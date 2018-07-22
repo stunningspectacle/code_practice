@@ -1,0 +1,14 @@
+F {main} {popen2.c:7}
+C {main} {popen2.c:31} {exit}
+C {main} {popen2.c:31} {err_sys}
+C {main} {popen2.c:31} {pclose}
+C {main} {popen2.c:31} {err_sys}
+C {main} {popen2.c:31} {ferror}
+C {main} {popen2.c:31} {fgets}
+C {main} {popen2.c:31} {err_sys}
+C {main} {popen2.c:31} {fputs}
+C {main} {popen2.c:31} {err_sys}
+C {main} {popen2.c:31} {popen}
+C {main} {popen2.c:31} {err_sys}
+C {main} {popen2.c:31} {fopen}
+C {main} {popen2.c:31} {err_quit}

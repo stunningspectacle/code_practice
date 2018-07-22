@@ -1,0 +1,581 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+  <title>LCOV - test.info - drivers/misc/bcm4751-gps.c</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">drivers/misc</a> - bcm4751-gps.c<span style="font-size: 80%;"> (source / <a href="bcm4751-gps.c.func.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">test.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntry">167</td>
+            <td class="headerCovTableEntryLo">1.8 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2011-05-12</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">19</td>
+            <td class="headerCovTableEntryLo">5.3 %</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="headerItem">Branches:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">172</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">           Branch data     Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>                :            : /*</a>
+<span class="lineNum">       2 </span>                :            :  * bcm4751-gps.c - Hardware interface for Broadcom BCM4751 GPS chip.
+<span class="lineNum">       3 </span>                :            :  *
+<span class="lineNum">       4 </span>                :            :  * Copyright (C) 2009 Nokia Corporation
+<span class="lineNum">       5 </span>                :            :  *
+<span class="lineNum">       6 </span>                :            :  * Written by Andrei Emeltchenko &lt;andrei.emeltchenko@nokia.com&gt;
+<span class="lineNum">       7 </span>                :            :  * Modified by Yuri Zaporozhets &lt;ext-yuri.zaporozhets@nokia.com&gt;
+<span class="lineNum">       8 </span>                :            :  *
+<span class="lineNum">       9 </span>                :            :  * This program is free software; you can redistribute it and/or
+<span class="lineNum">      10 </span>                :            :  * modify it under the terms of the GNU General Public License
+<span class="lineNum">      11 </span>                :            :  * version 2 as published by the Free Software Foundation.
+<span class="lineNum">      12 </span>                :            :  *
+<span class="lineNum">      13 </span>                :            :  * This program is distributed in the hope that it will be useful, but
+<span class="lineNum">      14 </span>                :            :  * WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      15 </span>                :            :  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+<span class="lineNum">      16 </span>                :            :  * General Public License for more details.
+<span class="lineNum">      17 </span>                :            :  *
+<span class="lineNum">      18 </span>                :            :  * You should have received a copy of the GNU General Public License
+<span class="lineNum">      19 </span>                :            :  * along with this program; if not, write to the Free Software
+<span class="lineNum">      20 </span>                :            :  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+<span class="lineNum">      21 </span>                :            :  * 02110-1301 USA
+<span class="lineNum">      22 </span>                :            :  */
+<span class="lineNum">      23 </span>                :            : 
+<span class="lineNum">      24 </span>                :            : /* #define DEBUG */
+<span class="lineNum">      25 </span>                :            : 
+<span class="lineNum">      26 </span>                :            : #include &lt;linux/kernel.h&gt;
+<span class="lineNum">      27 </span>                :            : #include &lt;linux/module.h&gt;
+<span class="lineNum">      28 </span>                :            : #include &lt;linux/fs.h&gt;
+<span class="lineNum">      29 </span>                :            : #include &lt;linux/err.h&gt;
+<span class="lineNum">      30 </span>                :            : #include &lt;linux/mutex.h&gt;
+<span class="lineNum">      31 </span>                :            : #include &lt;linux/i2c.h&gt;
+<span class="lineNum">      32 </span>                :            : #include &lt;linux/i2c-dev.h&gt;
+<span class="lineNum">      33 </span>                :            : #include &lt;linux/interrupt.h&gt;
+<span class="lineNum">      34 </span>                :            : #include &lt;linux/gpio.h&gt;
+<span class="lineNum">      35 </span>                :            : #include &lt;linux/poll.h&gt;
+<span class="lineNum">      36 </span>                :            : #include &lt;linux/miscdevice.h&gt;
+<span class="lineNum">      37 </span>                :            : #include &lt;linux/delay.h&gt;
+<span class="lineNum">      38 </span>                :            : #include &lt;linux/slab.h&gt;
+<span class="lineNum">      39 </span>                :            : 
+<span class="lineNum">      40 </span>                :            : #include &lt;linux/i2c/bcm4751-gps.h&gt;
+<span class="lineNum">      41 </span>                :            : 
+<span class="lineNum">      42 </span>                :            : static struct bcm4751_gps_data          *bcm4751_gps_device;
+<span class="lineNum">      43 </span>                :            : 
+<span class="lineNum">      44 </span>                :            : /*
+<span class="lineNum">      45 </span>                :            :  * Part of initialization is done in the board support file.
+<span class="lineNum">      46 </span>                :            :  */
+<span class="lineNum">      47 </span>                :            : 
+<a name="48"><span class="lineNum">      48 </span>                :            : static inline void bcm4751_gps_enable(struct bcm4751_gps_data *self)</a>
+<span class="lineNum">      49 </span>                :            : {
+<span class="lineNum">      50 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (self-&gt;pdata-&gt;enable)</span>
+<span class="lineNum">      51 </span>                :<span class="lineNoCov">          0 :                 self-&gt;pdata-&gt;enable(self-&gt;client);</span>
+<span class="lineNum">      52 </span>                :            : }
+<span class="lineNum">      53 </span>                :            : 
+<a name="54"><span class="lineNum">      54 </span>                :            : static inline void bcm4751_gps_disable(struct bcm4751_gps_data *self)</a>
+<span class="lineNum">      55 </span>                :            : {
+<span class="lineNum">      56 </span>[<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 4 was never executed"> # </span>:<span class="lineNoCov">          0 :         if (self-&gt;pdata-&gt;disable)</span>
+<span class="lineNum">         </span>            <span class="branchNoExec" title="Block containing branch 5 was never executed"> # </span>]
+<span class="lineNum">      57 </span>                :<span class="lineNoCov">          0 :                 self-&gt;pdata-&gt;disable(self-&gt;client);</span>
+<span class="lineNum">      58 </span>                :            : }
+<span class="lineNum">      59 </span>                :            : 
+<span class="lineNum">      60 </span>                :            : static inline void bcm4751_gps_wakeup_value(struct bcm4751_gps_data *self,
+<a name="61"><span class="lineNum">      61 </span>                :            :                 int value)</a>
+<span class="lineNum">      62 </span>                :            : {
+<span class="lineNum">      63 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (self-&gt;pdata-&gt;wakeup_ctrl)</span>
+<span class="lineNum">      64 </span>                :<span class="lineNoCov">          0 :                 self-&gt;pdata-&gt;wakeup_ctrl(self-&gt;client, value);</span>
+<span class="lineNum">      65 </span>                :            : }
+<span class="lineNum">      66 </span>                :            : 
+<span class="lineNum">      67 </span>                :            : 
+<span class="lineNum">      68 </span>                :            : /*
+<span class="lineNum">      69 </span>                :            :  * miscdevice interface
+<a name="70"><span class="lineNum">      70 </span>                :            :  */</a>
+<span class="lineNum">      71 </span>                :            : 
+<span class="lineNum">      72 </span>                :<span class="lineNoCov">          0 : static int bcm4751_gps_open(struct inode *inode, struct file *file)</span>
+<span class="lineNum">      73 </span>                :            : {
+<span class="lineNum">      74 </span>                :<span class="lineNoCov">          0 :         return 0;</span>
+<a name="75"><span class="lineNum">      75 </span>                :            : }</a>
+<span class="lineNum">      76 </span>                :            : 
+<span class="lineNum">      77 </span>                :<span class="lineNoCov">          0 : static int bcm4751_gps_release(struct inode *inode, struct file *file)</span>
+<span class="lineNum">      78 </span>                :            : {
+<span class="lineNum">      79 </span>                :<span class="lineNoCov">          0 :         return 0;</span>
+<a name="80"><span class="lineNum">      80 </span>                :            : }</a>
+<span class="lineNum">      81 </span>                :            : 
+<span class="lineNum">      82 </span>                :<span class="lineNoCov">          0 : static ssize_t bcm4751_gps_read(struct file *file, char __user *buf,</span>
+<span class="lineNum">      83 </span>                :            :                 size_t count, loff_t *offset)
+<span class="lineNum">      84 </span>                :            : {
+<span class="lineNum">      85 </span>                :<span class="lineNoCov">          0 :         struct i2c_client *client = bcm4751_gps_device-&gt;client;</span>
+<span class="lineNum">      86 </span>                :            :         int num_read;
+<span class="lineNum">      87 </span>                :            :         uint8_t tmp[BCM4751_MAX_BINPKT_RX_LEN];
+<span class="lineNum">      88 </span>                :            : 
+<span class="lineNum">      89 </span>                :            :         /* Adjust for binary packet size */
+<span class="lineNum">      90 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (count &gt; BCM4751_MAX_BINPKT_RX_LEN)</span>
+<span class="lineNum">      91 </span>                :<span class="lineNoCov">          0 :                 count = BCM4751_MAX_BINPKT_RX_LEN;</span>
+<span class="lineNum">      92 </span>                :            : 
+<span class="lineNum">      93 </span>[<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :         dev_dbg(&amp;client-&gt;dev, &quot;GPS Address: 0x%x\n&quot;, client-&gt;addr);</span>
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Block containing branch 4 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 5 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">      94 </span>                :            : 
+<span class="lineNum">      95 </span>[<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :         dev_dbg(&amp;client-&gt;dev, &quot;reading %d bytes\n&quot;, count);</span>
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Block containing branch 4 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 5 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">      96 </span>                :            : 
+<span class="lineNum">      97 </span>                :<span class="lineNoCov">          0 :         num_read = i2c_master_recv(client, tmp, count);</span>
+<span class="lineNum">      98 </span>                :            : 
+<span class="lineNum">      99 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (num_read &lt; 0) {</span>
+<span class="lineNum">     100 </span>                :<span class="lineNoCov">          0 :                 dev_err(&amp;client-&gt;dev, &quot;got %d bytes instead of %d\n&quot;,</span>
+<span class="lineNum">     101 </span>                :            :                         num_read, count);
+<span class="lineNum">     102 </span>                :<span class="lineNoCov">          0 :                 return num_read;</span>
+<span class="lineNum">     103 </span>                :            :         } else {
+<span class="lineNum">     104 </span>[<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :                 dev_dbg(&amp;client-&gt;dev, &quot;reading %d bytes returns %d&quot;,</span>
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Block containing branch 4 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 5 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">     105 </span>                :            :                         count, num_read);
+<span class="lineNum">     106 </span>                :            :         }
+<span class="lineNum">     107 </span>                :            : 
+<span class="lineNum">     108 </span>        [<span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span>]:<span class="lineNoCov">          0 :         return copy_to_user(buf, tmp, num_read) ? -EFAULT : num_read;</span>
+<a name="109"><span class="lineNum">     109 </span>                :            : }</a>
+<span class="lineNum">     110 </span>                :            : 
+<span class="lineNum">     111 </span>                :<span class="lineNoCov">          0 : static ssize_t bcm4751_gps_write(struct file *file, const char __user *buf,</span>
+<span class="lineNum">     112 </span>                :            :                 size_t count, loff_t *offset)
+<span class="lineNum">     113 </span>                :            : {
+<span class="lineNum">     114 </span>                :<span class="lineNoCov">          0 :         struct i2c_client *client = bcm4751_gps_device-&gt;client;</span>
+<span class="lineNum">     115 </span>                :            :         uint8_t tmp[BCM4751_MAX_BINPKT_TX_LEN];
+<span class="lineNum">     116 </span>                :            :         int num_sent;
+<span class="lineNum">     117 </span>                :            : 
+<span class="lineNum">     118 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (count &gt; BCM4751_MAX_BINPKT_TX_LEN)</span>
+<span class="lineNum">     119 </span>                :<span class="lineNoCov">          0 :                 count = BCM4751_MAX_BINPKT_TX_LEN;</span>
+<span class="lineNum">     120 </span>                :            : 
+<span class="lineNum">     121 </span>[<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :         dev_dbg(&amp;client-&gt;dev, &quot;writing %d bytes\n&quot;, count);</span>
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Block containing branch 4 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 5 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">     122 </span>                :            : 
+<span class="lineNum">     123 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (copy_from_user(tmp, buf, count))</span>
+<span class="lineNum">     124 </span>                :<span class="lineNoCov">          0 :                 return -EFAULT;</span>
+<span class="lineNum">     125 </span>                :            : 
+<span class="lineNum">     126 </span>                :<span class="lineNoCov">          0 :         num_sent = i2c_master_send(client, tmp, count);</span>
+<span class="lineNum">     127 </span>                :            : 
+<span class="lineNum">     128 </span>  [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :         dev_dbg(&amp;client-&gt;dev, &quot;writing %d bytes returns %d&quot;,</span>
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Block containing branch 4 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 5 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">     129 </span>                :            :                 count, num_sent);
+<span class="lineNum">     130 </span>                :            : 
+<span class="lineNum">     131 </span>                :<span class="lineNoCov">          0 :         return num_sent;</span>
+<a name="132"><span class="lineNum">     132 </span>                :            : }</a>
+<span class="lineNum">     133 </span>                :            : 
+<span class="lineNum">     134 </span>                :<span class="lineNoCov">          0 : static int bcm4751_gps_ioctl(struct inode *inode, struct file *file,</span>
+<span class="lineNum">     135 </span>                :            :                 unsigned int cmd, unsigned long arg)
+<span class="lineNum">     136 </span>                :            : {
+<span class="lineNum">     137 </span>                :<span class="lineNoCov">          0 :         struct i2c_client *client = bcm4751_gps_device-&gt;client;</span>
+<span class="lineNum">     138 </span>                :            : 
+<span class="lineNum">     139 </span>[<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :         dev_dbg(&amp;client-&gt;dev, &quot;ioctl: cmd = 0x%02x, arg=0x%02lx\n&quot;, cmd, arg);</span>
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Block containing branch 4 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 5 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">     140 </span>                :            : 
+<span class="lineNum">     141 </span>     [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span>]:<span class="lineNoCov">          0 :         switch (cmd) {</span>
+<span class="lineNum">     142 </span>                :            :         case I2C_SLAVE:
+<span class="lineNum">     143 </span>                :            :         case I2C_SLAVE_FORCE:
+<span class="lineNum">     144 </span>[<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :                 if ((arg &gt; 0x3ff) ||</span>
+<span class="lineNum">     145 </span>                :<span class="lineNoCov">          0 :                                 (((client-&gt;flags &amp; I2C_M_TEN) == 0) &amp;&amp;</span>
+<span class="lineNum">     146 </span>                :<span class="lineNoCov">          0 :                                  arg &gt; 0x7f))</span>
+<span class="lineNum">     147 </span>                :<span class="lineNoCov">          0 :                         return -EINVAL;</span>
+<span class="lineNum">     148 </span>                :<span class="lineNoCov">          0 :                 client-&gt;addr = arg;</span>
+<span class="lineNum">     149 </span>[<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :                 dev_dbg(&amp;client-&gt;dev, &quot;ioctl: client-&gt;addr = %x&quot;, client-&gt;addr);</span>
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Block containing branch 4 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 5 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">     150 </span>                :<span class="lineNoCov">          0 :                 return 0;</span>
+<span class="lineNum">     151 </span>                :            :         case I2C_TENBIT:
+<span class="lineNum">     152 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :                 if (arg)</span>
+<span class="lineNum">     153 </span>                :<span class="lineNoCov">          0 :                         client-&gt;flags |= I2C_M_TEN;</span>
+<span class="lineNum">     154 </span>                :            :                 else
+<span class="lineNum">     155 </span>                :<span class="lineNoCov">          0 :                         client-&gt;flags &amp;= ~I2C_M_TEN;</span>
+<span class="lineNum">     156 </span>                :<span class="lineNoCov">          0 :                 return 0;</span>
+<span class="lineNum">     157 </span>                :            :         default:
+<span class="lineNum">     158 </span>                :<span class="lineNoCov">          0 :                 return -ENOTTY;</span>
+<span class="lineNum">     159 </span>                :            :         }
+<span class="lineNum">     160 </span>                :            :         return 0;
+<span class="lineNum">     161 </span>                :            : }
+<span class="lineNum">     162 </span>                :            : 
+<span class="lineNum">     163 </span>                :            : static const struct file_operations bcm4751_gps_fileops = {
+<span class="lineNum">     164 </span>                :            :         .owner = THIS_MODULE,
+<span class="lineNum">     165 </span>                :            :         .llseek         = no_llseek,
+<span class="lineNum">     166 </span>                :            :         .read           = bcm4751_gps_read,
+<span class="lineNum">     167 </span>                :            :         .write          = bcm4751_gps_write,
+<span class="lineNum">     168 </span>                :            :         .ioctl          = bcm4751_gps_ioctl,
+<span class="lineNum">     169 </span>                :            :         .open           = bcm4751_gps_open,
+<span class="lineNum">     170 </span>                :            :         .release        = bcm4751_gps_release,
+<span class="lineNum">     171 </span>                :            : };
+<span class="lineNum">     172 </span>                :            : 
+<span class="lineNum">     173 </span>                :            : static struct miscdevice bcm4751_gps_miscdevice = {
+<span class="lineNum">     174 </span>                :            :         .minor = MISC_DYNAMIC_MINOR,
+<span class="lineNum">     175 </span>                :            :         .name = &quot;bcm4751-gps&quot;,
+<span class="lineNum">     176 </span>                :            :         .fops = &amp;bcm4751_gps_fileops
+<span class="lineNum">     177 </span>                :            : };
+<span class="lineNum">     178 </span>                :            : 
+<span class="lineNum">     179 </span>                :            : 
+<span class="lineNum">     180 </span>                :            : /*
+<span class="lineNum">     181 </span>                :            :  * sysfs interface
+<a name="182"><span class="lineNum">     182 </span>                :            :  */</a>
+<span class="lineNum">     183 </span>                :            : 
+<span class="lineNum">     184 </span>                :<span class="lineNoCov">          0 : static ssize_t bcm4751_gps_show_hostreq(struct device *dev,</span>
+<span class="lineNum">     185 </span>                :            :                 struct device_attribute *attr, char *buf)
+<span class="lineNum">     186 </span>                :            : {
+<span class="lineNum">     187 </span>                :<span class="lineNoCov">          0 :         struct bcm4751_gps_data *self = dev_get_drvdata(dev);</span>
+<span class="lineNum">     188 </span>                :<span class="lineNoCov">          0 :         int value = -1;</span>
+<span class="lineNum">     189 </span>                :            : 
+<span class="lineNum">     190 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (self-&gt;pdata-&gt;show_irq)</span>
+<span class="lineNum">     191 </span>                :<span class="lineNoCov">          0 :                 value = self-&gt;pdata-&gt;show_irq(self-&gt;client);</span>
+<span class="lineNum">     192 </span>                :            : 
+<span class="lineNum">     193 </span>                :<span class="lineNoCov">          0 :         return snprintf(buf, PAGE_SIZE, &quot;%d\n&quot;, value);</span>
+<a name="194"><span class="lineNum">     194 </span>                :            : }</a>
+<span class="lineNum">     195 </span>                :            : 
+<span class="lineNum">     196 </span>                :<span class="lineNoCov">          0 : static ssize_t bcm4751_gps_show_enable(struct device *dev,</span>
+<span class="lineNum">     197 </span>                :            :                 struct device_attribute *attr, char *buf)
+<span class="lineNum">     198 </span>                :            : {
+<span class="lineNum">     199 </span>                :<span class="lineNoCov">          0 :         struct bcm4751_gps_data *self = dev_get_drvdata(dev);</span>
+<span class="lineNum">     200 </span>                :            : 
+<span class="lineNum">     201 </span>                :<span class="lineNoCov">          0 :         return snprintf(buf, PAGE_SIZE, &quot;%d\n&quot;, self-&gt;enable);</span>
+<span class="lineNum">     202 </span>                :            : }
+<span class="lineNum">     203 </span>                :            : 
+<span class="lineNum">     204 </span>                :<span class="lineNoCov">          0 : static ssize_t bcm4751_gps_set_enable(struct device *dev,</span>
+<span class="lineNum">     205 </span>                :            :                 struct device_attribute *attr, const char *buf, size_t len)
+<span class="lineNum">     206 </span>                :            : {
+<span class="lineNum">     207 </span>                :<span class="lineNoCov">          0 :         struct bcm4751_gps_data *self = dev_get_drvdata(dev);</span>
+<span class="lineNum">     208 </span>                :            :         int value;
+<span class="lineNum">     209 </span>                :            : 
+<span class="lineNum">     210 </span>                :<span class="lineNoCov">          0 :         sscanf(buf, &quot;%d&quot;, &amp;value);</span>
+<span class="lineNum">     211 </span>  [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :         dev_dbg(dev, &quot;enable: %d&quot;, value);</span>
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Block containing branch 4 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 5 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">     212 </span>                :            : 
+<span class="lineNum">     213 </span>     [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span>]:<span class="lineNoCov">          0 :         switch (value) {</span>
+<span class="lineNum">     214 </span>                :            :         case 0:
+<span class="lineNum">     215 </span>                :            :                 bcm4751_gps_disable(self);
+<span class="lineNum">     216 </span>                :            :                 break;
+<span class="lineNum">     217 </span>                :            : 
+<span class="lineNum">     218 </span>                :            :         case 1:
+<span class="lineNum">     219 </span>                :            :                 bcm4751_gps_enable(self);
+<span class="lineNum">     220 </span>                :            :                 break;
+<span class="lineNum">     221 </span>                :            : 
+<span class="lineNum">     222 </span>                :            :         default:
+<span class="lineNum">     223 </span>                :<span class="lineNoCov">          0 :                 return -EINVAL;</span>
+<span class="lineNum">     224 </span>                :            :         }
+<span class="lineNum">     225 </span>                :            : 
+<span class="lineNum">     226 </span>                :<span class="lineNoCov">          0 :         self-&gt;enable = value;</span>
+<span class="lineNum">     227 </span>                :<span class="lineNoCov">          0 :         return len;</span>
+<a name="228"><span class="lineNum">     228 </span>                :            : }</a>
+<span class="lineNum">     229 </span>                :            : 
+<span class="lineNum">     230 </span>                :<span class="lineNoCov">          0 : static ssize_t bcm4751_gps_show_wakeup(struct device *dev,</span>
+<span class="lineNum">     231 </span>                :            :                 struct device_attribute *attr, char *buf)
+<span class="lineNum">     232 </span>                :            : {
+<span class="lineNum">     233 </span>                :<span class="lineNoCov">          0 :         struct bcm4751_gps_data *self = dev_get_drvdata(dev);</span>
+<span class="lineNum">     234 </span>                :            : 
+<span class="lineNum">     235 </span>                :<span class="lineNoCov">          0 :         return snprintf(buf, PAGE_SIZE, &quot;%d\n&quot;, self-&gt;wakeup);</span>
+<span class="lineNum">     236 </span>                :            : }
+<span class="lineNum">     237 </span>                :            : 
+<span class="lineNum">     238 </span>                :<span class="lineNoCov">          0 : static ssize_t bcm4751_gps_set_wakeup(struct device *dev,</span>
+<span class="lineNum">     239 </span>                :            :                 struct device_attribute *attr, const char *buf, size_t len)
+<span class="lineNum">     240 </span>                :            : {
+<span class="lineNum">     241 </span>                :            :         unsigned long val;
+<span class="lineNum">     242 </span>                :            :         int ret;
+<span class="lineNum">     243 </span>                :<span class="lineNoCov">          0 :         struct bcm4751_gps_data *self = dev_get_drvdata(dev);</span>
+<span class="lineNum">     244 </span>                :            : 
+<span class="lineNum">     245 </span>                :<span class="lineNoCov">          0 :         ret = strict_strtoul(buf, 0, &amp;val);</span>
+<span class="lineNum">     246 </span>  [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (ret &amp;&amp; val &gt; 1)</span>
+<span class="lineNum">     247 </span>                :<span class="lineNoCov">          0 :                 return -EINVAL;</span>
+<span class="lineNum">     248 </span>                :            :         else {
+<span class="lineNum">     249 </span>                :<span class="lineNoCov">          0 :                 bcm4751_gps_wakeup_value(self, val);</span>
+<span class="lineNum">     250 </span>[<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :                 dev_dbg(dev, &quot;new wakeup value = %d&quot;, self-&gt;wakeup);</span>
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Block containing branch 4 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 5 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">     251 </span>                :            :         }
+<span class="lineNum">     252 </span>                :            : 
+<span class="lineNum">     253 </span>                :<span class="lineNoCov">          0 :         return len;</span>
+<span class="lineNum">     254 </span>                :            : }
+<span class="lineNum">     255 </span>                :            : 
+<span class="lineNum">     256 </span>                :            : static struct device_attribute bcm4751_gps_attrs[] = {
+<span class="lineNum">     257 </span>                :            :         __ATTR(enable, S_IRUGO|S_IWUSR,
+<span class="lineNum">     258 </span>                :            :                         bcm4751_gps_show_enable, bcm4751_gps_set_enable),
+<span class="lineNum">     259 </span>                :            :         __ATTR(hostreq, S_IRUGO|S_IWUSR,
+<span class="lineNum">     260 </span>                :            :                         bcm4751_gps_show_hostreq, NULL),
+<span class="lineNum">     261 </span>                :            :         __ATTR(wakeup, S_IRUGO|S_IWUSR,
+<span class="lineNum">     262 </span>                :            :                         bcm4751_gps_show_wakeup, bcm4751_gps_set_wakeup),
+<span class="lineNum">     263 </span>                :            : };
+<span class="lineNum">     264 </span>                :            : 
+<a name="265"><span class="lineNum">     265 </span>                :            : static int bcm4751_gps_register_sysfs(struct i2c_client *client)</a>
+<span class="lineNum">     266 </span>                :            : {
+<span class="lineNum">     267 </span>                :<span class="lineNoCov">          0 :         struct device *dev = &amp;client-&gt;dev;</span>
+<span class="lineNum">     268 </span>                :            :         int i, ret;
+<span class="lineNum">     269 </span>                :            : 
+<span class="lineNum">     270 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         for (i = 0; i &lt; ARRAY_SIZE(bcm4751_gps_attrs); i++) {</span>
+<span class="lineNum">     271 </span>                :<span class="lineNoCov">          0 :                 ret = device_create_file(dev, &amp;bcm4751_gps_attrs[i]);</span>
+<span class="lineNum">     272 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :                 if (ret)</span>
+<span class="lineNum">     273 </span>                :            :                         goto fail;
+<span class="lineNum">     274 </span>                :            :         }
+<span class="lineNum">     275 </span>                :<span class="lineNoCov">          0 :         return 0;</span>
+<span class="lineNum">     276 </span>                :            : fail:
+<span class="lineNum">     277 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         while (i--)</span>
+<span class="lineNum">     278 </span>                :<span class="lineNoCov">          0 :                 device_remove_file(dev, &amp;bcm4751_gps_attrs[i]);</span>
+<span class="lineNum">     279 </span>                :            : 
+<span class="lineNum">     280 </span>                :<span class="lineNoCov">          0 :         return ret;</span>
+<span class="lineNum">     281 </span>                :            : }
+<span class="lineNum">     282 </span>                :            : 
+<span class="lineNum">     283 </span>                :            : static void bcm4751_gps_unregister_sysfs(struct i2c_client *client)
+<span class="lineNum">     284 </span>                :            : {
+<span class="lineNum">     285 </span>                :<span class="lineNoCov">          0 :         struct device *dev = &amp;client-&gt;dev;</span>
+<span class="lineNum">     286 </span>                :            :         int i;
+<span class="lineNum">     287 </span>                :            : 
+<span class="lineNum">     288 </span>[<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :         for (i = ARRAY_SIZE(bcm4751_gps_attrs) - 1; i &gt;= 0; i--)</span>
+<span class="lineNum">     289 </span>                :<span class="lineNoCov">          0 :                 device_remove_file(dev, &amp;bcm4751_gps_attrs[i]);</span>
+<span class="lineNum">     290 </span>                :            : }
+<span class="lineNum">     291 </span>                :            : 
+<span class="lineNum">     292 </span>                :            : /*
+<span class="lineNum">     293 </span>                :            :  * &quot;Bottom half&quot; of the interrupt.
+<a name="294"><span class="lineNum">     294 </span>                :            :  * It gets called only when the &quot;main&quot; handler detects HOST_IRQ=1</a>
+<span class="lineNum">     295 </span>                :            :  */
+<span class="lineNum">     296 </span>                :<span class="lineNoCov">          0 : static void bcm4751_gps_bottom_half(struct work_struct *work)</span>
+<span class="lineNum">     297 </span>                :            : {
+<span class="lineNum">     298 </span>                :            :         struct bcm4751_gps_data *data =
+<span class="lineNum">     299 </span>                :<span class="lineNoCov">          0 :                 container_of(work, struct bcm4751_gps_data, work);</span>
+<span class="lineNum">     300 </span>                :            : 
+<span class="lineNum">     301 </span>[<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :         dev_dbg(&amp;data-&gt;client-&gt;dev, &quot;irq, HOST_REQ=%d&quot;,</span>
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Block containing branch 4 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 5 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">     302 </span>                :            :                         data-&gt;pdata-&gt;show_irq(data-&gt;client));
+<span class="lineNum">     303 </span>                :            : 
+<span class="lineNum">     304 </span>                :            :         /* Update sysfs GPIO line here */
+<span class="lineNum">     305 </span>                :<span class="lineNoCov">          0 :         sysfs_notify(&amp;data-&gt;client-&gt;dev.kobj, NULL, &quot;hostreq&quot;);</span>
+<a name="306"><span class="lineNum">     306 </span>                :<span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     307 </span>                :            : 
+<span class="lineNum">     308 </span>                :<span class="lineNoCov">          0 : static irqreturn_t bcm4751_gps_irq(int irq, void *dev_id)</span>
+<span class="lineNum">     309 </span>                :            : {
+<span class="lineNum">     310 </span>                :<span class="lineNoCov">          0 :         struct bcm4751_gps_data *data = dev_id;</span>
+<span class="lineNum">     311 </span>                :            : 
+<span class="lineNum">     312 </span>                :            :         /* If HOST_REQ is 1 - let bottom half to do the rest of the job */
+<span class="lineNum">     313 </span>        [<span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (data-&gt;pdata-&gt;show_irq(data-&gt;client))</span>
+<span class="lineNum">     314 </span>                :<span class="lineNoCov">          0 :                 schedule_work(&amp;data-&gt;work);</span>
+<span class="lineNum">     315 </span>                :            : 
+<span class="lineNum">     316 </span>                :<span class="lineNoCov">          0 :         return IRQ_HANDLED;</span>
+<span class="lineNum">     317 </span>                :            : }
+<span class="lineNum">     318 </span>                :            : 
+<span class="lineNum">     319 </span>                :<span class="lineNoCov">          0 : static int bcm4751_gps_probe(struct i2c_client *client,</span>
+<span class="lineNum">     320 </span>                :            :                 const struct i2c_device_id *device_id)
+<span class="lineNum">     321 </span>                :            : {
+<span class="lineNum">     322 </span>                :            :         struct bcm4751_gps_data                 *data;
+<span class="lineNum">     323 </span>                :            :         struct bcm4751_gps_platform_data        *pdata;
+<span class="lineNum">     324 </span>                :            :         int                                     err;
+<span class="lineNum">     325 </span>                :            : 
+<span class="lineNum">     326 </span>                :<span class="lineNoCov">          0 :         data = kzalloc(sizeof(*data), GFP_KERNEL);</span>
+<span class="lineNum">     327 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (!data)</span>
+<span class="lineNum">     328 </span>                :<span class="lineNoCov">          0 :                 return -ENOMEM;</span>
+<span class="lineNum">     329 </span>                :            : 
+<span class="lineNum">     330 </span>                :<span class="lineNoCov">          0 :         pdata = client-&gt;dev.platform_data;</span>
+<span class="lineNum">     331 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (!pdata) {</span>
+<span class="lineNum">     332 </span>                :<span class="lineNoCov">          0 :                 dev_err(&amp;client-&gt;dev, &quot;no platform data\n&quot;);</span>
+<span class="lineNum">     333 </span>                :<span class="lineNoCov">          0 :                 err = -ENODEV;</span>
+<span class="lineNum">     334 </span>                :<span class="lineNoCov">          0 :                 goto clean_data;</span>
+<span class="lineNum">     335 </span>                :            :         }
+<span class="lineNum">     336 </span>                :            : 
+<span class="lineNum">     337 </span>                :            :         i2c_set_clientdata(client, data);
+<span class="lineNum">     338 </span>                :<span class="lineNoCov">          0 :         data-&gt;client = client;</span>
+<span class="lineNum">     339 </span>                :<span class="lineNoCov">          0 :         data-&gt;pdata  = pdata;</span>
+<span class="lineNum">     340 </span>                :<span class="lineNoCov">          0 :         data-&gt;enable = 1;</span>
+<span class="lineNum">     341 </span>                :<span class="lineNoCov">          0 :         data-&gt;wakeup = 1;</span>
+<span class="lineNum">     342 </span>                :            : 
+<span class="lineNum">     343 </span>                :<span class="lineNoCov">          0 :         data-&gt;gpio_irq    = pdata-&gt;gps_gpio_irq;</span>
+<span class="lineNum">     344 </span>                :<span class="lineNoCov">          0 :         data-&gt;gpio_enable = pdata-&gt;gps_gpio_enable;</span>
+<span class="lineNum">     345 </span>                :<span class="lineNoCov">          0 :         data-&gt;gpio_wakeup = pdata-&gt;gps_gpio_wakeup;</span>
+<span class="lineNum">     346 </span>                :            : 
+<span class="lineNum">     347 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (pdata-&gt;setup) {</span>
+<span class="lineNum">     348 </span>                :<span class="lineNoCov">          0 :                 err = pdata-&gt;setup(client);</span>
+<span class="lineNum">     349 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :                 if (err)</span>
+<span class="lineNum">     350 </span>                :            :                         goto clean_data;
+<span class="lineNum">     351 </span>                :            :         }
+<span class="lineNum">     352 </span>                :            : 
+<span class="lineNum">     353 </span>                :<span class="lineNoCov">          0 :         INIT_WORK(&amp;data-&gt;work, bcm4751_gps_bottom_half);</span>
+<span class="lineNum">     354 </span>                :<span class="lineNoCov">          0 :         err = request_irq(client-&gt;irq, bcm4751_gps_irq,</span>
+<span class="lineNum">     355 </span>                :            :                          IRQF_TRIGGER_RISING, &quot;i2c_gps&quot;, data);
+<span class="lineNum">     356 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (err) {</span>
+<span class="lineNum">     357 </span>                :<span class="lineNoCov">          0 :                 dev_err(&amp;client-&gt;dev, &quot;could not get GPS_IRQ = %d\n&quot;,</span>
+<span class="lineNum">     358 </span>                :            :                                 client-&gt;irq);
+<span class="lineNum">     359 </span>                :<span class="lineNoCov">          0 :                 goto clean_setup;</span>
+<span class="lineNum">     360 </span>                :            :         }
+<span class="lineNum">     361 </span>                :            : 
+<span class="lineNum">     362 </span>                :<span class="lineNoCov">          0 :         err = bcm4751_gps_register_sysfs(client);</span>
+<span class="lineNum">     363 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (err) {</span>
+<span class="lineNum">     364 </span>                :<span class="lineNoCov">          0 :                 dev_err(&amp;client-&gt;dev,</span>
+<span class="lineNum">     365 </span>                :            :                                 &quot;sysfs registration failed, error %d\n&quot;, err);
+<span class="lineNum">     366 </span>                :<span class="lineNoCov">          0 :                 goto clean_irq;</span>
+<span class="lineNum">     367 </span>                :            :         }
+<span class="lineNum">     368 </span>                :            : 
+<span class="lineNum">     369 </span>                :<span class="lineNoCov">          0 :         bcm4751_gps_miscdevice.parent = &amp;client-&gt;dev;</span>
+<span class="lineNum">     370 </span>                :<span class="lineNoCov">          0 :         err = misc_register(&amp;bcm4751_gps_miscdevice);</span>
+<span class="lineNum">     371 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (err) {</span>
+<span class="lineNum">     372 </span>                :<span class="lineNoCov">          0 :                 dev_err(&amp;client-&gt;dev, &quot;Miscdevice register failed\n&quot;);</span>
+<span class="lineNum">     373 </span>                :<span class="lineNoCov">          0 :                 goto clean_sysfs;</span>
+<span class="lineNum">     374 </span>                :            :         }
+<span class="lineNum">     375 </span>                :            : 
+<span class="lineNum">     376 </span>                :<span class="lineNoCov">          0 :         bcm4751_gps_device = data;</span>
+<span class="lineNum">     377 </span>                :            : 
+<span class="lineNum">     378 </span>                :<span class="lineNoCov">          0 :         return 0;</span>
+<span class="lineNum">     379 </span>                :            : 
+<span class="lineNum">     380 </span>                :            : clean_sysfs:
+<span class="lineNum">     381 </span>                :            :         bcm4751_gps_unregister_sysfs(client);
+<span class="lineNum">     382 </span>                :            : 
+<span class="lineNum">     383 </span>                :            : clean_irq:
+<span class="lineNum">     384 </span>                :<span class="lineNoCov">          0 :         free_irq(client-&gt;irq, data);</span>
+<span class="lineNum">     385 </span>                :            : 
+<span class="lineNum">     386 </span>                :            : clean_setup:
+<span class="lineNum">     387 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (pdata-&gt;cleanup)</span>
+<span class="lineNum">     388 </span>                :<span class="lineNoCov">          0 :                 pdata-&gt;cleanup(client);</span>
+<span class="lineNum">     389 </span>                :            : 
+<span class="lineNum">     390 </span>                :            : clean_data:
+<span class="lineNum">     391 </span>                :<span class="lineNoCov">          0 :         kfree(data);</span>
+<span class="lineNum">     392 </span>                :<span class="lineNoCov">          0 :         bcm4751_gps_device = NULL;</span>
+<span class="lineNum">     393 </span>                :            : 
+<span class="lineNum">     394 </span>                :<span class="lineNoCov">          0 :         return err;</span>
+<span class="lineNum">     395 </span>                :            : }
+<span class="lineNum">     396 </span>                :            : 
+<span class="lineNum">     397 </span>                :<span class="lineNoCov">          0 : static int bcm4751_gps_remove(struct i2c_client *client)</span>
+<span class="lineNum">     398 </span>                :            : {
+<span class="lineNum">     399 </span>                :<span class="lineNoCov">          0 :         struct bcm4751_gps_data *data = i2c_get_clientdata(client);</span>
+<span class="lineNum">     400 </span>                :            : 
+<span class="lineNum">     401 </span>                :            :         bcm4751_gps_disable(data);
+<span class="lineNum">     402 </span>                :            : 
+<span class="lineNum">     403 </span>                :<span class="lineNoCov">          0 :         free_irq(client-&gt;irq, data);</span>
+<span class="lineNum">     404 </span>                :<span class="lineNoCov">          0 :         misc_deregister(&amp;bcm4751_gps_miscdevice);</span>
+<span class="lineNum">     405 </span>                :            :         bcm4751_gps_unregister_sysfs(client);
+<span class="lineNum">     406 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (data-&gt;pdata-&gt;cleanup)</span>
+<span class="lineNum">     407 </span>                :<span class="lineNoCov">          0 :                 data-&gt;pdata-&gt;cleanup(client);</span>
+<span class="lineNum">     408 </span>                :<span class="lineNoCov">          0 :         kfree(data);</span>
+<span class="lineNum">     409 </span>                :<span class="lineNoCov">          0 :         bcm4751_gps_device = NULL;</span>
+<span class="lineNum">     410 </span>                :            : 
+<span class="lineNum">     411 </span>                :<span class="lineNoCov">          0 :         return 0;</span>
+<span class="lineNum">     412 </span>                :            : }
+<span class="lineNum">     413 </span>                :            : 
+<span class="lineNum">     414 </span>                :<span class="lineNoCov">          0 : static void bcm4751_gps_shutdown(struct i2c_client *client)</span>
+<span class="lineNum">     415 </span>                :            : {
+<span class="lineNum">     416 </span>[<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :         dev_dbg(&amp;client-&gt;dev, &quot;BCM4751 shutdown\n&quot;);</span>
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Block containing branch 4 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 5 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">     417 </span>                :<span class="lineNoCov">          0 :         bcm4751_gps_disable(i2c_get_clientdata(client));</span>
+<span class="lineNum">     418 </span>                :<span class="lineNoCov">          0 : }</span>
+<a name="419"><span class="lineNum">     419 </span>                :            : </a>
+<span class="lineNum">     420 </span>                :            : #ifdef CONFIG_PM
+<span class="lineNum">     421 </span>                :<span class="lineNoCov">          0 : static int bcm4751_gps_suspend(struct i2c_client *client, pm_message_t mesg)</span>
+<span class="lineNum">     422 </span>                :            : {
+<span class="lineNum">     423 </span>                :<span class="lineNoCov">          0 :         struct bcm4751_gps_data *data = i2c_get_clientdata(client);</span>
+<span class="lineNum">     424 </span>                :<span class="lineNoCov">          0 :         data-&gt;pdata-&gt;wakeup_ctrl(data-&gt;client, 0);</span>
+<span class="lineNum">     425 </span>  [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :         dev_dbg(&amp;client-&gt;dev, &quot;BCM4751 suspends\n&quot;);</span>
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Block containing branch 4 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 5 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">     426 </span>                :<span class="lineNoCov">          0 :         return 0;</span>
+<a name="427"><span class="lineNum">     427 </span>                :            : }</a>
+<span class="lineNum">     428 </span>                :            : 
+<span class="lineNum">     429 </span>                :<span class="lineNoCov">          0 : static int bcm4751_gps_resume(struct i2c_client *client)</span>
+<span class="lineNum">     430 </span>                :            : {
+<span class="lineNum">     431 </span>                :<span class="lineNoCov">          0 :         struct bcm4751_gps_data *data = i2c_get_clientdata(client);</span>
+<span class="lineNum">     432 </span>                :<span class="lineNoCov">          0 :         data-&gt;pdata-&gt;wakeup_ctrl(data-&gt;client, 1);</span>
+<span class="lineNum">     433 </span>  [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :         dev_dbg(&amp;client-&gt;dev, &quot;BCM4751 resumes\n&quot;);</span>
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Block containing branch 4 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 5 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">     434 </span>                :<span class="lineNoCov">          0 :         return 0;</span>
+<span class="lineNum">     435 </span>                :            : }
+<span class="lineNum">     436 </span>                :            : #else
+<span class="lineNum">     437 </span>                :            : #define bcm4751_gps_suspend NULL
+<span class="lineNum">     438 </span>                :            : #define bcm4751_gps_resume NULL
+<span class="lineNum">     439 </span>                :            : #endif
+<span class="lineNum">     440 </span>                :            : 
+<span class="lineNum">     441 </span>                :            : /* Address to scan: 0x1FA -i2c slave addr*/
+<span class="lineNum">     442 </span>                :            : static const unsigned short bcm4751_normal_i2c[] = {
+<span class="lineNum">     443 </span>                :            :         0x1FA, I2C_CLIENT_END
+<span class="lineNum">     444 </span>                :            : };
+<span class="lineNum">     445 </span>                :            : 
+<span class="lineNum">     446 </span>                :            : static const struct i2c_device_id bcm4751_gps_id[] = {
+<span class="lineNum">     447 </span>                :            :         { &quot;bcm4751-gps&quot;, 0 },
+<span class="lineNum">     448 </span>                :            :         { },
+<span class="lineNum">     449 </span>                :            : };
+<span class="lineNum">     450 </span>                :            : 
+<span class="lineNum">     451 </span>                :            : static struct i2c_driver bcm4751_gps_i2c_driver = {
+<span class="lineNum">     452 </span>                :            :         .driver = {
+<span class="lineNum">     453 </span>                :            :                 .name    = &quot;i2c_gps&quot;,
+<span class="lineNum">     454 </span>                :            :         },
+<span class="lineNum">     455 </span>                :            :         .id_table       = bcm4751_gps_id,
+<span class="lineNum">     456 </span>                :            :         .probe          = bcm4751_gps_probe,
+<span class="lineNum">     457 </span>                :            :         .remove         = __devexit_p(bcm4751_gps_remove),
+<span class="lineNum">     458 </span>                :            :         .shutdown       = bcm4751_gps_shutdown,
+<span class="lineNum">     459 </span>                :            :         .suspend        = bcm4751_gps_suspend,
+<span class="lineNum">     460 </span>                :            :         .resume         = bcm4751_gps_resume,
+<span class="lineNum">     461 </span>                :            : };
+<span class="lineNum">     462 </span>                :            : 
+<a name="463"><span class="lineNum">     463 </span>                :            : MODULE_DEVICE_TABLE(i2c, bcm4751_gps_id);</a>
+<span class="lineNum">     464 </span>                :            : 
+<span class="lineNum">     465 </span>                :<span class="lineCov">          1 : static int __init bcm4751_gps_init(void)</span>
+<span class="lineNum">     466 </span>                :            : {
+<span class="lineNum">     467 </span>                :<span class="lineCov">          1 :         pr_info(&quot;Loading BCM4751 GPS driver\n&quot;);</span>
+<span class="lineNum">     468 </span>                :            : 
+<span class="lineNum">     469 </span>                :<span class="lineCov">          1 :         return i2c_add_driver(&amp;bcm4751_gps_i2c_driver);</span>
+<a name="470"><span class="lineNum">     470 </span>                :            : }</a>
+<span class="lineNum">     471 </span>                :            : 
+<span class="lineNum">     472 </span>                :<span class="lineNoCov">          0 : static void __exit bcm4751_gps_exit(void)</span>
+<span class="lineNum">     473 </span>                :            : {
+<span class="lineNum">     474 </span>                :<span class="lineNoCov">          0 :         i2c_del_driver(&amp;bcm4751_gps_i2c_driver);</span>
+<span class="lineNum">     475 </span>                :<span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     476 </span>                :            : 
+<span class="lineNum">     477 </span>                :            : module_init(bcm4751_gps_init);
+<span class="lineNum">     478 </span>                :            : module_exit(bcm4751_gps_exit);
+<span class="lineNum">     479 </span>                :            : 
+<span class="lineNum">     480 </span>                :            : MODULE_AUTHOR(&quot;Andrei Emeltchenko, Yuri Zaporozhets&quot;);
+<span class="lineNum">     481 </span>                :            : MODULE_DESCRIPTION(&quot;BCM4751 GPS driver&quot;);
+<span class="lineNum">     482 </span>                :            : MODULE_LICENSE(&quot;GPL&quot;);
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.8</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

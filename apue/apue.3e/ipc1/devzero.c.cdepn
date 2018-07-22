@@ -1,0 +1,20 @@
+F {main} {devzero.c:15}
+C {main} {devzero.c:52} {exit}
+C {main} {devzero.c:52} {TELL_PARENT}
+C {main} {devzero.c:52} {getppid}
+C {main} {devzero.c:52} {err_quit}
+C {main} {devzero.c:52} {update}
+C {main} {devzero.c:52} {WAIT_PARENT}
+C {main} {devzero.c:52} {WAIT_CHILD}
+C {main} {devzero.c:52} {TELL_CHILD}
+C {main} {devzero.c:52} {err_quit}
+C {main} {devzero.c:52} {update}
+C {main} {devzero.c:52} {err_sys}
+C {main} {devzero.c:52} {fork}
+C {main} {devzero.c:52} {TELL_WAIT}
+C {main} {devzero.c:52} {close}
+C {main} {devzero.c:52} {err_sys}
+C {main} {devzero.c:52} {mmap}
+C {main} {devzero.c:52} {err_sys}
+C {main} {devzero.c:52} {open}
+F {update} {devzero.c:9}

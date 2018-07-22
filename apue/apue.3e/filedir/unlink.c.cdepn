@@ -1,0 +1,9 @@
+F {main} {unlink.c:5}
+C {main} {unlink.c:15} {exit}
+C {main} {unlink.c:15} {__builtin_puts}
+C {main} {unlink.c:15} {sleep}
+C {main} {unlink.c:15} {__builtin_puts}
+C {main} {unlink.c:15} {err_sys}
+C {main} {unlink.c:15} {unlink}
+C {main} {unlink.c:15} {err_sys}
+C {main} {unlink.c:15} {open}

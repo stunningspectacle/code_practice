@@ -1,0 +1,25 @@
+F {tty_termios} {ttymodes.c:160}
+F {tty_atexit} {ttymodes.c:153}
+C {tty_atexit} {ttymodes.c:163} {tty_reset}
+F {tty_reset} {ttymodes.c:142}
+C {tty_reset} {ttymodes.c:163} {tcsetattr}
+F {tty_raw} {ttymodes.c:63}
+C {tty_raw} {ttymodes.c:163} {__errno_location}
+C {tty_raw} {ttymodes.c:163} {tcsetattr}
+C {tty_raw} {ttymodes.c:163} {__errno_location}
+C {tty_raw} {ttymodes.c:163} {tcsetattr}
+C {tty_raw} {ttymodes.c:163} {__errno_location}
+C {tty_raw} {ttymodes.c:163} {tcgetattr}
+C {tty_raw} {ttymodes.c:163} {tcsetattr}
+C {tty_raw} {ttymodes.c:163} {tcgetattr}
+C {tty_raw} {ttymodes.c:163} {__errno_location}
+F {tty_cbreak} {ttymodes.c:10}
+C {tty_cbreak} {ttymodes.c:163} {__errno_location}
+C {tty_cbreak} {ttymodes.c:163} {tcsetattr}
+C {tty_cbreak} {ttymodes.c:163} {__errno_location}
+C {tty_cbreak} {ttymodes.c:163} {tcsetattr}
+C {tty_cbreak} {ttymodes.c:163} {__errno_location}
+C {tty_cbreak} {ttymodes.c:163} {tcgetattr}
+C {tty_cbreak} {ttymodes.c:163} {tcsetattr}
+C {tty_cbreak} {ttymodes.c:163} {tcgetattr}
+C {tty_cbreak} {ttymodes.c:163} {__errno_location}

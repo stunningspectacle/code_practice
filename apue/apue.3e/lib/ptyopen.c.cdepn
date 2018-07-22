@@ -1,0 +1,11 @@
+F {ptys_open} {ptyopen.c:38}
+C {ptys_open} {ptyopen.c:70} {open}
+F {ptym_open} {ptyopen.c:9}
+C {ptym_open} {ptyopen.c:70} {__errno_location}
+C {ptym_open} {ptyopen.c:70} {close}
+C {ptym_open} {ptyopen.c:70} {__errno_location}
+C {ptym_open} {ptyopen.c:70} {strncpy}
+C {ptym_open} {ptyopen.c:70} {ptsname}
+C {ptym_open} {ptyopen.c:70} {unlockpt}
+C {ptym_open} {ptyopen.c:70} {grantpt}
+C {ptym_open} {ptyopen.c:70} {posix_openpt}

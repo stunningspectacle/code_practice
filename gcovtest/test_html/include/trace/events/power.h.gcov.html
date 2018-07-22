@@ -1,0 +1,213 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+  <title>LCOV - test.info - include/trace/events/power.h</title>
+  <link rel="stylesheet" type="text/css" href="../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../index.html">top level</a> - <a href="index.html">include/trace/events</a> - power.h<span style="font-size: 80%;"> (source / <a href="power.h.func.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">test.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2011-05-12</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="headerItem">Branches:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr><td><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">           Branch data     Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>                :            : #undef TRACE_SYSTEM</a>
+<span class="lineNum">       2 </span>                :            : #define TRACE_SYSTEM power
+<span class="lineNum">       3 </span>                :            : 
+<span class="lineNum">       4 </span>                :            : #if !defined(_TRACE_POWER_H) || defined(TRACE_HEADER_MULTI_READ)
+<span class="lineNum">       5 </span>                :            : #define _TRACE_POWER_H
+<span class="lineNum">       6 </span>                :            : 
+<span class="lineNum">       7 </span>                :            : #include &lt;linux/ktime.h&gt;
+<span class="lineNum">       8 </span>                :            : #include &lt;linux/tracepoint.h&gt;
+<span class="lineNum">       9 </span>                :            : #include &lt;linux/device.h&gt;
+<span class="lineNum">      10 </span>                :            : 
+<span class="lineNum">      11 </span>                :            : #ifndef _TRACE_POWER_ENUM_
+<span class="lineNum">      12 </span>                :            : #define _TRACE_POWER_ENUM_
+<span class="lineNum">      13 </span>                :            : enum {
+<span class="lineNum">      14 </span>                :            :         POWER_NONE = 0,
+<span class="lineNum">      15 </span>                :            :         POWER_CSTATE = 1,
+<span class="lineNum">      16 </span>                :            :         POWER_PSTATE = 2,
+<span class="lineNum">      17 </span>                :            : };
+<span class="lineNum">      18 </span>                :            : #endif
+<span class="lineNum">      19 </span>                :            : 
+<span class="lineNum">      20 </span>                :            : DECLARE_EVENT_CLASS(power,
+<span class="lineNum">      21 </span>                :            : 
+<span class="lineNum">      22 </span>                :            :         TP_PROTO(unsigned int type, unsigned int state),
+<span class="lineNum">      23 </span>                :            : 
+<span class="lineNum">      24 </span>                :            :         TP_ARGS(type, state),
+<span class="lineNum">      25 </span>                :            : 
+<span class="lineNum">      26 </span>                :            :         TP_STRUCT__entry(
+<span class="lineNum">      27 </span>                :            :                 __field(        u64,            type            )
+<span class="lineNum">      28 </span>                :            :                 __field(        u64,            state           )
+<span class="lineNum">      29 </span>                :            :         ),
+<span class="lineNum">      30 </span>                :            : 
+<span class="lineNum">      31 </span>                :            :         TP_fast_assign(
+<span class="lineNum">      32 </span>                :            :                 __entry-&gt;type = type;
+<span class="lineNum">      33 </span>                :            :                 __entry-&gt;state = state;
+<span class="lineNum">      34 </span>                :            :         ),
+<span class="lineNum">      35 </span>                :            : 
+<span class="lineNum">      36 </span>                :            :         TP_printk(&quot;type=%lu state=%lu&quot;, (unsigned long)__entry-&gt;type, (unsigned long)__entry-&gt;state)
+<span class="lineNum">      37 </span>                :            : );
+<span class="lineNum">      38 </span>                :            : 
+<span class="lineNum">      39 </span>                :            : DEFINE_EVENT(power, power_start,
+<span class="lineNum">      40 </span>                :            : 
+<span class="lineNum">      41 </span>                :            :         TP_PROTO(unsigned int type, unsigned int state),
+<span class="lineNum">      42 </span>                :            : 
+<span class="lineNum">      43 </span>                :            :         TP_ARGS(type, state)
+<span class="lineNum">      44 </span>                :            : );
+<span class="lineNum">      45 </span>                :            : 
+<span class="lineNum">      46 </span>                :            : DEFINE_EVENT(power, power_frequency,
+<span class="lineNum">      47 </span>                :            : 
+<span class="lineNum">      48 </span>                :            :         TP_PROTO(unsigned int type, unsigned int state),
+<span class="lineNum">      49 </span>                :            : 
+<span class="lineNum">      50 </span>                :            :         TP_ARGS(type, state)
+<span class="lineNum">      51 </span>                :            : );
+<span class="lineNum">      52 </span>                :            : 
+<span class="lineNum">      53 </span>                :            : TRACE_EVENT(power_end,
+<span class="lineNum">      54 </span>                :            : 
+<span class="lineNum">      55 </span>                :            :         TP_PROTO(int dummy),
+<span class="lineNum">      56 </span>                :            : 
+<span class="lineNum">      57 </span>                :            :         TP_ARGS(dummy),
+<span class="lineNum">      58 </span>                :            : 
+<span class="lineNum">      59 </span>                :            :         TP_STRUCT__entry(
+<span class="lineNum">      60 </span>                :            :                 __field(        u64,            dummy           )
+<span class="lineNum">      61 </span>                :            :         ),
+<span class="lineNum">      62 </span>                :            : 
+<span class="lineNum">      63 </span>                :            :         TP_fast_assign(
+<span class="lineNum">      64 </span>                :            :                 __entry-&gt;dummy = 0xffff;
+<span class="lineNum">      65 </span>                :            :         ),
+<span class="lineNum">      66 </span>                :            : 
+<span class="lineNum">      67 </span>                :            :         TP_printk(&quot;dummy=%lu&quot;, (unsigned long)__entry-&gt;dummy)
+<span class="lineNum">      68 </span>                :            : 
+<span class="lineNum">      69 </span>                :            : );
+<span class="lineNum">      70 </span>                :            : 
+<span class="lineNum">      71 </span>                :            : #ifdef CONFIG_PM_RUNTIME
+<span class="lineNum">      72 </span>                :            : #define rpm_status_name(status) { RPM_##status, #status }
+<span class="lineNum">      73 </span>                :            : #define show_rpm_status_name(val)                               \
+<span class="lineNum">      74 </span>                :            :         __print_symbolic(val,                                   \
+<span class="lineNum">      75 </span>                :            :                 rpm_status_name(SUSPENDED),                     \
+<span class="lineNum">      76 </span>                :            :                 rpm_status_name(SUSPENDING),                    \
+<span class="lineNum">      77 </span>                :            :                 rpm_status_name(RESUMING),                      \
+<span class="lineNum">      78 </span>                :            :                 rpm_status_name(ACTIVE)                         \
+<span class="lineNum">      79 </span>                :            :                 )
+<span class="lineNum">      80 </span>                :            : TRACE_EVENT(runtime_pm_status,
+<span class="lineNum">      81 </span>                :            : 
+<span class="lineNum">      82 </span>                :            :         TP_PROTO(struct device *dev, int status),
+<span class="lineNum">      83 </span>                :            : 
+<span class="lineNum">      84 </span>                :            :         TP_ARGS(dev, status),
+<span class="lineNum">      85 </span>                :            : 
+<span class="lineNum">      86 </span>                :            :         TP_STRUCT__entry(
+<span class="lineNum">      87 </span>                :            :                 __string(devname, dev_name(dev))
+<span class="lineNum">      88 </span>                :            :                 __string(drivername, dev_driver_string(dev))
+<span class="lineNum">      89 </span>                :            :                 __field(u32, status)
+<span class="lineNum">      90 </span>                :            :         ),
+<span class="lineNum">      91 </span>                :            : 
+<span class="lineNum">      92 </span>                :            :         TP_fast_assign(
+<span class="lineNum">      93 </span>                :            :                 __assign_str(devname, dev_name(dev));
+<span class="lineNum">      94 </span>                :            :                 __assign_str(drivername, dev_driver_string(dev));
+<span class="lineNum">      95 </span>                :            :                 __entry-&gt;status = status;
+<span class="lineNum">      96 </span>                :            :         ),
+<span class="lineNum">      97 </span>                :            : 
+<span class="lineNum">      98 </span>                :            :         TP_printk(&quot;driver=%s dev=%s status=%s&quot;, __get_str(drivername),
+<span class="lineNum">      99 </span>                :            :                   __get_str(devname), show_rpm_status_name(__entry-&gt;status))
+<span class="lineNum">     100 </span>                :            : );
+<span class="lineNum">     101 </span>  [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 : TRACE_EVENT(runtime_pm_usage,</span>
+<span class="lineNum">         </span>        [<span class="branchNoExec" title="Block containing branch 5 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span>]
+<span class="lineNum">     102 </span>                :            : 
+<span class="lineNum">     103 </span>                :            :         TP_PROTO(struct device *dev, int usage),
+<span class="lineNum">     104 </span>                :            : 
+<span class="lineNum">     105 </span>                :            :         TP_ARGS(dev, usage),
+<span class="lineNum">     106 </span>                :            : 
+<span class="lineNum">     107 </span>                :            :         TP_STRUCT__entry(
+<span class="lineNum">     108 </span>                :            :                 __string(devname, dev_name(dev))
+<span class="lineNum">     109 </span>                :            :                 __string(drivername, dev_driver_string(dev))
+<span class="lineNum">     110 </span>                :            :                 __field(u32, usage)
+<span class="lineNum">     111 </span>                :            :         ),
+<span class="lineNum">     112 </span>                :            : 
+<span class="lineNum">     113 </span>                :            :         TP_fast_assign(
+<span class="lineNum">     114 </span>                :            :                 __assign_str(devname, dev_name(dev));
+<span class="lineNum">     115 </span>                :            :                 __assign_str(drivername, dev_driver_string(dev));
+<span class="lineNum">     116 </span>                :            :                 __entry-&gt;usage = (u32)usage;
+<span class="lineNum">     117 </span>                :            :         ),
+<span class="lineNum">     118 </span>                :            : 
+<span class="lineNum">     119 </span>                :            :         TP_printk(&quot;driver=%s dev=%s usage=%d&quot;, __get_str(drivername),
+<span class="lineNum">     120 </span>                :            :                   __get_str(devname), __entry-&gt;usage)
+<span class="lineNum">     121 </span>                :            : );
+<span class="lineNum">     122 </span>                :            : #endif /* CONFIG_PM_RUNTIME */
+<span class="lineNum">     123 </span>                :            : 
+<span class="lineNum">     124 </span>                :            : #endif /* _TRACE_POWER_H */
+<span class="lineNum">     125 </span>                :            : 
+<span class="lineNum">     126 </span>                :            : /* This part must be outside protection */
+<span class="lineNum">     127 </span>                :            : #include &lt;trace/define_trace.h&gt;
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.8</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

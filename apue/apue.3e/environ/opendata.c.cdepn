@@ -1,0 +1,3 @@
+F {open_data} {opendata.c:4}
+C {open_data} {opendata.c:14} {setvbuf}
+C {open_data} {opendata.c:14} {fopen}

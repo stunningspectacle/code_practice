@@ -1,0 +1,8 @@
+F {main} {changemod.c:4}
+C {main} {changemod.c:21} {exit}
+C {main} {changemod.c:21} {err_sys}
+C {main} {changemod.c:21} {chmod}
+C {main} {changemod.c:21} {err_sys}
+C {main} {changemod.c:21} {chmod}
+C {main} {changemod.c:21} {err_sys}
+C {main} {changemod.c:21} {stat}

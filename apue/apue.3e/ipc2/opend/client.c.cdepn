@@ -1,0 +1,9 @@
+F {client_del} {client.c:52}
+C {client_del} {client.c:63} {log_quit}
+F {client_add} {client.c:28}
+C {client_add} {client.c:63} {client_alloc}
+C {client_add} {client.c:63} {client_alloc}
+F {client_alloc} {client.c:6}
+C {client_alloc} {client.c:63} {err_sys}
+C {client_alloc} {client.c:63} {realloc}
+C {client_alloc} {client.c:63} {malloc}

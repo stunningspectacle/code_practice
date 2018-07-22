@@ -1,0 +1,25 @@
+F {main} {reread.c:45}
+C {main} {reread.c:94} {exit}
+C {main} {reread.c:94} {err_exit}
+C {main} {reread.c:94} {pthread_create}
+C {main} {reread.c:94} {err_exit}
+C {main} {reread.c:94} {pthread_sigmask}
+C {main} {reread.c:94} {sigfillset}
+C {main} {reread.c:94} {err_quit}
+C {main} {reread.c:94} {sigaction}
+C {main} {reread.c:94} {sigemptyset}
+C {main} {reread.c:94} {exit}
+C {main} {reread.c:94} {syslog}
+C {main} {reread.c:94} {already_running}
+C {main} {reread.c:94} {daemonize}
+C {main} {reread.c:94} {strrchr}
+F {thr_fn} {reread.c:16}
+C {thr_fn} {reread.c:94} {syslog}
+C {thr_fn} {reread.c:94} {exit}
+C {thr_fn} {reread.c:94} {syslog}
+C {thr_fn} {reread.c:94} {reread}
+C {thr_fn} {reread.c:94} {syslog}
+C {thr_fn} {reread.c:94} {exit}
+C {thr_fn} {reread.c:94} {syslog}
+C {thr_fn} {reread.c:94} {sigwait}
+F {reread} {reread.c:10}

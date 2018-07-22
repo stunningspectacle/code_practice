@@ -1,0 +1,34 @@
+#include <stdio.h>
+
+int glb_a;
+int glb_b;
+
+void my_exit()
+{
+	asm(	"movl $1, %eax	\n\t"
+			"movl $123, %ebx \n\t"
+			"int $0x80		\n\t"
+	   );
+}
+
+void use_glb()
+{
+	glb_a = 10;
+	glb_b = 20;
+
+	asm(	"pusha\n\t"
+			"movl glb_a, %eax	\n\t"
+			"addl glb_b, %eax	\n\t"
+			"movl %eax, glb_b	\n\t"
+			"popa\n\t"
+	   );
+
+	printf("glb_b = %d\n", glb_b);
+}
+
+int main() {
+	printf("this is the first line\n");
+	use_glb();
+}
+	
+

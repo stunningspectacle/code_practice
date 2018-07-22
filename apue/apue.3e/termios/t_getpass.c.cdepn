@@ -1,0 +1,5 @@
+F {main} {t_getpass.c:6}
+C {main} {t_getpass.c:19} {exit}
+C {main} {t_getpass.c:19} {printf}
+C {main} {t_getpass.c:19} {err_sys}
+C {main} {t_getpass.c:19} {getpass}

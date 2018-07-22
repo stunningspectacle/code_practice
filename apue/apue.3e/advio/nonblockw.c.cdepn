@@ -1,0 +1,10 @@
+F {main} {nonblockw.c:8}
+C {main} {nonblockw.c:33} {exit}
+C {main} {nonblockw.c:33} {clr_fl}
+C {main} {nonblockw.c:33} {fprintf}
+C {main} {nonblockw.c:33} {__errno_location}
+C {main} {nonblockw.c:33} {write}
+C {main} {nonblockw.c:33} {__errno_location}
+C {main} {nonblockw.c:33} {set_fl}
+C {main} {nonblockw.c:33} {fprintf}
+C {main} {nonblockw.c:33} {read}

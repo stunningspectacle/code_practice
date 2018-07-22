@@ -1,0 +1,12 @@
+F {charatatime} {tellwait2.c:25}
+C {charatatime} {tellwait2.c:33} {_IO_putc}
+C {charatatime} {tellwait2.c:33} {setbuf}
+F {main} {tellwait2.c:6}
+C {main} {tellwait2.c:33} {exit}
+C {main} {tellwait2.c:33} {TELL_CHILD}
+C {main} {tellwait2.c:33} {charatatime}
+C {main} {tellwait2.c:33} {charatatime}
+C {main} {tellwait2.c:33} {WAIT_PARENT}
+C {main} {tellwait2.c:33} {err_sys}
+C {main} {tellwait2.c:33} {fork}
+C {main} {tellwait2.c:33} {TELL_WAIT}

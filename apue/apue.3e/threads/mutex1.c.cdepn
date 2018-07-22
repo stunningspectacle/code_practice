@@ -1,0 +1,13 @@
+F {foo_rele} {mutex1.c:37}
+C {foo_rele} {mutex1.c:47} {pthread_mutex_unlock}
+C {foo_rele} {mutex1.c:47} {free}
+C {foo_rele} {mutex1.c:47} {pthread_mutex_destroy}
+C {foo_rele} {mutex1.c:47} {pthread_mutex_unlock}
+C {foo_rele} {mutex1.c:47} {pthread_mutex_lock}
+F {foo_hold} {mutex1.c:29}
+C {foo_hold} {mutex1.c:47} {pthread_mutex_unlock}
+C {foo_hold} {mutex1.c:47} {pthread_mutex_lock}
+F {foo_alloc} {mutex1.c:12}
+C {foo_alloc} {mutex1.c:47} {free}
+C {foo_alloc} {mutex1.c:47} {pthread_mutex_init}
+C {foo_alloc} {mutex1.c:47} {malloc}

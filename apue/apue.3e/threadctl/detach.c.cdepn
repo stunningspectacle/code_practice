@@ -1,0 +1,5 @@
+F {makethread} {detach.c:5}
+C {makethread} {detach.c:19} {pthread_attr_destroy}
+C {makethread} {detach.c:19} {pthread_create}
+C {makethread} {detach.c:19} {pthread_attr_setdetachstate}
+C {makethread} {detach.c:19} {pthread_attr_init}

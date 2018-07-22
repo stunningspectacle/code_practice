@@ -1,0 +1,8 @@
+F {enqueue_msg} {condvar.c:31}
+C {enqueue_msg} {condvar.c:38} {pthread_cond_signal}
+C {enqueue_msg} {condvar.c:38} {pthread_mutex_unlock}
+C {enqueue_msg} {condvar.c:38} {pthread_mutex_lock}
+F {process_msg} {condvar.c:15}
+C {process_msg} {condvar.c:38} {pthread_mutex_unlock}
+C {process_msg} {condvar.c:38} {pthread_cond_wait}
+C {process_msg} {condvar.c:38} {pthread_mutex_lock}

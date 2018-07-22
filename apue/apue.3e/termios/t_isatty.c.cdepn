@@ -1,0 +1,8 @@
+F {main} {t_isatty.c:4}
+C {main} {t_isatty.c:10} {exit}
+C {main} {t_isatty.c:10} {printf}
+C {main} {t_isatty.c:10} {isatty}
+C {main} {t_isatty.c:10} {printf}
+C {main} {t_isatty.c:10} {isatty}
+C {main} {t_isatty.c:10} {printf}
+C {main} {t_isatty.c:10} {isatty}

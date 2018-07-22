@@ -1,0 +1,12 @@
+F {main} {threadid.c:26}
+C {main} {threadid.c:36} {exit}
+C {main} {threadid.c:36} {sleep}
+C {main} {threadid.c:36} {printids}
+C {main} {threadid.c:36} {err_exit}
+C {main} {threadid.c:36} {pthread_create}
+F {thr_fn} {threadid.c:19}
+C {thr_fn} {threadid.c:36} {printids}
+F {printids} {threadid.c:7}
+C {printids} {threadid.c:36} {printf}
+C {printids} {threadid.c:36} {pthread_self}
+C {printids} {threadid.c:36} {getpid}

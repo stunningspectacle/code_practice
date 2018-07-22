@@ -1,0 +1,16 @@
+F {main} {suspend2.c:15}
+C {main} {suspend2.c:49} {exit}
+C {main} {suspend2.c:49} {err_sys}
+C {main} {suspend2.c:49} {sigprocmask}
+C {main} {suspend2.c:49} {sigsuspend}
+C {main} {suspend2.c:49} {err_sys}
+C {main} {suspend2.c:49} {sigprocmask}
+C {main} {suspend2.c:49} {sigaddset}
+C {main} {suspend2.c:49} {sigemptyset}
+C {main} {suspend2.c:49} {sigemptyset}
+C {main} {suspend2.c:49} {err_sys}
+C {main} {suspend2.c:49} {signal}
+C {main} {suspend2.c:49} {err_sys}
+C {main} {suspend2.c:49} {signal}
+F {sig_int} {suspend2.c:6}
+C {sig_int} {suspend2.c:49} {__builtin_puts}

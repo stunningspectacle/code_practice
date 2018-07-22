@@ -1,0 +1,12 @@
+F {my_exit2} {doatexit.c:28}
+C {my_exit2} {doatexit.c:31} {__builtin_puts}
+F {my_exit1} {doatexit.c:22}
+C {my_exit1} {doatexit.c:31} {__builtin_puts}
+F {main} {doatexit.c:7}
+C {main} {doatexit.c:31} {__builtin_puts}
+C {main} {doatexit.c:31} {err_sys}
+C {main} {doatexit.c:31} {atexit}
+C {main} {doatexit.c:31} {err_sys}
+C {main} {doatexit.c:31} {atexit}
+C {main} {doatexit.c:31} {err_sys}
+C {main} {doatexit.c:31} {atexit}

@@ -1,0 +1,6 @@
+F {clrasync} {asyncsocket.c:24}
+C {clrasync} {asyncsocket.c:32} {ioctl}
+F {setasync} {asyncsocket.c:11}
+C {setasync} {asyncsocket.c:32} {ioctl}
+C {setasync} {asyncsocket.c:32} {fcntl}
+C {setasync} {asyncsocket.c:32} {getpid}

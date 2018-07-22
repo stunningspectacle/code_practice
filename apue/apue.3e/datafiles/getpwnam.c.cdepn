@@ -1,0 +1,5 @@
+F {getpwnam} {/usr/include/pwd.h:117}
+C {getpwnam} {getpwnam.c:16} {endpwent}
+C {getpwnam} {getpwnam.c:16} {getpwent}
+C {getpwnam} {getpwnam.c:16} {strcmp}
+C {getpwnam} {getpwnam.c:16} {setpwent}

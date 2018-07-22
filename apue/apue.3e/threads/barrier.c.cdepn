@@ -1,0 +1,18 @@
+F {main} {barrier.c:81}
+C {main} {barrier.c:121} {exit}
+C {main} {barrier.c:121} {printf}
+C {main} {barrier.c:121} {printf}
+C {main} {barrier.c:121} {gettimeofday}
+C {main} {barrier.c:121} {merge}
+C {main} {barrier.c:121} {pthread_barrier_wait}
+C {main} {barrier.c:121} {err_exit}
+C {main} {barrier.c:121} {pthread_create}
+C {main} {barrier.c:121} {pthread_barrier_init}
+C {main} {barrier.c:121} {gettimeofday}
+C {main} {barrier.c:121} {random}
+C {main} {barrier.c:121} {srandom}
+F {merge} {barrier.c:60}
+F {thr_fn} {barrier.c:43}
+C {thr_fn} {barrier.c:121} {pthread_barrier_wait}
+C {thr_fn} {barrier.c:121} {heapsort}
+F {complong} {barrier.c:26}

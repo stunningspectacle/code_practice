@@ -1,0 +1,11 @@
+F {main} {t_ttyname.c:4}
+C {main} {t_ttyname.c:35} {exit}
+C {main} {t_ttyname.c:35} {printf}
+C {main} {t_ttyname.c:35} {ttyname}
+C {main} {t_ttyname.c:35} {isatty}
+C {main} {t_ttyname.c:35} {printf}
+C {main} {t_ttyname.c:35} {ttyname}
+C {main} {t_ttyname.c:35} {isatty}
+C {main} {t_ttyname.c:35} {printf}
+C {main} {t_ttyname.c:35} {ttyname}
+C {main} {t_ttyname.c:35} {isatty}

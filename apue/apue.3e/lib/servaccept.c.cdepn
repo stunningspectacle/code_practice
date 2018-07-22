@@ -1,0 +1,13 @@
+F {serv_accept} {servaccept.c:16}
+C {serv_accept} {servaccept.c:76} {__errno_location}
+C {serv_accept} {servaccept.c:76} {free}
+C {serv_accept} {servaccept.c:76} {close}
+C {serv_accept} {servaccept.c:76} {__errno_location}
+C {serv_accept} {servaccept.c:76} {free}
+C {serv_accept} {servaccept.c:76} {unlink}
+C {serv_accept} {servaccept.c:76} {time}
+C {serv_accept} {servaccept.c:76} {stat}
+C {serv_accept} {servaccept.c:76} {memcpy}
+C {serv_accept} {servaccept.c:76} {free}
+C {serv_accept} {servaccept.c:76} {accept}
+C {serv_accept} {servaccept.c:76} {malloc}

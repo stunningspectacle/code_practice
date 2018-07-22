@@ -1,0 +1,617 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+  <title>LCOV - test.info - drivers/misc/ak8975.c</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">drivers/misc</a> - ak8975.c<span style="font-size: 80%;"> (source / <a href="ak8975.c.func.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">test.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">173</td>
+            <td class="headerCovTableEntryLo">1.2 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2011-05-12</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">18</td>
+            <td class="headerCovTableEntryLo">5.6 %</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="headerItem">Branches:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">70</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">           Branch data     Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>                :            : /*</a>
+<span class="lineNum">       2 </span>                :            :  * ak8975.c - AKM 8975 Compass Driver
+<span class="lineNum">       3 </span>                :            :  *
+<span class="lineNum">       4 </span>                :            :  * Copyright (C) 2010 Intel Corp
+<span class="lineNum">       5 </span>                :            :  * Contains changes by Wind River Systems, 2010
+<span class="lineNum">       6 </span>                :            :  *
+<span class="lineNum">       7 </span>                :            :  *  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<span class="lineNum">       8 </span>                :            :  *
+<span class="lineNum">       9 </span>                :            :  * This program is free software; you can redistribute it and/or modify
+<span class="lineNum">      10 </span>                :            :  * it under the terms of the GNU General Public License as published by
+<span class="lineNum">      11 </span>                :            :  * the Free Software Foundation; version 2 of the License.
+<span class="lineNum">      12 </span>                :            :  *
+<span class="lineNum">      13 </span>                :            :  * This program is distributed in the hope that it will be useful, but
+<span class="lineNum">      14 </span>                :            :  * WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      15 </span>                :            :  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+<span class="lineNum">      16 </span>                :            :  * General Public License for more details.
+<span class="lineNum">      17 </span>                :            :  *
+<span class="lineNum">      18 </span>                :            :  * You should have received a copy of the GNU General Public License along
+<span class="lineNum">      19 </span>                :            :  * with this program; if not, write to the Free Software Foundation, Inc.,
+<span class="lineNum">      20 </span>                :            :  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
+<span class="lineNum">      21 </span>                :            :  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<span class="lineNum">      22 </span>                :            :  *
+<span class="lineNum">      23 </span>                :            :  */
+<span class="lineNum">      24 </span>                :            : 
+<span class="lineNum">      25 </span>                :            : #include &lt;linux/module.h&gt;
+<span class="lineNum">      26 </span>                :            : #include &lt;linux/init.h&gt;
+<span class="lineNum">      27 </span>                :            : #include &lt;linux/slab.h&gt;
+<span class="lineNum">      28 </span>                :            : #include &lt;linux/i2c.h&gt;
+<span class="lineNum">      29 </span>                :            : #include &lt;linux/hwmon.h&gt;
+<span class="lineNum">      30 </span>                :            : #include &lt;linux/err.h&gt;
+<span class="lineNum">      31 </span>                :            : #include &lt;linux/mutex.h&gt;
+<span class="lineNum">      32 </span>                :            : #include &lt;linux/sysfs.h&gt;
+<span class="lineNum">      33 </span>                :            : #include &lt;linux/pm_runtime.h&gt;
+<span class="lineNum">      34 </span>                :            : 
+<span class="lineNum">      35 </span>                :            : MODULE_AUTHOR(&quot;KalhanTrisal,Anantha Narayanan&lt;anantha.narayanan@intel.com&gt;&quot;);
+<span class="lineNum">      36 </span>                :            : MODULE_DESCRIPTION(&quot;ak8975 Compass Driver&quot;);
+<span class="lineNum">      37 </span>                :            : MODULE_LICENSE(&quot;GPL v2&quot;);
+<span class="lineNum">      38 </span>                :            : 
+<span class="lineNum">      39 </span>                :            : #define AK8975_SELF_TEST 1      /* Set to zero to disable sensor self test */
+<span class="lineNum">      40 </span>                :            : 
+<span class="lineNum">      41 </span>                :            : #define RETRY_COUNT     10      /* Number of attempts for reading sensor */
+<span class="lineNum">      42 </span>                :            : 
+<span class="lineNum">      43 </span>                :            : /* Register Addresses */
+<span class="lineNum">      44 </span>                :            : #define REG_WIA         0x00    /* Device ID : RO */
+<span class="lineNum">      45 </span>                :            : #define REG_INFO        0x01    /* AKM info : RO */
+<span class="lineNum">      46 </span>                :            : #define REG_ST1         0x02    /* Status 1 : RO */
+<span class="lineNum">      47 </span>                :            : #define REG_HXL         0x03    /* X data low : RO */
+<span class="lineNum">      48 </span>                :            : #define REG_HXH         0x04    /* X data high : RO */
+<span class="lineNum">      49 </span>                :            : #define REG_HYL         0x05    /* Y data low : RO */
+<span class="lineNum">      50 </span>                :            : #define REG_HYH         0x06    /* Y data high : RO */
+<span class="lineNum">      51 </span>                :            : #define REG_HZL         0x07    /* Z data low : RO */
+<span class="lineNum">      52 </span>                :            : #define REG_HZH         0x08    /* Z data high : RO */
+<span class="lineNum">      53 </span>                :            : #define REG_ST2         0x09    /* Status 2 : RO */
+<span class="lineNum">      54 </span>                :            : #define REG_CNTL        0x0A    /* Control : RW */
+<span class="lineNum">      55 </span>                :            : #define REG_RSV         0x0B    /* Reserved : NA */
+<span class="lineNum">      56 </span>                :            : #define REG_ASTC        0x0C    /* Self Test Control : RW */
+<span class="lineNum">      57 </span>                :            : #define REG_TS1         0x0D    /* Shipment Test 1 : NA */
+<span class="lineNum">      58 </span>                :            : #define REG_TS2         0x0E    /* Shipment Test 2 : NA */
+<span class="lineNum">      59 </span>                :            : #define REG_I2CDIS      0x0F    /* I2C Disable : RW */
+<span class="lineNum">      60 </span>                :            : #define REG_ASAX        0x10    /* X Sensitivity Adj : RO */
+<span class="lineNum">      61 </span>                :            : #define REG_ASAY        0x11    /* Y Sensitivity Adj : RO */
+<span class="lineNum">      62 </span>                :            : #define REG_ASAZ        0x12    /* Z Sensitivity Adj : RO */
+<span class="lineNum">      63 </span>                :            : 
+<span class="lineNum">      64 </span>                :            : /* REG_WIA definitions */
+<span class="lineNum">      65 </span>                :            : #define DEV_ID          0x48    /* Fixed value for AK8975 */
+<span class="lineNum">      66 </span>                :            : 
+<span class="lineNum">      67 </span>                :            : /* REG_ST1 definitions */
+<span class="lineNum">      68 </span>                :            : #define DRDY            0x01    /* Data Ready bit */
+<span class="lineNum">      69 </span>                :            : 
+<span class="lineNum">      70 </span>                :            : /* REG_ST2 definitions */
+<span class="lineNum">      71 </span>                :            : #define DERR            0x04    /* Data Error bit */
+<span class="lineNum">      72 </span>                :            : #define HOFL            0x08    /* Magnetic Sensor Overflow bit */
+<span class="lineNum">      73 </span>                :            : 
+<span class="lineNum">      74 </span>                :            : /* REG_CNTL definitions */
+<span class="lineNum">      75 </span>                :            : #define POWER_DOWN      0x00    /* Power Down mode */
+<span class="lineNum">      76 </span>                :            : #define SINGLE_MEAS     0x01    /* Single Measurement mode */
+<span class="lineNum">      77 </span>                :            : #define SELF_TEST       0x08    /* Self Test mode */
+<span class="lineNum">      78 </span>                :            : #define FUSE_ROM        0x0F    /* Fuse ROM mode */
+<span class="lineNum">      79 </span>                :            : 
+<span class="lineNum">      80 </span>                :            : /* REG_ASTC definitions */
+<span class="lineNum">      81 </span>                :            : #define SELF            0x40    /* Generate Magnetic Field bit */
+<span class="lineNum">      82 </span>                :            : 
+<span class="lineNum">      83 </span>                :            : /* REG_I2CDIS definitions */
+<span class="lineNum">      84 </span>                :            : #define I2CDIS          0x01    /* I2C Disable bit */
+<span class="lineNum">      85 </span>                :            : 
+<span class="lineNum">      86 </span>                :            : 
+<span class="lineNum">      87 </span>                :            : /* Unique Sensitivity Adjustment values */
+<span class="lineNum">      88 </span>                :            : static unsigned char asax, asay, asaz;
+<span class="lineNum">      89 </span>                :            : 
+<span class="lineNum">      90 </span>                :            : /* For tracking power state as set by User Space code */
+<span class="lineNum">      91 </span>                :            : static unsigned char power_state = 1;
+<span class="lineNum">      92 </span>                :            : 
+<span class="lineNum">      93 </span>                :            : struct compass_data {
+<span class="lineNum">      94 </span>                :            :         struct device *hwmon_dev;
+<span class="lineNum">      95 </span>                :            :         struct mutex write_lock;
+<span class="lineNum">      96 </span>                :            : };
+<a name="97"><span class="lineNum">      97 </span>                :            : </a>
+<span class="lineNum">      98 </span>                :            : 
+<span class="lineNum">      99 </span>                :<span class="lineNoCov">          0 : static int set_mode(struct i2c_client *client, unsigned char new_mode)</span>
+<span class="lineNum">     100 </span>                :            : {
+<span class="lineNum">     101 </span>                :            :         unsigned char curr_mode;
+<span class="lineNum">     102 </span>                :            : 
+<span class="lineNum">     103 </span>                :            :         /* Read the current mode and return if it's already in the new mode */
+<span class="lineNum">     104 </span>                :<span class="lineNoCov">          0 :         curr_mode = i2c_smbus_read_byte_data(client, REG_CNTL);</span>
+<span class="lineNum">     105 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (curr_mode == new_mode)</span>
+<span class="lineNum">     106 </span>                :<span class="lineNoCov">          0 :                 return 0;</span>
+<span class="lineNum">     107 </span>                :            : 
+<span class="lineNum">     108 </span>                :            :         /* Changing operating modes requires entry to Power Down mode first */
+<span class="lineNum">     109 </span>                :<span class="lineNoCov">          0 :         i2c_smbus_write_byte_data(client, REG_CNTL, POWER_DOWN);</span>
+<span class="lineNum">     110 </span>                :            : 
+<span class="lineNum">     111 </span>                :            :         /* Delay a bit, then ensure the device is in Power Down mode */
+<span class="lineNum">     112 </span>                :<span class="lineNoCov">          0 :         msleep(1);</span>
+<span class="lineNum">     113 </span>                :<span class="lineNoCov">          0 :         curr_mode = i2c_smbus_read_byte_data(client, REG_CNTL);</span>
+<span class="lineNum">     114 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (curr_mode != POWER_DOWN)</span>
+<span class="lineNum">     115 </span>                :<span class="lineNoCov">          0 :                 return -1; /* Failure ! */</span>
+<span class="lineNum">     116 </span>                :            : 
+<span class="lineNum">     117 </span>                :            :         /* We're done if Power Down mode was requested */
+<span class="lineNum">     118 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (new_mode == POWER_DOWN)</span>
+<span class="lineNum">     119 </span>                :<span class="lineNoCov">          0 :                 return 0;</span>
+<span class="lineNum">     120 </span>                :            : 
+<span class="lineNum">     121 </span>                :            :         /* Set the new mode */
+<span class="lineNum">     122 </span>                :<span class="lineNoCov">          0 :         i2c_smbus_write_byte_data(client, REG_CNTL, new_mode);</span>
+<span class="lineNum">     123 </span>                :<span class="lineNoCov">          0 :         return 0;</span>
+<span class="lineNum">     124 </span>                :            : }
+<span class="lineNum">     125 </span>                :            : 
+<a name="126"><span class="lineNum">     126 </span>                :            : static int wait_for_data_ready(struct i2c_client *client)</a>
+<span class="lineNum">     127 </span>                :            : {
+<span class="lineNum">     128 </span>                :<span class="lineNoCov">          0 :         unsigned char data_ready = 0;</span>
+<span class="lineNum">     129 </span>                :<span class="lineNoCov">          0 :         int wait_count = RETRY_COUNT;</span>
+<span class="lineNum">     130 </span>                :            : 
+<span class="lineNum">     131 </span>                :            :         /* Wait for Data Ready bit in ST1 to become 1 */
+<span class="lineNum">     132 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         while (--wait_count) {</span>
+<span class="lineNum">     133 </span>                :<span class="lineNoCov">          0 :                 data_ready = i2c_smbus_read_byte_data(client, REG_ST1);</span>
+<span class="lineNum">     134 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :                 if (data_ready)</span>
+<span class="lineNum">     135 </span>                :<span class="lineNoCov">          0 :                         return 0; /* Success */</span>
+<span class="lineNum">     136 </span>                :<span class="lineNoCov">          0 :                 msleep(1);</span>
+<span class="lineNum">     137 </span>                :            :         }
+<span class="lineNum">     138 </span>                :<span class="lineNoCov">          0 :         return -1; /* Failure */</span>
+<span class="lineNum">     139 </span>                :            : }
+<span class="lineNum">     140 </span>                :            : 
+<span class="lineNum">     141 </span>                :<span class="lineNoCov">          0 : static int get_current_field(struct i2c_client *client, unsigned char mode,</span>
+<span class="lineNum">     142 </span>                :            :                                 unsigned short *xc, unsigned short *yc,
+<span class="lineNum">     143 </span>                :            :                                 unsigned short *zc)
+<span class="lineNum">     144 </span>                :            : {
+<span class="lineNum">     145 </span>                :<span class="lineNoCov">          0 :         unsigned short field[3] = {0, 0, 0};</span>
+<span class="lineNum">     146 </span>                :<span class="lineNoCov">          0 :         int status, retries = 0;</span>
+<span class="lineNum">     147 </span>                :<span class="lineNoCov">          0 :         int ret = -1;</span>
+<span class="lineNum">     148 </span>                :            : 
+<span class="lineNum">     149 </span>                :            :         /* Work function for retrieving magnetic field values from sensor */
+<span class="lineNum">     150 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         while (retries++ &lt; RETRY_COUNT) {</span>
+<span class="lineNum">     151 </span>                :            :                 /* Set Single Measurement mode */
+<span class="lineNum">     152 </span>        [<span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span>]:<span class="lineNoCov">          0 :                 if (set_mode(client, mode) == 0) {</span>
+<span class="lineNum">     153 </span>                :            :                         /* Wait for Data Ready */
+<span class="lineNum">     154 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :                         if (wait_for_data_ready(client) == 0) {</span>
+<span class="lineNum">     155 </span>                :            :                                 /* Read the three field components */
+<span class="lineNum">     156 </span>                :<span class="lineNoCov">          0 :                                 i2c_smbus_read_i2c_block_data(client, REG_HXL,</span>
+<span class="lineNum">     157 </span>                :            :                                                 6, (unsigned char *)field);
+<span class="lineNum">     158 </span>                :            : 
+<span class="lineNum">     159 </span>                :            :                                 /* Check for error (status clears when read) */
+<span class="lineNum">     160 </span>                :<span class="lineNoCov">          0 :                                 status = i2c_smbus_read_byte_data(client,</span>
+<span class="lineNum">     161 </span>                :            :                                                                  REG_ST2);
+<span class="lineNum">     162 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :                                 if (status &amp; DERR)</span>
+<span class="lineNum">     163 </span>                :<span class="lineNoCov">          0 :                                         dev_warn(&amp;client-&gt;dev,</span>
+<span class="lineNum">     164 </span>                :            :                                                 &quot;Data Read Error !&quot;);
+<span class="lineNum">     165 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :                                 else if (status &amp; HOFL)</span>
+<span class="lineNum">     166 </span>                :<span class="lineNoCov">          0 :                                         dev_warn(&amp;client-&gt;dev,</span>
+<span class="lineNum">     167 </span>                :            :                                                 &quot;Sensor Field Overflow !&quot;);
+<span class="lineNum">     168 </span>                :            :                                 else {
+<span class="lineNum">     169 </span>                :<span class="lineNoCov">          0 :                                         ret = 0;</span>
+<span class="lineNum">     170 </span>                :            :                                 }
+<span class="lineNum">     171 </span>                :            :                         }
+<span class="lineNum">     172 </span>                :            :                 } else {
+<span class="lineNum">     173 </span>                :<span class="lineNoCov">          0 :                         dev_warn(&amp;client-&gt;dev, &quot;mode change unsuccessful!&quot;);</span>
+<span class="lineNum">     174 </span>                :            :                 }
+<span class="lineNum">     175 </span>                :            :         }
+<span class="lineNum">     176 </span>                :            :         /* set the three field components */
+<span class="lineNum">     177 </span>                :<span class="lineNoCov">          0 :         *xc = le16_to_cpu(field[0]);</span>
+<span class="lineNum">     178 </span>                :<span class="lineNoCov">          0 :         *yc = le16_to_cpu(field[1]);</span>
+<span class="lineNum">     179 </span>                :<span class="lineNoCov">          0 :         *zc = le16_to_cpu(field[2]);</span>
+<span class="lineNum">     180 </span>                :<span class="lineNoCov">          0 :         return ret;</span>
+<a name="181"><span class="lineNum">     181 </span>                :            : }</a>
+<span class="lineNum">     182 </span>                :            : 
+<span class="lineNum">     183 </span>                :<span class="lineNoCov">          0 : static int get_sensitivity_data(struct i2c_client *client)</span>
+<span class="lineNum">     184 </span>                :            : {
+<span class="lineNum">     185 </span>                :            :         /* Enter Fuse ROM Access Mode to retrieve Sensitivity Adjustment data */
+<span class="lineNum">     186 </span>        [<span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (set_mode(client, FUSE_ROM) == 0) {</span>
+<span class="lineNum">     187 </span>                :            :                 /* Fetch the factory-stored data and save in static vars */
+<span class="lineNum">     188 </span>                :<span class="lineNoCov">          0 :                 asax = i2c_smbus_read_byte_data(client, REG_ASAX);</span>
+<span class="lineNum">     189 </span>                :<span class="lineNoCov">          0 :                 asay = i2c_smbus_read_byte_data(client, REG_ASAY);</span>
+<span class="lineNum">     190 </span>                :<span class="lineNoCov">          0 :                 asaz = i2c_smbus_read_byte_data(client, REG_ASAZ);</span>
+<span class="lineNum">     191 </span>                :            : 
+<span class="lineNum">     192 </span>                :            :                 /* Exit Fuse ROM mode and return success */
+<span class="lineNum">     193 </span>        [<span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span>]:<span class="lineNoCov">          0 :                 if (set_mode(client, POWER_DOWN)) {</span>
+<span class="lineNum">     194 </span>                :<span class="lineNoCov">          0 :                         dev_warn(&amp;client-&gt;dev,</span>
+<span class="lineNum">     195 </span>                :            :                                 &quot;Failure exiting Fuse ROM mode !\n&quot;);
+<span class="lineNum">     196 </span>                :            :                 } else {
+<span class="lineNum">     197 </span>                :<span class="lineNoCov">          0 :                         dev_info(&amp;client-&gt;dev,</span>
+<span class="lineNum">     198 </span>                :            :                                 &quot;Successfully retrieved Sensitivity data\n&quot;);
+<span class="lineNum">     199 </span>                :            :                 }
+<span class="lineNum">     200 </span>                :            :                 /* data acquisition successful */
+<span class="lineNum">     201 </span>                :<span class="lineNoCov">          0 :                 return 0;</span>
+<span class="lineNum">     202 </span>                :            :         }
+<span class="lineNum">     203 </span>                :<span class="lineNoCov">          0 :         dev_err(&amp;client-&gt;dev,</span>
+<span class="lineNum">     204 </span>                :            :                 &quot;Entering Fuse ROM mode for Sensitivity data failed !\n&quot;);
+<span class="lineNum">     205 </span>                :<span class="lineNoCov">          0 :         return -1;</span>
+<a name="206"><span class="lineNum">     206 </span>                :            : }</a>
+<span class="lineNum">     207 </span>                :            : 
+<span class="lineNum">     208 </span>                :<span class="lineNoCov">          0 : static int sensor_self_test(struct i2c_client *client)</span>
+<span class="lineNum">     209 </span>                :            : {
+<span class="lineNum">     210 </span>                :<span class="lineNoCov">          0 :         struct compass_data *data = i2c_get_clientdata(client);</span>
+<span class="lineNum">     211 </span>                :<span class="lineNoCov">          0 :         signed short x, y, z = 0;</span>
+<span class="lineNum">     212 </span>                :<span class="lineNoCov">          0 :         int ret = -1;</span>
+<span class="lineNum">     213 </span>                :<span class="lineNoCov">          0 :         unsigned char power_on_entry = power_state;</span>
+<span class="lineNum">     214 </span>                :            : 
+<span class="lineNum">     215 </span>                :            :         /* Enable device power if necessary */
+<span class="lineNum">     216 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (power_on_entry == 0) {</span>
+<span class="lineNum">     217 </span>                :            :                 /* Request usage of the device */
+<span class="lineNum">     218 </span>                :<span class="lineNoCov">          0 :                 ret = pm_runtime_get_sync(&amp;client-&gt;dev);</span>
+<span class="lineNum">     219 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :                 if (ret &lt; 0) {</span>
+<span class="lineNum">     220 </span>                :<span class="lineNoCov">          0 :                         dev_err(&amp;client-&gt;dev,</span>
+<span class="lineNum">     221 </span>                :            :                         &quot;pm_runtime_get_sync() returned error %d !\n&quot;, ret);
+<span class="lineNum">     222 </span>                :<span class="lineNoCov">          0 :                         return ret;</span>
+<span class="lineNum">     223 </span>                :            :                 }
+<span class="lineNum">     224 </span>                :            :         }
+<span class="lineNum">     225 </span>                :            :         /* Enter internal Power Down mode prior to enabling field generator */
+<span class="lineNum">     226 </span>                :<span class="lineNoCov">          0 :         dev_info(&amp;client-&gt;dev, &quot;Starting Sensor Self Test...\n&quot;);</span>
+<span class="lineNum">     227 </span>                :<span class="lineNoCov">          0 :         mutex_lock(&amp;data-&gt;write_lock);</span>
+<span class="lineNum">     228 </span>        [<span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (set_mode(client, POWER_DOWN)) {</span>
+<span class="lineNum">     229 </span>                :<span class="lineNoCov">          0 :                 dev_err(&amp;client-&gt;dev, &quot;Sensor failed initial Power Down !\n&quot;);</span>
+<span class="lineNum">     230 </span>                :            :         } else {
+<span class="lineNum">     231 </span>                :            :                 /* Enable the Self Test's internal Field Generator */
+<span class="lineNum">     232 </span>                :<span class="lineNoCov">          0 :                 i2c_smbus_write_byte_data(client, REG_ASTC, SELF);</span>
+<span class="lineNum">     233 </span>                :            : 
+<span class="lineNum">     234 </span>                :            :                 /* Enter Self Test Mode &amp; retrieve the measured field values */
+<span class="lineNum">     235 </span>                :<span class="lineNoCov">          0 :                 ret = get_current_field(client, SELF_TEST, &amp;x, &amp;y, &amp;z);</span>
+<span class="lineNum">     236 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :                 if (ret == 0) {</span>
+<span class="lineNum">     237 </span>                :            :                         /* Display the test criteria for those who care */
+<span class="lineNum">     238 </span>                :<span class="lineNoCov">          0 :                         dev_info(&amp;client-&gt;dev,</span>
+<span class="lineNum">     239 </span>                :            :                         &quot;criteria: -100&lt;=x&lt;=100,-100&lt;=y&lt;=100,-1000&lt;=z&lt;=-300\n&quot;);
+<span class="lineNum">     240 </span>                :<span class="lineNoCov">          0 :                         dev_info(&amp;client-&gt;dev, &quot;x,y,z = %d,%d,%d\n&quot;, x, y, z);</span>
+<span class="lineNum">     241 </span>                :            : 
+<span class="lineNum">     242 </span>                :            :                         /* Data acquisition successful, so check the criteria */
+<span class="lineNum">     243 </span>  [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :                         if ((x &gt;=  -100 &amp;&amp; x &lt;=  100)</span>
+<span class="lineNum">         </span>        [<span class="branchNoExec" title="Block containing branch 4 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 5 was never executed"> # </span>]
+<span class="lineNum">     244 </span>                :<span class="lineNoCov">          0 :                         &amp;&amp;  (y &gt;=  -100 &amp;&amp; y &lt;=  100)</span>
+<span class="lineNum">     245 </span>                :<span class="lineNoCov">          0 :                         &amp;&amp;  (z &gt;= -1000 &amp;&amp; z &lt;= -300)) {</span>
+<span class="lineNum">     246 </span>                :<span class="lineNoCov">          0 :                                 ret = 0;</span>
+<span class="lineNum">     247 </span>                :            :                         } else {
+<span class="lineNum">     248 </span>                :<span class="lineNoCov">          0 :                                 dev_warn(&amp;client-&gt;dev,</span>
+<span class="lineNum">     249 </span>                :            :                                 &quot;Sensor Self Test failed numeric criteria !\n&quot;);
+<span class="lineNum">     250 </span>                :<span class="lineNoCov">          0 :                                 ret = -1;</span>
+<span class="lineNum">     251 </span>                :            :                         }
+<span class="lineNum">     252 </span>                :            :                 } else {
+<span class="lineNum">     253 </span>                :<span class="lineNoCov">          0 :                         dev_warn(&amp;client-&gt;dev,</span>
+<span class="lineNum">     254 </span>                :            :                                 &quot;Unable to retrieve Sensor Self Test data !\n&quot;);
+<span class="lineNum">     255 </span>                :            :                 }
+<span class="lineNum">     256 </span>                :            :                 /* Disable field generator (sensor powers-down automatically) */
+<span class="lineNum">     257 </span>                :<span class="lineNoCov">          0 :                 i2c_smbus_write_byte_data(client, REG_ASTC, 0);</span>
+<span class="lineNum">     258 </span>                :            : 
+<span class="lineNum">     259 </span>                :            :                 /* Disable device power if it was off prior to self test */
+<span class="lineNum">     260 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :                 if (power_on_entry == 0) {</span>
+<span class="lineNum">     261 </span>                :            :                         /* Release usage of the device */
+<span class="lineNum">     262 </span>                :<span class="lineNoCov">          0 :                         pm_runtime_put_noidle(&amp;client-&gt;dev);</span>
+<span class="lineNum">     263 </span>                :            :                 }
+<span class="lineNum">     264 </span>                :            :         }
+<span class="lineNum">     265 </span>                :<span class="lineNoCov">          0 :         mutex_unlock(&amp;data-&gt;write_lock);</span>
+<span class="lineNum">     266 </span>                :<span class="lineNoCov">          0 :         return ret;</span>
+<span class="lineNum">     267 </span>                :            : }
+<span class="lineNum">     268 </span>                :            : 
+<span class="lineNum">     269 </span>                :            : /*
+<span class="lineNum">     270 </span>                :            : * Notes regarding the sysfs interfaces and power control:
+<span class="lineNum">     271 </span>                :            : *
+<span class="lineNum">     272 </span>                :            : * Unlike the AK8974, the AK8975 automatically transitions to a Standby state
+<span class="lineNum">     273 </span>                :            : * after each operation, to minimize power consumption.  The AK8975 registers
+<span class="lineNum">     274 </span>                :            : * are both readable &amp; writable in Standby -- issuing a command wakes it up.
+<span class="lineNum">     275 </span>                :            : *
+<span class="lineNum">     276 </span>                :            : * The power_state sysfs entry can be read to determine if the ak8975 is on (1)
+<span class="lineNum">     277 </span>                :            : * off (0).  Writing a 1 (or 0) to power_state will enable (or disable) power
+<span class="lineNum">     278 </span>                :            : * to the device via the runtime PM core.
+<span class="lineNum">     279 </span>                :            : *
+<span class="lineNum">     280 </span>                :            : * The curr_pos sysfs entry can be read to obtain the current (raw) magnetic
+<span class="lineNum">     281 </span>                :            : * field values when the power_state is 1.  Reading curr_pos when power_state
+<span class="lineNum">     282 </span>                :            : * is 0 will return null field values.
+<span class="lineNum">     283 </span>                :            : *
+<span class="lineNum">     284 </span>                :            : * The sens_adjust sysfs entry can be read to obtain the device-specific x/y/z
+<span class="lineNum">     285 </span>                :            : * sensitivity adjustment values (stored in Fuse ROM).
+<span class="lineNum">     286 </span>                :            : *
+<span class="lineNum">     287 </span>                :            : * Applications can read the self_test sysfs entry to verify proper operation
+<span class="lineNum">     288 </span>                :            : * of the ak8975.  The driver will enable the device power via the runtime PM
+<span class="lineNum">     289 </span>                :            : * core (if necessary), perform the self test sequence, return power to the
+<span class="lineNum">     290 </span>                :            : * original state, and return the test result (pass or fail).
+<a name="291"><span class="lineNum">     291 </span>                :            : */</a>
+<span class="lineNum">     292 </span>                :            : 
+<span class="lineNum">     293 </span>                :<span class="lineNoCov">          0 : static ssize_t power_mode_show(struct device *dev,</span>
+<span class="lineNum">     294 </span>                :            :                         struct device_attribute *attr, char *buf)
+<span class="lineNum">     295 </span>                :            : {
+<span class="lineNum">     296 </span>                :<span class="lineNoCov">          0 :         return sprintf(buf, &quot;%d\n&quot;, power_state);</span>
+<a name="297"><span class="lineNum">     297 </span>                :            : }</a>
+<span class="lineNum">     298 </span>                :            : 
+<span class="lineNum">     299 </span>                :<span class="lineNoCov">          0 : static ssize_t power_mode_store(struct device *dev,</span>
+<span class="lineNum">     300 </span>                :            :                 struct device_attribute *attr, const  char *buf, size_t count)
+<span class="lineNum">     301 </span>                :            : {
+<span class="lineNum">     302 </span>                :            :         unsigned long set_val;
+<span class="lineNum">     303 </span>                :<span class="lineNoCov">          0 :         int ret = 0;</span>
+<span class="lineNum">     304 </span>                :<span class="lineNoCov">          0 :         struct i2c_client *client = to_i2c_client(dev);</span>
+<span class="lineNum">     305 </span>                :            : 
+<span class="lineNum">     306 </span>        [<span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (strict_strtoul(buf, 10, &amp;set_val))</span>
+<span class="lineNum">     307 </span>                :<span class="lineNoCov">          0 :                 return -EINVAL;</span>
+<span class="lineNum">     308 </span>                :            : 
+<span class="lineNum">     309 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (set_val == 1) {</span>
+<span class="lineNum">     310 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :                 if (power_state == 0) {</span>
+<span class="lineNum">     311 </span>                :            :                         /* Request usage of the device */
+<span class="lineNum">     312 </span>                :<span class="lineNoCov">          0 :                         ret = pm_runtime_get_sync(dev);</span>
+<span class="lineNum">     313 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :                         if (ret &lt; 0) {</span>
+<span class="lineNum">     314 </span>                :<span class="lineNoCov">          0 :                                 dev_warn(&amp;client-&gt;dev,</span>
+<span class="lineNum">     315 </span>                :            :                                 &quot;pm_runtime_get_sync() returned error %d !\n&quot;,
+<span class="lineNum">     316 </span>                :            :                                 ret);
+<span class="lineNum">     317 </span>                :            :                         }
+<span class="lineNum">     318 </span>                :<span class="lineNoCov">          0 :                         power_state = 1;</span>
+<span class="lineNum">     319 </span>                :            :                 }
+<span class="lineNum">     320 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         } else if (set_val == 0) {</span>
+<span class="lineNum">     321 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :                 if (power_state == 1) {</span>
+<span class="lineNum">     322 </span>                :            :                         /* Release usage of the device */
+<span class="lineNum">     323 </span>                :            :                         pm_runtime_put_sync(dev);
+<span class="lineNum">     324 </span>                :<span class="lineNoCov">          0 :                         power_state = 0;</span>
+<span class="lineNum">     325 </span>                :            :                 }
+<span class="lineNum">     326 </span>                :            :         } else {
+<span class="lineNum">     327 </span>                :<span class="lineNoCov">          0 :                 return -EINVAL;</span>
+<span class="lineNum">     328 </span>                :            :         }
+<span class="lineNum">     329 </span>                :<span class="lineNoCov">          0 :         return count;</span>
+<a name="330"><span class="lineNum">     330 </span>                :            : }</a>
+<span class="lineNum">     331 </span>                :            : 
+<span class="lineNum">     332 </span>                :<span class="lineNoCov">          0 : static ssize_t curr_xyz_show(struct device *dev,</span>
+<span class="lineNum">     333 </span>                :            :                                 struct device_attribute *attr, char *buf)
+<span class="lineNum">     334 </span>                :            : {
+<span class="lineNum">     335 </span>                :            :         signed short x, y, z;
+<span class="lineNum">     336 </span>                :<span class="lineNoCov">          0 :         struct i2c_client *client = to_i2c_client(dev);</span>
+<span class="lineNum">     337 </span>                :<span class="lineNoCov">          0 :         struct compass_data *data = i2c_get_clientdata(client);</span>
+<span class="lineNum">     338 </span>                :            : 
+<span class="lineNum">     339 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (power_state == 0) {</span>
+<span class="lineNum">     340 </span>                :<span class="lineNoCov">          0 :                 dev_warn(&amp;client-&gt;dev,</span>
+<span class="lineNum">     341 </span>                :            :                         &quot;field requested when power state is OFF !\n&quot;);
+<span class="lineNum">     342 </span>                :            :         } else {
+<span class="lineNum">     343 </span>                :            :                 /* Retrieve the current magnetic field values */
+<span class="lineNum">     344 </span>                :<span class="lineNoCov">          0 :                 mutex_lock(&amp;data-&gt;write_lock);</span>
+<span class="lineNum">     345 </span>        [<span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span>]:<span class="lineNoCov">          0 :                 if (get_current_field(client, SINGLE_MEAS, &amp;x, &amp;y, &amp;z) == 0) {</span>
+<span class="lineNum">     346 </span>                :<span class="lineNoCov">          0 :                         mutex_unlock(&amp;data-&gt;write_lock);</span>
+<span class="lineNum">     347 </span>                :<span class="lineNoCov">          0 :                         return sprintf(buf, &quot;%d:%d:%d\n&quot;, x, y, z);</span>
+<span class="lineNum">     348 </span>                :            :                 } else {
+<span class="lineNum">     349 </span>                :            :                         /* Unable to obtain data - return null field values */
+<span class="lineNum">     350 </span>                :<span class="lineNoCov">          0 :                         dev_err(&amp;client-&gt;dev,</span>
+<span class="lineNum">     351 </span>                :            :                                 &quot;error reading current field !\n&quot;);
+<span class="lineNum">     352 </span>                :            :                 }
+<span class="lineNum">     353 </span>                :<span class="lineNoCov">          0 :                 mutex_unlock(&amp;data-&gt;write_lock);</span>
+<span class="lineNum">     354 </span>                :            :         }
+<span class="lineNum">     355 </span>                :<span class="lineNoCov">          0 :         return sprintf(buf, &quot;%d:%d:%d&quot;, 0, 0, 0);</span>
+<a name="356"><span class="lineNum">     356 </span>                :            : }</a>
+<span class="lineNum">     357 </span>                :            : 
+<span class="lineNum">     358 </span>                :<span class="lineNoCov">          0 : static ssize_t xyz_sensitivity_show(struct device *dev,</span>
+<span class="lineNum">     359 </span>                :            :                                 struct device_attribute *attr, char *buf)
+<span class="lineNum">     360 </span>                :            : {
+<span class="lineNum">     361 </span>                :            :         /* Return the x/y/z sensitivity adjustment values read from Fuse ROM */
+<span class="lineNum">     362 </span>                :<span class="lineNoCov">          0 :         return sprintf(buf, &quot;%d:%d:%d&quot;, asax, asay, asaz);</span>
+<a name="363"><span class="lineNum">     363 </span>                :            : }</a>
+<span class="lineNum">     364 </span>                :            : 
+<span class="lineNum">     365 </span>                :<span class="lineNoCov">          0 : static ssize_t self_test_show(struct device *dev,</span>
+<span class="lineNum">     366 </span>                :            :                                 struct device_attribute *attr, char *buf)
+<span class="lineNum">     367 </span>                :            : {
+<span class="lineNum">     368 </span>                :<span class="lineNoCov">          0 :         struct i2c_client *client = to_i2c_client(dev);</span>
+<span class="lineNum">     369 </span>                :            : 
+<span class="lineNum">     370 </span>                :            :         /* Execute the self test and return the appropriate result */
+<span class="lineNum">     371 </span>        [<span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span>]:<span class="lineNoCov">          0 :         return sprintf(buf, &quot;%s&quot;, sensor_self_test(client) ? &quot;fail&quot; : &quot;pass&quot;);</span>
+<span class="lineNum">     372 </span>                :            : }
+<span class="lineNum">     373 </span>                :            : 
+<span class="lineNum">     374 </span>                :            : static DEVICE_ATTR(power_state, S_IRUGO | S_IWUSR,
+<span class="lineNum">     375 </span>                :            :                         power_mode_show, power_mode_store);
+<span class="lineNum">     376 </span>                :            : static DEVICE_ATTR(curr_pos, S_IRUGO, curr_xyz_show, NULL);
+<span class="lineNum">     377 </span>                :            : static DEVICE_ATTR(sens_adjust, S_IRUGO, xyz_sensitivity_show, NULL);
+<span class="lineNum">     378 </span>                :            : static DEVICE_ATTR(self_test, S_IRUGO, self_test_show, NULL);
+<span class="lineNum">     379 </span>                :            : 
+<span class="lineNum">     380 </span>                :            : static struct attribute *mid_att_compass[] = {
+<span class="lineNum">     381 </span>                :            :         &amp;dev_attr_power_state.attr,
+<span class="lineNum">     382 </span>                :            :         &amp;dev_attr_curr_pos.attr,
+<span class="lineNum">     383 </span>                :            :         &amp;dev_attr_sens_adjust.attr,
+<span class="lineNum">     384 </span>                :            :         &amp;dev_attr_self_test.attr,
+<span class="lineNum">     385 </span>                :            :         NULL
+<span class="lineNum">     386 </span>                :            : };
+<span class="lineNum">     387 </span>                :            : 
+<span class="lineNum">     388 </span>                :            : static struct attribute_group m_compass_gr = {
+<span class="lineNum">     389 </span>                :            :         .name = &quot;ak8975&quot;,
+<span class="lineNum">     390 </span>                :            :         .attrs = mid_att_compass
+<a name="391"><span class="lineNum">     391 </span>                :            : };</a>
+<span class="lineNum">     392 </span>                :            : 
+<span class="lineNum">     393 </span>                :<span class="lineNoCov">          0 : static int ak8975_probe(struct i2c_client *client,</span>
+<span class="lineNum">     394 </span>                :            :                         const struct i2c_device_id *id)
+<span class="lineNum">     395 </span>                :            : {
+<span class="lineNum">     396 </span>                :            :         int res;
+<span class="lineNum">     397 </span>                :            :         unsigned char device_id;
+<span class="lineNum">     398 </span>                :            :         struct compass_data *data;
+<span class="lineNum">     399 </span>                :            : 
+<span class="lineNum">     400 </span>                :<span class="lineNoCov">          0 :         data = kzalloc(sizeof(struct compass_data), GFP_KERNEL);</span>
+<span class="lineNum">     401 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (data == NULL) {</span>
+<span class="lineNum">     402 </span>                :<span class="lineNoCov">          0 :                 dev_warn(&amp;client-&gt;dev, &quot;Memory initialization failed&quot;);</span>
+<span class="lineNum">     403 </span>                :<span class="lineNoCov">          0 :                 return -ENOMEM;</span>
+<span class="lineNum">     404 </span>                :            :         }
+<span class="lineNum">     405 </span>                :            :         i2c_set_clientdata(client, data);
+<span class="lineNum">     406 </span>                :            : 
+<span class="lineNum">     407 </span>                :<span class="lineNoCov">          0 :         res = sysfs_create_group(&amp;client-&gt;dev.kobj, &amp;m_compass_gr);</span>
+<span class="lineNum">     408 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (res) {</span>
+<span class="lineNum">     409 </span>                :<span class="lineNoCov">          0 :                 dev_warn(&amp;client-&gt;dev, &quot;device_create_file failed!!\n&quot;);</span>
+<span class="lineNum">     410 </span>                :<span class="lineNoCov">          0 :                 goto compass_error1;</span>
+<span class="lineNum">     411 </span>                :            :         }
+<span class="lineNum">     412 </span>                :<span class="lineNoCov">          0 :         data-&gt;hwmon_dev = hwmon_device_register(&amp;client-&gt;dev);</span>
+<span class="lineNum">     413 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (IS_ERR(data-&gt;hwmon_dev)) {</span>
+<span class="lineNum">     414 </span>                :<span class="lineNoCov">          0 :                 res = PTR_ERR(data-&gt;hwmon_dev);</span>
+<span class="lineNum">     415 </span>                :<span class="lineNoCov">          0 :                 dev_warn(&amp;client-&gt;dev, &quot;failed to register hwmon device\n&quot;);</span>
+<span class="lineNum">     416 </span>                :<span class="lineNoCov">          0 :                 goto compass_error2;</span>
+<span class="lineNum">     417 </span>                :            :         }
+<span class="lineNum">     418 </span>                :<span class="lineNoCov">          0 :         mutex_init(&amp;data-&gt;write_lock);</span>
+<span class="lineNum">     419 </span>                :            : 
+<span class="lineNum">     420 </span>                :            :         /* Verify presence of the AK8975 by reading the Device ID */
+<span class="lineNum">     421 </span>                :<span class="lineNoCov">          0 :         device_id = i2c_smbus_read_byte_data(client, REG_WIA);</span>
+<span class="lineNum">     422 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (device_id == DEV_ID) {</span>
+<span class="lineNum">     423 </span>                :<span class="lineNoCov">          0 :                 dev_info(&amp;client-&gt;dev, &quot;%s compass chip found\n&quot;, client-&gt;name);</span>
+<span class="lineNum">     424 </span>                :            :         } else {
+<span class="lineNum">     425 </span>                :<span class="lineNoCov">          0 :                 dev_info(&amp;client-&gt;dev, &quot;%s compass chip NOT found !\n&quot;,</span>
+<span class="lineNum">     426 </span>                :            :                         client-&gt;name);
+<span class="lineNum">     427 </span>                :<span class="lineNoCov">          0 :                 goto compass_error2;</span>
+<span class="lineNum">     428 </span>                :            :         }
+<span class="lineNum">     429 </span>                :            :         /* Obtain (and store) the Sensitivity Adjustment values from Fuse ROM */
+<span class="lineNum">     430 </span>        [<span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (get_sensitivity_data(client))</span>
+<span class="lineNum">     431 </span>                :<span class="lineNoCov">          0 :                 dev_err(&amp;client-&gt;dev, &quot;Failed to retrieve sensitivity data!\n&quot;);</span>
+<span class="lineNum">     432 </span>                :            :         else
+<span class="lineNum">     433 </span>                :<span class="lineNoCov">          0 :                 dev_info(&amp;client-&gt;dev, &quot;Successfully read sensitivity data\n&quot;);</span>
+<span class="lineNum">     434 </span>                :            : 
+<span class="lineNum">     435 </span>                :            : #if AK8975_SELF_TEST
+<span class="lineNum">     436 </span>                :            :         /* Sensor self test verifies proper device operation &amp; field values */
+<span class="lineNum">     437 </span>        [<span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (sensor_self_test(client))</span>
+<span class="lineNum">     438 </span>                :<span class="lineNoCov">          0 :                 dev_err(&amp;client-&gt;dev, &quot;Sensor failed Self Test criteria !\n&quot;);</span>
+<span class="lineNum">     439 </span>                :            :         else
+<span class="lineNum">     440 </span>                :<span class="lineNoCov">          0 :                 dev_info(&amp;client-&gt;dev, &quot;Successfully passed sensor selftest\n&quot;);</span>
+<span class="lineNum">     441 </span>                :            : #endif
+<span class="lineNum">     442 </span>                :<span class="lineNoCov">          0 :         pm_runtime_set_active(data-&gt;hwmon_dev);</span>
+<span class="lineNum">     443 </span>                :<span class="lineNoCov">          0 :         pm_runtime_enable(data-&gt;hwmon_dev);</span>
+<span class="lineNum">     444 </span>                :<span class="lineNoCov">          0 :         return 0;</span>
+<span class="lineNum">     445 </span>                :            : 
+<span class="lineNum">     446 </span>                :            : compass_error2:
+<span class="lineNum">     447 </span>                :<span class="lineNoCov">          0 :         data-&gt;hwmon_dev = NULL;</span>
+<span class="lineNum">     448 </span>                :<span class="lineNoCov">          0 :         sysfs_remove_group(&amp;client-&gt;dev.kobj, &amp;m_compass_gr);</span>
+<span class="lineNum">     449 </span>                :            : compass_error1:
+<span class="lineNum">     450 </span>                :            :         i2c_set_clientdata(client, NULL);
+<span class="lineNum">     451 </span>                :<span class="lineNoCov">          0 :         kfree(data);</span>
+<span class="lineNum">     452 </span>                :<span class="lineNoCov">          0 :         return res;</span>
+<a name="453"><span class="lineNum">     453 </span>                :            : }</a>
+<span class="lineNum">     454 </span>                :            : 
+<span class="lineNum">     455 </span>                :<span class="lineNoCov">          0 : static int ak8975_remove(struct i2c_client *client)</span>
+<span class="lineNum">     456 </span>                :            : {
+<span class="lineNum">     457 </span>                :<span class="lineNoCov">          0 :         struct compass_data *data = i2c_get_clientdata(client);</span>
+<span class="lineNum">     458 </span>                :            : 
+<span class="lineNum">     459 </span>                :<span class="lineNoCov">          0 :         hwmon_device_unregister(data-&gt;hwmon_dev);</span>
+<span class="lineNum">     460 </span>                :<span class="lineNoCov">          0 :         sysfs_remove_group(&amp;client-&gt;dev.kobj, &amp;m_compass_gr);</span>
+<span class="lineNum">     461 </span>                :<span class="lineNoCov">          0 :         kfree(data);</span>
+<span class="lineNum">     462 </span>                :<span class="lineNoCov">          0 :         return 0;</span>
+<a name="463"><span class="lineNum">     463 </span>                :            : }</a>
+<span class="lineNum">     464 </span>                :            : 
+<span class="lineNum">     465 </span>                :<span class="lineNoCov">          0 : static int ak8975_suspend(struct i2c_client *client, pm_message_t mesg)</span>
+<span class="lineNum">     466 </span>                :            : {
+<span class="lineNum">     467 </span>                :            :         /* Legacy suspend; AK8975 is automatically in Standby mode */
+<span class="lineNum">     468 </span>                :<span class="lineNoCov">          0 :         return 0;</span>
+<a name="469"><span class="lineNum">     469 </span>                :            : }</a>
+<span class="lineNum">     470 </span>                :            : 
+<span class="lineNum">     471 </span>                :<span class="lineNoCov">          0 : static int ak8975_resume(struct i2c_client *client)</span>
+<span class="lineNum">     472 </span>                :            : {
+<span class="lineNum">     473 </span>                :            :         /* Legacy resume; AK8975 automatically wakes from Standby */
+<span class="lineNum">     474 </span>                :<span class="lineNoCov">          0 :         return 0;</span>
+<a name="475"><span class="lineNum">     475 </span>                :            : }</a>
+<span class="lineNum">     476 </span>                :            : 
+<span class="lineNum">     477 </span>                :<span class="lineNoCov">          0 : static int ak8975_runtime_suspend(struct device *dev)</span>
+<a name="478"><span class="lineNum">     478 </span>                :            : {</a>
+<span class="lineNum">     479 </span>                :            :         /* We only need to track the new device power state here */
+<span class="lineNum">     480 </span>                :<span class="lineNoCov">          0 :         power_state = 0;</span>
+<span class="lineNum">     481 </span>                :<span class="lineNoCov">          0 :         return 0;</span>
+<a name="482"><span class="lineNum">     482 </span>                :            : }</a>
+<span class="lineNum">     483 </span>                :            : 
+<span class="lineNum">     484 </span>                :<span class="lineNoCov">          0 : static int ak8975_runtime_resume(struct device *dev)</span>
+<span class="lineNum">     485 </span>                :            : {
+<span class="lineNum">     486 </span>                :            :         /* We only need to track the new device power state here */
+<span class="lineNum">     487 </span>                :<span class="lineNoCov">          0 :         power_state = 1;</span>
+<span class="lineNum">     488 </span>                :<span class="lineNoCov">          0 :         return 0;</span>
+<span class="lineNum">     489 </span>                :            : }
+<span class="lineNum">     490 </span>                :            : 
+<span class="lineNum">     491 </span>                :<span class="lineNoCov">          0 : static int ak8975_runtime_idle(struct device *dev)</span>
+<span class="lineNum">     492 </span>                :            : {
+<span class="lineNum">     493 </span>                :            :         /* Utilize the runtime suspend function here for any work */
+<span class="lineNum">     494 </span>                :<span class="lineNoCov">          0 :         return ak8975_runtime_suspend(dev);</span>
+<span class="lineNum">     495 </span>                :            : }
+<span class="lineNum">     496 </span>                :            : 
+<span class="lineNum">     497 </span>                :            : static const struct dev_pm_ops pm_ops = {
+<span class="lineNum">     498 </span>                :            :         .runtime_suspend = ak8975_runtime_suspend,
+<span class="lineNum">     499 </span>                :            :         .runtime_resume  = ak8975_runtime_resume,
+<span class="lineNum">     500 </span>                :            :         .runtime_idle    = ak8975_runtime_idle,
+<span class="lineNum">     501 </span>                :            : };
+<span class="lineNum">     502 </span>                :            : 
+<span class="lineNum">     503 </span>                :            : static const struct i2c_device_id ak8975_id[] = {
+<span class="lineNum">     504 </span>                :            :         { &quot;ak8975&quot;, 0 },
+<span class="lineNum">     505 </span>                :            :         { }
+<span class="lineNum">     506 </span>                :            : };
+<span class="lineNum">     507 </span>                :            : static struct i2c_driver ak8975_driver = {
+<span class="lineNum">     508 </span>                :            :         .driver = {
+<span class="lineNum">     509 </span>                :            :                 .name = &quot;ak8975&quot;,
+<span class="lineNum">     510 </span>                :            :                 .bus = &amp;i2c_bus_type,
+<span class="lineNum">     511 </span>                :            :                 .owner = THIS_MODULE,
+<span class="lineNum">     512 </span>                :            :                 .pm = &amp;pm_ops,
+<span class="lineNum">     513 </span>                :            :         },
+<span class="lineNum">     514 </span>                :            :         .probe = ak8975_probe,
+<span class="lineNum">     515 </span>                :            :         .remove = ak8975_remove,
+<span class="lineNum">     516 </span>                :            :         .suspend = ak8975_suspend,
+<span class="lineNum">     517 </span>                :            :         .resume = ak8975_resume,
+<span class="lineNum">     518 </span>                :            :         .id_table = ak8975_id,
+<a name="519"><span class="lineNum">     519 </span>                :            : };</a>
+<span class="lineNum">     520 </span>                :            : 
+<span class="lineNum">     521 </span>                :<span class="lineCov">          1 : static int __init sensor_ak8975_init(void)</span>
+<span class="lineNum">     522 </span>                :            : {
+<span class="lineNum">     523 </span>                :<span class="lineCov">          1 :         return i2c_add_driver(&amp;ak8975_driver);</span>
+<a name="524"><span class="lineNum">     524 </span>                :            : }</a>
+<span class="lineNum">     525 </span>                :            : 
+<span class="lineNum">     526 </span>                :<span class="lineNoCov">          0 : static void  __exit sensor_ak8975_exit(void)</span>
+<span class="lineNum">     527 </span>                :            : {
+<span class="lineNum">     528 </span>                :<span class="lineNoCov">          0 :         i2c_del_driver(&amp;ak8975_driver);</span>
+<span class="lineNum">     529 </span>                :<span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     530 </span>                :            : module_init(sensor_ak8975_init);
+<span class="lineNum">     531 </span>                :            : module_exit(sensor_ak8975_exit);
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.8</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

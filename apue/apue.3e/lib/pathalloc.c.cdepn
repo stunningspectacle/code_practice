@@ -1,0 +1,9 @@
+F {path_alloc} {pathalloc.c:18}
+C {path_alloc} {pathalloc.c:56} {err_sys}
+C {path_alloc} {pathalloc.c:56} {malloc}
+C {path_alloc} {pathalloc.c:56} {err_sys}
+C {path_alloc} {pathalloc.c:56} {__errno_location}
+C {path_alloc} {pathalloc.c:56} {pathconf}
+C {path_alloc} {pathalloc.c:56} {__errno_location}
+C {path_alloc} {pathalloc.c:56} {sysconf}
+C {path_alloc} {pathalloc.c:56} {sysconf}

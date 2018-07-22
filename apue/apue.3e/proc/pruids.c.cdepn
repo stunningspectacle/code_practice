@@ -1,0 +1,5 @@
+F {main} {pruids.c:4}
+C {main} {pruids.c:8} {exit}
+C {main} {pruids.c:8} {printf}
+C {main} {pruids.c:8} {getuid}
+C {main} {pruids.c:8} {geteuid}

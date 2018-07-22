@@ -1,0 +1,5 @@
+F {clr_fl} {clrfl.c:5}
+C {clr_fl} {clrfl.c:17} {err_sys}
+C {clr_fl} {clrfl.c:17} {fcntl}
+C {clr_fl} {clrfl.c:17} {err_sys}
+C {clr_fl} {clrfl.c:17} {fcntl}

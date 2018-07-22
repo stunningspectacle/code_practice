@@ -1,0 +1,13 @@
+F {main} {tempfiles.c:4}
+C {main} {tempfiles.c:23} {exit}
+C {main} {tempfiles.c:23} {fputs}
+C {main} {tempfiles.c:23} {err_sys}
+C {main} {tempfiles.c:23} {fgets}
+C {main} {tempfiles.c:23} {rewind}
+C {main} {tempfiles.c:23} {__builtin_fwrite}
+C {main} {tempfiles.c:23} {err_sys}
+C {main} {tempfiles.c:23} {tmpfile}
+C {main} {tempfiles.c:23} {__builtin_puts}
+C {main} {tempfiles.c:23} {tmpnam}
+C {main} {tempfiles.c:23} {__builtin_puts}
+C {main} {tempfiles.c:23} {tmpnam}

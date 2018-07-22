@@ -1,0 +1,33 @@
+F {main} {atfork.c:52}
+C {main} {atfork.c:73} {exit}
+C {main} {atfork.c:73} {__builtin_puts}
+C {main} {atfork.c:73} {__builtin_puts}
+C {main} {atfork.c:73} {err_quit}
+C {main} {atfork.c:73} {fork}
+C {main} {atfork.c:73} {__builtin_puts}
+C {main} {atfork.c:73} {sleep}
+C {main} {atfork.c:73} {err_exit}
+C {main} {atfork.c:73} {pthread_create}
+C {main} {atfork.c:73} {err_exit}
+C {main} {atfork.c:73} {pthread_atfork}
+F {thr_fn} {atfork.c:44}
+C {thr_fn} {atfork.c:73} {pause}
+C {thr_fn} {atfork.c:73} {__builtin_puts}
+F {child} {atfork.c:32}
+C {child} {atfork.c:73} {err_cont}
+C {child} {atfork.c:73} {pthread_mutex_unlock}
+C {child} {atfork.c:73} {err_cont}
+C {child} {atfork.c:73} {pthread_mutex_unlock}
+C {child} {atfork.c:73} {__builtin_puts}
+F {parent} {atfork.c:20}
+C {parent} {atfork.c:73} {err_cont}
+C {parent} {atfork.c:73} {pthread_mutex_unlock}
+C {parent} {atfork.c:73} {err_cont}
+C {parent} {atfork.c:73} {pthread_mutex_unlock}
+C {parent} {atfork.c:73} {__builtin_puts}
+F {prepare} {atfork.c:8}
+C {prepare} {atfork.c:73} {err_cont}
+C {prepare} {atfork.c:73} {pthread_mutex_lock}
+C {prepare} {atfork.c:73} {err_cont}
+C {prepare} {atfork.c:73} {pthread_mutex_lock}
+C {prepare} {atfork.c:73} {__builtin_puts}

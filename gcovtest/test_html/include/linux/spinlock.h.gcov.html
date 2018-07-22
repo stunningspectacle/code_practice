@@ -1,0 +1,484 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+  <title>LCOV - test.info - include/linux/spinlock.h</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">include/linux</a> - spinlock.h<span style="font-size: 80%;"> (source / <a href="spinlock.h.func.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">test.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2011-05-12</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="headerItem">Branches:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">           Branch data     Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>                :            : #ifndef __LINUX_SPINLOCK_H</a>
+<span class="lineNum">       2 </span>                :            : #define __LINUX_SPINLOCK_H
+<span class="lineNum">       3 </span>                :            : 
+<span class="lineNum">       4 </span>                :            : /*
+<span class="lineNum">       5 </span>                :            :  * include/linux/spinlock.h - generic spinlock/rwlock declarations
+<span class="lineNum">       6 </span>                :            :  *
+<span class="lineNum">       7 </span>                :            :  * here's the role of the various spinlock/rwlock related include files:
+<span class="lineNum">       8 </span>                :            :  *
+<span class="lineNum">       9 </span>                :            :  * on SMP builds:
+<span class="lineNum">      10 </span>                :            :  *
+<span class="lineNum">      11 </span>                :            :  *  asm/spinlock_types.h: contains the arch_spinlock_t/arch_rwlock_t and the
+<span class="lineNum">      12 </span>                :            :  *                        initializers
+<span class="lineNum">      13 </span>                :            :  *
+<span class="lineNum">      14 </span>                :            :  *  linux/spinlock_types.h:
+<span class="lineNum">      15 </span>                :            :  *                        defines the generic type and initializers
+<span class="lineNum">      16 </span>                :            :  *
+<span class="lineNum">      17 </span>                :            :  *  asm/spinlock.h:       contains the arch_spin_*()/etc. lowlevel
+<span class="lineNum">      18 </span>                :            :  *                        implementations, mostly inline assembly code
+<span class="lineNum">      19 </span>                :            :  *
+<span class="lineNum">      20 </span>                :            :  *   (also included on UP-debug builds:)
+<span class="lineNum">      21 </span>                :            :  *
+<span class="lineNum">      22 </span>                :            :  *  linux/spinlock_api_smp.h:
+<span class="lineNum">      23 </span>                :            :  *                        contains the prototypes for the _spin_*() APIs.
+<span class="lineNum">      24 </span>                :            :  *
+<span class="lineNum">      25 </span>                :            :  *  linux/spinlock.h:     builds the final spin_*() APIs.
+<span class="lineNum">      26 </span>                :            :  *
+<span class="lineNum">      27 </span>                :            :  * on UP builds:
+<span class="lineNum">      28 </span>                :            :  *
+<span class="lineNum">      29 </span>                :            :  *  linux/spinlock_type_up.h:
+<span class="lineNum">      30 </span>                :            :  *                        contains the generic, simplified UP spinlock type.
+<span class="lineNum">      31 </span>                :            :  *                        (which is an empty structure on non-debug builds)
+<span class="lineNum">      32 </span>                :            :  *
+<span class="lineNum">      33 </span>                :            :  *  linux/spinlock_types.h:
+<span class="lineNum">      34 </span>                :            :  *                        defines the generic type and initializers
+<span class="lineNum">      35 </span>                :            :  *
+<span class="lineNum">      36 </span>                :            :  *  linux/spinlock_up.h:
+<span class="lineNum">      37 </span>                :            :  *                        contains the arch_spin_*()/etc. version of UP
+<span class="lineNum">      38 </span>                :            :  *                        builds. (which are NOPs on non-debug, non-preempt
+<span class="lineNum">      39 </span>                :            :  *                        builds)
+<span class="lineNum">      40 </span>                :            :  *
+<span class="lineNum">      41 </span>                :            :  *   (included on UP-non-debug builds:)
+<span class="lineNum">      42 </span>                :            :  *
+<span class="lineNum">      43 </span>                :            :  *  linux/spinlock_api_up.h:
+<span class="lineNum">      44 </span>                :            :  *                        builds the _spin_*() APIs.
+<span class="lineNum">      45 </span>                :            :  *
+<span class="lineNum">      46 </span>                :            :  *  linux/spinlock.h:     builds the final spin_*() APIs.
+<span class="lineNum">      47 </span>                :            :  */
+<span class="lineNum">      48 </span>                :            : 
+<span class="lineNum">      49 </span>                :            : #include &lt;linux/typecheck.h&gt;
+<span class="lineNum">      50 </span>                :            : #include &lt;linux/preempt.h&gt;
+<span class="lineNum">      51 </span>                :            : #include &lt;linux/linkage.h&gt;
+<span class="lineNum">      52 </span>                :            : #include &lt;linux/compiler.h&gt;
+<span class="lineNum">      53 </span>                :            : #include &lt;linux/thread_info.h&gt;
+<span class="lineNum">      54 </span>                :            : #include &lt;linux/kernel.h&gt;
+<span class="lineNum">      55 </span>                :            : #include &lt;linux/stringify.h&gt;
+<span class="lineNum">      56 </span>                :            : #include &lt;linux/bottom_half.h&gt;
+<span class="lineNum">      57 </span>                :            : 
+<span class="lineNum">      58 </span>                :            : #include &lt;asm/system.h&gt;
+<span class="lineNum">      59 </span>                :            : 
+<span class="lineNum">      60 </span>                :            : /*
+<span class="lineNum">      61 </span>                :            :  * Must define these before including other files, inline functions need them
+<span class="lineNum">      62 </span>                :            :  */
+<span class="lineNum">      63 </span>                :            : #define LOCK_SECTION_NAME &quot;.text..lock.&quot;KBUILD_BASENAME
+<span class="lineNum">      64 </span>                :            : 
+<span class="lineNum">      65 </span>                :            : #define LOCK_SECTION_START(extra)               \
+<span class="lineNum">      66 </span>                :            :         &quot;.subsection 1\n\t&quot;                     \
+<span class="lineNum">      67 </span>                :            :         extra                                   \
+<span class="lineNum">      68 </span>                :            :         &quot;.ifndef &quot; LOCK_SECTION_NAME &quot;\n\t&quot;     \
+<span class="lineNum">      69 </span>                :            :         LOCK_SECTION_NAME &quot;:\n\t&quot;               \
+<span class="lineNum">      70 </span>                :            :         &quot;.endif\n&quot;
+<span class="lineNum">      71 </span>                :            : 
+<span class="lineNum">      72 </span>                :            : #define LOCK_SECTION_END                        \
+<span class="lineNum">      73 </span>                :            :         &quot;.previous\n\t&quot;
+<span class="lineNum">      74 </span>                :            : 
+<span class="lineNum">      75 </span>                :            : #define __lockfunc __attribute__((section(&quot;.spinlock.text&quot;)))
+<span class="lineNum">      76 </span>                :            : 
+<span class="lineNum">      77 </span>                :            : /*
+<span class="lineNum">      78 </span>                :            :  * Pull the arch_spinlock_t and arch_rwlock_t definitions:
+<span class="lineNum">      79 </span>                :            :  */
+<span class="lineNum">      80 </span>                :            : #include &lt;linux/spinlock_types.h&gt;
+<span class="lineNum">      81 </span>                :            : 
+<span class="lineNum">      82 </span>                :            : /*
+<span class="lineNum">      83 </span>                :            :  * Pull the arch_spin*() functions/declarations (UP-nondebug doesnt need them):
+<span class="lineNum">      84 </span>                :            :  */
+<span class="lineNum">      85 </span>                :            : #ifdef CONFIG_SMP
+<span class="lineNum">      86 </span>                :            : # include &lt;asm/spinlock.h&gt;
+<span class="lineNum">      87 </span>                :            : #else
+<span class="lineNum">      88 </span>                :            : # include &lt;linux/spinlock_up.h&gt;
+<span class="lineNum">      89 </span>                :            : #endif
+<span class="lineNum">      90 </span>                :            : 
+<span class="lineNum">      91 </span>                :            : #ifdef CONFIG_DEBUG_SPINLOCK
+<span class="lineNum">      92 </span>                :            :   extern void __raw_spin_lock_init(raw_spinlock_t *lock, const char *name,
+<span class="lineNum">      93 </span>                :            :                                    struct lock_class_key *key);
+<span class="lineNum">      94 </span>                :            : # define raw_spin_lock_init(lock)                               \
+<span class="lineNum">      95 </span>                :            : do {                                                            \
+<span class="lineNum">      96 </span>                :            :         static struct lock_class_key __key;                     \
+<span class="lineNum">      97 </span>                :            :                                                                 \
+<span class="lineNum">      98 </span>                :            :         __raw_spin_lock_init((lock), #lock, &amp;__key);                \
+<span class="lineNum">      99 </span>                :            : } while (0)
+<span class="lineNum">     100 </span>                :            : 
+<span class="lineNum">     101 </span>                :            : #else
+<span class="lineNum">     102 </span>                :            : # define raw_spin_lock_init(lock)                               \
+<span class="lineNum">     103 </span>                :            :         do { *(lock) = __RAW_SPIN_LOCK_UNLOCKED(lock); } while (0)
+<span class="lineNum">     104 </span>                :            : #endif
+<span class="lineNum">     105 </span>                :            : 
+<span class="lineNum">     106 </span>                :            : #define raw_spin_is_locked(lock)        arch_spin_is_locked(&amp;(lock)-&gt;raw_lock)
+<span class="lineNum">     107 </span>                :            : 
+<span class="lineNum">     108 </span>                :            : #ifdef CONFIG_GENERIC_LOCKBREAK
+<span class="lineNum">     109 </span>                :            : #define raw_spin_is_contended(lock) ((lock)-&gt;break_lock)
+<span class="lineNum">     110 </span>                :            : #else
+<span class="lineNum">     111 </span>                :            : 
+<span class="lineNum">     112 </span>                :            : #ifdef arch_spin_is_contended
+<span class="lineNum">     113 </span>                :            : #define raw_spin_is_contended(lock)     arch_spin_is_contended(&amp;(lock)-&gt;raw_lock)
+<span class="lineNum">     114 </span>                :            : #else
+<span class="lineNum">     115 </span>                :            : #define raw_spin_is_contended(lock)     (((void)(lock), 0))
+<span class="lineNum">     116 </span>                :            : #endif /*arch_spin_is_contended*/
+<span class="lineNum">     117 </span>                :            : #endif
+<span class="lineNum">     118 </span>                :            : 
+<span class="lineNum">     119 </span>                :            : /* The lock does not imply full memory barrier. */
+<span class="lineNum">     120 </span>                :            : #ifndef ARCH_HAS_SMP_MB_AFTER_LOCK
+<span class="lineNum">     121 </span>                :            : static inline void smp_mb__after_lock(void) { smp_mb(); }
+<span class="lineNum">     122 </span>                :            : #endif
+<span class="lineNum">     123 </span>                :            : 
+<span class="lineNum">     124 </span>                :            : /**
+<span class="lineNum">     125 </span>                :            :  * raw_spin_unlock_wait - wait until the spinlock gets unlocked
+<span class="lineNum">     126 </span>                :            :  * @lock: the spinlock in question.
+<span class="lineNum">     127 </span>                :            :  */
+<span class="lineNum">     128 </span>                :            : #define raw_spin_unlock_wait(lock)      arch_spin_unlock_wait(&amp;(lock)-&gt;raw_lock)
+<span class="lineNum">     129 </span>                :            : 
+<span class="lineNum">     130 </span>                :            : #ifdef CONFIG_DEBUG_SPINLOCK
+<span class="lineNum">     131 </span>                :            :  extern void do_raw_spin_lock(raw_spinlock_t *lock) __acquires(lock);
+<span class="lineNum">     132 </span>                :            : #define do_raw_spin_lock_flags(lock, flags) do_raw_spin_lock(lock)
+<span class="lineNum">     133 </span>                :            :  extern int do_raw_spin_trylock(raw_spinlock_t *lock);
+<span class="lineNum">     134 </span>                :            :  extern void do_raw_spin_unlock(raw_spinlock_t *lock) __releases(lock);
+<span class="lineNum">     135 </span>                :            : #else
+<span class="lineNum">     136 </span>                :            : static inline void do_raw_spin_lock(raw_spinlock_t *lock) __acquires(lock)
+<span class="lineNum">     137 </span>                :            : {
+<span class="lineNum">     138 </span>                :            :         __acquire(lock);
+<span class="lineNum">     139 </span>                :            :         arch_spin_lock(&amp;lock-&gt;raw_lock);
+<span class="lineNum">     140 </span>                :            : }
+<span class="lineNum">     141 </span>                :            : 
+<span class="lineNum">     142 </span>                :            : static inline void
+<span class="lineNum">     143 </span>                :            : do_raw_spin_lock_flags(raw_spinlock_t *lock, unsigned long *flags) __acquires(lock)
+<span class="lineNum">     144 </span>                :            : {
+<span class="lineNum">     145 </span>                :            :         __acquire(lock);
+<span class="lineNum">     146 </span>                :            :         arch_spin_lock_flags(&amp;lock-&gt;raw_lock, *flags);
+<span class="lineNum">     147 </span>                :            : }
+<span class="lineNum">     148 </span>                :            : 
+<span class="lineNum">     149 </span>                :            : static inline int do_raw_spin_trylock(raw_spinlock_t *lock)
+<span class="lineNum">     150 </span>                :            : {
+<span class="lineNum">     151 </span>                :            :         return arch_spin_trylock(&amp;(lock)-&gt;raw_lock);
+<span class="lineNum">     152 </span>                :            : }
+<span class="lineNum">     153 </span>                :            : 
+<span class="lineNum">     154 </span>                :            : static inline void do_raw_spin_unlock(raw_spinlock_t *lock) __releases(lock)
+<span class="lineNum">     155 </span>                :            : {
+<span class="lineNum">     156 </span>                :            :         arch_spin_unlock(&amp;lock-&gt;raw_lock);
+<span class="lineNum">     157 </span>                :            :         __release(lock);
+<span class="lineNum">     158 </span>                :            : }
+<span class="lineNum">     159 </span>                :            : #endif
+<span class="lineNum">     160 </span>                :            : 
+<span class="lineNum">     161 </span>                :            : /*
+<span class="lineNum">     162 </span>                :            :  * Define the various spin_lock methods.  Note we define these
+<span class="lineNum">     163 </span>                :            :  * regardless of whether CONFIG_SMP or CONFIG_PREEMPT are set. The
+<span class="lineNum">     164 </span>                :            :  * various methods are defined as nops in the case they are not
+<span class="lineNum">     165 </span>                :            :  * required.
+<span class="lineNum">     166 </span>                :            :  */
+<span class="lineNum">     167 </span>                :            : #define raw_spin_trylock(lock)  __cond_lock(lock, _raw_spin_trylock(lock))
+<span class="lineNum">     168 </span>                :            : 
+<span class="lineNum">     169 </span>                :            : #define raw_spin_lock(lock)     _raw_spin_lock(lock)
+<span class="lineNum">     170 </span>                :            : 
+<span class="lineNum">     171 </span>                :            : #ifdef CONFIG_DEBUG_LOCK_ALLOC
+<span class="lineNum">     172 </span>                :            : # define raw_spin_lock_nested(lock, subclass) \
+<span class="lineNum">     173 </span>                :            :         _raw_spin_lock_nested(lock, subclass)
+<span class="lineNum">     174 </span>                :            : 
+<span class="lineNum">     175 </span>                :            : # define raw_spin_lock_nest_lock(lock, nest_lock)                       \
+<span class="lineNum">     176 </span>                :            :          do {                                                           \
+<span class="lineNum">     177 </span>                :            :                  typecheck(struct lockdep_map *, &amp;(nest_lock)-&gt;dep_map);\
+<span class="lineNum">     178 </span>                :            :                  _raw_spin_lock_nest_lock(lock, &amp;(nest_lock)-&gt;dep_map);  \
+<span class="lineNum">     179 </span>                :            :          } while (0)
+<span class="lineNum">     180 </span>                :            : #else
+<span class="lineNum">     181 </span>                :            : # define raw_spin_lock_nested(lock, subclass)           _raw_spin_lock(lock)
+<span class="lineNum">     182 </span>                :            : # define raw_spin_lock_nest_lock(lock, nest_lock)       _raw_spin_lock(lock)
+<span class="lineNum">     183 </span>                :            : #endif
+<span class="lineNum">     184 </span>                :            : 
+<span class="lineNum">     185 </span>                :            : #if defined(CONFIG_SMP) || defined(CONFIG_DEBUG_SPINLOCK)
+<span class="lineNum">     186 </span>                :            : 
+<span class="lineNum">     187 </span>                :            : #define raw_spin_lock_irqsave(lock, flags)                      \
+<span class="lineNum">     188 </span>                :            :         do {                                            \
+<span class="lineNum">     189 </span>                :            :                 typecheck(unsigned long, flags);        \
+<span class="lineNum">     190 </span>                :            :                 flags = _raw_spin_lock_irqsave(lock);   \
+<span class="lineNum">     191 </span>                :            :         } while (0)
+<span class="lineNum">     192 </span>                :            : 
+<span class="lineNum">     193 </span>                :            : #ifdef CONFIG_DEBUG_LOCK_ALLOC
+<span class="lineNum">     194 </span>                :            : #define raw_spin_lock_irqsave_nested(lock, flags, subclass)             \
+<span class="lineNum">     195 </span>                :            :         do {                                                            \
+<span class="lineNum">     196 </span>                :            :                 typecheck(unsigned long, flags);                        \
+<span class="lineNum">     197 </span>                :            :                 flags = _raw_spin_lock_irqsave_nested(lock, subclass);  \
+<span class="lineNum">     198 </span>                :            :         } while (0)
+<span class="lineNum">     199 </span>                :            : #else
+<span class="lineNum">     200 </span>                :            : #define raw_spin_lock_irqsave_nested(lock, flags, subclass)             \
+<span class="lineNum">     201 </span>                :            :         do {                                                            \
+<span class="lineNum">     202 </span>                :            :                 typecheck(unsigned long, flags);                        \
+<span class="lineNum">     203 </span>                :            :                 flags = _raw_spin_lock_irqsave(lock);                   \
+<span class="lineNum">     204 </span>                :            :         } while (0)
+<span class="lineNum">     205 </span>                :            : #endif
+<span class="lineNum">     206 </span>                :            : 
+<span class="lineNum">     207 </span>                :            : #else
+<span class="lineNum">     208 </span>                :            : 
+<span class="lineNum">     209 </span>                :            : #define raw_spin_lock_irqsave(lock, flags)              \
+<span class="lineNum">     210 </span>                :            :         do {                                            \
+<span class="lineNum">     211 </span>                :            :                 typecheck(unsigned long, flags);        \
+<span class="lineNum">     212 </span>                :            :                 _raw_spin_lock_irqsave(lock, flags);    \
+<span class="lineNum">     213 </span>                :            :         } while (0)
+<span class="lineNum">     214 </span>                :            : 
+<span class="lineNum">     215 </span>                :            : #define raw_spin_lock_irqsave_nested(lock, flags, subclass)     \
+<span class="lineNum">     216 </span>                :            :         raw_spin_lock_irqsave(lock, flags)
+<span class="lineNum">     217 </span>                :            : 
+<span class="lineNum">     218 </span>                :            : #endif
+<span class="lineNum">     219 </span>                :            : 
+<span class="lineNum">     220 </span>                :            : #define raw_spin_lock_irq(lock)         _raw_spin_lock_irq(lock)
+<span class="lineNum">     221 </span>                :            : #define raw_spin_lock_bh(lock)          _raw_spin_lock_bh(lock)
+<span class="lineNum">     222 </span>                :            : #define raw_spin_unlock(lock)           _raw_spin_unlock(lock)
+<span class="lineNum">     223 </span>                :            : #define raw_spin_unlock_irq(lock)       _raw_spin_unlock_irq(lock)
+<span class="lineNum">     224 </span>                :            : 
+<span class="lineNum">     225 </span>                :            : #define raw_spin_unlock_irqrestore(lock, flags)         \
+<span class="lineNum">     226 </span>                :            :         do {                                                    \
+<span class="lineNum">     227 </span>                :            :                 typecheck(unsigned long, flags);                \
+<span class="lineNum">     228 </span>                :            :                 _raw_spin_unlock_irqrestore(lock, flags);       \
+<span class="lineNum">     229 </span>                :            :         } while (0)
+<span class="lineNum">     230 </span>                :            : #define raw_spin_unlock_bh(lock)        _raw_spin_unlock_bh(lock)
+<span class="lineNum">     231 </span>                :            : 
+<span class="lineNum">     232 </span>                :            : #define raw_spin_trylock_bh(lock) \
+<span class="lineNum">     233 </span>                :            :         __cond_lock(lock, _raw_spin_trylock_bh(lock))
+<span class="lineNum">     234 </span>                :            : 
+<span class="lineNum">     235 </span>                :            : #define raw_spin_trylock_irq(lock) \
+<span class="lineNum">     236 </span>                :            : ({ \
+<span class="lineNum">     237 </span>                :            :         local_irq_disable(); \
+<span class="lineNum">     238 </span>                :            :         raw_spin_trylock(lock) ? \
+<span class="lineNum">     239 </span>                :            :         1 : ({ local_irq_enable(); 0;  }); \
+<span class="lineNum">     240 </span>                :            : })
+<span class="lineNum">     241 </span>                :            : 
+<span class="lineNum">     242 </span>                :            : #define raw_spin_trylock_irqsave(lock, flags) \
+<span class="lineNum">     243 </span>                :            : ({ \
+<span class="lineNum">     244 </span>                :            :         local_irq_save(flags); \
+<span class="lineNum">     245 </span>                :            :         raw_spin_trylock(lock) ? \
+<span class="lineNum">     246 </span>                :            :         1 : ({ local_irq_restore(flags); 0; }); \
+<span class="lineNum">     247 </span>                :            : })
+<span class="lineNum">     248 </span>                :            : 
+<span class="lineNum">     249 </span>                :            : /**
+<span class="lineNum">     250 </span>                :            :  * raw_spin_can_lock - would raw_spin_trylock() succeed?
+<span class="lineNum">     251 </span>                :            :  * @lock: the spinlock in question.
+<span class="lineNum">     252 </span>                :            :  */
+<span class="lineNum">     253 </span>                :            : #define raw_spin_can_lock(lock) (!raw_spin_is_locked(lock))
+<span class="lineNum">     254 </span>                :            : 
+<span class="lineNum">     255 </span>                :            : /* Include rwlock functions */
+<span class="lineNum">     256 </span>                :            : #include &lt;linux/rwlock.h&gt;
+<span class="lineNum">     257 </span>                :            : 
+<span class="lineNum">     258 </span>                :            : /*
+<span class="lineNum">     259 </span>                :            :  * Pull the _spin_*()/_read_*()/_write_*() functions/declarations:
+<span class="lineNum">     260 </span>                :            :  */
+<span class="lineNum">     261 </span>                :            : #if defined(CONFIG_SMP) || defined(CONFIG_DEBUG_SPINLOCK)
+<span class="lineNum">     262 </span>                :            : # include &lt;linux/spinlock_api_smp.h&gt;
+<span class="lineNum">     263 </span>                :            : #else
+<span class="lineNum">     264 </span>                :            : # include &lt;linux/spinlock_api_up.h&gt;
+<span class="lineNum">     265 </span>                :            : #endif
+<span class="lineNum">     266 </span>                :            : 
+<span class="lineNum">     267 </span>                :            : /*
+<span class="lineNum">     268 </span>                :            :  * Map the spin_lock functions to the raw variants for PREEMPT_RT=n
+<span class="lineNum">     269 </span>                :            :  */
+<span class="lineNum">     270 </span>                :            : 
+<span class="lineNum">     271 </span>                :            : static inline raw_spinlock_t *spinlock_check(spinlock_t *lock)
+<span class="lineNum">     272 </span>                :            : {
+<span class="lineNum">     273 </span>                :<span class="lineNoCov">          0 :         return &amp;lock-&gt;rlock;</span>
+<span class="lineNum">     274 </span>                :            : }
+<span class="lineNum">     275 </span>                :            : 
+<span class="lineNum">     276 </span>                :            : #define spin_lock_init(_lock)                           \
+<span class="lineNum">     277 </span>                :            : do {                                                    \
+<span class="lineNum">     278 </span>                :            :         spinlock_check(_lock);                          \
+<span class="lineNum">     279 </span>                :            :         raw_spin_lock_init(&amp;(_lock)-&gt;rlock);             \
+<span class="lineNum">     280 </span>                :            : } while (0)
+<span class="lineNum">     281 </span>                :            : 
+<span class="lineNum">     282 </span>                :            : static inline void spin_lock(spinlock_t *lock)
+<span class="lineNum">     283 </span>                :            : {
+<span class="lineNum">     284 </span>                :            :         raw_spin_lock(&amp;lock-&gt;rlock);
+<span class="lineNum">     285 </span>                :            : }
+<span class="lineNum">     286 </span>                :            : 
+<span class="lineNum">     287 </span>                :            : static inline void spin_lock_bh(spinlock_t *lock)
+<span class="lineNum">     288 </span>                :            : {
+<span class="lineNum">     289 </span>                :            :         raw_spin_lock_bh(&amp;lock-&gt;rlock);
+<span class="lineNum">     290 </span>                :            : }
+<span class="lineNum">     291 </span>                :            : 
+<span class="lineNum">     292 </span>                :            : static inline int spin_trylock(spinlock_t *lock)
+<span class="lineNum">     293 </span>                :            : {
+<span class="lineNum">     294 </span>                :            :         return raw_spin_trylock(&amp;lock-&gt;rlock);
+<span class="lineNum">     295 </span>                :            : }
+<span class="lineNum">     296 </span>                :            : 
+<span class="lineNum">     297 </span>                :            : #define spin_lock_nested(lock, subclass)                        \
+<span class="lineNum">     298 </span>                :            : do {                                                            \
+<span class="lineNum">     299 </span>                :            :         raw_spin_lock_nested(spinlock_check(lock), subclass);   \
+<span class="lineNum">     300 </span>                :            : } while (0)
+<span class="lineNum">     301 </span>                :            : 
+<span class="lineNum">     302 </span>                :            : #define spin_lock_nest_lock(lock, nest_lock)                            \
+<span class="lineNum">     303 </span>                :            : do {                                                                    \
+<span class="lineNum">     304 </span>                :            :         raw_spin_lock_nest_lock(spinlock_check(lock), nest_lock);       \
+<span class="lineNum">     305 </span>                :            : } while (0)
+<span class="lineNum">     306 </span>                :            : 
+<span class="lineNum">     307 </span>                :            : static inline void spin_lock_irq(spinlock_t *lock)
+<span class="lineNum">     308 </span>                :            : {
+<span class="lineNum">     309 </span>                :            :         raw_spin_lock_irq(&amp;lock-&gt;rlock);
+<span class="lineNum">     310 </span>                :            : }
+<span class="lineNum">     311 </span>                :            : 
+<span class="lineNum">     312 </span>                :            : #define spin_lock_irqsave(lock, flags)                          \
+<span class="lineNum">     313 </span>                :            : do {                                                            \
+<span class="lineNum">     314 </span>                :            :         raw_spin_lock_irqsave(spinlock_check(lock), flags);     \
+<span class="lineNum">     315 </span>                :            : } while (0)
+<span class="lineNum">     316 </span>                :            : 
+<span class="lineNum">     317 </span>                :            : #define spin_lock_irqsave_nested(lock, flags, subclass)                 \
+<span class="lineNum">     318 </span>                :            : do {                                                                    \
+<span class="lineNum">     319 </span>                :            :         raw_spin_lock_irqsave_nested(spinlock_check(lock), flags, subclass); \
+<span class="lineNum">     320 </span>                :            : } while (0)
+<span class="lineNum">     321 </span>                :            : 
+<span class="lineNum">     322 </span>                :            : static inline void spin_unlock(spinlock_t *lock)
+<span class="lineNum">     323 </span>                :            : {
+<span class="lineNum">     324 </span>                :            :         raw_spin_unlock(&amp;lock-&gt;rlock);
+<span class="lineNum">     325 </span>                :            : }
+<span class="lineNum">     326 </span>                :            : 
+<span class="lineNum">     327 </span>                :            : static inline void spin_unlock_bh(spinlock_t *lock)
+<span class="lineNum">     328 </span>                :            : {
+<span class="lineNum">     329 </span>                :            :         raw_spin_unlock_bh(&amp;lock-&gt;rlock);
+<span class="lineNum">     330 </span>                :            : }
+<span class="lineNum">     331 </span>                :            : 
+<span class="lineNum">     332 </span>                :            : static inline void spin_unlock_irq(spinlock_t *lock)
+<span class="lineNum">     333 </span>                :            : {
+<span class="lineNum">     334 </span>                :            :         raw_spin_unlock_irq(&amp;lock-&gt;rlock);
+<span class="lineNum">     335 </span>                :            : }
+<span class="lineNum">     336 </span>                :            : 
+<span class="lineNum">     337 </span>                :            : static inline void spin_unlock_irqrestore(spinlock_t *lock, unsigned long flags)
+<span class="lineNum">     338 </span>                :            : {
+<span class="lineNum">     339 </span>                :<span class="lineNoCov">          0 :         raw_spin_unlock_irqrestore(&amp;lock-&gt;rlock, flags);</span>
+<span class="lineNum">     340 </span>                :            : }
+<span class="lineNum">     341 </span>                :            : 
+<span class="lineNum">     342 </span>                :            : static inline int spin_trylock_bh(spinlock_t *lock)
+<span class="lineNum">     343 </span>                :            : {
+<span class="lineNum">     344 </span>                :            :         return raw_spin_trylock_bh(&amp;lock-&gt;rlock);
+<span class="lineNum">     345 </span>                :            : }
+<span class="lineNum">     346 </span>                :            : 
+<span class="lineNum">     347 </span>                :            : static inline int spin_trylock_irq(spinlock_t *lock)
+<span class="lineNum">     348 </span>                :            : {
+<span class="lineNum">     349 </span>                :            :         return raw_spin_trylock_irq(&amp;lock-&gt;rlock);
+<span class="lineNum">     350 </span>                :            : }
+<span class="lineNum">     351 </span>                :            : 
+<span class="lineNum">     352 </span>                :            : #define spin_trylock_irqsave(lock, flags)                       \
+<span class="lineNum">     353 </span>                :            : ({                                                              \
+<span class="lineNum">     354 </span>                :            :         raw_spin_trylock_irqsave(spinlock_check(lock), flags); \
+<span class="lineNum">     355 </span>                :            : })
+<span class="lineNum">     356 </span>                :            : 
+<span class="lineNum">     357 </span>                :            : static inline void spin_unlock_wait(spinlock_t *lock)
+<span class="lineNum">     358 </span>                :            : {
+<span class="lineNum">     359 </span>                :            :         raw_spin_unlock_wait(&amp;lock-&gt;rlock);
+<span class="lineNum">     360 </span>                :            : }
+<span class="lineNum">     361 </span>                :            : 
+<span class="lineNum">     362 </span>                :            : static inline int spin_is_locked(spinlock_t *lock)
+<span class="lineNum">     363 </span>                :            : {
+<span class="lineNum">     364 </span>                :            :         return raw_spin_is_locked(&amp;lock-&gt;rlock);
+<span class="lineNum">     365 </span>                :            : }
+<span class="lineNum">     366 </span>                :            : 
+<span class="lineNum">     367 </span>                :            : static inline int spin_is_contended(spinlock_t *lock)
+<span class="lineNum">     368 </span>                :            : {
+<span class="lineNum">     369 </span>                :            :         return raw_spin_is_contended(&amp;lock-&gt;rlock);
+<span class="lineNum">     370 </span>                :            : }
+<span class="lineNum">     371 </span>                :            : 
+<span class="lineNum">     372 </span>                :            : static inline int spin_can_lock(spinlock_t *lock)
+<span class="lineNum">     373 </span>                :            : {
+<span class="lineNum">     374 </span>                :            :         return raw_spin_can_lock(&amp;lock-&gt;rlock);
+<span class="lineNum">     375 </span>                :            : }
+<span class="lineNum">     376 </span>                :            : 
+<span class="lineNum">     377 </span>                :            : static inline void assert_spin_locked(spinlock_t *lock)
+<span class="lineNum">     378 </span>                :            : {
+<span class="lineNum">     379 </span>                :            :         assert_raw_spin_locked(&amp;lock-&gt;rlock);
+<span class="lineNum">     380 </span>                :            : }
+<span class="lineNum">     381 </span>                :            : 
+<span class="lineNum">     382 </span>                :            : /*
+<span class="lineNum">     383 </span>                :            :  * Pull the atomic_t declaration:
+<span class="lineNum">     384 </span>                :            :  * (asm-mips/atomic.h needs above definitions)
+<span class="lineNum">     385 </span>                :            :  */
+<span class="lineNum">     386 </span>                :            : #include &lt;asm/atomic.h&gt;
+<span class="lineNum">     387 </span>                :            : /**
+<span class="lineNum">     388 </span>                :            :  * atomic_dec_and_lock - lock on reaching reference count zero
+<span class="lineNum">     389 </span>                :            :  * @atomic: the atomic counter
+<span class="lineNum">     390 </span>                :            :  * @lock: the spinlock in question
+<span class="lineNum">     391 </span>                :            :  *
+<span class="lineNum">     392 </span>                :            :  * Decrements @atomic by 1.  If the result is 0, returns true and locks
+<span class="lineNum">     393 </span>                :            :  * @lock.  Returns false for all other cases.
+<span class="lineNum">     394 </span>                :            :  */
+<span class="lineNum">     395 </span>                :            : extern int _atomic_dec_and_lock(atomic_t *atomic, spinlock_t *lock);
+<span class="lineNum">     396 </span>                :            : #define atomic_dec_and_lock(atomic, lock) \
+<span class="lineNum">     397 </span>                :            :                 __cond_lock(lock, _atomic_dec_and_lock(atomic, lock))
+<span class="lineNum">     398 </span>                :            : 
+<span class="lineNum">     399 </span>                :            : #endif /* __LINUX_SPINLOCK_H */
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.8</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

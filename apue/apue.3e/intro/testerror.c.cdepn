@@ -1,0 +1,6 @@
+F {main} {testerror.c:5}
+C {main} {testerror.c:11} {exit}
+C {main} {testerror.c:11} {perror}
+C {main} {testerror.c:11} {__errno_location}
+C {main} {testerror.c:11} {fprintf}
+C {main} {testerror.c:11} {strerror}

@@ -1,0 +1,164 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+  <title>LCOV - test.info - drivers/misc/kernel_debugger.c</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">drivers/misc</a> - kernel_debugger.c<span style="font-size: 80%;"> (source / <a href="kernel_debugger.c.func.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">test.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">32</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2011-05-12</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="headerItem">Branches:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">18</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">           Branch data     Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>                :            : /* drivers/android/kernel_debugger.c</a>
+<span class="lineNum">       2 </span>                :            :  *
+<span class="lineNum">       3 </span>                :            :  * Guts of the kernel debugger.
+<span class="lineNum">       4 </span>                :            :  * Needs something to actually push commands to it.
+<span class="lineNum">       5 </span>                :            :  *
+<span class="lineNum">       6 </span>                :            :  * Copyright (C) 2007-2008 Google, Inc.
+<span class="lineNum">       7 </span>                :            :  *
+<span class="lineNum">       8 </span>                :            :  * This software is licensed under the terms of the GNU General Public
+<span class="lineNum">       9 </span>                :            :  * License version 2, as published by the Free Software Foundation, and
+<span class="lineNum">      10 </span>                :            :  * may be copied, distributed, and modified under those terms.
+<span class="lineNum">      11 </span>                :            :  *
+<span class="lineNum">      12 </span>                :            :  * This program is distributed in the hope that it will be useful,
+<span class="lineNum">      13 </span>                :            :  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      14 </span>                :            :  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      15 </span>                :            :  * GNU General Public License for more details.
+<span class="lineNum">      16 </span>                :            :  *
+<span class="lineNum">      17 </span>                :            :  */
+<span class="lineNum">      18 </span>                :            : 
+<span class="lineNum">      19 </span>                :            : #include &lt;linux/ctype.h&gt;
+<span class="lineNum">      20 </span>                :            : #include &lt;linux/device.h&gt;
+<span class="lineNum">      21 </span>                :            : #include &lt;linux/sched.h&gt;
+<span class="lineNum">      22 </span>                :            : #include &lt;linux/spinlock.h&gt;
+<span class="lineNum">      23 </span>                :            : #include &lt;linux/sysrq.h&gt;
+<span class="lineNum">      24 </span>                :            : #include &lt;linux/kernel_debugger.h&gt;
+<span class="lineNum">      25 </span>                :            : 
+<a name="26"><span class="lineNum">      26 </span>                :            : #define dprintf(fmt...) (ctxt-&gt;printf(ctxt-&gt;cookie, fmt))</a>
+<span class="lineNum">      27 </span>                :            : 
+<span class="lineNum">      28 </span>                :<span class="lineNoCov">          0 : static void do_ps(struct kdbg_ctxt *ctxt)</span>
+<span class="lineNum">      29 </span>                :            : {
+<span class="lineNum">      30 </span>                :            :         struct task_struct *g, *p;
+<span class="lineNum">      31 </span>                :            :         unsigned state;
+<span class="lineNum">      32 </span>                :            :         static const char stat_nam[] = &quot;RSDTtZX&quot;;
+<span class="lineNum">      33 </span>                :            : 
+<span class="lineNum">      34 </span>                :<span class="lineNoCov">          0 :         dprintf(&quot;pid   ppid  prio task            pc\n&quot;);</span>
+<span class="lineNum">      35 </span>                :<span class="lineNoCov">          0 :         read_lock(&amp;tasklist_lock);</span>
+<span class="lineNum">      36 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         do_each_thread(g, p) {</span>
+<span class="lineNum">      37 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :                 state = p-&gt;state ? __ffs(p-&gt;state) + 1 : 0;</span>
+<span class="lineNum">      38 </span>                :<span class="lineNoCov">          0 :                 dprintf(&quot;%5d %5d %4d &quot;, p-&gt;pid, p-&gt;parent-&gt;pid, p-&gt;prio);</span>
+<span class="lineNum">      39 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :                 dprintf(&quot;%-13.13s %c&quot;, p-&gt;comm,</span>
+<span class="lineNum">      40 </span>                :            :                         state &gt;= sizeof(stat_nam) ? '?' : stat_nam[state]);
+<span class="lineNum">      41 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :                 if (state == TASK_RUNNING)</span>
+<span class="lineNum">      42 </span>                :<span class="lineNoCov">          0 :                         dprintf(&quot; running\n&quot;);</span>
+<span class="lineNum">      43 </span>                :            :                 else
+<span class="lineNum">      44 </span>                :<span class="lineNoCov">          0 :                         dprintf(&quot; %08lx\n&quot;, thread_saved_pc(p));</span>
+<span class="lineNum">      45 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         } while_each_thread(g, p);</span>
+<span class="lineNum">      46 </span>                :<span class="lineNoCov">          0 :         read_unlock(&amp;tasklist_lock);</span>
+<span class="lineNum">      47 </span>                :<span class="lineNoCov">          0 : }</span>
+<span class="lineNum">      48 </span>                :            : 
+<a name="49"><span class="lineNum">      49 </span>                :            : int log_buf_copy(char *dest, int idx, int len);</a>
+<span class="lineNum">      50 </span>                :            : extern int do_syslog(int type, char __user *bug, int count);
+<span class="lineNum">      51 </span>                :<span class="lineNoCov">          0 : static void do_sysrq(struct kdbg_ctxt *ctxt, char rq)</span>
+<span class="lineNum">      52 </span>                :            : {
+<span class="lineNum">      53 </span>                :            :         char buf[128];
+<span class="lineNum">      54 </span>                :            :         int ret;
+<span class="lineNum">      55 </span>                :<span class="lineNoCov">          0 :         int idx = 0;</span>
+<span class="lineNum">      56 </span>                :<span class="lineNoCov">          0 :         do_syslog(5 /* clear */, NULL, 0);</span>
+<span class="lineNum">      57 </span>                :<span class="lineNoCov">          0 :         handle_sysrq(rq, NULL);</span>
+<span class="lineNum">      58 </span>                :            :         while (1) {
+<span class="lineNum">      59 </span>                :<span class="lineNoCov">          0 :                 ret = log_buf_copy(buf, idx, sizeof(buf) - 1);</span>
+<span class="lineNum">      60 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :                 if (ret &lt;= 0)</span>
+<span class="lineNum">      61 </span>                :            :                         break;
+<span class="lineNum">      62 </span>                :<span class="lineNoCov">          0 :                 buf[ret] = 0;</span>
+<span class="lineNum">      63 </span>                :<span class="lineNoCov">          0 :                 dprintf(&quot;%s&quot;, buf);</span>
+<span class="lineNum">      64 </span>                :<span class="lineNoCov">          0 :                 idx += ret;</span>
+<span class="lineNum">      65 </span>                :<span class="lineNoCov">          0 :         }</span>
+<a name="66"><span class="lineNum">      66 </span>                :<span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">      67 </span>                :            : 
+<span class="lineNum">      68 </span>                :<span class="lineNoCov">          0 : int kernel_debugger(struct kdbg_ctxt *ctxt, char *cmd)</span>
+<span class="lineNum">      69 </span>                :            : {
+<span class="lineNum">      70 </span>        [<span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (!strcmp(cmd, &quot;ps&quot;))</span>
+<span class="lineNum">      71 </span>                :<span class="lineNoCov">          0 :                 do_ps(ctxt);</span>
+<span class="lineNum">      72 </span>        [<span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (!strcmp(cmd, &quot;sysrq&quot;))</span>
+<span class="lineNum">      73 </span>                :<span class="lineNoCov">          0 :                 do_sysrq(ctxt, 'h');</span>
+<span class="lineNum">      74 </span>        [<span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (!strncmp(cmd, &quot;sysrq &quot;, 6))</span>
+<span class="lineNum">      75 </span>                :<span class="lineNoCov">          0 :                 do_sysrq(ctxt, cmd[6]);</span>
+<span class="lineNum">      76 </span>                :            : 
+<span class="lineNum">      77 </span>                :<span class="lineNoCov">          0 :         return 0;</span>
+<span class="lineNum">      78 </span>                :            : }
+<span class="lineNum">      79 </span>                :            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.8</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

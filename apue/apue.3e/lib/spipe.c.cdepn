@@ -1,0 +1,2 @@
+F {fd_pipe} {spipe.c:9}
+C {fd_pipe} {spipe.c:12} {socketpair}

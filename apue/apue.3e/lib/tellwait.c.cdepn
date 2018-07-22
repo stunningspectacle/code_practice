@@ -1,0 +1,24 @@
+F {WAIT_CHILD} {tellwait.c:54}
+C {WAIT_CHILD} {tellwait.c:63} {err_sys}
+C {WAIT_CHILD} {tellwait.c:63} {sigprocmask}
+C {WAIT_CHILD} {tellwait.c:63} {sigsuspend}
+F {TELL_CHILD} {tellwait.c:48}
+C {TELL_CHILD} {tellwait.c:63} {kill}
+F {WAIT_PARENT} {tellwait.c:36}
+C {WAIT_PARENT} {tellwait.c:63} {err_sys}
+C {WAIT_PARENT} {tellwait.c:63} {sigprocmask}
+C {WAIT_PARENT} {tellwait.c:63} {sigsuspend}
+F {TELL_PARENT} {tellwait.c:30}
+C {TELL_PARENT} {tellwait.c:63} {kill}
+F {TELL_WAIT} {tellwait.c:13}
+C {TELL_WAIT} {tellwait.c:63} {err_sys}
+C {TELL_WAIT} {tellwait.c:63} {sigprocmask}
+C {TELL_WAIT} {tellwait.c:63} {sigaddset}
+C {TELL_WAIT} {tellwait.c:63} {sigaddset}
+C {TELL_WAIT} {tellwait.c:63} {sigemptyset}
+C {TELL_WAIT} {tellwait.c:63} {sigemptyset}
+C {TELL_WAIT} {tellwait.c:63} {err_sys}
+C {TELL_WAIT} {tellwait.c:63} {signal}
+C {TELL_WAIT} {tellwait.c:63} {err_sys}
+C {TELL_WAIT} {tellwait.c:63} {signal}
+F {sig_usr} {tellwait.c:7}

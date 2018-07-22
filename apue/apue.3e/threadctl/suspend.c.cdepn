@@ -1,0 +1,23 @@
+F {main} {suspend.c:39}
+C {main} {suspend.c:67} {exit}
+C {main} {suspend.c:67} {err_sys}
+C {main} {suspend.c:67} {sigprocmask}
+C {main} {suspend.c:67} {pthread_mutex_unlock}
+C {main} {suspend.c:67} {pthread_cond_wait}
+C {main} {suspend.c:67} {pthread_mutex_lock}
+C {main} {suspend.c:67} {err_exit}
+C {main} {suspend.c:67} {pthread_create}
+C {main} {suspend.c:67} {err_exit}
+C {main} {suspend.c:67} {pthread_sigmask}
+C {main} {suspend.c:67} {sigaddset}
+C {main} {suspend.c:67} {sigaddset}
+C {main} {suspend.c:67} {sigemptyset}
+F {thr_fn} {suspend.c:11}
+C {thr_fn} {suspend.c:67} {exit}
+C {thr_fn} {suspend.c:67} {printf}
+C {thr_fn} {suspend.c:67} {pthread_cond_signal}
+C {thr_fn} {suspend.c:67} {pthread_mutex_unlock}
+C {thr_fn} {suspend.c:67} {pthread_mutex_lock}
+C {thr_fn} {suspend.c:67} {__builtin_puts}
+C {thr_fn} {suspend.c:67} {err_exit}
+C {thr_fn} {suspend.c:67} {sigwait}

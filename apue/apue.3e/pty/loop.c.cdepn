@@ -1,0 +1,17 @@
+F {sig_term} {loop.c:67}
+F {loop} {loop.c:9}
+C {loop} {loop.c:70} {kill}
+C {loop} {loop.c:70} {err_sys}
+C {loop} {loop.c:70} {writen}
+C {loop} {loop.c:70} {read}
+C {loop} {loop.c:70} {err_sys}
+C {loop} {loop.c:70} {signal_intr}
+C {loop} {loop.c:70} {exit}
+C {loop} {loop.c:70} {kill}
+C {loop} {loop.c:70} {getppid}
+C {loop} {loop.c:70} {err_sys}
+C {loop} {loop.c:70} {writen}
+C {loop} {loop.c:70} {err_sys}
+C {loop} {loop.c:70} {read}
+C {loop} {loop.c:70} {err_sys}
+C {loop} {loop.c:70} {fork}

@@ -1,0 +1,216 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+  <title>LCOV - drivers_i2c_busses.info - include/linux/thread_info.h</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">include/linux</a> - thread_info.h<span style="font-size: 80%;"> (source / <a href="thread_info.h.func.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">drivers_i2c_busses.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2011-04-26</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="headerItem">Branches:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">           Branch data     Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>                :            : /* thread_info.h: common low-level thread information accessors</a>
+<span class="lineNum">       2 </span>                :            :  *
+<span class="lineNum">       3 </span>                :            :  * Copyright (C) 2002  David Howells (dhowells@redhat.com)
+<span class="lineNum">       4 </span>                :            :  * - Incorporating suggestions made by Linus Torvalds
+<span class="lineNum">       5 </span>                :            :  */
+<span class="lineNum">       6 </span>                :            : 
+<span class="lineNum">       7 </span>                :            : #ifndef _LINUX_THREAD_INFO_H
+<span class="lineNum">       8 </span>                :            : #define _LINUX_THREAD_INFO_H
+<span class="lineNum">       9 </span>                :            : 
+<span class="lineNum">      10 </span>                :            : #include &lt;linux/types.h&gt;
+<span class="lineNum">      11 </span>                :            : 
+<span class="lineNum">      12 </span>                :            : struct timespec;
+<span class="lineNum">      13 </span>                :            : struct compat_timespec;
+<span class="lineNum">      14 </span>                :            : 
+<span class="lineNum">      15 </span>                :            : /*
+<span class="lineNum">      16 </span>                :            :  * System call restart block.
+<span class="lineNum">      17 </span>                :            :  */
+<span class="lineNum">      18 </span>                :            : struct restart_block {
+<span class="lineNum">      19 </span>                :            :         long (*fn)(struct restart_block *);
+<span class="lineNum">      20 </span>                :            :         union {
+<span class="lineNum">      21 </span>                :            :                 struct {
+<span class="lineNum">      22 </span>                :            :                         unsigned long arg0, arg1, arg2, arg3;
+<span class="lineNum">      23 </span>                :            :                 };
+<span class="lineNum">      24 </span>                :            :                 /* For futex_wait and futex_wait_requeue_pi */
+<span class="lineNum">      25 </span>                :            :                 struct {
+<span class="lineNum">      26 </span>                :            :                         u32 *uaddr;
+<span class="lineNum">      27 </span>                :            :                         u32 val;
+<span class="lineNum">      28 </span>                :            :                         u32 flags;
+<span class="lineNum">      29 </span>                :            :                         u32 bitset;
+<span class="lineNum">      30 </span>                :            :                         u64 time;
+<span class="lineNum">      31 </span>                :            :                         u32 *uaddr2;
+<span class="lineNum">      32 </span>                :            :                 } futex;
+<span class="lineNum">      33 </span>                :            :                 /* For nanosleep */
+<span class="lineNum">      34 </span>                :            :                 struct {
+<span class="lineNum">      35 </span>                :            :                         clockid_t index;
+<span class="lineNum">      36 </span>                :            :                         struct timespec __user *rmtp;
+<span class="lineNum">      37 </span>                :            : #ifdef CONFIG_COMPAT
+<span class="lineNum">      38 </span>                :            :                         struct compat_timespec __user *compat_rmtp;
+<span class="lineNum">      39 </span>                :            : #endif
+<span class="lineNum">      40 </span>                :            :                         u64 expires;
+<span class="lineNum">      41 </span>                :            :                 } nanosleep;
+<span class="lineNum">      42 </span>                :            :                 /* For poll */
+<span class="lineNum">      43 </span>                :            :                 struct {
+<span class="lineNum">      44 </span>                :            :                         struct pollfd __user *ufds;
+<span class="lineNum">      45 </span>                :            :                         int nfds;
+<span class="lineNum">      46 </span>                :            :                         int has_timeout;
+<span class="lineNum">      47 </span>                :            :                         unsigned long tv_sec;
+<span class="lineNum">      48 </span>                :            :                         unsigned long tv_nsec;
+<span class="lineNum">      49 </span>                :            :                 } poll;
+<span class="lineNum">      50 </span>                :            :         };
+<span class="lineNum">      51 </span>                :            : };
+<span class="lineNum">      52 </span>                :            : 
+<span class="lineNum">      53 </span>                :            : extern long do_no_restart_syscall(struct restart_block *parm);
+<span class="lineNum">      54 </span>                :            : 
+<span class="lineNum">      55 </span>                :            : #include &lt;linux/bitops.h&gt;
+<span class="lineNum">      56 </span>                :            : #include &lt;asm/thread_info.h&gt;
+<span class="lineNum">      57 </span>                :            : 
+<span class="lineNum">      58 </span>                :            : #ifdef __KERNEL__
+<span class="lineNum">      59 </span>                :            : 
+<span class="lineNum">      60 </span>                :            : /*
+<span class="lineNum">      61 </span>                :            :  * flag set/clear/test wrappers
+<span class="lineNum">      62 </span>                :            :  * - pass TIF_xxxx constants to these functions
+<span class="lineNum">      63 </span>                :            :  */
+<span class="lineNum">      64 </span>                :            : 
+<span class="lineNum">      65 </span>                :            : static inline void set_ti_thread_flag(struct thread_info *ti, int flag)
+<span class="lineNum">      66 </span>                :            : {
+<span class="lineNum">      67 </span>                :            :         set_bit(flag, (unsigned long *)&amp;ti-&gt;flags);
+<span class="lineNum">      68 </span>                :            : }
+<span class="lineNum">      69 </span>                :            : 
+<span class="lineNum">      70 </span>                :            : static inline void clear_ti_thread_flag(struct thread_info *ti, int flag)
+<span class="lineNum">      71 </span>                :            : {
+<span class="lineNum">      72 </span>                :            :         clear_bit(flag, (unsigned long *)&amp;ti-&gt;flags);
+<span class="lineNum">      73 </span>                :            : }
+<span class="lineNum">      74 </span>                :            : 
+<span class="lineNum">      75 </span>                :            : static inline int test_and_set_ti_thread_flag(struct thread_info *ti, int flag)
+<span class="lineNum">      76 </span>                :            : {
+<span class="lineNum">      77 </span>                :            :         return test_and_set_bit(flag, (unsigned long *)&amp;ti-&gt;flags);
+<span class="lineNum">      78 </span>                :            : }
+<span class="lineNum">      79 </span>                :            : 
+<span class="lineNum">      80 </span>                :            : static inline int test_and_clear_ti_thread_flag(struct thread_info *ti, int flag)
+<span class="lineNum">      81 </span>                :            : {
+<span class="lineNum">      82 </span>                :            :         return test_and_clear_bit(flag, (unsigned long *)&amp;ti-&gt;flags);
+<span class="lineNum">      83 </span>                :            : }
+<span class="lineNum">      84 </span>                :            : 
+<span class="lineNum">      85 </span>                :            : static inline int test_ti_thread_flag(struct thread_info *ti, int flag)
+<span class="lineNum">      86 </span>                :            : {
+<span class="lineNum">      87 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         return test_bit(flag, (unsigned long *)&amp;ti-&gt;flags);</span>
+<span class="lineNum">      88 </span>                :            : }
+<span class="lineNum">      89 </span>                :            : 
+<span class="lineNum">      90 </span>                :            : #define set_thread_flag(flag) \
+<span class="lineNum">      91 </span>                :            :         set_ti_thread_flag(current_thread_info(), flag)
+<span class="lineNum">      92 </span>                :            : #define clear_thread_flag(flag) \
+<span class="lineNum">      93 </span>                :            :         clear_ti_thread_flag(current_thread_info(), flag)
+<span class="lineNum">      94 </span>                :            : #define test_and_set_thread_flag(flag) \
+<span class="lineNum">      95 </span>                :            :         test_and_set_ti_thread_flag(current_thread_info(), flag)
+<span class="lineNum">      96 </span>                :            : #define test_and_clear_thread_flag(flag) \
+<span class="lineNum">      97 </span>                :            :         test_and_clear_ti_thread_flag(current_thread_info(), flag)
+<span class="lineNum">      98 </span>                :            : #define test_thread_flag(flag) \
+<span class="lineNum">      99 </span>                :            :         test_ti_thread_flag(current_thread_info(), flag)
+<span class="lineNum">     100 </span>                :            : 
+<span class="lineNum">     101 </span>                :            : #define set_need_resched()      set_thread_flag(TIF_NEED_RESCHED)
+<span class="lineNum">     102 </span>                :            : #define clear_need_resched()    clear_thread_flag(TIF_NEED_RESCHED)
+<span class="lineNum">     103 </span>                :            : 
+<span class="lineNum">     104 </span>                :            : #if defined TIF_RESTORE_SIGMASK &amp;&amp; !defined HAVE_SET_RESTORE_SIGMASK
+<span class="lineNum">     105 </span>                :            : /*
+<span class="lineNum">     106 </span>                :            :  * An arch can define its own version of set_restore_sigmask() to get the
+<span class="lineNum">     107 </span>                :            :  * job done however works, with or without TIF_RESTORE_SIGMASK.
+<span class="lineNum">     108 </span>                :            :  */
+<span class="lineNum">     109 </span>                :            : #define HAVE_SET_RESTORE_SIGMASK        1
+<span class="lineNum">     110 </span>                :            : 
+<span class="lineNum">     111 </span>                :            : /**
+<span class="lineNum">     112 </span>                :            :  * set_restore_sigmask() - make sure saved_sigmask processing gets done
+<span class="lineNum">     113 </span>                :            :  *
+<span class="lineNum">     114 </span>                :            :  * This sets TIF_RESTORE_SIGMASK and ensures that the arch signal code
+<span class="lineNum">     115 </span>                :            :  * will run before returning to user mode, to process the flag.  For
+<span class="lineNum">     116 </span>                :            :  * all callers, TIF_SIGPENDING is already set or it's no harm to set
+<span class="lineNum">     117 </span>                :            :  * it.  TIF_RESTORE_SIGMASK need not be in the set of bits that the
+<span class="lineNum">     118 </span>                :            :  * arch code will notice on return to user mode, in case those bits
+<span class="lineNum">     119 </span>                :            :  * are scarce.  We set TIF_SIGPENDING here to ensure that the arch
+<span class="lineNum">     120 </span>                :            :  * signal code always gets run when TIF_RESTORE_SIGMASK is set.
+<span class="lineNum">     121 </span>                :            :  */
+<span class="lineNum">     122 </span>                :            : static inline void set_restore_sigmask(void)
+<span class="lineNum">     123 </span>                :            : {
+<span class="lineNum">     124 </span>                :            :         set_thread_flag(TIF_RESTORE_SIGMASK);
+<span class="lineNum">     125 </span>                :            :         set_thread_flag(TIF_SIGPENDING);
+<span class="lineNum">     126 </span>                :            : }
+<span class="lineNum">     127 </span>                :            : #endif  /* TIF_RESTORE_SIGMASK &amp;&amp; !HAVE_SET_RESTORE_SIGMASK */
+<span class="lineNum">     128 </span>                :            : 
+<span class="lineNum">     129 </span>                :            : #endif  /* __KERNEL__ */
+<span class="lineNum">     130 </span>                :            : 
+<span class="lineNum">     131 </span>                :            : #endif /* _LINUX_THREAD_INFO_H */
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.8</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

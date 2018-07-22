@@ -1,0 +1,3 @@
+F {buf_args} {bufargs.c:14}
+C {buf_args} {bufargs.c:35} {strtok}
+C {buf_args} {bufargs.c:35} {strtok}

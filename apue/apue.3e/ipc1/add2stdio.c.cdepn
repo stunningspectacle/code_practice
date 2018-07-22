@@ -1,0 +1,8 @@
+F {main} {add2stdio.c:4}
+C {main} {add2stdio.c:19} {exit}
+C {main} {add2stdio.c:19} {fgets}
+C {main} {add2stdio.c:19} {err_sys}
+C {main} {add2stdio.c:19} {printf}
+C {main} {add2stdio.c:19} {err_sys}
+C {main} {add2stdio.c:19} {printf}
+C {main} {add2stdio.c:19} {sscanf}

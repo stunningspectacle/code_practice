@@ -1,0 +1,23 @@
+F {main} {nice.c:29}
+C {main} {nice.c:69} {checktime}
+C {main} {nice.c:69} {err_quit}
+C {main} {nice.c:69} {printf}
+C {main} {nice.c:69} {nice}
+C {main} {nice.c:69} {printf}
+C {main} {nice.c:69} {err_sys}
+C {main} {nice.c:69} {__errno_location}
+C {main} {nice.c:69} {nice}
+C {main} {nice.c:69} {__errno_location}
+C {main} {nice.c:69} {printf}
+C {main} {nice.c:69} {nice}
+C {main} {nice.c:69} {err_sys}
+C {main} {nice.c:69} {fork}
+C {main} {nice.c:69} {gettimeofday}
+C {main} {nice.c:69} {strtol}
+C {main} {nice.c:69} {printf}
+C {main} {nice.c:69} {sysconf}
+C {main} {nice.c:69} {setbuf}
+F {checktime} {nice.c:17}
+C {checktime} {nice.c:69} {exit}
+C {checktime} {nice.c:69} {printf}
+C {checktime} {nice.c:69} {gettimeofday}

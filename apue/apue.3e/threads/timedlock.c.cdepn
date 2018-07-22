@@ -1,0 +1,16 @@
+F {main} {timedlock.c:5}
+C {main} {timedlock.c:31} {exit}
+C {main} {timedlock.c:31} {printf}
+C {main} {timedlock.c:31} {strerror}
+C {main} {timedlock.c:31} {__builtin_puts}
+C {main} {timedlock.c:31} {printf}
+C {main} {timedlock.c:31} {strftime}
+C {main} {timedlock.c:31} {localtime}
+C {main} {timedlock.c:31} {clock_gettime}
+C {main} {timedlock.c:31} {pthread_mutex_timedlock}
+C {main} {timedlock.c:31} {printf}
+C {main} {timedlock.c:31} {strftime}
+C {main} {timedlock.c:31} {localtime}
+C {main} {timedlock.c:31} {clock_gettime}
+C {main} {timedlock.c:31} {__builtin_puts}
+C {main} {timedlock.c:31} {pthread_mutex_lock}

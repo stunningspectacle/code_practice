@@ -1,0 +1,17 @@
+F {make_temp} {mkstemp.c:20}
+C {make_temp} {mkstemp.c:38} {unlink}
+C {make_temp} {mkstemp.c:38} {__builtin_puts}
+C {make_temp} {mkstemp.c:38} {err_sys}
+C {make_temp} {mkstemp.c:38} {__builtin_puts}
+C {make_temp} {mkstemp.c:38} {__errno_location}
+C {make_temp} {mkstemp.c:38} {stat}
+C {make_temp} {mkstemp.c:38} {close}
+C {make_temp} {mkstemp.c:38} {printf}
+C {make_temp} {mkstemp.c:38} {err_sys}
+C {make_temp} {mkstemp.c:38} {mkstemp}
+F {main} {mkstemp.c:7}
+C {main} {mkstemp.c:38} {exit}
+C {main} {mkstemp.c:38} {make_temp}
+C {main} {mkstemp.c:38} {__builtin_puts}
+C {main} {mkstemp.c:38} {make_temp}
+C {main} {mkstemp.c:38} {__builtin_puts}

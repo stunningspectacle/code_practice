@@ -1,0 +1,13 @@
+F {main} {fork2.c:5}
+C {main} {fork2.c:36} {exit}
+C {main} {fork2.c:36} {err_sys}
+C {main} {fork2.c:36} {waitpid}
+C {main} {fork2.c:36} {exit}
+C {main} {fork2.c:36} {printf}
+C {main} {fork2.c:36} {getppid}
+C {main} {fork2.c:36} {sleep}
+C {main} {fork2.c:36} {exit}
+C {main} {fork2.c:36} {err_sys}
+C {main} {fork2.c:36} {fork}
+C {main} {fork2.c:36} {err_sys}
+C {main} {fork2.c:36} {fork}

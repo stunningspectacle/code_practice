@@ -1,0 +1,9 @@
+F {main} {zap.c:5}
+C {main} {zap.c:27} {exit}
+C {main} {zap.c:27} {close}
+C {main} {zap.c:27} {err_ret}
+C {main} {zap.c:27} {futimens}
+C {main} {zap.c:27} {err_ret}
+C {main} {zap.c:27} {open}
+C {main} {zap.c:27} {err_ret}
+C {main} {zap.c:27} {stat}

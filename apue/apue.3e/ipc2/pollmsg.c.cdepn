@@ -1,0 +1,19 @@
+F {main} {pollmsg.c:38}
+C {main} {pollmsg.c:78} {printf}
+C {main} {pollmsg.c:78} {err_sys}
+C {main} {pollmsg.c:78} {read}
+C {main} {pollmsg.c:78} {err_sys}
+C {main} {pollmsg.c:78} {poll}
+C {main} {pollmsg.c:78} {err_exit}
+C {main} {pollmsg.c:78} {pthread_create}
+C {main} {pollmsg.c:78} {err_sys}
+C {main} {pollmsg.c:78} {socketpair}
+C {main} {pollmsg.c:78} {printf}
+C {main} {pollmsg.c:78} {err_sys}
+C {main} {pollmsg.c:78} {msgget}
+F {helper} {pollmsg.c:22}
+C {helper} {pollmsg.c:78} {err_sys}
+C {helper} {pollmsg.c:78} {write}
+C {helper} {pollmsg.c:78} {err_sys}
+C {helper} {pollmsg.c:78} {msgrcv}
+C {helper} {pollmsg.c:78} {memset}

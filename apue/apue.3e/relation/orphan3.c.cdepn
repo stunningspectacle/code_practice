@@ -1,0 +1,24 @@
+F {main} {orphan3.c:20}
+C {main} {orphan3.c:39} {exit}
+C {main} {orphan3.c:39} {printf}
+C {main} {orphan3.c:39} {__errno_location}
+C {main} {orphan3.c:39} {read}
+C {main} {orphan3.c:39} {pr_ids}
+C {main} {orphan3.c:39} {kill}
+C {main} {orphan3.c:39} {getpid}
+C {main} {orphan3.c:39} {signal}
+C {main} {orphan3.c:39} {pr_ids}
+C {main} {orphan3.c:39} {sleep}
+C {main} {orphan3.c:39} {err_sys}
+C {main} {orphan3.c:39} {fork}
+C {main} {orphan3.c:39} {pr_ids}
+F {pr_ids} {orphan3.c:11}
+C {pr_ids} {orphan3.c:39} {fflush}
+C {pr_ids} {orphan3.c:39} {printf}
+C {pr_ids} {orphan3.c:39} {getpid}
+C {pr_ids} {orphan3.c:39} {getppid}
+C {pr_ids} {orphan3.c:39} {getpgrp}
+C {pr_ids} {orphan3.c:39} {tcgetpgrp}
+F {sig_hup} {orphan3.c:5}
+C {sig_hup} {orphan3.c:39} {printf}
+C {sig_hup} {orphan3.c:39} {getpid}

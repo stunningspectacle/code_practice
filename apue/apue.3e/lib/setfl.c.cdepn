@@ -1,0 +1,5 @@
+F {set_fl} {setfl.c:5}
+C {set_fl} {setfl.c:16} {err_sys}
+C {set_fl} {setfl.c:16} {fcntl}
+C {set_fl} {setfl.c:16} {err_sys}
+C {set_fl} {setfl.c:16} {fcntl}

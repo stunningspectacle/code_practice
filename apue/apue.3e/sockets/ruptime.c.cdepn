@@ -1,0 +1,15 @@
+F {main} {ruptime.c:24}
+C {main} {ruptime.c:49} {err_exit}
+C {main} {ruptime.c:49} {exit}
+C {main} {ruptime.c:49} {print_uptime}
+C {main} {ruptime.c:49} {__errno_location}
+C {main} {ruptime.c:49} {connect_retry}
+C {main} {ruptime.c:49} {err_quit}
+C {main} {ruptime.c:49} {gai_strerror}
+C {main} {ruptime.c:49} {getaddrinfo}
+C {main} {ruptime.c:49} {memset}
+C {main} {ruptime.c:49} {err_quit}
+F {print_uptime} {ruptime.c:12}
+C {print_uptime} {ruptime.c:49} {err_sys}
+C {print_uptime} {ruptime.c:49} {recv}
+C {print_uptime} {ruptime.c:49} {write}

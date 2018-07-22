@@ -1,0 +1,7 @@
+F {main} {getcputc.c:4}
+C {main} {getcputc.c:16} {exit}
+C {main} {getcputc.c:16} {err_sys}
+C {main} {getcputc.c:16} {ferror}
+C {main} {getcputc.c:16} {_IO_getc}
+C {main} {getcputc.c:16} {err_sys}
+C {main} {getcputc.c:16} {_IO_putc}

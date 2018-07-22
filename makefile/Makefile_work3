@@ -1,0 +1,15 @@
+TARGETS := main main1 main2
+OUT := out
+OUT_TARGETS := $(patsubst %, $(OUT)/%, $(TARGETS))
+
+all: $(OUT) $(OUT_TARGETS)
+
+$(OUT)/%: %.c
+	gcc -o $@ $<
+
+$(OUT):
+	mkdir $(OUT)
+
+.PHONY: clean
+clean:
+	rm -rf $(OUT)

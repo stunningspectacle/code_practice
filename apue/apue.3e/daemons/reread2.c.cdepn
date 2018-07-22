@@ -1,0 +1,28 @@
+F {main} {reread2.c:29}
+C {main} {reread2.c:77} {exit}
+C {main} {reread2.c:77} {exit}
+C {main} {reread2.c:77} {syslog}
+C {main} {reread2.c:77} {strerror}
+C {main} {reread2.c:77} {__errno_location}
+C {main} {reread2.c:77} {sigaction}
+C {main} {reread2.c:77} {sigaddset}
+C {main} {reread2.c:77} {sigemptyset}
+C {main} {reread2.c:77} {exit}
+C {main} {reread2.c:77} {syslog}
+C {main} {reread2.c:77} {strerror}
+C {main} {reread2.c:77} {__errno_location}
+C {main} {reread2.c:77} {sigaction}
+C {main} {reread2.c:77} {sigaddset}
+C {main} {reread2.c:77} {sigemptyset}
+C {main} {reread2.c:77} {exit}
+C {main} {reread2.c:77} {syslog}
+C {main} {reread2.c:77} {already_running}
+C {main} {reread2.c:77} {daemonize}
+C {main} {reread2.c:77} {strrchr}
+F {sighup} {reread2.c:22}
+C {sighup} {reread2.c:77} {reread}
+C {sighup} {reread2.c:77} {syslog}
+F {sigterm} {reread2.c:15}
+C {sigterm} {reread2.c:77} {exit}
+C {sigterm} {reread2.c:77} {syslog}
+F {reread} {reread2.c:9}

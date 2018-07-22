@@ -1,0 +1,31 @@
+digraph fullgraph {
+node [ fontname=Helvetica, fontsize=12 ];
+rankdir=LR;
+"daemonize" -> "exit";
+"daemonize" -> "getrlimit";
+"daemonize" -> "close";
+"daemonize" -> "chdir";
+"daemonize" -> "syslog";
+"daemonize" -> "dup";
+"daemonize" -> "setsid";
+"daemonize" -> "open";
+"daemonize" -> "umask";
+"daemonize" -> "openlog";
+"daemonize" -> "fork";
+"daemonize" -> "sigemptyset";
+"daemonize" -> "sigaction";
+"daemonize" -> "err_quit";
+"err_quit" -> "__builtin_va_start";
+"err_quit" -> "err_doit";
+"err_doit" -> "strerror";
+"err_doit" -> "fputs";
+"err_doit" -> "__builtin_memcpy";
+"err_doit" -> "fflush";
+"err_doit" -> "snprintf";
+"err_doit" -> "__builtin_strlen";
+"err_doit" -> "vsnprintf";
+"err_doit" -> "strlen";
+"err_quit" -> "__builtin_va_end";
+"err_quit" -> "exit";
+"daemonize"  [ fillcolor="#dddddd", style="filled,bold", shape="box" ];
+}

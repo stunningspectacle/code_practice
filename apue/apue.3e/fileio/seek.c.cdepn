@@ -1,0 +1,5 @@
+F {main} {seek.c:4}
+C {main} {seek.c:11} {exit}
+C {main} {seek.c:11} {__builtin_puts}
+C {main} {seek.c:11} {__builtin_puts}
+C {main} {seek.c:11} {lseek}

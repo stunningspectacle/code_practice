@@ -1,0 +1,263 @@
+#!/bin/bash
+#Please config the following parameters to run this script
+
+#ANDROID_DIR: the absolute path of android repository
+ANDROID_DIR=/home/leo/gingerbread
+
+#AVAILABLE_DRIVERS: the drivers support coverage testing. 
+#                   if a new driver directory was added, 
+#                   user have to rebuild and flash the images to board to enable the driver can be coverage tested
+AVAILABLE_DRIVERS="drivers/misc drivers/i2c/busses"
+
+##################################################################################################################
+
+testcase_PATH=
+SOURCE_DIR=
+DEBUG=1
+TARGET=mfld_cdk
+KERNEL_DIR=$ANDROID_DIR/hardware/intel/linux-2.6
+KERNEL_CONFIG=i386_mfld_cdk_android_defconfig
+WORK_DIR=`pwd`
+GCOV_DIR=/system/gcov
+CONFIG_FILE=.gcov_test_config
+TMPDIR=.gcov_tmp
+
+function usage() {
+    echo "Usage:    To install gcov test here: $0 --init manifest_url --driver driver_dir"
+    echo "          To run a gcov test: $0 testcase_path"
+    echo "          To get help: $0 [-h] [--help]"
+    exit
+}
+
+function exit_on_failure() {
+    $@
+    if [ $? -ne 0 ]; then
+        echo "$@ failed"
+        exit $?
+    fi
+}
+
+function check_config() {
+    if [ "$ANDROID_DIR" == "" ] || [ "$AVAILABLE_DRIVERS" == "" ]; then
+        echo "Please config the ANDROID_DIR and AVAILABLE_DRIVERS in the script"
+        exit
+    fi
+    if [ ! -d $KERNEL_DIR ]; then
+        echo "$KERNEL_DIR is not exist, please check ANDROID_DIR in the config!"
+        exit
+    fi
+
+    if ! lcov -v | grep -q version; then
+        echo "lcov in not installed, please install lcov and run script again."
+        exit
+    fi
+    cd $KERNEL_DIR
+    for code in $AVAILABLE_DRIVERS
+    do
+        if [ ! -d $code ]; then
+            echo "$KERNEL_DIR/$code is not exist, please check AVAILABLE_DRIVERS in the config!"
+            exit
+        fi
+    done
+    cd $WORK_DIR
+}
+
+function build_and_flash_kernel()
+{
+    cd $KERNEL_DIR
+    make $KERNEL_CONFIG
+    echo CONFIG_GCOV_KERNEL=y >> .config
+    make oldconfig << CONFIGENTER
+
+
+
+
+
+CONFIGENTER
+    for code in $AVAILABLE_DRIVERS
+    do
+        cd $code
+        if [ ! -f Makefile ]; then
+            echo "There is no Makefile in $code, ERROR!"
+            cd -
+            continue
+        fi
+        if ! grep -q "GCOV_PROFILE := y" Makefile; then
+            cat Makefile | sed -e '1,/^$/ {/^$/i\
+            GCOV_PROFILE := y
+            }' > Makefile_gcov
+            mv Makefile_gcov Makefile
+        fi
+        cd -
+    done
+
+    [ ! $DEBUG ] && {
+        exit_on_failure make -j4
+        cp arch/x86/boot/bzImage $ANDROID_DIR/out/target/product/mfld_cdk/boot/kernel
+        cd $ANDROID_DIR
+        $ANDROID_DIR/vendor/intel/support/build_boot.sh mfld_cdk out/target/product/mfld_cdk/boot.bin
+    }
+
+    for ((;;))
+    do
+        adb_avail=0
+        if fastboot devices | grep -q fastboot; then
+            break
+        fi
+        if adb devices | grep -q 0123456789ABCDEF; then
+           adb_avail=1 
+        fi
+
+        if [ $adb_avail -eq 1 ]; then
+            adb push $ANDROID_DIR/out/target/product/mfld_cdk/symbols/invalidate_osip /system/bin/
+            adb shell invalidate_osip
+            echo "adb shell invalidate_osip has been done, please reboot the board into fastboot flash interface and press 'Enter'"
+        else
+            echo "Please power on the board, connect the board to host mechine and press 'Enter'"
+        fi
+        read
+    done
+
+    exit_on_failure $ANDROID_DIR/vendor/intel/support/flash_device.sh -c $ANDROID_DIR/out/target/product/mfld_cdk
+    echo "Flash kernel and images completed!"    
+    exit
+}
+
+function coverage_test() {
+    if [ ! -f $testcase_PATH ]; then
+        echo "$testcase_PATH not exsited, ERROR"
+        exit
+    fi
+
+    exit_on_failure cd $KERNEL_DIR/$SOURCE_DIR
+    if ! ls | grep -q "\.gcno$"; then
+        echo "Can't find .gcno file in $KERNEL_DIR/$SOURCE_DIR, ERROR!"
+        echo "Please add $SOURCE_DIR into AVAILABLE_DRIVERS in the config, rebuild and flash kernel"
+        exit
+    fi
+    
+    for ((;;))
+    do
+        if ! adb devices | grep -q 0123456789ABCDEF; then
+            echo "Please power on the board, connect the board to host mechine and press 'Enter'"
+            read
+        else
+            break
+        fi
+    done
+
+    adb shell << COMMAND >/dev/null
+    if [ ! -d $GCOV_DIR ]; then
+        mkdir $GCOV_DIR
+    fi
+    if ! `mount | grep -q /sys/kernel/debug`; then
+        mount -t debugfs none /sys/kernel/debug
+    fi
+    exit
+COMMAND
+
+    cd $WORK_DIR
+    exit_on_failure adb push $testcase_PATH $GCOV_DIR
+
+    testcase=$GCOV_DIR/`basename $testcase_PATH`
+    exit_on_failure adb shell chmod +x $testcase
+    exit_on_failure adb shell $testcase
+
+    if [ -d $TMPDIR ]; then
+        rm -rf $TMPDIR/*
+    else
+        mkdir $TMPDIR
+    fi
+    SOURCE_PATH=$KERNEL_DIR/$SOURCE_DIR
+    exit_on_failure adb pull /sys/kernel/debug/gcov${SOURCE_PATH} $TMPDIR
+    cp $TMPDIR/*.gcda $SOURCE_PATH
+
+    infoname=`basename $testcase_PATH | cut -d. -f1`
+    exit_on_failure lcov -b $KERNEL_DIR --directory $SOURCE_PATH --capture --output-file $infoname.info
+    exit_on_failure genhtml $infoname.info -o ${infoname}_html
+    exit_on_failure firefox ${infoname}_html/index.html
+}
+
+function list_drivers() {
+    if [ "$AVAILABLE_DRIVERS" == "" ]; then
+        echo "There is no availe drivers for coverage testing"
+        echo "Please add the driver path to AVAILABLE_DRIVERS and run this script by -f option (build and flash images)"
+        exit
+    fi
+    echo "Available drivers are:"
+    for code in $AVAILABLE_DRIVERS
+    do
+        echo "      $code"
+    done
+    exit
+}
+
+function gcov_init() {
+    _manifest=$1
+    _driver_dir=$2
+
+    exit_on_failure echo "manifest:$_manifest" > $CONFIG_FILE
+    exit_on_failure echo "driver: $_driver_dir" >> $CONFIG_FILE
+
+    exit_on_failure repo init -u $_manifest -b gingerbread -m stable
+    exit_on_failure repo sync
+
+    exit_on_failure . build/envsetup.sh
+    exit_on_failure lunch $TARGET-eng
+    exit_on_failure make -j4 $TARGET
+    
+    
+    
+function main() {
+    _driver_dir=
+    _manifest=
+    _testcase=
+    _usage=0
+    _debug_mode=0
+
+    [ $# -eq 0 ] && usage
+
+    for (( $# > 0 ))
+    do
+        case "$1" in
+            --init)
+                shift
+                _manifest=$1
+                shift
+                ;;
+            --driver)
+                shift
+                _driver_dir=$1
+                shift
+                ;;
+            --testcase)
+                shift
+                _testcase=$1
+                shift
+                ;;
+            --debug)
+                shift
+                _debug_mode=1
+                ;;
+            -h | --help)
+                shift
+                usage=1
+            *)
+                usage
+        esac
+    done
+
+    [ $_usage -eq 1 ] && usage
+    [ $_debug_mode -eq 1 ] && set -x
+
+    if [ "$_manifest" != "" ] && [ "$_driver_dir" != "" ]; then
+        [ -f $CONFIG_FILE ] && rm $CONFIG_FILE
+        gcov_init $_manifest $_driver_dir
+    fi
+
+    if [ "$_testcase" != "" ]; then
+        gcov_test $_testcase
+    fi
+}
+
+main $@

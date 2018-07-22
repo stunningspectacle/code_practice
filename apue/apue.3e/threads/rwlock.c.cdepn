@@ -1,0 +1,15 @@
+F {job_find} {rwlock.c:95}
+C {job_find} {rwlock.c:108} {pthread_rwlock_unlock}
+C {job_find} {rwlock.c:108} {pthread_equal}
+C {job_find} {rwlock.c:108} {pthread_rwlock_rdlock}
+F {job_remove} {rwlock.c:72}
+C {job_remove} {rwlock.c:108} {pthread_rwlock_unlock}
+C {job_remove} {rwlock.c:108} {pthread_rwlock_wrlock}
+F {job_append} {rwlock.c:55}
+C {job_append} {rwlock.c:108} {pthread_rwlock_unlock}
+C {job_append} {rwlock.c:108} {pthread_rwlock_wrlock}
+F {job_insert} {rwlock.c:38}
+C {job_insert} {rwlock.c:108} {pthread_rwlock_unlock}
+C {job_insert} {rwlock.c:108} {pthread_rwlock_wrlock}
+F {queue_init} {rwlock.c:21}
+C {queue_init} {rwlock.c:108} {pthread_rwlock_init}

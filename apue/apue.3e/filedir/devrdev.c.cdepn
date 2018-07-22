@@ -1,0 +1,12 @@
+F {main} {devrdev.c:7}
+C {main} {devrdev.c:30} {exit}
+C {main} {devrdev.c:30} {__builtin_putchar}
+C {main} {devrdev.c:30} {printf}
+C {main} {devrdev.c:30} {gnu_dev_major}
+C {main} {devrdev.c:30} {gnu_dev_minor}
+C {main} {devrdev.c:30} {printf}
+C {main} {devrdev.c:30} {gnu_dev_major}
+C {main} {devrdev.c:30} {gnu_dev_minor}
+C {main} {devrdev.c:30} {err_ret}
+C {main} {devrdev.c:30} {stat}
+C {main} {devrdev.c:30} {printf}

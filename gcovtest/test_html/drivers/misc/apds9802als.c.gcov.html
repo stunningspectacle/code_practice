@@ -1,0 +1,420 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+  <title>LCOV - test.info - drivers/misc/apds9802als.c</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">drivers/misc</a> - apds9802als.c<span style="font-size: 80%;"> (source / <a href="apds9802als.c.func.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">test.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">65</td>
+            <td class="headerCovTableEntry">121</td>
+            <td class="headerCovTableEntryLo">53.7 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2011-05-12</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">8</td>
+            <td class="headerCovTableEntry">14</td>
+            <td class="headerCovTableEntryLo">57.1 %</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="headerItem">Branches:</td>
+            <td class="headerCovTableEntry">14</td>
+            <td class="headerCovTableEntry">34</td>
+            <td class="headerCovTableEntryLo">41.2 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">           Branch data     Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>                :            : /*</a>
+<span class="lineNum">       2 </span>                :            :  * apds9802als.c - apds9802  ALS Driver
+<span class="lineNum">       3 </span>                :            :  *
+<span class="lineNum">       4 </span>                :            :  * Copyright (C) 2009 Intel Corp
+<span class="lineNum">       5 </span>                :            :  *
+<span class="lineNum">       6 </span>                :            :  *  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<span class="lineNum">       7 </span>                :            :  *
+<span class="lineNum">       8 </span>                :            :  * This program is free software; you can redistribute it and/or modify
+<span class="lineNum">       9 </span>                :            :  * it under the terms of the GNU General Public License as published by
+<span class="lineNum">      10 </span>                :            :  * the Free Software Foundation; version 2 of the License.
+<span class="lineNum">      11 </span>                :            :  *
+<span class="lineNum">      12 </span>                :            :  * This program is distributed in the hope that it will be useful, but
+<span class="lineNum">      13 </span>                :            :  * WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      14 </span>                :            :  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+<span class="lineNum">      15 </span>                :            :  * General Public License for more details.
+<span class="lineNum">      16 </span>                :            :  *
+<span class="lineNum">      17 </span>                :            :  * You should have received a copy of the GNU General Public License along
+<span class="lineNum">      18 </span>                :            :  * with this program; if not, write to the Free Software Foundation, Inc.,
+<span class="lineNum">      19 </span>                :            :  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
+<span class="lineNum">      20 </span>                :            :  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<span class="lineNum">      21 </span>                :            :  *
+<span class="lineNum">      22 </span>                :            :  */
+<span class="lineNum">      23 </span>                :            : 
+<span class="lineNum">      24 </span>                :            : #include &lt;linux/module.h&gt;
+<span class="lineNum">      25 </span>                :            : #include &lt;linux/init.h&gt;
+<span class="lineNum">      26 </span>                :            : #include &lt;linux/slab.h&gt;
+<span class="lineNum">      27 </span>                :            : #include &lt;linux/i2c.h&gt;
+<span class="lineNum">      28 </span>                :            : #include &lt;linux/err.h&gt;
+<span class="lineNum">      29 </span>                :            : #include &lt;linux/delay.h&gt;
+<span class="lineNum">      30 </span>                :            : #include &lt;linux/mutex.h&gt;
+<span class="lineNum">      31 </span>                :            : #include &lt;linux/sysfs.h&gt;
+<span class="lineNum">      32 </span>                :            : #include &lt;linux/pm_runtime.h&gt;
+<span class="lineNum">      33 </span>                :            : 
+<span class="lineNum">      34 </span>                :            : #define ALS_MIN_RANGE_VAL 1
+<span class="lineNum">      35 </span>                :            : #define ALS_MAX_RANGE_VAL 2
+<span class="lineNum">      36 </span>                :            : #define POWER_STA_ENABLE 1
+<span class="lineNum">      37 </span>                :            : #define POWER_STA_DISABLE 0
+<span class="lineNum">      38 </span>                :            : 
+<span class="lineNum">      39 </span>                :            : #define DRIVER_NAME &quot;apds9802als&quot;
+<span class="lineNum">      40 </span>                :            : 
+<span class="lineNum">      41 </span>                :            : struct als_data {
+<span class="lineNum">      42 </span>                :            :         struct mutex mutex;
+<a name="43"><span class="lineNum">      43 </span>                :            : };</a>
+<span class="lineNum">      44 </span>                :            : 
+<span class="lineNum">      45 </span>                :<span class="lineNoCov">          0 : static ssize_t als_sensing_range_show(struct device *dev,</span>
+<span class="lineNum">      46 </span>                :            :                         struct device_attribute *attr,  char *buf)
+<span class="lineNum">      47 </span>                :            : {
+<span class="lineNum">      48 </span>                :<span class="lineNoCov">          0 :         struct i2c_client *client = to_i2c_client(dev);</span>
+<span class="lineNum">      49 </span>                :            :         int  val;
+<span class="lineNum">      50 </span>                :            : 
+<span class="lineNum">      51 </span>                :<span class="lineNoCov">          0 :         val = i2c_smbus_read_byte_data(client, 0x81);</span>
+<span class="lineNum">      52 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (val &lt; 0)</span>
+<span class="lineNum">      53 </span>                :<span class="lineNoCov">          0 :                 return val;</span>
+<span class="lineNum">      54 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (val &amp; 1)</span>
+<span class="lineNum">      55 </span>                :<span class="lineNoCov">          0 :                 return sprintf(buf, &quot;4095\n&quot;);</span>
+<span class="lineNum">      56 </span>                :            :         else
+<span class="lineNum">      57 </span>                :<span class="lineNoCov">          0 :                 return sprintf(buf, &quot;65535\n&quot;);</span>
+<a name="58"><span class="lineNum">      58 </span>                :            : }</a>
+<span class="lineNum">      59 </span>                :            : 
+<span class="lineNum">      60 </span>                :<span class="lineCov">        195 : static int als_wait_for_data_ready(struct device *dev)</span>
+<span class="lineNum">      61 </span>                :            : {
+<span class="lineNum">      62 </span>                :<span class="lineCov">        195 :         struct i2c_client *client = to_i2c_client(dev);</span>
+<span class="lineNum">      63 </span>                :            :         int ret;
+<span class="lineNum">      64 </span>                :<span class="lineCov">        195 :         int retry = 10;</span>
+<span class="lineNum">      65 </span>                :            : 
+<span class="lineNum">      66 </span>                :            :         do {
+<span class="lineNum">      67 </span>                :<span class="lineCov">       1359 :                 msleep(30);</span>
+<span class="lineNum">      68 </span>                :<span class="lineCov">       1359 :                 ret = i2c_smbus_read_byte_data(client, 0x86);</span>
+<span class="lineNum">      69 </span>  [<span class="branchCov" title="Branch 0 was taken 1164 times"> + </span><span class="branchCov" title="Branch 1 was taken 195 times"> + </span><span class="branchCov" title="Branch 2 was taken 1164 times"> + </span><span class="branchNoCov" title="Branch 3 was not taken"> - </span>]:<span class="lineCov">       1359 :         } while (!(ret &amp; 0x80) &amp;&amp; retry--);</span>
+<span class="lineNum">      70 </span>                :            : 
+<span class="lineNum">      71 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 195 times"> + </span>]:<span class="lineCov">        195 :         if (!retry) {</span>
+<span class="lineNum">      72 </span>                :<span class="lineNoCov">          0 :                 dev_warn(dev, &quot;timeout waiting for data ready\n&quot;);</span>
+<span class="lineNum">      73 </span>                :<span class="lineNoCov">          0 :                 return -ETIMEDOUT;</span>
+<span class="lineNum">      74 </span>                :            :         }
+<span class="lineNum">      75 </span>                :            : 
+<span class="lineNum">      76 </span>                :<span class="lineCov">        195 :         return 0;</span>
+<a name="77"><span class="lineNum">      77 </span>                :            : }</a>
+<span class="lineNum">      78 </span>                :            : 
+<span class="lineNum">      79 </span>                :<span class="lineCov">        194 : static ssize_t als_lux_output_data_show(struct device *dev,</span>
+<span class="lineNum">      80 </span>                :            :                         struct device_attribute *attr, char *buf)
+<span class="lineNum">      81 </span>                :            : {
+<span class="lineNum">      82 </span>                :<span class="lineCov">        194 :         struct i2c_client *client = to_i2c_client(dev);</span>
+<span class="lineNum">      83 </span>                :<span class="lineCov">        194 :         struct als_data *data = i2c_get_clientdata(client);</span>
+<span class="lineNum">      84 </span>                :            :         int ret_val;
+<span class="lineNum">      85 </span>                :            :         int temp;
+<span class="lineNum">      86 </span>                :            : 
+<span class="lineNum">      87 </span>                :            :         pm_runtime_get_sync(dev);
+<span class="lineNum">      88 </span>                :<span class="lineCov">        194 :         mutex_lock(&amp;data-&gt;mutex);</span>
+<span class="lineNum">      89 </span>                :            : 
+<span class="lineNum">      90 </span>                :            :         /* clear EOC interrupt status */
+<span class="lineNum">      91 </span>                :<span class="lineCov">        194 :         i2c_smbus_write_byte(client, 0x40);</span>
+<span class="lineNum">      92 </span>                :            :         /* start measurement */
+<span class="lineNum">      93 </span>                :<span class="lineCov">        194 :         temp = i2c_smbus_read_byte_data(client, 0x81);</span>
+<span class="lineNum">      94 </span>                :<span class="lineCov">        194 :         i2c_smbus_write_byte_data(client, 0x81, temp | 0x08);</span>
+<span class="lineNum">      95 </span>                :            : 
+<span class="lineNum">      96 </span>                :<span class="lineCov">        194 :         ret_val = als_wait_for_data_ready(dev);</span>
+<span class="lineNum">      97 </span>        [<span class="branchCov" title="Branch 0 was taken 194 times"> + </span><span class="branchNoCov" title="Branch 1 was not taken"> - </span>]:<span class="lineCov">        194 :         if (ret_val &lt; 0)</span>
+<span class="lineNum">      98 </span>                :            :                 goto failed;
+<span class="lineNum">      99 </span>                :            : 
+<span class="lineNum">     100 </span>                :<span class="lineCov">        194 :         temp = i2c_smbus_read_byte_data(client, 0x8C); /* LSB data */</span>
+<span class="lineNum">     101 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 194 times"> + </span>]:<span class="lineCov">        194 :         if (temp &lt; 0) {</span>
+<span class="lineNum">     102 </span>                :<span class="lineNoCov">          0 :                 ret_val = temp;</span>
+<span class="lineNum">     103 </span>                :<span class="lineNoCov">          0 :                 goto failed;</span>
+<span class="lineNum">     104 </span>                :            :         }
+<span class="lineNum">     105 </span>                :<span class="lineCov">        194 :         ret_val = i2c_smbus_read_byte_data(client, 0x8D); /* MSB data */</span>
+<span class="lineNum">     106 </span>        [<span class="branchCov" title="Branch 0 was taken 194 times"> + </span><span class="branchNoCov" title="Branch 1 was not taken"> - </span>]:<span class="lineCov">        194 :         if (ret_val &lt; 0)</span>
+<span class="lineNum">     107 </span>                :            :                 goto failed;
+<span class="lineNum">     108 </span>                :            : 
+<span class="lineNum">     109 </span>                :<span class="lineCov">        194 :         mutex_unlock(&amp;data-&gt;mutex);</span>
+<span class="lineNum">     110 </span>                :            :         pm_runtime_put_sync(dev);
+<span class="lineNum">     111 </span>                :            : 
+<span class="lineNum">     112 </span>                :<span class="lineCov">        194 :         temp = (ret_val &lt;&lt; 8) | temp;</span>
+<span class="lineNum">     113 </span>                :<span class="lineCov">        194 :         return sprintf(buf, &quot;%d\n&quot;, temp);</span>
+<span class="lineNum">     114 </span>                :            : failed:
+<span class="lineNum">     115 </span>                :<span class="lineNoCov">          0 :         mutex_unlock(&amp;data-&gt;mutex);</span>
+<span class="lineNum">     116 </span>                :            :         pm_runtime_put_sync(dev);
+<span class="lineNum">     117 </span>                :<span class="lineCov">        194 :         return ret_val;</span>
+<a name="118"><span class="lineNum">     118 </span>                :            : }</a>
+<span class="lineNum">     119 </span>                :            : 
+<span class="lineNum">     120 </span>                :<span class="lineNoCov">          0 : static ssize_t als_sensing_range_store(struct device *dev,</span>
+<span class="lineNum">     121 </span>                :            :                 struct device_attribute *attr, const  char *buf, size_t count)
+<span class="lineNum">     122 </span>                :            : {
+<span class="lineNum">     123 </span>                :<span class="lineNoCov">          0 :         struct i2c_client *client = to_i2c_client(dev);</span>
+<span class="lineNum">     124 </span>                :<span class="lineNoCov">          0 :         struct als_data *data = i2c_get_clientdata(client);</span>
+<span class="lineNum">     125 </span>                :            :         unsigned int ret_val;
+<span class="lineNum">     126 </span>                :            :         unsigned long val;
+<span class="lineNum">     127 </span>                :            : 
+<span class="lineNum">     128 </span>        [<span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (strict_strtoul(buf, 10, &amp;val))</span>
+<span class="lineNum">     129 </span>                :<span class="lineNoCov">          0 :                 return -EINVAL;</span>
+<span class="lineNum">     130 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (val != 1 &amp;&amp; val != 2)</span>
+<span class="lineNum">     131 </span>                :<span class="lineNoCov">          0 :                 return -EINVAL;</span>
+<span class="lineNum">     132 </span>                :            : 
+<span class="lineNum">     133 </span>                :            :         pm_runtime_get_sync(dev);
+<span class="lineNum">     134 </span>                :            : 
+<span class="lineNum">     135 </span>                :            :         /* Make sure nobody else reads/modifies/writes 0x81 while we
+<span class="lineNum">     136 </span>                :            :            are active */
+<span class="lineNum">     137 </span>                :<span class="lineNoCov">          0 :         mutex_lock(&amp;data-&gt;mutex);</span>
+<span class="lineNum">     138 </span>                :            : 
+<span class="lineNum">     139 </span>                :<span class="lineNoCov">          0 :         ret_val = i2c_smbus_read_byte_data(client, 0x81);</span>
+<span class="lineNum">     140 </span>                :            :         if (ret_val &lt; 0)
+<span class="lineNum">     141 </span>                :            :                 goto fail;
+<span class="lineNum">     142 </span>                :            : 
+<span class="lineNum">     143 </span>                :            :         /* Reset the bits before setting them */
+<span class="lineNum">     144 </span>                :<span class="lineNoCov">          0 :         ret_val = ret_val &amp; 0xFA;</span>
+<span class="lineNum">     145 </span>                :            : 
+<span class="lineNum">     146 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (val == 1) /* Setting detection range up to 4k LUX */</span>
+<span class="lineNum">     147 </span>                :<span class="lineNoCov">          0 :                 ret_val = (ret_val | 0x01);</span>
+<span class="lineNum">     148 </span>                :            :         else /* Setting detection range up to 64k LUX*/
+<span class="lineNum">     149 </span>                :<span class="lineNoCov">          0 :                 ret_val = (ret_val | 0x00);</span>
+<span class="lineNum">     150 </span>                :            : 
+<span class="lineNum">     151 </span>                :<span class="lineNoCov">          0 :         ret_val = i2c_smbus_write_byte_data(client, 0x81, ret_val);</span>
+<span class="lineNum">     152 </span>                :            : 
+<span class="lineNum">     153 </span>                :            :         if (ret_val &gt;= 0) {
+<span class="lineNum">     154 </span>                :            :                 /* All OK */
+<span class="lineNum">     155 </span>                :<span class="lineNoCov">          0 :                 mutex_unlock(&amp;data-&gt;mutex);</span>
+<span class="lineNum">     156 </span>                :            :                 pm_runtime_put_sync(dev);
+<span class="lineNum">     157 </span>                :<span class="lineNoCov">          0 :                 return count;</span>
+<span class="lineNum">     158 </span>                :            :         }
+<span class="lineNum">     159 </span>                :            : fail:
+<span class="lineNum">     160 </span>                :            :         mutex_unlock(&amp;data-&gt;mutex);
+<span class="lineNum">     161 </span>                :            :         pm_runtime_put_sync(dev);
+<span class="lineNum">     162 </span>                :            :         return ret_val;
+<a name="163"><span class="lineNum">     163 </span>                :            : }</a>
+<span class="lineNum">     164 </span>                :            : 
+<span class="lineNum">     165 </span>                :<span class="lineCov">        389 : static int als_set_power_state(struct i2c_client *client, bool on_off)</span>
+<span class="lineNum">     166 </span>                :            : {
+<span class="lineNum">     167 </span>                :            :         int ret_val;
+<span class="lineNum">     168 </span>                :<span class="lineCov">        389 :         struct als_data *data = i2c_get_clientdata(client);</span>
+<span class="lineNum">     169 </span>                :            : 
+<span class="lineNum">     170 </span>                :<span class="lineCov">        389 :         mutex_lock(&amp;data-&gt;mutex);</span>
+<span class="lineNum">     171 </span>                :<span class="lineCov">        389 :         ret_val = i2c_smbus_read_byte_data(client, 0x80);</span>
+<span class="lineNum">     172 </span>        [<span class="branchCov" title="Branch 0 was taken 389 times"> + </span><span class="branchNoCov" title="Branch 1 was not taken"> - </span>]:<span class="lineCov">        389 :         if (ret_val &lt; 0)</span>
+<span class="lineNum">     173 </span>                :            :                 goto fail;
+<span class="lineNum">     174 </span>        [<span class="branchCov" title="Branch 0 was taken 194 times"> + </span><span class="branchCov" title="Branch 1 was taken 195 times"> + </span>]:<span class="lineCov">        389 :         if (on_off)</span>
+<span class="lineNum">     175 </span>                :<span class="lineCov">        194 :                 ret_val = ret_val | 0x01;</span>
+<span class="lineNum">     176 </span>                :            :         else
+<span class="lineNum">     177 </span>                :<span class="lineCov">        195 :                 ret_val = ret_val &amp; 0xFE;</span>
+<span class="lineNum">     178 </span>                :<span class="lineCov">        389 :         ret_val = i2c_smbus_write_byte_data(client, 0x80, ret_val);</span>
+<span class="lineNum">     179 </span>                :            : fail:
+<span class="lineNum">     180 </span>                :<span class="lineCov">        389 :         mutex_unlock(&amp;data-&gt;mutex);</span>
+<span class="lineNum">     181 </span>                :<span class="lineCov">        389 :         return ret_val;</span>
+<span class="lineNum">     182 </span>                :            : }
+<span class="lineNum">     183 </span>                :            : 
+<span class="lineNum">     184 </span>                :            : static DEVICE_ATTR(sensing_range, S_IRUGO | S_IWUSR,
+<span class="lineNum">     185 </span>                :            :         als_sensing_range_show, als_sensing_range_store);
+<span class="lineNum">     186 </span>                :            : static DEVICE_ATTR(lux_output, S_IRUGO, als_lux_output_data_show, NULL);
+<span class="lineNum">     187 </span>                :            : 
+<span class="lineNum">     188 </span>                :            : static struct attribute *mid_att_als[] = {
+<span class="lineNum">     189 </span>                :            :         &amp;dev_attr_sensing_range.attr,
+<span class="lineNum">     190 </span>                :            :         &amp;dev_attr_lux_output.attr,
+<span class="lineNum">     191 </span>                :            :         NULL
+<span class="lineNum">     192 </span>                :            : };
+<span class="lineNum">     193 </span>                :            : 
+<span class="lineNum">     194 </span>                :            : static struct attribute_group m_als_gr = {
+<span class="lineNum">     195 </span>                :            :         .name = &quot;apds9802als&quot;,
+<span class="lineNum">     196 </span>                :            :         .attrs = mid_att_als
+<a name="197"><span class="lineNum">     197 </span>                :            : };</a>
+<span class="lineNum">     198 </span>                :            : 
+<span class="lineNum">     199 </span>                :<span class="lineCov">          1 : static int als_set_default_config(struct i2c_client *client)</span>
+<span class="lineNum">     200 </span>                :            : {
+<span class="lineNum">     201 </span>                :            :         int ret_val;
+<span class="lineNum">     202 </span>                :            :         /* Write the command and then switch on */
+<span class="lineNum">     203 </span>                :<span class="lineCov">          1 :         ret_val = i2c_smbus_write_byte_data(client, 0x80, 0x01);</span>
+<span class="lineNum">     204 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 1 time"> + </span>]:<span class="lineCov">          1 :         if (ret_val &lt; 0) {</span>
+<span class="lineNum">     205 </span>                :<span class="lineNoCov">          0 :                 dev_err(&amp;client-&gt;dev, &quot;failed default switch on write\n&quot;);</span>
+<span class="lineNum">     206 </span>                :<span class="lineNoCov">          0 :                 return ret_val;</span>
+<span class="lineNum">     207 </span>                :            :         }
+<span class="lineNum">     208 </span>                :            :         /* detection range: 1~64K Lux, maunal measurement */
+<span class="lineNum">     209 </span>                :<span class="lineCov">          1 :         ret_val = i2c_smbus_write_byte_data(client, 0x81, 0x08);</span>
+<span class="lineNum">     210 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 1 time"> + </span>]:<span class="lineCov">          1 :         if (ret_val &lt; 0)</span>
+<span class="lineNum">     211 </span>                :<span class="lineNoCov">          0 :                 dev_err(&amp;client-&gt;dev, &quot;failed default LUX on write\n&quot;);</span>
+<span class="lineNum">     212 </span>                :            : 
+<span class="lineNum">     213 </span>                :            :         /*  We always get 0 for the 1st measurement after system power on,
+<span class="lineNum">     214 </span>                :            :          *  so make sure it is finished before user asks for data.
+<span class="lineNum">     215 </span>                :            :          */
+<span class="lineNum">     216 </span>                :<span class="lineCov">          1 :         als_wait_for_data_ready(&amp;client-&gt;dev);</span>
+<span class="lineNum">     217 </span>                :            : 
+<span class="lineNum">     218 </span>                :<span class="lineCov">          1 :         return ret_val;</span>
+<a name="219"><span class="lineNum">     219 </span>                :            : }</a>
+<span class="lineNum">     220 </span>                :            : 
+<span class="lineNum">     221 </span>                :<span class="lineCov">          1 : static int apds9802als_probe(struct i2c_client *client,</span>
+<span class="lineNum">     222 </span>                :            :                              const struct i2c_device_id *id)
+<span class="lineNum">     223 </span>                :            : {
+<span class="lineNum">     224 </span>                :            :         int res;
+<span class="lineNum">     225 </span>                :            :         struct als_data *data;
+<span class="lineNum">     226 </span>                :            : 
+<span class="lineNum">     227 </span>                :<span class="lineCov">          1 :         data = kzalloc(sizeof(struct als_data), GFP_KERNEL);</span>
+<span class="lineNum">     228 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 1 time"> + </span>]:<span class="lineCov">          1 :         if (data == NULL) {</span>
+<span class="lineNum">     229 </span>                :<span class="lineNoCov">          0 :                 dev_err(&amp;client-&gt;dev, &quot;Memory allocation failed&quot;);</span>
+<span class="lineNum">     230 </span>                :<span class="lineNoCov">          0 :                 return -ENOMEM;</span>
+<span class="lineNum">     231 </span>                :            :         }
+<span class="lineNum">     232 </span>                :            :         i2c_set_clientdata(client, data);
+<span class="lineNum">     233 </span>                :<span class="lineCov">          1 :         res = sysfs_create_group(&amp;client-&gt;dev.kobj, &amp;m_als_gr);</span>
+<span class="lineNum">     234 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 1 time"> + </span>]:<span class="lineCov">          1 :         if (res) {</span>
+<span class="lineNum">     235 </span>                :<span class="lineNoCov">          0 :                 dev_err(&amp;client-&gt;dev, &quot;device create file failed\n&quot;);</span>
+<span class="lineNum">     236 </span>                :<span class="lineNoCov">          0 :                 goto als_error1;</span>
+<span class="lineNum">     237 </span>                :            :         }
+<span class="lineNum">     238 </span>                :<span class="lineCov">          1 :         dev_info(&amp;client-&gt;dev, &quot;ALS chip found\n&quot;);</span>
+<span class="lineNum">     239 </span>                :<span class="lineCov">          1 :         als_set_default_config(client);</span>
+<span class="lineNum">     240 </span>                :<span class="lineCov">          1 :         mutex_init(&amp;data-&gt;mutex);</span>
+<span class="lineNum">     241 </span>                :            : 
+<span class="lineNum">     242 </span>                :<span class="lineCov">          1 :         pm_runtime_set_active(&amp;client-&gt;dev);</span>
+<span class="lineNum">     243 </span>                :<span class="lineCov">          1 :         pm_runtime_enable(&amp;client-&gt;dev);</span>
+<span class="lineNum">     244 </span>                :            : 
+<span class="lineNum">     245 </span>                :<span class="lineCov">          1 :         return res;</span>
+<span class="lineNum">     246 </span>                :            : als_error1:
+<span class="lineNum">     247 </span>                :            :         i2c_set_clientdata(client, NULL);
+<span class="lineNum">     248 </span>                :<span class="lineNoCov">          0 :         kfree(data);</span>
+<span class="lineNum">     249 </span>                :<span class="lineCov">          1 :         return res;</span>
+<a name="250"><span class="lineNum">     250 </span>                :            : }</a>
+<span class="lineNum">     251 </span>                :            : 
+<span class="lineNum">     252 </span>                :<span class="lineNoCov">          0 : static int __devexit apds9802als_remove(struct i2c_client *client)</span>
+<span class="lineNum">     253 </span>                :            : {
+<span class="lineNum">     254 </span>                :<span class="lineNoCov">          0 :         struct als_data *data = i2c_get_clientdata(client);</span>
+<span class="lineNum">     255 </span>                :            : 
+<span class="lineNum">     256 </span>                :<span class="lineNoCov">          0 :         pm_runtime_get_sync(&amp;client-&gt;dev);</span>
+<span class="lineNum">     257 </span>                :            : 
+<span class="lineNum">     258 </span>                :<span class="lineNoCov">          0 :         als_set_power_state(client, false);</span>
+<span class="lineNum">     259 </span>                :<span class="lineNoCov">          0 :         sysfs_remove_group(&amp;client-&gt;dev.kobj, &amp;m_als_gr);</span>
+<span class="lineNum">     260 </span>                :            : 
+<span class="lineNum">     261 </span>                :<span class="lineNoCov">          0 :         pm_runtime_disable(&amp;client-&gt;dev);</span>
+<span class="lineNum">     262 </span>                :<span class="lineNoCov">          0 :         pm_runtime_set_suspended(&amp;client-&gt;dev);</span>
+<span class="lineNum">     263 </span>                :<span class="lineNoCov">          0 :         pm_runtime_put_noidle(&amp;client-&gt;dev);</span>
+<span class="lineNum">     264 </span>                :            : 
+<span class="lineNum">     265 </span>                :<span class="lineNoCov">          0 :         kfree(data);</span>
+<span class="lineNum">     266 </span>                :<span class="lineNoCov">          0 :         return 0;</span>
+<a name="267"><span class="lineNum">     267 </span>                :            : }</a>
+<span class="lineNum">     268 </span>                :            : 
+<span class="lineNum">     269 </span>                :<span class="lineNoCov">          0 : static int apds9802als_suspend(struct i2c_client *client, pm_message_t mesg)</span>
+<span class="lineNum">     270 </span>                :            : {
+<span class="lineNum">     271 </span>                :<span class="lineNoCov">          0 :         als_set_power_state(client, false);</span>
+<span class="lineNum">     272 </span>                :<span class="lineNoCov">          0 :         return 0;</span>
+<a name="273"><span class="lineNum">     273 </span>                :            : }</a>
+<span class="lineNum">     274 </span>                :            : 
+<span class="lineNum">     275 </span>                :<span class="lineNoCov">          0 : static int apds9802als_resume(struct i2c_client *client)</span>
+<span class="lineNum">     276 </span>                :            : {
+<span class="lineNum">     277 </span>                :<span class="lineNoCov">          0 :         als_set_default_config(client);</span>
+<span class="lineNum">     278 </span>                :<span class="lineNoCov">          0 :         return 0;</span>
+<a name="279"><span class="lineNum">     279 </span>                :            : }</a>
+<span class="lineNum">     280 </span>                :            : 
+<span class="lineNum">     281 </span>                :<span class="lineCov">        195 : static int apds9802als_runtime_suspend(struct device *dev)</span>
+<span class="lineNum">     282 </span>                :            : {
+<span class="lineNum">     283 </span>                :<span class="lineCov">        195 :         struct i2c_client *client = to_i2c_client(dev);</span>
+<span class="lineNum">     284 </span>                :            : 
+<span class="lineNum">     285 </span>                :<span class="lineCov">        195 :         als_set_power_state(client, false);</span>
+<span class="lineNum">     286 </span>                :<span class="lineCov">        195 :         return 0;</span>
+<a name="287"><span class="lineNum">     287 </span>                :            : }</a>
+<span class="lineNum">     288 </span>                :            : 
+<span class="lineNum">     289 </span>                :<span class="lineCov">        194 : static int apds9802als_runtime_resume(struct device *dev)</span>
+<span class="lineNum">     290 </span>                :            : {
+<span class="lineNum">     291 </span>                :<span class="lineCov">        194 :         struct i2c_client *client = to_i2c_client(dev);</span>
+<span class="lineNum">     292 </span>                :            : 
+<span class="lineNum">     293 </span>                :<span class="lineCov">        194 :         als_set_power_state(client, true);</span>
+<span class="lineNum">     294 </span>                :<span class="lineCov">        194 :         return 0;</span>
+<span class="lineNum">     295 </span>                :            : }
+<span class="lineNum">     296 </span>                :            : 
+<span class="lineNum">     297 </span>                :            : static const struct dev_pm_ops apds9802als_pm_ops = {
+<span class="lineNum">     298 </span>                :            :         .runtime_suspend = apds9802als_runtime_suspend,
+<span class="lineNum">     299 </span>                :            :         .runtime_resume = apds9802als_runtime_resume,
+<span class="lineNum">     300 </span>                :            : };
+<span class="lineNum">     301 </span>                :            : 
+<span class="lineNum">     302 </span>                :            : static struct i2c_device_id apds9802als_id[] = {
+<span class="lineNum">     303 </span>                :            :         { DRIVER_NAME, 0 },
+<span class="lineNum">     304 </span>                :            :         { }
+<span class="lineNum">     305 </span>                :            : };
+<span class="lineNum">     306 </span>                :            : 
+<span class="lineNum">     307 </span>                :            : MODULE_DEVICE_TABLE(i2c, apds9802als_id);
+<span class="lineNum">     308 </span>                :            : 
+<span class="lineNum">     309 </span>                :            : static struct i2c_driver apds9802als_driver = {
+<span class="lineNum">     310 </span>                :            :         .driver = {
+<span class="lineNum">     311 </span>                :            :                 .name = DRIVER_NAME,
+<span class="lineNum">     312 </span>                :            :                 .pm = &amp;apds9802als_pm_ops,
+<span class="lineNum">     313 </span>                :            :         },
+<span class="lineNum">     314 </span>                :            :         .probe = apds9802als_probe,
+<span class="lineNum">     315 </span>                :            :         .remove = __devexit_p(apds9802als_remove),
+<span class="lineNum">     316 </span>                :            :         .suspend = apds9802als_suspend,
+<span class="lineNum">     317 </span>                :            :         .resume = apds9802als_resume,
+<span class="lineNum">     318 </span>                :            :         .id_table = apds9802als_id,
+<a name="319"><span class="lineNum">     319 </span>                :            : };</a>
+<span class="lineNum">     320 </span>                :            : 
+<span class="lineNum">     321 </span>                :<span class="lineCov">          1 : static int __init sensor_apds9802als_init(void)</span>
+<span class="lineNum">     322 </span>                :            : {
+<span class="lineNum">     323 </span>                :<span class="lineCov">          1 :         return i2c_add_driver(&amp;apds9802als_driver);</span>
+<a name="324"><span class="lineNum">     324 </span>                :            : }</a>
+<span class="lineNum">     325 </span>                :            : 
+<span class="lineNum">     326 </span>                :<span class="lineNoCov">          0 : static void  __exit sensor_apds9802als_exit(void)</span>
+<span class="lineNum">     327 </span>                :            : {
+<span class="lineNum">     328 </span>                :<span class="lineNoCov">          0 :         i2c_del_driver(&amp;apds9802als_driver);</span>
+<span class="lineNum">     329 </span>                :<span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     330 </span>                :            : module_init(sensor_apds9802als_init);
+<span class="lineNum">     331 </span>                :            : module_exit(sensor_apds9802als_exit);
+<span class="lineNum">     332 </span>                :            : 
+<span class="lineNum">     333 </span>                :            : MODULE_AUTHOR(&quot;Anantha Narayanan &lt;Anantha.Narayanan@intel.com&quot;);
+<span class="lineNum">     334 </span>                :            : MODULE_DESCRIPTION(&quot;Avago apds9802als ALS Driver&quot;);
+<span class="lineNum">     335 </span>                :            : MODULE_LICENSE(&quot;GPL v2&quot;);
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.8</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

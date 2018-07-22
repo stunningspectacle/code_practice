@@ -1,0 +1,977 @@
+locFB( 1520): uevent detected in fb_thread:578
+D/dalvikvm( 1627): GC_EXPLICIT freed 16K, 50% free 3022K/5959K, external 9359K/11407K, paused 10ms
+I/GrallocFB( 1520): uevent detected in fb_thread:142
+I/GrallocFB( 1520): uevent detected in fb_thread:142
+I/GrallocFB( 1520): uevent detected in fb_thread:142
+I/GrallocFB( 1520): uevent detected in fb_thread:142
+I/GrallocFB( 1520): uevent detected in fb_thread:142
+I/GrallocFB( 1520): uevent detected in fb_thread:142
+I/GrallocFB( 1520): uevent detected in fb_thread:142
+I/GrallocFB( 1520): uevent detected in fb_thread:142
+I/GrallocFB( 1520): uevent detected in fb_thread:142
+I/GrallocFB( 1520): uevent detected in fb_thread:142
+I/GrallocFB( 1520): uevent detected in fb_thread:142
+I/GrallocFB( 1520): uevent detected in fb_thread:142
+I/GrallocFB( 1520): uevent detected in fb_thread:142
+I/GrallocFB( 1520): uevent detected in fb_thread:142
+I/GrallocFB( 1520): uevent detected in fb_thread:142
+I/power   ( 1520): *** set_screen_state 0
+D/InCallScreen( 1609): onPause()...
+D/InCallScreen( 1609): updateProviderOverlay: false
+D/InCallScreen( 1609): proximity 11111111111111111...
+D/InCallScreen( 1609): proximity 22222222222222222...
+D/PhoneApp( 1609): updateProximitySensorMode: state = OFFHOOK
+D/PhoneApp( 1609): updateProximitySensorMode: lock already held.
+D/InCallScreen( 1609): proximity 33333333333333333...
+D/InCallScreen( 1609): proximity 44444444444444444...
+D/DTMFTwelveKeyDialer( 1609): Notifying dtmf key up.
+D/InCallScreen( 1609): proximity 55555555555555555...
+D/InCallScreen( 1609): proximity 66666666666666666...
+D/InCallScreen( 1609): dismissMenu(immediate = true)...
+D/InCallScreen( 1609): dismissAllDialogs()...
+D/NotificationMgr( 1609): updating status bar state: 4
+D/Vibrator_Alsa( 1520): vibrator off
+D/PhoneApp( 1609): re-enable status bar
+D/PhoneApp( 1609): StatusBarManager.DISABLE_NONE
+D/PhoneApp( 1609): updateWakeState: callscreen false, dialer false, speaker false...
+D/PhoneApp( 1609): setScreenTimeout(DEFAULT)...
+D/PhoneApp( 1609): updateWakeState: keepScreenOn = true (isRinging false, isDialing true, showingDisc false)
+D/PhoneApp( 1609): requestWakeState(FULL)...
+D/NFC-HCI ( 1619): HCI Poll Configuration .... 
+D/NFC-HCI ( 1619):  HCI: Current State --> 01 
+D/NFC-HCI ( 1619):  HCI: Transition Before FSM Update --> 00 
+D/NFC-HCI ( 1619):  HCI: Next State Before FSM Update --> 14 
+D/NFC-HCI ( 1619):  HCI: Next State After FSM Update --> 03 
+D/NFC-HCI ( 1619): HCI: In Function: phHciNfc_Send 
+D/NFC-HCI ( 1619): HCI: Response Pending status --> TRUE 
+D/NFC-HCI ( 1619): 
+D/NFC-HCI ( 1619):   Send Buffer:
+D/NFC-HCI ( 1619): 84 01 07 FF F0 
+D/NFC-HCI ( 1619): Block size is: 5
+D/NFC-HCI ( 1619): 
+D/NFC-HCI ( 1619):  HCI : Timer 2 Started 
+D/NFC-HCI ( 1619): Llc Send called
+D/NFC-HCI ( 1619): Buffer length : 0x0005
+D/NFC-HCI ( 1619): 84 01 07 FF F0 
+D/NFC-HCI ( 1619): Block size is: 5
+D/NFC-HCI ( 1619): 
+D/NFC-HCI ( 1619): Llc Dal Interface Write called
+D/NFC-HCI ( 1619): Buffer to be send to Dal : 
+D/NFC-HCI ( 1619): 08 9D 84 01 07 FF F0 E5 1F 
+D/NFC-HCI ( 1619): Block size is: 9
+D/NFC-HCI ( 1619): 
+D/NFC-HCI ( 1619): phDal4Nfc_Write() : Temporary buffer !! 
+D/NFC-HCI ( 1619): phDal4Nfc_Write(): 9
+D/NFC-HCI ( 1619): Llc Dal Interface Write result : 0xd
+D/NFC-HCI ( 1619): 
+D/NFC-HCI ( 1619): 
+D/NFC-HCI ( 1619): LLC : START TIMER CALLED
+D/NFC-HCI ( 1619): 
+D/NFC-HCI ( 1619): RESOLUTION VALUE : 0x1F4
+D/NFC-HCI ( 1619): TIME-OUT VALUE : 0x3E8
+D/NFC-HCI ( 1619): GUARD TIMER NS INDEX : 0x03
+D/NFC-HCI ( 1619): GUARD TIMER COUNT : 0x00
+D/NFC-HCI ( 1619): GUARD TIMER STARTED : 0x00
+D/NFC-HCI ( 1619): GUARD TIMER VALUE : 0x03E8
+D/NFC-HCI ( 1619): OSAL START TIMER CALLED TIMER ID : 0x01
+D/NFC-HCI ( 1619): 
+D/NFC-HCI ( 1619): 
+D/NFC-HCI ( 1619): LLC : START TIMER END
+D/NFC-HCI ( 1619): 
+D/NFC-HCI ( 1619): Llc Send result : 0x000D
+D/NFC-HCI ( 1619): phDal4Nfc_DeferredCb ENTER
+D/NFC-HCI ( 1619):  Dal deferred write called 
+D/NFC-HCI ( 1619): Writing 9 bytes
+D/NFC-HCI ( 1619): Write failed: write() returned -1 
+D/NFC-HCI ( 1619): Writing 9 bytes
+D/NFC-HCI ( 1619): Write succeed (9 bytes)
+D/NFC-HCI ( 1619):  Physical Write Success 
+D/NFC-HCI ( 1619): WriteBuff[]={ 
+    D/NFC-HCI ( 1619): 0x8 
+    D/NFC-HCI ( 1619): 0x9d 
+    D/NFC-HCI ( 1619): 0x84 
+    D/NFC-HCI ( 1619): 0x1 
+    D/NFC-HCI ( 1619): 0x7 
+    D/NFC-HCI ( 1619): 0xff 
+    D/NFC-HCI ( 1619): 0xf0 
+    D/NFC-HCI ( 1619): 0xe5 
+    D/NFC-HCI ( 1619): 0x1f 
+    D/NFC-HCI ( 1619): }
+    D/NFC-HCI ( 1619): 
+    D/NFC-HCI ( 1619): 
+    D/NFC-HCI ( 1619): LLC : WRITE RESP CB CALLED
+    D/NFC-HCI ( 1619): 
+    D/NFC-HCI ( 1619): RECEIVE length : 0x04
+    D/NFC-HCI ( 1619): SENT frame type : 0x06
+    D/NFC-HCI ( 1619): WRITE PENDING : 0x00
+    D/NFC-HCI ( 1619): WRITE PENDING status : 0x000D
+    D/NFC-HCI ( 1619): WRITE wait frame type : 0x00
+    D/NFC-HCI ( 1619): NS START POS : 0x03
+    D/NFC-HCI ( 1619): WIN SIZE : 0x01
+    D/NFC-HCI ( 1619): Llc Dal Interface Read called
+    D/NFC-HCI ( 1619): S frame info read pending
+    D/NFC-HCI ( 1619): Llc Dal Interface Read result : 0xd
+    D/NFC-HCI ( 1619): HCI Send Completion....
+    D/NFC-HCI ( 1619): HCI Send Completion... Length = 05
+    D/NFC-HCI ( 1619): HCI: In Function: phHciNfc_Send_Complete 
+    D/NFC-HCI ( 1619): HCI: Response Pending status --> TRUE 
+    D/NFC-HCI ( 1619): HCI: Event Pending status --> FALSE 
+    D/NFC-HCI ( 1619): Llc Receive called
+    D/NFC-HCI ( 1619): Llc Dal Interface Read called
+    D/NFC-HCI ( 1619): S frame info read pending
+    D/NFC-HCI ( 1619): Llc Dal Interface Read result : 0xd
+    D/NFC-HCI ( 1619): Llc Receive result : 0x000D
+    D/NFC-HCI ( 1619): 
+    D/NFC-HCI ( 1619): 
+    D/NFC-HCI ( 1619): LLC : WRITE RESP CB END
+    D/NFC-HCI ( 1619): 
+    D/NFC-HCI ( 1619): Read succeed (1 bytes)
+    D/NFC-HCI ( 1619): Read ok. nbToRead=1
+    D/NFC-HCI ( 1619): NbReallyRead=1
+    D/NFC-HCI ( 1619): ReadBuff[]={ 
+        D/NFC-HCI ( 1619): 0x5 
+        D/NFC-HCI ( 1619): }
+        D/NFC-HCI ( 1619): RX Thread Sem Lock
+        D/NFC-HCI ( 1619): phDal4Nfc_DeferredCb ENTER
+        D/NFC-HCI ( 1619):  Dal deferred read called 
+        D/NFC-HCI ( 1619): 
+        D/NFC-HCI ( 1619): 
+        D/NFC-HCI ( 1619): LLC : READ RESP CB CALLED
+        D/NFC-HCI ( 1619): 
+        D/NFC-HCI ( 1619): Buffer received : 
+        D/NFC-HCI ( 1619): 05 
+        D/NFC-HCI ( 1619): Block size is: 1
+        D/NFC-HCI ( 1619): 
+        D/NFC-HCI ( 1619): Llc Dal Interface Read called
+        D/NFC-HCI ( 1619): *****DAl Read called  length : 5
+        D/NFC-HCI ( 1619): *****DAl Read called  result : d
+        D/NFC-HCI ( 1619): Llc Dal Interface Read result : 0xd
+        D/NFC-HCI ( 1619): 
+        D/NFC-HCI ( 1619): 
+        D/NFC-HCI ( 1619): LLC : READ RESP CB END
+        D/NFC-HCI ( 1619): 
+        D/NFC-HCI ( 1619): RX Thread Sem UnLock
+        D/NFC-HCI ( 1619): 
+        D/NFC-HCI ( 1619): *New *** *****Request Length = 5
+        D/NFC-HCI ( 1619): Reading 5 bytes
+        D/NFC-HCI ( 1619): Read succeed (5 bytes)
+        D/NFC-HCI ( 1619): Read ok. nbToRead=5
+        D/NFC-HCI ( 1619): NbReallyRead=5
+        D/NFC-HCI ( 1619): ReadBuff[]={ 
+            D/NFC-HCI ( 1619): 0xac 
+            D/NFC-HCI ( 1619): 0x84 
+            D/NFC-HCI ( 1619): 0x80 
+            D/NFC-HCI ( 1619): 0x59 
+            D/NFC-HCI ( 1619): 0x57 
+            D/NFC-HCI ( 1619): }
+            D/NFC-HCI ( 1619): RX Thread Sem Lock
+            D/NFC-HCI ( 1619): phDal4Nfc_DeferredCb ENTER
+            D/NFC-HCI ( 1619):  Dal deferred read called 
+            D/NFC-HCI ( 1619): 
+            D/NFC-HCI ( 1619): 
+            D/NFC-HCI ( 1619): LLC : READ RESP CB CALLED
+            D/NFC-HCI ( 1619): 
+            D/NFC-HCI ( 1619): Buffer received : 
+            D/NFC-HCI ( 1619): AC 84 80 59 57 
+            D/NFC-HCI ( 1619): Block size is: 5
+            D/NFC-HCI ( 1619): 
+            D/NFC-HCI ( 1619): WIN SIZE : 0x01
+            D/NFC-HCI ( 1619): I frame received 
+            D/NFC-HCI ( 1619): NS START POS BEFORE DEL : 0x03
+            D/NFC-HCI ( 1619): WIN SIZE BEFORE DEL : 0x01
+            D/NFC-HCI ( 1619): NS START POS AFTER DEL : 0x04
+            D/NFC-HCI ( 1619): WIN SIZE AFTER DEL : 0x00
+            D/NFC-HCI ( 1619): 
+            D/NFC-HCI ( 1619): 
+            D/NFC-HCI ( 1619): LLC : STOP TIMER CALLED
+            D/NFC-HCI ( 1619): 
+            D/NFC-HCI ( 1619): GUARD TIMER COUNT BEFORE DELETE: 0x01
+            D/NFC-HCI ( 1619): GUARD TIMER TO DELETE: 0x01
+            D/NFC-HCI ( 1619): GUARD TIMER NS INDEX DELETED ELSE : 0x03
+            D/NFC-HCI ( 1619): GUARD TIMER COUNT AFTER DELETE: 0x00
+            D/NFC-HCI ( 1619): OSAL STOP TIMER CALLED TIMER ID : 0x01
+            D/NFC-HCI ( 1619): 
+            D/NFC-HCI ( 1619): 
+            D/NFC-HCI ( 1619): LLC : STOP TIMER END
+            D/NFC-HCI ( 1619): 
+            D/NFC-HCI ( 1619):  Type bits of S frame to be sent is RR 
+            D/NFC-HCI ( 1619): Llc Dal Interface Read called
+            D/NFC-HCI ( 1619): *****DAl Read called  length : 1
+            D/NFC-HCI ( 1619): *****DAl Read called  result : d
+            D/NFC-HCI ( 1619): Llc Dal Interface Read result : 0xd
+            D/NFC-HCI ( 1619): Llc Dal Interface Write called
+            D/NFC-HCI ( 1619): Buffer to be send to Dal : 
+            D/NFC-HCI ( 1619): 03 C6 15 86 
+            D/NFC-HCI ( 1619): Block size is: 4
+            D/NFC-HCI ( 1619): 
+            D/NFC-HCI ( 1619): phDal4Nfc_Write() : Temporary buffer !! 
+            D/NFC-HCI ( 1619): phDal4Nfc_Write(): 4
+            D/NFC-HCI ( 1619): Llc Dal Interface Write result : 0xd
+            D/NFC-HCI ( 1619): 
+            D/NFC-HCI ( 1619): 
+            D/NFC-HCI ( 1619): LLC : READ RESP CB END
+            D/NFC-HCI ( 1619): 
+            D/NFC-HCI ( 1619): phDal4Nfc_DeferredCb ENTER
+            D/NFC-HCI ( 1619):  Dal deferred write called 
+            D/NFC-HCI ( 1619): RX Thread Sem UnLock
+            D/NFC-HCI ( 1619): 
+            D/NFC-HCI ( 1619): *New *** *****Request Length = 1
+            D/NFC-HCI ( 1619): Reading 1 bytes
+            D/NFC-HCI ( 1619): Writing 4 bytes
+            D/NFC-HCI ( 1619): Write succeed (4 bytes)
+            D/NFC-HCI ( 1619):  Physical Write Success 
+            D/NFC-HCI ( 1619): WriteBuff[]={ 
+                D/NFC-HCI ( 1619): 0x3 
+                D/NFC-HCI ( 1619): 0xc6 
+                D/NFC-HCI ( 1619): 0x15 
+                D/NFC-HCI ( 1619): 0x86 
+                D/NFC-HCI ( 1619): }
+                D/NFC-HCI ( 1619): 
+                D/NFC-HCI ( 1619): 
+                D/NFC-HCI ( 1619): LLC : WRITE RESP CB CALLED
+                D/NFC-HCI ( 1619): 
+                D/NFC-HCI ( 1619): RECEIVE length : 0x06
+                D/NFC-HCI ( 1619): SENT frame type : 0x05
+                D/NFC-HCI ( 1619): WRITE PENDING : 0x00
+                D/NFC-HCI ( 1619): WRITE PENDING status : 0x000D
+                D/NFC-HCI ( 1619): WRITE wait frame type : 0x00
+                D/NFC-HCI ( 1619): NS START POS : 0x04
+                D/NFC-HCI ( 1619): WIN SIZE : 0x00
+                D/NFC-HCI ( 1619): Window size : 0x00
+                D/NFC-HCI ( 1619): frame to send : 0x00
+                D/NFC-HCI ( 1619): Llc Dal Interface Read called
+                D/NFC-HCI ( 1619): S frame info read pending
+                D/NFC-HCI ( 1619): Llc Dal Interface Read result : 0xd
+                D/NFC-HCI ( 1619): HCI Receive Completion....
+                D/NFC-HCI ( 1619): HCI Lower Layer Receive Completion, Status = 00
+                D/NFC-HCI ( 1619): 
+                D/NFC-HCI ( 1619):   Receive Buffer:
+                D/NFC-HCI ( 1619): 84 80 
+                D/NFC-HCI ( 1619): Block size is: 2
+                D/NFC-HCI ( 1619): 
+                D/NFC-HCI ( 1619):  HCI : Timer 2 Stopped 
+                D/NFC-HCI ( 1619): Polling loop Set Param complete
+                D/NFC-HCI ( 1619): HCI: Response Pending status --> FALSE, phHciNfc_Process_Response 
+                D/NFC-HCI ( 1619): HCI: In Function: phHciNfc_Resume_Sequence 
+                D/NFC-HCI ( 1619):  HCI: Current HCI State --> 01 
+                D/NFC-HCI ( 1619):  HCI: Next HCI State --> 03 
+                D/NFC-HCI ( 1619): HCI: In Function: phHciNfc_Send 
+                D/NFC-HCI ( 1619): HCI: Response Pending status --> TRUE 
+                D/NFC-HCI ( 1619): 
+                D/NFC-HCI ( 1619):   Send Buffer:
+                D/NFC-HCI ( 1619): 8A 01 01 00 
+                D/NFC-HCI ( 1619): Block size is: 4
+                D/NFC-HCI ( 1619): 
+                D/NFC-HCI ( 1619):  HCI : Timer 2 Started 
+                D/NFC-HCI ( 1619): Llc Send called
+                D/NFC-HCI ( 1619): Buffer length : 0x0004
+                D/NFC-HCI ( 1619): 8A 01 01 00 
+                D/NFC-HCI ( 1619): Block size is: 4
+                D/NFC-HCI ( 1619): 
+                D/NFC-HCI ( 1619): Llc Dal Interface Write called
+                D/NFC-HCI ( 1619): Buffer to be send to Dal : 
+                D/NFC-HCI ( 1619): 07 A6 8A 01 01 00 C6 88 
+                D/NFC-HCI ( 1619): Block size is: 8
+                D/NFC-HCI ( 1619): 
+                D/NFC-HCI ( 1619): phDal4Nfc_Write() : Temporary buffer !! 
+                D/NFC-HCI ( 1619): phDal4Nfc_Write(): 8
+                D/NFC-HCI ( 1619): Llc Dal Interface Write result : 0xd
+                D/NFC-HCI ( 1619): 
+                D/NFC-HCI ( 1619): 
+                D/NFC-HCI ( 1619): LLC : START TIMER CALLED
+                D/NFC-HCI ( 1619): 
+                D/NFC-HCI ( 1619): RESOLUTION VALUE : 0x1F4
+                D/NFC-HCI ( 1619): TIME-OUT VALUE : 0x3E8
+                D/NFC-HCI ( 1619): GUARD TIMER NS INDEX : 0x04
+                D/NFC-HCI ( 1619): GUARD TIMER COUNT : 0x00
+                D/NFC-HCI ( 1619): GUARD TIMER STARTED : 0x00
+                D/NFC-HCI ( 1619): GUARD TIMER VALUE : 0x03E8
+                D/NFC-HCI ( 1619): OSAL START TIMER CALLED TIMER ID : 0x01
+                D/NFC-HCI ( 1619): 
+                D/NFC-HCI ( 1619): 
+                D/NFC-HCI ( 1619): LLC : START TIMER END
+                D/NFC-HCI ( 1619): 
+                D/NFC-HCI ( 1619): Llc Send result : 0x000D
+                D/NFC-HCI ( 1619): 
+                D/NFC-HCI ( 1619): 
+                D/NFC-HCI ( 1619): LLC : WRITE RESP CB END
+                D/NFC-HCI ( 1619): 
+                D/NFC-HCI ( 1619): phDal4Nfc_DeferredCb ENTER
+                D/NFC-HCI ( 1619):  Dal deferred write called 
+                D/NFC-HCI ( 1619): Writing 8 bytes
+                D/NFC-HCI ( 1619): Write succeed (8 bytes)
+                D/NFC-HCI ( 1619):  Physical Write Success 
+                D/NFC-HCI ( 1619): WriteBuff[]={ 
+                    D/NFC-HCI ( 1619): 0x7 
+                    D/NFC-HCI ( 1619): 0xa6 
+                    D/NFC-HCI ( 1619): 0x8a 
+                    D/NFC-HCI ( 1619): 0x1 
+                    D/NFC-HCI ( 1619): 0x1 
+                    D/NFC-HCI ( 1619): 0x0 
+                    D/NFC-HCI ( 1619): 0xc6 
+                    D/NFC-HCI ( 1619): 0x88 
+                    D/NFC-HCI ( 1619): }
+                    D/NFC-HCI ( 1619): 
+                    D/NFC-HCI ( 1619): 
+                    D/NFC-HCI ( 1619): LLC : WRITE RESP CB CALLED
+                    D/NFC-HCI ( 1619): 
+                    D/NFC-HCI ( 1619): RECEIVE length : 0x06
+                    D/NFC-HCI ( 1619): SENT frame type : 0x06
+                    D/NFC-HCI ( 1619): WRITE PENDING : 0x00
+                    D/NFC-HCI ( 1619): WRITE PENDING status : 0x000D
+                    D/NFC-HCI ( 1619): WRITE wait frame type : 0x00
+                    D/NFC-HCI ( 1619): NS START POS : 0x04
+                    D/NFC-HCI ( 1619): WIN SIZE : 0x01
+                    D/NFC-HCI ( 1619): Llc Dal Interface Read called
+                    D/NFC-HCI ( 1619): S frame info read pending
+                    D/NFC-HCI ( 1619): Llc Dal Interface Read result : 0xd
+                    D/NFC-HCI ( 1619): HCI Send Completion....
+                    D/NFC-HCI ( 1619): HCI Send Completion... Length = 04
+                    D/NFC-HCI ( 1619): HCI: In Function: phHciNfc_Send_Complete 
+                    D/NFC-HCI ( 1619): HCI: Response Pending status --> TRUE 
+                    D/NFC-HCI ( 1619): HCI: Event Pending status --> FALSE 
+                    D/NFC-HCI ( 1619): Llc Receive called
+                    D/NFC-HCI ( 1619): Llc Dal Interface Read called
+                    D/NFC-HCI ( 1619): S frame info read pending
+                    D/NFC-HCI ( 1619): Llc Dal Interface Read result : 0xd
+                    D/NFC-HCI ( 1619): Llc Receive result : 0x000D
+                    D/NFC-HCI ( 1619): 
+                    D/NFC-HCI ( 1619): 
+                    D/NFC-HCI ( 1619): LLC : WRITE RESP CB END
+                    D/NFC-HCI ( 1619): 
+                    D/NFC-HCI ( 1619): Read succeed (1 bytes)
+                    D/NFC-HCI ( 1619): Read ok. nbToRead=1
+                    D/NFC-HCI ( 1619): NbReallyRead=1
+                    D/NFC-HCI ( 1619): ReadBuff[]={ 
+                        D/NFC-HCI ( 1619): 0x3 
+                        D/NFC-HCI ( 1619): }
+                        D/NFC-HCI ( 1619): RX Thread Sem Lock
+                        D/NFC-HCI ( 1619): phDal4Nfc_DeferredCb ENTER
+                        D/NFC-HCI ( 1619):  Dal deferred read called 
+                        D/NFC-HCI ( 1619): 
+                        D/NFC-HCI ( 1619): 
+                        D/NFC-HCI ( 1619): LLC : READ RESP CB CALLED
+                        D/NFC-HCI ( 1619): 
+                        D/NFC-HCI ( 1619): Buffer received : 
+                        D/NFC-HCI ( 1619): 03 
+                        D/NFC-HCI ( 1619): Block size is: 1
+                        D/NFC-HCI ( 1619): 
+                        D/NFC-HCI ( 1619): Llc Dal Interface Read called
+                        D/NFC-HCI ( 1619): *****DAl Read called  length : 3
+                        D/NFC-HCI ( 1619): *****DAl Read called  result : d
+                        D/NFC-HCI ( 1619): Llc Dal Interface Read result : 0xd
+                        D/NFC-HCI ( 1619): 
+                        D/NFC-HCI ( 1619): 
+                        D/NFC-HCI ( 1619): LLC : READ RESP CB END
+                        D/NFC-HCI ( 1619): 
+                        D/NFC-HCI ( 1619): RX Thread Sem UnLock
+                        D/NFC-HCI ( 1619): 
+                        D/NFC-HCI ( 1619): *New *** *****Request Length = 3
+                        D/NFC-HCI ( 1619): Reading 3 bytes
+                        D/NFC-HCI ( 1619): Read succeed (3 bytes)
+                        D/NFC-HCI ( 1619): Read ok. nbToRead=3
+                        D/NFC-HCI ( 1619): NbReallyRead=3
+                        D/NFC-HCI ( 1619): ReadBuff[]={ 
+                            D/NFC-HCI ( 1619): 0xc5 
+                            D/NFC-HCI ( 1619): 0x8e 
+                            D/NFC-HCI ( 1619): 0xb4 
+                            D/NFC-HCI ( 1619): }
+                            D/NFC-HCI ( 1619): RX Thread Sem Lock
+                            D/NFC-HCI ( 1619): phDal4Nfc_DeferredCb ENTER
+                            D/NFC-HCI ( 1619):  Dal deferred read called 
+                            D/NFC-HCI ( 1619): 
+                            D/NFC-HCI ( 1619): 
+                            D/NFC-HCI ( 1619): LLC : READ RESP CB CALLED
+                            D/NFC-HCI ( 1619): 
+                            D/NFC-HCI ( 1619): Buffer received : 
+                            D/NFC-HCI ( 1619): C5 8E B4 
+                            D/NFC-HCI ( 1619): Block size is: 3
+                            D/NFC-HCI ( 1619): 
+                            D/NFC-HCI ( 1619): WIN SIZE : 0x01
+                            D/NFC-HCI ( 1619): S frame received 
+                            D/NFC-HCI ( 1619): NS START POS BEFORE DEL : 0x04
+                            D/NFC-HCI ( 1619): WIN SIZE BEFORE DEL : 0x01
+                            D/NFC-HCI ( 1619): NS START POS AFTER DEL : 0x05
+                            D/NFC-HCI ( 1619): WIN SIZE AFTER DEL : 0x00
+                            D/NFC-HCI ( 1619): Llc Dal Interface Read called
+                            D/NFC-HCI ( 1619): *****DAl Read called  length : 1
+                            D/NFC-HCI ( 1619): *****DAl Read called  result : d
+                            D/NFC-HCI ( 1619): Llc Dal Interface Read result : 0xd
+                            D/NFC-HCI ( 1619): 
+                            D/NFC-HCI ( 1619): 
+                            D/NFC-HCI ( 1619): LLC : STOP TIMER CALLED
+                            D/NFC-HCI ( 1619): 
+                            D/NFC-HCI ( 1619): GUARD TIMER COUNT BEFORE DELETE: 0x01
+                            D/NFC-HCI ( 1619): GUARD TIMER TO DELETE: 0x01
+                            D/NFC-HCI ( 1619): GUARD TIMER NS INDEX DELETED ELSE : 0x04
+                            D/NFC-HCI ( 1619): GUARD TIMER COUNT AFTER DELETE: 0x00
+                            D/NFC-HCI ( 1619): OSAL STOP TIMER CALLED TIMER ID : 0x01
+                            D/NFC-HCI ( 1619): 
+                            D/NFC-HCI ( 1619): 
+                            D/NFC-HCI ( 1619): LLC : STOP TIMER END
+                            D/NFC-HCI ( 1619): 
+                            D/NFC-HCI ( 1619): 
+                            D/NFC-HCI ( 1619): 
+                            D/NFC-HCI ( 1619): LLC : READ RESP CB END
+                            D/NFC-HCI ( 1619): 
+                            D/NFC-HCI ( 1619): RX Thread Sem UnLock
+                            D/NFC-HCI ( 1619): 
+                            D/NFC-HCI ( 1619): *New *** *****Request Length = 1
+                            D/NFC-HCI ( 1619): Reading 1 bytes
+                            D/NFC-HCI ( 1619): Read succeed (1 bytes)
+                            D/NFC-HCI ( 1619): Read ok. nbToRead=1
+                            D/NFC-HCI ( 1619): NbReallyRead=1
+                            D/NFC-HCI ( 1619): ReadBuff[]={ 
+                                D/NFC-HCI ( 1619): 0x5 
+                                D/NFC-HCI ( 1619): }
+                                D/NFC-HCI ( 1619): RX Thread Sem Lock
+                                D/NFC-HCI ( 1619): phDal4Nfc_DeferredCb ENTER
+                                D/NFC-HCI ( 1619):  Dal deferred read called 
+                                D/NFC-HCI ( 1619): 
+                                D/NFC-HCI ( 1619): 
+                                D/NFC-HCI ( 1619): LLC : READ RESP CB CALLED
+                                D/NFC-HCI ( 1619): 
+                                D/NFC-HCI ( 1619): Buffer received : 
+                                D/NFC-HCI ( 1619): 05 
+                                D/NFC-HCI ( 1619): Block size is: 1
+                                D/NFC-HCI ( 1619): 
+                                D/NFC-HCI ( 1619): Llc Dal Interface Read called
+                                D/NFC-HCI ( 1619): *****DAl Read called  length : 5
+                                D/NFC-HCI ( 1619): *****DAl Read called  result : d
+                                D/NFC-HCI ( 1619): Llc Dal Interface Read result : 0xd
+                                D/NFC-HCI ( 1619): 
+                                D/NFC-HCI ( 1619): 
+                                D/NFC-HCI ( 1619): LLC : READ RESP CB END
+                                D/NFC-HCI ( 1619): 
+                                D/NFC-HCI ( 1619): RX Thread Sem UnLock
+                                D/NFC-HCI ( 1619): 
+                                D/NFC-HCI ( 1619): *New *** *****Request Length = 5
+                                D/NFC-HCI ( 1619): Reading 5 bytes
+                                D/NFC-HCI ( 1619): Read succeed (5 bytes)
+                                D/NFC-HCI ( 1619): Read ok. nbToRead=5
+                                D/NFC-HCI ( 1619): NbReallyRead=5
+                                D/NFC-HCI ( 1619): ReadBuff[]={ 
+                                    D/NFC-HCI ( 1619): 0xb5 
+                                    D/NFC-HCI ( 1619): 0x8a 
+                                    D/NFC-HCI ( 1619): 0x80 
+                                    D/NFC-HCI ( 1619): 0xc2 
+                                    D/NFC-HCI ( 1619): 0xd4 
+                                    D/NFC-HCI ( 1619): }
+                                    D/NFC-HCI ( 1619): RX Thread Sem Lock
+                                    D/NFC-HCI ( 1619): phDal4Nfc_DeferredCb ENTER
+                                    D/NFC-HCI ( 1619):  Dal deferred read called 
+                                    D/NFC-HCI ( 1619): 
+                                    D/NFC-HCI ( 1619): 
+                                    D/NFC-HCI ( 1619): LLC : READ RESP CB CALLED
+                                    D/NFC-HCI ( 1619): 
+                                    D/NFC-HCI ( 1619): Buffer received : 
+                                    D/NFC-HCI ( 1619): B5 8A 80 C2 D4 
+                                    D/NFC-HCI ( 1619): Block size is: 5
+                                    D/NFC-HCI ( 1619): 
+                                    D/NFC-HCI ( 1619): WIN SIZE : 0x00
+                                    D/NFC-HCI ( 1619): I frame received 
+                                    D/NFC-HCI ( 1619): NS START POS BEFORE DEL : 0x05
+                                    D/NFC-HCI ( 1619): WIN SIZE BEFORE DEL : 0x00
+                                    D/NFC-HCI ( 1619): NS START POS AFTER DEL : 0x05
+                                    D/NFC-HCI ( 1619): WIN SIZE AFTER DEL : 0x00
+                                    D/NFC-HCI ( 1619):  Type bits of S frame to be sent is RR 
+                                    D/NFC-HCI ( 1619): Llc Dal Interface Read called
+                                    D/NFC-HCI ( 1619): *****DAl Read called  length : 1
+                                    D/NFC-HCI ( 1619): *****DAl Read called  result : d
+                                    D/NFC-HCI ( 1619): Llc Dal Interface Read result : 0xd
+                                    D/NFC-HCI ( 1619): Llc Dal Interface Write called
+                                    D/NFC-HCI ( 1619): Buffer to be send to Dal : 
+                                    D/NFC-HCI ( 1619): 03 C7 9C 97 
+                                    D/NFC-HCI ( 1619): Block size is: 4
+                                    D/NFC-HCI ( 1619): 
+                                    D/NFC-HCI ( 1619): phDal4Nfc_Write() : Temporary buffer !! 
+                                    D/NFC-HCI ( 1619): phDal4Nfc_Write(): 4
+                                    D/NFC-HCI ( 1619): Llc Dal Interface Write result : 0xd
+                                    D/NFC-HCI ( 1619): 
+                                    D/NFC-HCI ( 1619): 
+                                    D/NFC-HCI ( 1619): LLC : READ RESP CB END
+                                    D/NFC-HCI ( 1619): 
+                                    D/NFC-HCI ( 1619): phDal4Nfc_DeferredCb ENTER
+                                    D/NFC-HCI ( 1619):  Dal deferred write called 
+                                    D/NFC-HCI ( 1619): RX Thread Sem UnLock
+                                    D/NFC-HCI ( 1619): 
+                                    D/NFC-HCI ( 1619): *New *** *****Request Length = 1
+                                    D/NFC-HCI ( 1619): Reading 1 bytes
+                                    D/NFC-HCI ( 1619): Writing 4 bytes
+                                    D/NFC-HCI ( 1619): Write succeed (4 bytes)
+                                    D/NFC-HCI ( 1619):  Physical Write Success 
+                                    D/NFC-HCI ( 1619): WriteBuff[]={ 
+                                        D/NFC-HCI ( 1619): 0x3 
+                                        D/NFC-HCI ( 1619): 0xc7 
+                                        D/NFC-HCI ( 1619): 0x9c 
+                                        D/NFC-HCI ( 1619): 0x97 
+                                        D/NFC-HCI ( 1619): }
+                                        D/NFC-HCI ( 1619): 
+                                        D/NFC-HCI ( 1619): 
+                                        D/NFC-HCI ( 1619): LLC : WRITE RESP CB CALLED
+                                        D/NFC-HCI ( 1619): 
+                                        D/NFC-HCI ( 1619): RECEIVE length : 0x06
+                                        D/NFC-HCI ( 1619): SENT frame type : 0x05
+                                        D/NFC-HCI ( 1619): WRITE PENDING : 0x00
+                                        D/NFC-HCI ( 1619): WRITE PENDING status : 0x000D
+                                        D/NFC-HCI ( 1619): WRITE wait frame type : 0x00
+                                        D/NFC-HCI ( 1619): NS START POS : 0x05
+                                        D/NFC-HCI ( 1619): WIN SIZE : 0x00
+                                        D/NFC-HCI ( 1619): Window size : 0x00
+                                        D/NFC-HCI ( 1619): frame to send : 0x00
+                                        D/NFC-HCI ( 1619): Llc Dal Interface Read called
+                                        D/NFC-HCI ( 1619): S frame info read pending
+                                        D/NFC-HCI ( 1619): Llc Dal Interface Read result : 0xd
+                                        D/NFC-HCI ( 1619): HCI Receive Completion....
+                                        D/NFC-HCI ( 1619): HCI Lower Layer Receive Completion, Status = 00
+                                        D/NFC-HCI ( 1619): 
+                                        D/NFC-HCI ( 1619):   Receive Buffer:
+                                        D/NFC-HCI ( 1619): 8A 80 
+                                        D/NFC-HCI ( 1619): Block size is: 2
+                                        D/NFC-HCI ( 1619): 
+                                        D/NFC-HCI ( 1619):  HCI : Timer 2 Stopped 
+                                        D/NFC-HCI ( 1619): NFCIP-1 NFCIP Parameter Set 
+                                        D/NFC-HCI ( 1619): HCI: Response Pending status --> FALSE, phHciNfc_Process_Response 
+                                        D/NFC-HCI ( 1619): HCI: In Function: phHciNfc_Resume_Sequence 
+                                        D/NFC-HCI ( 1619):  HCI: Current HCI State --> 01 
+                                        D/NFC-HCI ( 1619):  HCI: Next HCI State --> 03 
+                                        D/NFC-HCI ( 1619): HCI: In Function: phHciNfc_Send 
+                                        D/NFC-HCI ( 1619): HCI: Response Pending status --> TRUE 
+                                        D/NFC-HCI ( 1619): 
+                                        D/NFC-HCI ( 1619):   Send Buffer:
+                                        D/NFC-HCI ( 1619): 84 01 09 01 
+                                        D/NFC-HCI ( 1619): Block size is: 4
+                                        D/NFC-HCI ( 1619): 
+                                        D/NFC-HCI ( 1619):  HCI : Timer 2 Started 
+                                        D/NFC-HCI ( 1619): Llc Send called
+                                        D/NFC-HCI ( 1619): Buffer length : 0x0004
+                                        D/NFC-HCI ( 1619): 84 01 09 01 
+                                        D/NFC-HCI ( 1619): Block size is: 4
+                                        D/NFC-HCI ( 1619): 
+                                        D/NFC-HCI ( 1619): Llc Dal Interface Write called
+                                        D/NFC-HCI ( 1619): Buffer to be send to Dal : 
+                                        D/NFC-HCI ( 1619): 07 AF 84 01 09 01 A9 A8 
+                                        D/NFC-HCI ( 1619): Block size is: 8
+                                        D/NFC-HCI ( 1619): 
+                                        D/NFC-HCI ( 1619): phDal4Nfc_Write() : Temporary buffer !! 
+                                        D/NFC-HCI ( 1619): phDal4Nfc_Write(): 8
+                                        D/NFC-HCI ( 1619): Llc Dal Interface Write result : 0xd
+                                        D/NFC-HCI ( 1619): 
+                                        D/NFC-HCI ( 1619): 
+                                        D/NFC-HCI ( 1619): LLC : START TIMER CALLED
+                                        D/NFC-HCI ( 1619): 
+                                        D/NFC-HCI ( 1619): RESOLUTION VALUE : 0x1F4
+                                        D/NFC-HCI ( 1619): TIME-OUT VALUE : 0x3E8
+                                        D/NFC-HCI ( 1619): GUARD TIMER NS INDEX : 0x05
+                                        D/NFC-HCI ( 1619): GUARD TIMER COUNT : 0x00
+                                        D/NFC-HCI ( 1619): GUARD TIMER STARTED : 0x00
+                                        D/NFC-HCI ( 1619): GUARD TIMER VALUE : 0x03E8
+                                        D/NFC-HCI ( 1619): OSAL START TIMER CALLED TIMER ID : 0x01
+                                        D/NFC-HCI ( 1619): 
+                                        D/NFC-HCI ( 1619): 
+                                        D/NFC-HCI ( 1619): LLC : START TIMER END
+                                        D/NFC-HCI ( 1619): 
+                                        D/NFC-HCI ( 1619): Llc Send result : 0x000D
+                                        D/NFC-HCI ( 1619): 
+                                        D/NFC-HCI ( 1619): 
+                                        D/NFC-HCI ( 1619): LLC : WRITE RESP CB END
+                                        D/NFC-HCI ( 1619): 
+                                        D/NFC-HCI ( 1619): phDal4Nfc_DeferredCb ENTER
+                                        D/NFC-HCI ( 1619):  Dal deferred write called 
+                                        D/NFC-HCI ( 1619): Writing 8 bytes
+                                        D/NFC-HCI ( 1619): Write succeed (8 bytes)
+                                        D/NFC-HCI ( 1619):  Physical Write Success 
+                                        D/NFC-HCI ( 1619): WriteBuff[]={ 
+                                            D/NFC-HCI ( 1619): 0x7 
+                                            D/NFC-HCI ( 1619): 0xaf 
+                                            D/NFC-HCI ( 1619): 0x84 
+                                            D/NFC-HCI ( 1619): 0x1 
+                                            D/NFC-HCI ( 1619): 0x9 
+                                            D/NFC-HCI ( 1619): 0x1 
+                                            D/NFC-HCI ( 1619): 0xa9 
+                                            D/NFC-HCI ( 1619): 0xa8 
+                                            D/NFC-HCI ( 1619): }
+                                            D/NFC-HCI ( 1619): 
+                                            D/NFC-HCI ( 1619): 
+                                            D/NFC-HCI ( 1619): LLC : WRITE RESP CB CALLED
+                                            D/NFC-HCI ( 1619): 
+                                            D/NFC-HCI ( 1619): RECEIVE length : 0x06
+                                            D/NFC-HCI ( 1619): SENT frame type : 0x06
+                                            D/NFC-HCI ( 1619): WRITE PENDING : 0x00
+                                            D/NFC-HCI ( 1619): WRITE PENDING status : 0x000D
+                                            D/NFC-HCI ( 1619): WRITE wait frame type : 0x00
+                                            D/NFC-HCI ( 1619): NS START POS : 0x05
+                                            D/NFC-HCI ( 1619): WIN SIZE : 0x01
+                                            D/NFC-HCI ( 1619): Llc Dal Interface Read called
+                                            D/NFC-HCI ( 1619): S frame info read pending
+                                            D/NFC-HCI ( 1619): Llc Dal Interface Read result : 0xd
+                                            D/NFC-HCI ( 1619): HCI Send Completion....
+                                            D/NFC-HCI ( 1619): HCI Send Completion... Length = 04
+                                            D/NFC-HCI ( 1619): HCI: In Function: phHciNfc_Send_Complete 
+                                            D/NFC-HCI ( 1619): HCI: Response Pending status --> TRUE 
+                                            D/NFC-HCI ( 1619): HCI: Event Pending status --> FALSE 
+                                            D/NFC-HCI ( 1619): Llc Receive called
+                                            D/NFC-HCI ( 1619): Llc Dal Interface Read called
+                                            D/NFC-HCI ( 1619): S frame info read pending
+                                            D/NFC-HCI ( 1619): Llc Dal Interface Read result : 0xd
+                                            D/NFC-HCI ( 1619): Llc Receive result : 0x000D
+                                            D/NFC-HCI ( 1619): 
+                                            D/NFC-HCI ( 1619): 
+                                            D/NFC-HCI ( 1619): LLC : WRITE RESP CB END
+                                            D/NFC-HCI ( 1619): 
+                                            D/NFC-HCI ( 1619): Read succeed (1 bytes)
+                                            D/NFC-HCI ( 1619): Read ok. nbToRead=1
+                                            D/NFC-HCI ( 1619): NbReallyRead=1
+                                            D/NFC-HCI ( 1619): ReadBuff[]={ 
+                                                D/NFC-HCI ( 1619): 0x5 
+                                                D/NFC-HCI ( 1619): }
+                                                D/NFC-HCI ( 1619): RX Thread Sem Lock
+                                                D/NFC-HCI ( 1619): phDal4Nfc_DeferredCb ENTER
+                                                D/NFC-HCI ( 1619):  Dal deferred read called 
+                                                D/NFC-HCI ( 1619): 
+                                                D/NFC-HCI ( 1619): 
+                                                D/NFC-HCI ( 1619): LLC : READ RESP CB CALLED
+                                                D/NFC-HCI ( 1619): 
+                                                D/NFC-HCI ( 1619): Buffer received : 
+                                                D/NFC-HCI ( 1619): 05 
+                                                D/NFC-HCI ( 1619): Block size is: 1
+                                                D/NFC-HCI ( 1619): 
+                                                D/NFC-HCI ( 1619): Llc Dal Interface Read called
+                                                D/NFC-HCI ( 1619): *****DAl Read called  length : 5
+                                                D/NFC-HCI ( 1619): *****DAl Read called  result : d
+                                                D/NFC-HCI ( 1619): Llc Dal Interface Read result : 0xd
+                                                D/NFC-HCI ( 1619): 
+                                                D/NFC-HCI ( 1619): 
+                                                D/NFC-HCI ( 1619): LLC : READ RESP CB END
+                                                D/NFC-HCI ( 1619): 
+                                                D/NFC-HCI ( 1619): RX Thread Sem UnLock
+                                                D/NFC-HCI ( 1619): 
+                                                D/NFC-HCI ( 1619): *New *** *****Request Length = 5
+                                                D/NFC-HCI ( 1619): Reading 5 bytes
+                                                D/NFC-HCI ( 1619): Read succeed (5 bytes)
+                                                D/NFC-HCI ( 1619): Read ok. nbToRead=5
+                                                D/NFC-HCI ( 1619): NbReallyRead=5
+                                                D/NFC-HCI ( 1619): ReadBuff[]={ 
+                                                    D/NFC-HCI ( 1619): 0xbe 
+                                                    D/NFC-HCI ( 1619): 0x84 
+                                                    D/NFC-HCI ( 1619): 0x80 
+                                                    D/NFC-HCI ( 1619): 0x74 
+                                                    D/NFC-HCI ( 1619): 0x67 
+                                                    D/NFC-HCI ( 1619): }
+                                                    D/NFC-HCI ( 1619): RX Thread Sem Lock
+                                                    D/NFC-HCI ( 1619): phDal4Nfc_DeferredCb ENTER
+                                                    D/NFC-HCI ( 1619):  Dal deferred read called 
+                                                    D/NFC-HCI ( 1619): 
+                                                    D/NFC-HCI ( 1619): 
+                                                    D/NFC-HCI ( 1619): LLC : READ RESP CB CALLED
+                                                    D/NFC-HCI ( 1619): 
+                                                    D/NFC-HCI ( 1619): Buffer received : 
+                                                    D/NFC-HCI ( 1619): BE 84 80 74 67 
+                                                    D/NFC-HCI ( 1619): Block size is: 5
+                                                    D/NFC-HCI ( 1619): 
+                                                    D/NFC-HCI ( 1619): WIN SIZE : 0x01
+                                                    D/NFC-HCI ( 1619): I frame received 
+                                                    D/NFC-HCI ( 1619): NS START POS BEFORE DEL : 0x05
+                                                    D/NFC-HCI ( 1619): WIN SIZE BEFORE DEL : 0x01
+                                                    D/NFC-HCI ( 1619): NS START POS AFTER DEL : 0x06
+                                                    D/NFC-HCI ( 1619): WIN SIZE AFTER DEL : 0x00
+                                                    D/NFC-HCI ( 1619): 
+                                                    D/NFC-HCI ( 1619): 
+                                                    D/NFC-HCI ( 1619): LLC : STOP TIMER CALLED
+                                                    D/NFC-HCI ( 1619): 
+                                                    D/NFC-HCI ( 1619): GUARD TIMER COUNT BEFORE DELETE: 0x01
+                                                    D/NFC-HCI ( 1619): GUARD TIMER TO DELETE: 0x01
+                                                    D/NFC-HCI ( 1619): GUARD TIMER NS INDEX DELETED ELSE : 0x05
+                                                    D/NFC-HCI ( 1619): GUARD TIMER COUNT AFTER DELETE: 0x00
+                                                    D/NFC-HCI ( 1619): OSAL STOP TIMER CALLED TIMER ID : 0x01
+                                                    D/NFC-HCI ( 1619): 
+                                                    D/NFC-HCI ( 1619): 
+                                                    D/NFC-HCI ( 1619): LLC : STOP TIMER END
+                                                    D/NFC-HCI ( 1619): 
+                                                    D/NFC-HCI ( 1619):  Type bits of S frame to be sent is RR 
+                                                    D/NFC-HCI ( 1619): Llc Dal Interface Read called
+                                                    D/NFC-HCI ( 1619): *****DAl Read called  length : 1
+                                                    D/NFC-HCI ( 1619): *****DAl Read called  result : d
+                                                    D/NFC-HCI ( 1619): Llc Dal Interface Read result : 0xd
+                                                    D/NFC-HCI ( 1619): Llc Dal Interface Write called
+                                                    D/NFC-HCI ( 1619): Buffer to be send to Dal : 
+                                                    D/NFC-HCI ( 1619): 03 C0 23 E3 
+                                                    D/NFC-HCI ( 1619): Block size is: 4
+                                                    D/NFC-HCI ( 1619): 
+                                                    D/NFC-HCI ( 1619): phDal4Nfc_Write() : Temporary buffer !! 
+                                                    D/NFC-HCI ( 1619): phDal4Nfc_Write(): 4
+                                                    D/NFC-HCI ( 1619): Llc Dal Interface Write result : 0xd
+                                                    D/NFC-HCI ( 1619): 
+                                                    D/NFC-HCI ( 1619): 
+                                                    D/NFC-HCI ( 1619): LLC : READ RESP CB END
+                                                    D/NFC-HCI ( 1619): 
+                                                    D/NFC-HCI ( 1619): phDal4Nfc_DeferredCb ENTER
+                                                    D/NFC-HCI ( 1619):  Dal deferred write called 
+                                                    D/NFC-HCI ( 1619): RX Thread Sem UnLock
+                                                    D/NFC-HCI ( 1619): 
+                                                    D/NFC-HCI ( 1619): *New *** *****Request Length = 1
+                                                    D/NFC-HCI ( 1619): Reading 1 bytes
+                                                    D/NFC-HCI ( 1619): Writing 4 bytes
+                                                    D/NFC-HCI ( 1619): Write succeed (4 bytes)
+                                                    D/NFC-HCI ( 1619):  Physical Write Success 
+                                                    D/NFC-HCI ( 1619): WriteBuff[]={ 
+                                                        D/NFC-HCI ( 1619): 0x3 
+                                                        D/NFC-HCI ( 1619): 0xc0 
+                                                        D/NFC-HCI ( 1619): 0x23 
+                                                        D/NFC-HCI ( 1619): 0xe3 
+                                                        D/NFC-HCI ( 1619): }
+                                                        D/NFC-HCI ( 1619): 
+                                                        D/NFC-HCI ( 1619): 
+                                                        D/NFC-HCI ( 1619): LLC : WRITE RESP CB CALLED
+                                                        D/NFC-HCI ( 1619): 
+                                                        D/NFC-HCI ( 1619): RECEIVE length : 0x06
+                                                        D/NFC-HCI ( 1619): SENT frame type : 0x05
+                                                        D/NFC-HCI ( 1619): WRITE PENDING : 0x00
+                                                        D/NFC-HCI ( 1619): WRITE PENDING status : 0x000D
+                                                        D/NFC-HCI ( 1619): WRITE wait frame type : 0x00
+                                                        D/NFC-HCI ( 1619): NS START POS : 0x06
+                                                        D/NFC-HCI ( 1619): WIN SIZE : 0x00
+                                                        D/NFC-HCI ( 1619): Window size : 0x00
+                                                        D/NFC-HCI ( 1619): frame to send : 0x00
+                                                        D/NFC-HCI ( 1619): Llc Dal Interface Read called
+                                                        D/NFC-HCI ( 1619): S frame info read pending
+                                                        D/NFC-HCI ( 1619): Llc Dal Interface Read result : 0xd
+                                                        D/NFC-HCI ( 1619): HCI Receive Completion....
+                                                        D/NFC-HCI ( 1619): HCI Lower Layer Receive Completion, Status = 00
+                                                        D/NFC-HCI ( 1619): 
+                                                        D/NFC-HCI ( 1619):   Receive Buffer:
+                                                        D/NFC-HCI ( 1619): 84 80 
+                                                        D/NFC-HCI ( 1619): Block size is: 2
+                                                        D/NFC-HCI ( 1619): 
+                                                        D/NFC-HCI ( 1619):  HCI : Timer 2 Stopped 
+                                                        D/NFC-HCI ( 1619): Polling loop Set Param complete
+                                                        D/NFC-HCI ( 1619): HCI: Response Pending status --> FALSE, phHciNfc_Process_Response 
+                                                        D/NFC-HCI ( 1619): HCI: In Function: phHciNfc_Resume_Sequence 
+                                                        D/NFC-HCI ( 1619):  HCI: Current HCI State --> 01 
+                                                        D/NFC-HCI ( 1619):  HCI: Next HCI State --> 03 
+                                                        D/NFC-HCI ( 1619): HCI: In Function: phHciNfc_Send 
+                                                        D/NFC-HCI ( 1619): HCI: Response Pending status --> TRUE 
+                                                        D/NFC-HCI ( 1619): 
+                                                        D/NFC-HCI ( 1619):   Send Buffer:
+                                                        D/NFC-HCI ( 1619): 84 01 06 00 
+                                                        D/NFC-HCI ( 1619): Block size is: 4
+                                                        D/NFC-HCI ( 1619): 
+                                                        D/NFC-HCI ( 1619):  HCI : Timer 2 Started 
+                                                        D/NFC-HCI ( 1619): Llc Send called
+                                                        D/NFC-HCI ( 1619): Buffer length : 0x0004
+                                                        D/NFC-HCI ( 1619): 84 01 06 00 
+                                                        D/NFC-HCI ( 1619): Block size is: 4
+                                                        D/NFC-HCI ( 1619): 
+                                                        D/NFC-HCI ( 1619): Llc Dal Interface Write called
+                                                        D/NFC-HCI ( 1619): Buffer to be send to Dal : 
+                                                        D/NFC-HCI ( 1619): 07 B0 84 01 06 00 54 E4 
+                                                        D/NFC-HCI ( 1619): Block size is: 8
+                                                        D/NFC-HCI ( 1619): 
+                                                        D/NFC-HCI ( 1619): phDal4Nfc_Write() : Temporary buffer !! 
+                                                        D/NFC-HCI ( 1619): phDal4Nfc_Write(): 8
+                                                        D/NFC-HCI ( 1619): Llc Dal Interface Write result : 0xd
+                                                        D/NFC-HCI ( 1619): 
+                                                        D/NFC-HCI ( 1619): 
+                                                        D/NFC-HCI ( 1619): LLC : START TIMER CALLED
+                                                        D/NFC-HCI ( 1619): 
+                                                        D/NFC-HCI ( 1619): RESOLUTION VALUE : 0x1F4
+                                                        D/NFC-HCI ( 1619): TIME-OUT VALUE : 0x3E8
+                                                        D/NFC-HCI ( 1619): GUARD TIMER NS INDEX : 0x06
+                                                        D/NFC-HCI ( 1619): GUARD TIMER COUNT : 0x00
+                                                        D/NFC-HCI ( 1619): GUARD TIMER STARTED : 0x00
+                                                        D/NFC-HCI ( 1619): GUARD TIMER VALUE : 0x03E8
+                                                        D/NFC-HCI ( 1619): OSAL START TIMER CALLED TIMER ID : 0x01
+                                                        D/NFC-HCI ( 1619): 
+                                                        D/NFC-HCI ( 1619): 
+                                                        D/NFC-HCI ( 1619): LLC : START TIMER END
+                                                        D/NFC-HCI ( 1619): 
+                                                        D/NFC-HCI ( 1619): Llc Send result : 0x000D
+                                                        D/NFC-HCI ( 1619): 
+                                                        D/NFC-HCI ( 1619): 
+                                                        D/NFC-HCI ( 1619): LLC : WRITE RESP CB END
+                                                        D/NFC-HCI ( 1619): 
+                                                        D/NFC-HCI ( 1619): phDal4Nfc_DeferredCb ENTER
+                                                        D/NFC-HCI ( 1619):  Dal deferred write called 
+                                                        D/NFC-HCI ( 1619): Writing 8 bytes
+                                                        D/NFC-HCI ( 1619): Write succeed (8 bytes)
+                                                        D/NFC-HCI ( 1619):  Physical Write Success 
+                                                        D/NFC-HCI ( 1619): WriteBuff[]={ 
+                                                            D/NFC-HCI ( 1619): 0x7 
+                                                            D/NFC-HCI ( 1619): 0xb0 
+                                                            D/NFC-HCI ( 1619): 0x84 
+                                                            D/NFC-HCI ( 1619): 0x1 
+                                                            D/NFC-HCI ( 1619): 0x6 
+                                                            D/NFC-HCI ( 1619): 0x0 
+                                                            D/NFC-HCI ( 1619): 0x54 
+                                                            D/NFC-HCI ( 1619): 0xe4 
+                                                            D/NFC-HCI ( 1619): }
+                                                            D/NFC-HCI ( 1619): 
+                                                            D/NFC-HCI ( 1619): 
+                                                            D/NFC-HCI ( 1619): LLC : WRITE RESP CB CALLED
+                                                            D/NFC-HCI ( 1619): 
+                                                            D/NFC-HCI ( 1619): RECEIVE length : 0x06
+                                                            D/NFC-HCI ( 1619): SENT frame type : 0x06
+                                                            D/NFC-HCI ( 1619): WRITE PENDING : 0x00
+                                                            D/NFC-HCI ( 1619): WRITE PENDING status : 0x000D
+                                                            D/NFC-HCI ( 1619): WRITE wait frame type : 0x00
+                                                            D/NFC-HCI ( 1619): NS START POS : 0x06
+                                                            D/NFC-HCI ( 1619): WIN SIZE : 0x01
+                                                            D/NFC-HCI ( 1619): Llc Dal Interface Read called
+                                                            D/NFC-HCI ( 1619): S frame info read pending
+                                                            D/NFC-HCI ( 1619): Llc Dal Interface Read result : 0xd
+                                                            D/NFC-HCI ( 1619): HCI Send Completion....
+                                                            D/NFC-HCI ( 1619): HCI Send Completion... Length = 04
+                                                            D/NFC-HCI ( 1619): HCI: In Function: phHciNfc_Send_Complete 
+                                                            D/NFC-HCI ( 1619): HCI: Response Pending status --> TRUE 
+                                                            D/NFC-HCI ( 1619): HCI: Event Pending status --> FALSE 
+                                                            D/NFC-HCI ( 1619): Llc Receive called
+                                                            D/NFC-HCI ( 1619): Llc Dal Interface Read called
+                                                            D/NFC-HCI ( 1619): S frame info read pending
+                                                            D/NFC-HCI ( 1619): Llc Dal Interface Read result : 0xd
+                                                            D/NFC-HCI ( 1619): Llc Receive result : 0x000D
+                                                            D/NFC-HCI ( 1619): 
+                                                            D/NFC-HCI ( 1619): 
+                                                            D/NFC-HCI ( 1619): LLC : WRITE RESP CB END
+                                                            D/NFC-HCI ( 1619): 
+                                                            D/NFC-HCI ( 1619): Read succeed (1 bytes)
+                                                            D/NFC-HCI ( 1619): Read ok. nbToRead=1
+                                                            D/NFC-HCI ( 1619): NbReallyRead=1
+                                                            D/NFC-HCI ( 1619): ReadBuff[]={ 
+                                                                D/NFC-HCI ( 1619): 0x5 
+                                                                D/NFC-HCI ( 1619): }
+                                                                D/NFC-HCI ( 1619): RX Thread Sem Lock
+                                                                D/NFC-HCI ( 1619): phDal4Nfc_DeferredCb ENTER
+                                                                D/NFC-HCI ( 1619):  Dal deferred read called 
+                                                                D/NFC-HCI ( 1619): 
+                                                                D/NFC-HCI ( 1619): 
+                                                                D/NFC-HCI ( 1619): LLC : READ RESP CB CALLED
+                                                                D/NFC-HCI ( 1619): 
+                                                                D/NFC-HCI ( 1619): Buffer received : 
+                                                                D/NFC-HCI ( 1619): 05 
+                                                                D/NFC-HCI ( 1619): Block size is: 1
+                                                                D/NFC-HCI ( 1619): 
+                                                                D/NFC-HCI ( 1619): Llc Dal Interface Read called
+                                                                D/NFC-HCI ( 1619): *****DAl Read called  length : 5
+                                                                D/NFC-HCI ( 1619): *****DAl Read called  result : d
+                                                                D/NFC-HCI ( 1619): Llc Dal Interface Read result : 0xd
+                                                                D/NFC-HCI ( 1619): 
+                                                                D/NFC-HCI ( 1619): 
+                                                                D/NFC-HCI ( 1619): LLC : READ RESP CB END
+                                                                D/NFC-HCI ( 1619): 
+                                                                D/NFC-HCI ( 1619): RX Thread Sem UnLock
+                                                                D/NFC-HCI ( 1619): 
+                                                                D/NFC-HCI ( 1619): *New *** *****Request Length = 5
+                                                                D/NFC-HCI ( 1619): Reading 5 bytes
+                                                                D/NFC-HCI ( 1619): Read succeed (5 bytes)
+                                                                D/NFC-HCI ( 1619): Read ok. nbToRead=5
+                                                                D/NFC-HCI ( 1619): NbReallyRead=5
+                                                                D/NFC-HCI ( 1619): ReadBuff[]={ 
+                                                                    D/NFC-HCI ( 1619): 0x87 
+                                                                    D/NFC-HCI ( 1619): 0x84 
+                                                                    D/NFC-HCI ( 1619): 0x80 
+                                                                    D/NFC-HCI ( 1619): 0xc4 
+                                                                    D/NFC-HCI ( 1619): 0x7d 
+                                                                    D/NFC-HCI ( 1619): }
+                                                                    D/NFC-HCI ( 1619): RX Thread Sem Lock
+                                                                    D/NFC-HCI ( 1619): phDal4Nfc_DeferredCb ENTER
+                                                                    D/NFC-HCI ( 1619):  Dal deferred read called 
+                                                                    D/NFC-HCI ( 1619): 
+                                                                    D/NFC-HCI ( 1619): 
+                                                                    D/NFC-HCI ( 1619): LLC : READ RESP CB CALLED
+                                                                    D/NFC-HCI ( 1619): 
+                                                                    D/NFC-HCI ( 1619): Buffer received : 
+                                                                    D/NFC-HCI ( 1619): 87 84 80 C4 7D 
+                                                                    D/NFC-HCI ( 1619): Block size is: 5
+                                                                    D/NFC-HCI ( 1619): 
+                                                                    D/NFC-HCI ( 1619): WIN SIZE : 0x01
+                                                                    D/NFC-HCI ( 1619): I frame received 
+                                                                    D/NFC-HCI ( 1619): NS START POS BEFORE DEL : 0x06
+                                                                    D/NFC-HCI ( 1619): WIN SIZE BEFORE DEL : 0x01
+                                                                    D/NFC-HCI ( 1619): NS START POS AFTER DEL : 0x07
+                                                                    D/NFC-HCI ( 1619): WIN SIZE AFTER DEL : 0x00
+                                                                    D/NFC-HCI ( 1619): 
+                                                                    D/NFC-HCI ( 1619): 
+                                                                    D/NFC-HCI ( 1619): LLC : STOP TIMER CALLED
+                                                                    D/NFC-HCI ( 1619): 
+                                                                    D/NFC-HCI ( 1619): GUARD TIMER COUNT BEFORE DELETE: 0x01
+                                                                    D/NFC-HCI ( 1619): GUARD TIMER TO DELETE: 0x01
+                                                                    D/NFC-HCI ( 1619): GUARD TIMER NS INDEX DELETED ELSE : 0x06
+                                                                    D/NFC-HCI ( 1619): GUARD TIMER COUNT AFTER DELETE: 0x00
+                                                                    D/NFC-HCI ( 1619): OSAL STOP TIMER CALLED TIMER ID : 0x01
+                                                                    D/NFC-HCI ( 1619): 
+                                                                    D/NFC-HCI ( 1619): 
+                                                                    D/NFC-HCI ( 1619): LLC : STOP TIMER END
+                                                                    D/NFC-HCI ( 1619): 
+                                                                    D/NFC-HCI ( 1619):  Type bits of S frame to be sent is RR 
+                                                                    D/NFC-HCI ( 1619): Llc Dal Interface Read called
+                                                                    D/NFC-HCI ( 1619): *****DAl Read called  length : 1
+                                                                    D/NFC-HCI ( 1619): *****DAl Read called  result : d
+                                                                    D/NFC-HCI ( 1619): Llc Dal Interface Read result : 0xd
+                                                                    D/NFC-HCI ( 1619): Llc Dal Interface Write called
+                                                                    D/NFC-HCI ( 1619): Buffer to be send to Dal : 
+                                                                    D/NFC-HCI ( 1619): 03 C1 AA F2 
+                                                                    D/NFC-HCI ( 1619): Block size is: 4
+                                                                    D/NFC-HCI ( 1619): 
+                                                                    D/NFC-HCI ( 1619): phDal4Nfc_Write() : Temporary buffer !! 
+                                                                    D/NFC-HCI ( 1619): phDal4Nfc_Write(): 4
+                                                                    D/NFC-HCI ( 1619): Llc Dal Interface Write result : 0xd
+                                                                    D/NFC-HCI ( 1619): 
+                                                                    D/NFC-HCI ( 1619): 
+                                                                    D/NFC-HCI ( 1619): LLC : READ RESP CB END
+                                                                    D/NFC-HCI ( 1619): 
+                                                                    D/NFC-HCI ( 1619): phDal4Nfc_DeferredCb ENTER
+                                                                    D/NFC-HCI ( 1619):  Dal deferred write called 
+                                                                    D/NFC-HCI ( 1619): RX Thread Sem UnLock
+                                                                    D/NFC-HCI ( 1619): 
+                                                                    D/NFC-HCI ( 1619): *New *** *****Request Length = 1
+                                                                    D/NFC-HCI ( 1619): Reading 1 bytes
+                                                                    D/NFC-HCI ( 1619): Writing 4 bytes
+                                                                    D/NFC-HCI ( 1619): Write succeed (4 bytes)
+                                                                    D/NFC-HCI ( 1619):  Physical Write Success 
+                                                                    D/NFC-HCI ( 1619): WriteBuff[]={ 
+                                                                        D/NFC-HCI ( 1619): 0x3 
+                                                                        D/NFC-HCI ( 1619): 0xc1 
+                                                                        D/NFC-HCI ( 1619): 0xaa 
+                                                                        D/NFC-HCI ( 1619): 0xf2 
+                                                                        D/NFC-HCI ( 1619): }
+                                                                        D/NFC-HCI ( 1619): 
+                                                                        D/NFC-HCI ( 1619): 
+                                                                        D/NFC-HCI ( 1619): LLC : WRITE RESP CB CALLED
+                                                                        D/NFC-HCI ( 1619): 
+                                                                        D/NFC-HCI ( 1619): RECEIVE length : 0x06
+                                                                        D/NFC-HCI ( 1619): SENT frame type : 0x05
+                                                                        D/NFC-HCI ( 1619): WRITE PENDING : 0x00
+                                                                        D/NFC-HCI ( 1619): WRITE PENDING status : 0x000D
+                                                                        D/NFC-HCI ( 1619): WRITE wait frame type : 0x00
+                                                                        D/NFC-HCI ( 1619): NS START POS : 0x07
+                                                                        D/NFC-HCI ( 1619): WIN SIZE : 0x00
+                                                                        D/NFC-HCI ( 1619): Window size : 0x00
+                                                                        D/NFC-HCI ( 1619): frame to send : 0x00
+                                                                        D/NFC-HCI ( 1619): Llc Dal Interface Read called
+                                                                        D/NFC-HCI ( 1619): S frame info read pending
+                                                                        D/NFC-HCI ( 1619): Llc Dal Interface Read result : 0xd
+                                                                        D/NFC-HCI ( 1619): HCI Receive Completion....
+                                                                        D/NFC-HCI ( 1619): HCI Lower Layer Receive Completion, Status = 00
+                                                                        D/NFC-HCI ( 1619): 
+                                                                        D/NFC-HCI ( 1619):   Receive Buffer:
+                                                                        D/NFC-HCI ( 1619): 84 80 
+                                                                        D/NFC-HCI ( 1619): Block size is: 2
+                                                                        D/NFC-HCI ( 1619): 
+                                                                        D/NFC-HCI ( 1619):  HCI : Timer 2 Stopped 
+                                                                        D/NFC-HCI ( 1619): Polling loop Set Param complete
+                                                                        D/NFC-HCI ( 1619): HCI: Response Pending status --> FALSE, phHciNfc_Process_Response 
+                                                                        D/NFC-HCI ( 1619): HCI: In Function: phHciNfc_Resume_Sequence 
+                                                                        D/NFC-HCI ( 1619):  HCI: Current HCI State --> 01 
+                                                                        D/NFC-HCI ( 1619):  HCI: Next HCI State --> 03 
+                                                                        D/NFC-HCI ( 1619): HCI: psHciContext->target_release --> FALSE 
+                                                                        D/NFC-HCI ( 1619): HCI: In Function: phHciNfc_FSM_Rollback 
+                                                                        D/NFC-HCI ( 1619):  HCI: Transition Before FSM Rollback --> 01 
+                                                                        D/NFC-HCI ( 1619):  HCI: Current State Before FSM Rollback --> 01 
+                                                                        D/NFC-HCI ( 1619):  HCI: Next State Before FSM Rollback  --> 03 
+                                                                        D/NFC-HCI ( 1619): HCI Discovery Configuration Completed 
+                                                                        D/NFC-HCI ( 1619): 
+                                                                        D/NFC-HCI ( 1619): 
+                                                                        D/NFC-HCI ( 1619): LLC : WRITE RESP CB END
+                                                                        D/NFC-HCI ( 1619): 
+                                                                        D/PhoneApp( 1609): setIgnoreTouchUserActivity(false)...
+

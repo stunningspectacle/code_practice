@@ -1,0 +1,16 @@
+F {main} {sigtstp.c:31}
+C {main} {sigtstp.c:50} {exit}
+C {main} {sigtstp.c:50} {err_sys}
+C {main} {sigtstp.c:50} {read}
+C {main} {sigtstp.c:50} {err_sys}
+C {main} {sigtstp.c:50} {write}
+C {main} {sigtstp.c:50} {signal}
+C {main} {sigtstp.c:50} {signal}
+F {sig_tstp} {sigtstp.c:6}
+C {sig_tstp} {sigtstp.c:50} {signal}
+C {sig_tstp} {sigtstp.c:50} {kill}
+C {sig_tstp} {sigtstp.c:50} {getpid}
+C {sig_tstp} {sigtstp.c:50} {signal}
+C {sig_tstp} {sigtstp.c:50} {sigprocmask}
+C {sig_tstp} {sigtstp.c:50} {sigaddset}
+C {sig_tstp} {sigtstp.c:50} {sigemptyset}

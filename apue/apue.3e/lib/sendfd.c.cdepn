@@ -1,0 +1,3 @@
+F {send_fd} {sendfd.c:14}
+C {send_fd} {sendfd.c:49} {sendmsg}
+C {send_fd} {sendfd.c:49} {malloc}

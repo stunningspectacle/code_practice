@@ -1,0 +1,27 @@
+F {main} {ruptime-dg.c:34}
+C {main} {ruptime-dg.c:67} {exit}
+C {main} {ruptime-dg.c:67} {fprintf}
+C {main} {ruptime-dg.c:67} {strerror}
+C {main} {ruptime-dg.c:67} {exit}
+C {main} {ruptime-dg.c:67} {print_uptime}
+C {main} {ruptime-dg.c:67} {__errno_location}
+C {main} {ruptime-dg.c:67} {socket}
+C {main} {ruptime-dg.c:67} {err_quit}
+C {main} {ruptime-dg.c:67} {gai_strerror}
+C {main} {ruptime-dg.c:67} {getaddrinfo}
+C {main} {ruptime-dg.c:67} {memset}
+C {main} {ruptime-dg.c:67} {err_sys}
+C {main} {ruptime-dg.c:67} {sigaction}
+C {main} {ruptime-dg.c:67} {sigemptyset}
+C {main} {ruptime-dg.c:67} {err_quit}
+F {print_uptime} {ruptime-dg.c:15}
+C {print_uptime} {ruptime-dg.c:67} {write}
+C {print_uptime} {ruptime-dg.c:67} {alarm}
+C {print_uptime} {ruptime-dg.c:67} {err_sys}
+C {print_uptime} {ruptime-dg.c:67} {alarm}
+C {print_uptime} {ruptime-dg.c:67} {__errno_location}
+C {print_uptime} {ruptime-dg.c:67} {recvfrom}
+C {print_uptime} {ruptime-dg.c:67} {alarm}
+C {print_uptime} {ruptime-dg.c:67} {err_sys}
+C {print_uptime} {ruptime-dg.c:67} {sendto}
+F {sigalrm} {ruptime-dg.c:10}

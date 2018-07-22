@@ -1,0 +1,8 @@
+F {sleep2} {sleep2.c:14}
+C {sleep2} {sleep2.c:23} {alarm}
+C {sleep2} {sleep2.c:23} {pause}
+C {sleep2} {sleep2.c:23} {alarm}
+C {sleep2} {sleep2.c:23} {_setjmp}
+C {sleep2} {sleep2.c:23} {signal}
+F {sig_alrm} {sleep2.c:8}
+C {sig_alrm} {sleep2.c:23} {longjmp}

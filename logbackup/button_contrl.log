@@ -1,0 +1,78 @@
+updateState(########### Dump CallManager ############
+D/CallCard( 1609): CallManager state = OFFHOOK
+D/CallCard( 1609):    - Foreground: DIALING from Handler{b3c1cfd8}
+D/CallCard( 1609):      Conn: [ incoming: false state: DIALING post dial state: NOT_STARTED]
+D/CallCard( 1609):    - Background: IDLE from Handler{b3c1cfd8}
+D/CallCard( 1609):      Conn: []
+D/CallCard( 1609):    - Ringing: IDLE from Handler{b3c1cfd8}
+D/CallCard( 1609):  Phone: Handler{b3c1cfd8}, name = GSM, state = OFFHOOK
+D/CallCard( 1609):    - Foreground: DIALING Background: IDLE Ringing: IDLE
+D/CallCard( 1609): ########## End Dump CallManager ##########)...
+D/CallCard( 1609): updateForegroundCall()...
+D/CallCard( 1609): displayMainCallStatus(call DIALING)...
+D/CallCard( 1609):   - call.state: DIALING
+D/CallCard( 1609): updateCardTitleWidgets(call DIALING)...
+D/CallCard( 1609): - getTitleForCallCard(Call DIALING)...
+D/CallCard( 1609):   ==> result: Dialing
+D/CallCard( 1609): updateCardTitleWidgets: Dialing
+D/CallCard( 1609):   - CONN:  incoming: false state: DIALING post dial state: NOT_STARTED, state = DIALING
+D/CallCard( 1609): - displayMainCallStatus: using data we already have...
+D/CallCard( 1609): - displayMainCallStatus: CNAP data from Connection: CNAP name=null, Number/Name Presentation=1
+D/CallCard( 1609):    ==> Got CallerInfo; updating display: ci = CallerInfo { name null, phoneNumber non-null }
+D/CallCard( 1609): updateDisplayForPerson(CallerInfo { name null, phoneNumber non-null })
+D/CallCard( 1609): presentation:1 isTemporary:false
+D/CallCard( 1609): - got personUri: 'content://com.android.contacts/contacts/0', based on info.person_id: 0
+D/CallCard( 1609): updatePhotoForCallState(DIALING)...
+D/CallCard( 1609): displayOnHoldCallStatus(call =IDLE)...
+D/PhoneApp( 1609): - isOtaCallInActiveState false
+D/InCallScreen( 1609): [okToDialDTMFTones] foreground state: DIALING, ringing state: false, call screen mode: NORMAL, result: false
+D/InCallScreen( 1609): isBluetoothAudioConnected: ==> isAudioOn = false
+D/InCallTouchUi( 1609): - updateState: CallManager state is OFFHOOK
+D/InCallScreen( 1609): getUpdatedInCallControlState()...
+D/InCallScreen( 1609): isBluetoothAvailable()...
+D/InCallScreen( 1609):   - headset state = 0
+D/InCallScreen( 1609):   - headset address: null
+D/InCallScreen( 1609):   ==> false
+D/InCallScreen( 1609): [okToDialDTMFTones] foreground state: DIALING, ringing state: false, call screen mode: NORMAL, result: false
+D/InCallControlState( 1609): InCallControlState:
+D/InCallControlState( 1609):   manageConferenceVisible: false
+D/InCallControlState( 1609):   manageConferenceEnabled: false
+D/InCallControlState( 1609):   canAddCall: false
+D/InCallControlState( 1609):   canSwap: false
+D/InCallControlState( 1609):   canMerge: false
+D/InCallControlState( 1609):   bluetoothEnabled: false
+D/InCallControlState( 1609):   bluetoothIndicatorOn: false
+D/InCallControlState( 1609):   speakerEnabled: true
+D/InCallControlState( 1609):   speakerOn: false
+D/InCallControlState( 1609):   canMute: false
+D/InCallControlState( 1609):   muteIndicatorOn: false
+D/InCallControlState( 1609):   dialpadEnabled: false
+D/InCallControlState( 1609):   dialpadVisible: false
+D/InCallControlState( 1609):   onHold: false
+D/InCallControlState( 1609):   canHold: false
+D/InCallScreen( 1609): updateProviderOverlay: false
+D/InCallScreen( 1609): updateMenuButtonHint()...
+D/PhoneApp( 1609): updateWakeState: callscreen true, dialer false, speaker false...
+D/PhoneApp( 1609): setScreenTimeout(MEDIUM)...
+D/PhoneApp( 1609): updateWakeState: keepScreenOn = true (isRinging false, isDialing true, showingDisc false)
+D/PhoneApp( 1609): requestWakeState(FULL)...
+D/InCallScreen( 1609): onWindowFocusChanged(true)...
+D/dalvikvm( 1956): GC_EXPLICIT freed 117K, 44% free 3457K/6151K, external 5461K/6820K, paused 17ms
+I/GrallocFB( 1520): uevent detected in fb_thread:142
+I/GrallocFB( 1520): uevent detected in fb_thread:142
+I/GrallocFB( 1520): uevent detected in fb_thread:142
+I/GrallocFB( 1520): uevent detected in fb_thread:142
+I/GrallocFB( 1520): uevent detected in fb_thread:142
+I/GrallocFB( 1520): uevent detected in fb_thread:142
+I/GrallocFB( 1520): uevent detected in fb_thread:142
+I/GrallocFB( 1520): uevent detected in fb_thread:142
+I/GrallocFB( 1520): uevent detected in fb_thread:142
+I/GrallocFB( 1520): uevent detected in fb_thread:142
+I/GrallocFB( 1520): uevent detected in fb_thread:142
+I/GrallocFB( 1520): uevent detected in fb_thread:142
+I/GrallocFB( 1520): uevent detected in fb_thread:142
+I/GrallocFB( 1520): uevent detected in fb_thread:142
+I/GrallocFB( 1520): uevent detected in fb_thread:142
+D/InCallScreen( 1609): onPause()...
+D/InCallScreen( 1609): updateProviderOverlay: false
+

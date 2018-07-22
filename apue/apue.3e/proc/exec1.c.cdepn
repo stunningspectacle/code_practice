@@ -1,0 +1,12 @@
+F {main} {exec1.c:7}
+C {main} {exec1.c:30} {exit}
+C {main} {exec1.c:30} {err_sys}
+C {main} {exec1.c:30} {execlp}
+C {main} {exec1.c:30} {err_sys}
+C {main} {exec1.c:30} {fork}
+C {main} {exec1.c:30} {err_sys}
+C {main} {exec1.c:30} {waitpid}
+C {main} {exec1.c:30} {err_sys}
+C {main} {exec1.c:30} {execle}
+C {main} {exec1.c:30} {err_sys}
+C {main} {exec1.c:30} {fork}

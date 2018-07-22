@@ -1,0 +1,6 @@
+F {system} {system.c:6}
+C {system} {system.c:29} {waitpid}
+C {system} {system.c:29} {__errno_location}
+C {system} {system.c:29} {_exit}
+C {system} {system.c:29} {execl}
+C {system} {system.c:29} {fork}

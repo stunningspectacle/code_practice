@@ -1,0 +1,23 @@
+F {main} {timeout.c:98}
+C {main} {timeout.c:132} {exit}
+C {main} {timeout.c:132} {pthread_mutex_unlock}
+C {main} {timeout.c:132} {timeout}
+C {main} {timeout.c:132} {clock_gettime}
+C {main} {timeout.c:132} {pthread_mutex_lock}
+C {main} {timeout.c:132} {err_exit}
+C {main} {timeout.c:132} {pthread_mutex_init}
+C {main} {timeout.c:132} {err_exit}
+C {main} {timeout.c:132} {pthread_mutexattr_settype}
+C {main} {timeout.c:132} {err_exit}
+C {main} {timeout.c:132} {pthread_mutexattr_init}
+F {retry} {timeout.c:88}
+C {retry} {timeout.c:132} {pthread_mutex_unlock}
+C {retry} {timeout.c:132} {pthread_mutex_lock}
+F {timeout} {timeout.c:48}
+C {timeout} {timeout.c:132} {free}
+C {timeout} {timeout.c:132} {makethread}
+C {timeout} {timeout.c:132} {malloc}
+C {timeout} {timeout.c:132} {clock_gettime}
+F {timeout_helper} {timeout.c:36}
+C {timeout_helper} {timeout.c:132} {free}
+C {timeout_helper} {timeout.c:132} {clock_nanosleep}

@@ -1,0 +1,15 @@
+F {main} {fileflags.c:5}
+C {main} {fileflags.c:46} {exit}
+C {main} {fileflags.c:46} {putchar}
+C {main} {fileflags.c:46} {printf}
+C {main} {fileflags.c:46} {printf}
+C {main} {fileflags.c:46} {printf}
+C {main} {fileflags.c:46} {err_dump}
+C {main} {fileflags.c:46} {printf}
+C {main} {fileflags.c:46} {printf}
+C {main} {fileflags.c:46} {printf}
+C {main} {fileflags.c:46} {err_sys}
+C {main} {fileflags.c:46} {atoi}
+C {main} {fileflags.c:46} {fcntl}
+C {main} {fileflags.c:46} {atoi}
+C {main} {fileflags.c:46} {err_quit}

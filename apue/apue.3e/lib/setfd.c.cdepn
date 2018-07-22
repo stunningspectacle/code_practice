@@ -1,0 +1,3 @@
+F {set_cloexec} {setfd.c:5}
+C {set_cloexec} {setfd.c:15} {fcntl}
+C {set_cloexec} {setfd.c:15} {fcntl}

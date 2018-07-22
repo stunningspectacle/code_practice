@@ -1,0 +1,470 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+  <title>LCOV - drivers_i2c_busses.info - drivers/i2c/busses/i2c-designware-pci.c</title>
+  <link rel="stylesheet" type="text/css" href="../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../index.html">top level</a> - <a href="index.html">drivers/i2c/busses</a> - i2c-designware-pci.c<span style="font-size: 80%;"> (source / <a href="i2c-designware-pci.c.func.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">drivers_i2c_busses.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">74</td>
+            <td class="headerCovTableEntry">113</td>
+            <td class="headerCovTableEntryLo">65.5 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2011-04-26</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntryMed">77.8 %</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="headerItem">Branches:</td>
+            <td class="headerCovTableEntry">14</td>
+            <td class="headerCovTableEntry">28</td>
+            <td class="headerCovTableEntryLo">50.0 %</td>
+          </tr>
+          <tr><td><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">           Branch data     Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>                :            : /*</a>
+<span class="lineNum">       2 </span>                :            :  * Synopsys DesignWare I2C adapter driver (master only).
+<span class="lineNum">       3 </span>                :            :  *
+<span class="lineNum">       4 </span>                :            :  * Based on the TI DAVINCI I2C adapter driver.
+<span class="lineNum">       5 </span>                :            :  *
+<span class="lineNum">       6 </span>                :            :  * Copyright (C) 2006 Texas Instruments.
+<span class="lineNum">       7 </span>                :            :  * Copyright (C) 2007 MontaVista Software Inc.
+<span class="lineNum">       8 </span>                :            :  * Copyright (C) 2009 Provigent Ltd.
+<span class="lineNum">       9 </span>                :            :  *
+<span class="lineNum">      10 </span>                :            :  * ----------------------------------------------------------------------------
+<span class="lineNum">      11 </span>                :            :  *
+<span class="lineNum">      12 </span>                :            :  * This program is free software; you can redistribute it and/or modify
+<span class="lineNum">      13 </span>                :            :  * it under the terms of the GNU General Public License as published by
+<span class="lineNum">      14 </span>                :            :  * the Free Software Foundation; either version 2 of the License, or
+<span class="lineNum">      15 </span>                :            :  * (at your option) any later version.
+<span class="lineNum">      16 </span>                :            :  *
+<span class="lineNum">      17 </span>                :            :  * This program is distributed in the hope that it will be useful,
+<span class="lineNum">      18 </span>                :            :  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      19 </span>                :            :  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      20 </span>                :            :  * GNU General Public License for more details.
+<span class="lineNum">      21 </span>                :            :  *
+<span class="lineNum">      22 </span>                :            :  * You should have received a copy of the GNU General Public License
+<span class="lineNum">      23 </span>                :            :  * along with this program; if not, write to the Free Software
+<span class="lineNum">      24 </span>                :            :  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+<span class="lineNum">      25 </span>                :            :  * ----------------------------------------------------------------------------
+<span class="lineNum">      26 </span>                :            :  *
+<span class="lineNum">      27 </span>                :            :  */
+<span class="lineNum">      28 </span>                :            : 
+<span class="lineNum">      29 </span>                :            : #include &lt;linux/kernel.h&gt;
+<span class="lineNum">      30 </span>                :            : #include &lt;linux/module.h&gt;
+<span class="lineNum">      31 </span>                :            : #include &lt;linux/delay.h&gt;
+<span class="lineNum">      32 </span>                :            : #include &lt;linux/i2c.h&gt;
+<span class="lineNum">      33 </span>                :            : #include &lt;linux/errno.h&gt;
+<span class="lineNum">      34 </span>                :            : #include &lt;linux/sched.h&gt;
+<span class="lineNum">      35 </span>                :            : #include &lt;linux/err.h&gt;
+<span class="lineNum">      36 </span>                :            : #include &lt;linux/interrupt.h&gt;
+<span class="lineNum">      37 </span>                :            : #include &lt;linux/platform_device.h&gt;
+<span class="lineNum">      38 </span>                :            : #include &lt;linux/io.h&gt;
+<span class="lineNum">      39 </span>                :            : #include &lt;linux/slab.h&gt;
+<span class="lineNum">      40 </span>                :            : #include &lt;linux/pci.h&gt;
+<span class="lineNum">      41 </span>                :            : #include &lt;linux/pm_runtime.h&gt;
+<span class="lineNum">      42 </span>                :            : #include &quot;i2c-designware-core.h&quot;
+<span class="lineNum">      43 </span>                :            : 
+<span class="lineNum">      44 </span>                :            : #define DRIVER_NAME &quot;i2c-designware-pci&quot;
+<span class="lineNum">      45 </span>                :            : 
+<span class="lineNum">      46 </span>                :            : enum dw_pci_ctl_id_t {
+<span class="lineNum">      47 </span>                :            :         moorestown_0,
+<span class="lineNum">      48 </span>                :            :         moorestown_1,
+<span class="lineNum">      49 </span>                :            :         moorestown_2,
+<span class="lineNum">      50 </span>                :            : 
+<span class="lineNum">      51 </span>                :            :         medfield_0,
+<span class="lineNum">      52 </span>                :            :         medfield_1,
+<span class="lineNum">      53 </span>                :            :         medfield_2,
+<span class="lineNum">      54 </span>                :            :         medfield_3,
+<span class="lineNum">      55 </span>                :            :         medfield_4,
+<span class="lineNum">      56 </span>                :            :         medfield_5,
+<span class="lineNum">      57 </span>                :            : };
+<span class="lineNum">      58 </span>                :            : 
+<span class="lineNum">      59 </span>                :            : struct dw_pci_controller {
+<span class="lineNum">      60 </span>                :            :         u32 bus_num;
+<span class="lineNum">      61 </span>                :            :         u32 bus_cfg;
+<span class="lineNum">      62 </span>                :            :         u32 tx_fifo_depth;
+<span class="lineNum">      63 </span>                :            :         u32 rx_fifo_depth;
+<span class="lineNum">      64 </span>                :            :         u32 clk_khz;
+<span class="lineNum">      65 </span>                :            : };
+<span class="lineNum">      66 </span>                :            : 
+<span class="lineNum">      67 </span>                :            : #define INTEL_MID_STD_CFG  (DW_IC_CON_MASTER |                  \
+<span class="lineNum">      68 </span>                :            :                                 DW_IC_CON_SLAVE_DISABLE |       \
+<span class="lineNum">      69 </span>                :            :                                 DW_IC_CON_RESTART_EN)
+<span class="lineNum">      70 </span>                :            : 
+<span class="lineNum">      71 </span>                :            : static struct  dw_pci_controller  dw_pci_controllers[] = {
+<span class="lineNum">      72 </span>                :            :         [moorestown_0] = {
+<span class="lineNum">      73 </span>                :            :                 .bus_num     = 0,
+<span class="lineNum">      74 </span>                :            :                 .bus_cfg   = INTEL_MID_STD_CFG | DW_IC_CON_SPEED_FAST,
+<span class="lineNum">      75 </span>                :            :                 .tx_fifo_depth = 32,
+<span class="lineNum">      76 </span>                :            :                 .rx_fifo_depth = 32,
+<span class="lineNum">      77 </span>                :            :                 .clk_khz      = 25000,
+<span class="lineNum">      78 </span>                :            :         },
+<span class="lineNum">      79 </span>                :            :         [moorestown_1] = {
+<span class="lineNum">      80 </span>                :            :                 .bus_num     = 1,
+<span class="lineNum">      81 </span>                :            :                 .bus_cfg   = INTEL_MID_STD_CFG | DW_IC_CON_SPEED_FAST,
+<span class="lineNum">      82 </span>                :            :                 .tx_fifo_depth = 32,
+<span class="lineNum">      83 </span>                :            :                 .rx_fifo_depth = 32,
+<span class="lineNum">      84 </span>                :            :                 .clk_khz      = 25000,
+<span class="lineNum">      85 </span>                :            :         },
+<span class="lineNum">      86 </span>                :            :         [moorestown_2] = {
+<span class="lineNum">      87 </span>                :            :                 .bus_num     = 2,
+<span class="lineNum">      88 </span>                :            :                 .bus_cfg   = INTEL_MID_STD_CFG | DW_IC_CON_SPEED_FAST,
+<span class="lineNum">      89 </span>                :            :                 .tx_fifo_depth = 32,
+<span class="lineNum">      90 </span>                :            :                 .rx_fifo_depth = 32,
+<span class="lineNum">      91 </span>                :            :                 .clk_khz      = 25000,
+<span class="lineNum">      92 </span>                :            :         },
+<span class="lineNum">      93 </span>                :            :         [medfield_0] = {
+<span class="lineNum">      94 </span>                :            :                 .bus_num     = 0,
+<span class="lineNum">      95 </span>                :            :                 .bus_cfg   = INTEL_MID_STD_CFG | DW_IC_CON_SPEED_FAST,
+<span class="lineNum">      96 </span>                :            :                 .tx_fifo_depth = 32,
+<span class="lineNum">      97 </span>                :            :                 .rx_fifo_depth = 32,
+<span class="lineNum">      98 </span>                :            :                 .clk_khz      = 17000,
+<span class="lineNum">      99 </span>                :            :         },
+<span class="lineNum">     100 </span>                :            :         [medfield_1] = {
+<span class="lineNum">     101 </span>                :            :                 .bus_num     = 1,
+<span class="lineNum">     102 </span>                :            :                 .bus_cfg   = INTEL_MID_STD_CFG | DW_IC_CON_SPEED_FAST,
+<span class="lineNum">     103 </span>                :            :                 .tx_fifo_depth = 32,
+<span class="lineNum">     104 </span>                :            :                 .rx_fifo_depth = 32,
+<span class="lineNum">     105 </span>                :            :                 .clk_khz      = 17000,
+<span class="lineNum">     106 </span>                :            :         },
+<span class="lineNum">     107 </span>                :            :         [medfield_2] = {
+<span class="lineNum">     108 </span>                :            :                 .bus_num     = 2,
+<span class="lineNum">     109 </span>                :            :                 .bus_cfg   = INTEL_MID_STD_CFG | DW_IC_CON_SPEED_FAST,
+<span class="lineNum">     110 </span>                :            :                 .tx_fifo_depth = 32,
+<span class="lineNum">     111 </span>                :            :                 .rx_fifo_depth = 32,
+<span class="lineNum">     112 </span>                :            :                 .clk_khz      = 17000,
+<span class="lineNum">     113 </span>                :            :         },
+<span class="lineNum">     114 </span>                :            :         [medfield_3] = {
+<span class="lineNum">     115 </span>                :            :                 .bus_num     = 3,
+<span class="lineNum">     116 </span>                :            :                 .bus_cfg   = INTEL_MID_STD_CFG | DW_IC_CON_SPEED_STD,
+<span class="lineNum">     117 </span>                :            :                 .tx_fifo_depth = 32,
+<span class="lineNum">     118 </span>                :            :                 .rx_fifo_depth = 32,
+<span class="lineNum">     119 </span>                :            :                 .clk_khz      = 17000,
+<span class="lineNum">     120 </span>                :            :         },
+<span class="lineNum">     121 </span>                :            :         [medfield_4] = {
+<span class="lineNum">     122 </span>                :            :                 .bus_num     = 4,
+<span class="lineNum">     123 </span>                :            :                 .bus_cfg   = INTEL_MID_STD_CFG | DW_IC_CON_SPEED_FAST,
+<span class="lineNum">     124 </span>                :            :                 .tx_fifo_depth = 32,
+<span class="lineNum">     125 </span>                :            :                 .rx_fifo_depth = 32,
+<span class="lineNum">     126 </span>                :            :                 .clk_khz      = 17000,
+<span class="lineNum">     127 </span>                :            :         },
+<span class="lineNum">     128 </span>                :            :         [medfield_5] = {
+<span class="lineNum">     129 </span>                :            :                 .bus_num     = 5,
+<span class="lineNum">     130 </span>                :            :                 .bus_cfg   = INTEL_MID_STD_CFG | DW_IC_CON_SPEED_FAST,
+<span class="lineNum">     131 </span>                :            :                 .tx_fifo_depth = 32,
+<span class="lineNum">     132 </span>                :            :                 .rx_fifo_depth = 32,
+<span class="lineNum">     133 </span>                :            :                 .clk_khz      = 17000,
+<span class="lineNum">     134 </span>                :            :         },
+<span class="lineNum">     135 </span>                :            : };
+<span class="lineNum">     136 </span>                :            : static struct i2c_algorithm i2c_dw_algo = {
+<span class="lineNum">     137 </span>                :            :         .master_xfer    = i2c_dw_xfer,
+<span class="lineNum">     138 </span>                :            :         .functionality  = i2c_dw_func,
+<a name="139"><span class="lineNum">     139 </span>                :            : };</a>
+<span class="lineNum">     140 </span>                :            : 
+<span class="lineNum">     141 </span>                :<span class="lineCov">         11 : static int i2c_dw_pci_suspend(struct device *dev)</span>
+<span class="lineNum">     142 </span>                :            : {
+<span class="lineNum">     143 </span>                :<span class="lineCov">         11 :         struct pci_dev *pdev = to_pci_dev(dev);</span>
+<span class="lineNum">     144 </span>                :<span class="lineCov">         11 :         struct dw_i2c_dev *i2c = pci_get_drvdata(pdev);</span>
+<span class="lineNum">     145 </span>                :            : 
+<span class="lineNum">     146 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 11 times"> + </span>]:<span class="lineCov">         11 :         if (!(i2c-&gt;status &amp; STATUS_POWERON))</span>
+<span class="lineNum">     147 </span>                :<span class="lineNoCov">          0 :                 return 0;</span>
+<span class="lineNum">     148 </span>                :            : 
+<span class="lineNum">     149 </span>                :<span class="lineCov">         11 :         dev_dbg(&amp;pdev-&gt;dev, &quot;suspend called\n&quot;);</span>
+<span class="lineNum">     150 </span>                :            : 
+<span class="lineNum">     151 </span>                :<span class="lineCov">         11 :         i2c_dw_disable(i2c);</span>
+<span class="lineNum">     152 </span>                :            : 
+<span class="lineNum">     153 </span>                :<span class="lineCov">         11 :         i2c-&gt;status &amp;= ~STATUS_POWERON;</span>
+<span class="lineNum">     154 </span>                :            : 
+<span class="lineNum">     155 </span>                :<span class="lineCov">         11 :         return 0;</span>
+<a name="156"><span class="lineNum">     156 </span>                :            : }</a>
+<span class="lineNum">     157 </span>                :            : 
+<span class="lineNum">     158 </span>                :<span class="lineCov">         11 : static int i2c_dw_pci_runtime_suspend(struct device *dev)</span>
+<span class="lineNum">     159 </span>                :            : {
+<span class="lineNum">     160 </span>                :<span class="lineCov">         11 :         return i2c_dw_pci_suspend(dev);</span>
+<a name="161"><span class="lineNum">     161 </span>                :            : }</a>
+<span class="lineNum">     162 </span>                :            : 
+<span class="lineNum">     163 </span>                :<span class="lineCov">          5 : static int i2c_dw_pci_resume(struct device *dev)</span>
+<span class="lineNum">     164 </span>                :            : {
+<span class="lineNum">     165 </span>                :<span class="lineCov">          5 :         struct pci_dev *pdev = to_pci_dev(dev);</span>
+<span class="lineNum">     166 </span>                :<span class="lineCov">          5 :         struct dw_i2c_dev *i2c = pci_get_drvdata(pdev);</span>
+<span class="lineNum">     167 </span>                :            : 
+<span class="lineNum">     168 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 5 times"> + </span>]:<span class="lineCov">          5 :         if (i2c-&gt;status &amp; STATUS_POWERON)</span>
+<span class="lineNum">     169 </span>                :<span class="lineNoCov">          0 :                 return 0;</span>
+<span class="lineNum">     170 </span>                :            : 
+<span class="lineNum">     171 </span>                :<span class="lineCov">          5 :         dev_dbg(&amp;pdev-&gt;dev, &quot;resume called\n&quot;);</span>
+<span class="lineNum">     172 </span>                :            : 
+<span class="lineNum">     173 </span>                :<span class="lineCov">          5 :         i2c_dw_enable(i2c);</span>
+<span class="lineNum">     174 </span>                :<span class="lineCov">          5 :         i2c_dw_init(i2c);</span>
+<span class="lineNum">     175 </span>                :<span class="lineCov">          5 :         i2c-&gt;status |= STATUS_POWERON;</span>
+<span class="lineNum">     176 </span>                :            : 
+<span class="lineNum">     177 </span>                :<span class="lineCov">          5 :         return 0;</span>
+<a name="178"><span class="lineNum">     178 </span>                :            : }</a>
+<span class="lineNum">     179 </span>                :            : 
+<span class="lineNum">     180 </span>                :<span class="lineCov">          5 : static int i2c_dw_pci_runtime_resume(struct device *dev)</span>
+<span class="lineNum">     181 </span>                :            : {
+<span class="lineNum">     182 </span>                :<span class="lineCov">          5 :         return i2c_dw_pci_resume(dev);</span>
+<a name="183"><span class="lineNum">     183 </span>                :            : }</a>
+<span class="lineNum">     184 </span>                :            : 
+<span class="lineNum">     185 </span>                :<span class="lineCov">       1520 : static int i2c_dw_pci_runtime_idle(struct device *dev)</span>
+<span class="lineNum">     186 </span>                :            : {
+<span class="lineNum">     187 </span>                :<span class="lineCov">       1520 :         int err = pm_schedule_suspend(dev, 500);</span>
+<span class="lineNum">     188 </span>                :            : 
+<span class="lineNum">     189 </span>        [<span class="branchCov" title="Branch 0 was taken 102 times"> + </span><span class="branchCov" title="Branch 1 was taken 1418 times"> + </span>]:<span class="lineCov">       1520 :         if (err != 0)</span>
+<span class="lineNum">     190 </span>                :<span class="lineCov">        102 :                 return 0;</span>
+<span class="lineNum">     191 </span>                :<span class="lineCov">       1520 :         return -EBUSY;</span>
+<span class="lineNum">     192 </span>                :            : }
+<span class="lineNum">     193 </span>                :            : 
+<span class="lineNum">     194 </span>                :            : static const struct dev_pm_ops i2c_dw_pm_ops = {
+<span class="lineNum">     195 </span>                :            :         SET_SYSTEM_SLEEP_PM_OPS(i2c_dw_pci_suspend,
+<span class="lineNum">     196 </span>                :            :                                 i2c_dw_pci_resume)
+<span class="lineNum">     197 </span>                :            :         SET_RUNTIME_PM_OPS(i2c_dw_pci_runtime_suspend,
+<span class="lineNum">     198 </span>                :            :                            i2c_dw_pci_runtime_resume,
+<span class="lineNum">     199 </span>                :            :                            i2c_dw_pci_runtime_idle)
+<a name="200"><span class="lineNum">     200 </span>                :            : };</a>
+<span class="lineNum">     201 </span>                :            : 
+<span class="lineNum">     202 </span>                :<span class="lineCov">          6 : static int __devinit i2c_dw_pci_probe(struct pci_dev *pdev,</span>
+<span class="lineNum">     203 </span>                :            : const struct pci_device_id *id)
+<span class="lineNum">     204 </span>                :            : {
+<span class="lineNum">     205 </span>                :            :         struct dw_i2c_dev *dev;
+<span class="lineNum">     206 </span>                :            :         struct i2c_adapter *adap;
+<span class="lineNum">     207 </span>                :            :         unsigned long start, len;
+<span class="lineNum">     208 </span>                :            :         void __iomem *base;
+<span class="lineNum">     209 </span>                :            :         int r;
+<span class="lineNum">     210 </span>                :            :         struct  dw_pci_controller *controller;
+<span class="lineNum">     211 </span>                :            : 
+<span class="lineNum">     212 </span>                :<span class="lineCov">          6 :         printk(KERN_ERR &quot;leoleoleo: %s called\n&quot;, __func__);</span>
+<span class="lineNum">     213 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 6 times"> + </span>]:<span class="lineCov">          6 :         if (id-&gt;driver_data &gt;= ARRAY_SIZE(dw_pci_controllers)) {</span>
+<span class="lineNum">     214 </span>                :<span class="lineNoCov">          0 :                 printk(KERN_ERR &quot;dw_i2c_pci_probe: invalid driver data %ld\n&quot;,</span>
+<span class="lineNum">     215 </span>                :            :                         id-&gt;driver_data);
+<span class="lineNum">     216 </span>                :<span class="lineNoCov">          0 :                 return -EINVAL;</span>
+<span class="lineNum">     217 </span>                :            :         }
+<span class="lineNum">     218 </span>                :            : 
+<span class="lineNum">     219 </span>                :<span class="lineCov">          6 :         controller = &amp;dw_pci_controllers[id-&gt;driver_data];</span>
+<span class="lineNum">     220 </span>                :            : 
+<span class="lineNum">     221 </span>                :<span class="lineCov">          6 :         r = pci_enable_device(pdev);</span>
+<span class="lineNum">     222 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 6 times"> + </span>]:<span class="lineCov">          6 :         if (r) {</span>
+<span class="lineNum">     223 </span>                :<span class="lineNoCov">          0 :                 dev_err(&amp;pdev-&gt;dev, &quot;Failed to enable I2C PCI device (%d)\n&quot;,</span>
+<span class="lineNum">     224 </span>                :            :                         r);
+<span class="lineNum">     225 </span>                :<span class="lineNoCov">          0 :                 goto exit;</span>
+<span class="lineNum">     226 </span>                :            :         }
+<span class="lineNum">     227 </span>                :            : 
+<span class="lineNum">     228 </span>                :            :         /* Determine the address of the I2C area */
+<span class="lineNum">     229 </span>                :<span class="lineCov">          6 :         start = pci_resource_start(pdev, 0);</span>
+<span class="lineNum">     230 </span>[<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 6 times"> + </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineCov">          6 :         len = pci_resource_len(pdev, 0);</span>
+<span class="lineNum">     231 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 6 times"> + </span>]:<span class="lineCov">          6 :         if (!start || len == 0) {</span>
+<span class="lineNum">     232 </span>                :<span class="lineNoCov">          0 :                 dev_err(&amp;pdev-&gt;dev, &quot;base address not set\n&quot;);</span>
+<span class="lineNum">     233 </span>                :<span class="lineNoCov">          0 :                 r = -ENODEV;</span>
+<span class="lineNum">     234 </span>                :<span class="lineNoCov">          0 :                 goto exit;</span>
+<span class="lineNum">     235 </span>                :            :         }
+<span class="lineNum">     236 </span>                :            : 
+<span class="lineNum">     237 </span>                :<span class="lineCov">          6 :         r = pci_request_region(pdev, 0, DRIVER_NAME);</span>
+<span class="lineNum">     238 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 6 times"> + </span>]:<span class="lineCov">          6 :         if (r) {</span>
+<span class="lineNum">     239 </span>                :<span class="lineNoCov">          0 :                 dev_err(&amp;pdev-&gt;dev, &quot;failed to request I2C region &quot;</span>
+<span class="lineNum">     240 </span>                :            :                         &quot;0x%lx-0x%lx\n&quot;, start,
+<span class="lineNum">     241 </span>                :            :                         (unsigned long)pci_resource_end(pdev, 0));
+<span class="lineNum">     242 </span>                :<span class="lineNoCov">          0 :                 goto exit;</span>
+<span class="lineNum">     243 </span>                :            :         }
+<span class="lineNum">     244 </span>                :            : 
+<span class="lineNum">     245 </span>                :<span class="lineCov">          6 :         base = ioremap_nocache(start, len);</span>
+<span class="lineNum">     246 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 6 times"> + </span>]:<span class="lineCov">          6 :         if (!base) {</span>
+<span class="lineNum">     247 </span>                :<span class="lineNoCov">          0 :                 dev_err(&amp;pdev-&gt;dev, &quot;I/O memory remapping failed\n&quot;);</span>
+<span class="lineNum">     248 </span>                :<span class="lineNoCov">          0 :                 r = -ENOMEM;</span>
+<span class="lineNum">     249 </span>                :<span class="lineNoCov">          0 :                 goto err_release_region;</span>
+<span class="lineNum">     250 </span>                :            :         }
+<span class="lineNum">     251 </span>                :            : 
+<span class="lineNum">     252 </span>                :            : 
+<span class="lineNum">     253 </span>                :<span class="lineCov">          6 :         dev = kzalloc(sizeof(struct dw_i2c_dev), GFP_KERNEL);</span>
+<span class="lineNum">     254 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 6 times"> + </span>]:<span class="lineCov">          6 :         if (!dev) {</span>
+<span class="lineNum">     255 </span>                :<span class="lineNoCov">          0 :                 r = -ENOMEM;</span>
+<span class="lineNum">     256 </span>                :<span class="lineNoCov">          0 :                 goto err_release_region;</span>
+<span class="lineNum">     257 </span>                :            :         }
+<span class="lineNum">     258 </span>                :            : 
+<span class="lineNum">     259 </span>                :<span class="lineCov">          6 :         init_completion(&amp;dev-&gt;cmd_complete);</span>
+<span class="lineNum">     260 </span>                :<span class="lineCov">          6 :         mutex_init(&amp;dev-&gt;lock);</span>
+<span class="lineNum">     261 </span>                :<span class="lineCov">          6 :         dev-&gt;status = STATUS_IDLE;</span>
+<span class="lineNum">     262 </span>                :<span class="lineCov">          6 :         dev-&gt;clk = NULL;</span>
+<span class="lineNum">     263 </span>                :<span class="lineCov">          6 :         dev-&gt;clk_khz = controller-&gt;clk_khz;</span>
+<span class="lineNum">     264 </span>                :<span class="lineCov">          6 :         dev-&gt;base = base;</span>
+<span class="lineNum">     265 </span>                :<span class="lineCov">          6 :         dev-&gt;dev = get_device(&amp;pdev-&gt;dev);</span>
+<span class="lineNum">     266 </span>                :<span class="lineCov">          6 :         dev-&gt;functionality = I2C_FUNC_I2C |</span>
+<span class="lineNum">     267 </span>                :            :                 I2C_FUNC_SMBUS_BYTE |
+<span class="lineNum">     268 </span>                :            :                 I2C_FUNC_SMBUS_BYTE_DATA |
+<span class="lineNum">     269 </span>                :            :                 I2C_FUNC_SMBUS_WORD_DATA |
+<span class="lineNum">     270 </span>                :            :                 I2C_FUNC_SMBUS_I2C_BLOCK;
+<span class="lineNum">     271 </span>                :<span class="lineCov">          6 :         dev-&gt;master_cfg =  controller-&gt;bus_cfg;</span>
+<span class="lineNum">     272 </span>                :            : 
+<span class="lineNum">     273 </span>                :            :         pci_set_drvdata(pdev, dev);
+<span class="lineNum">     274 </span>                :            : 
+<span class="lineNum">     275 </span>                :<span class="lineCov">          6 :         dev-&gt;tx_fifo_depth = controller-&gt;tx_fifo_depth;</span>
+<span class="lineNum">     276 </span>                :<span class="lineCov">          6 :         dev-&gt;rx_fifo_depth = controller-&gt;rx_fifo_depth;</span>
+<span class="lineNum">     277 </span>                :            : 
+<span class="lineNum">     278 </span>                :<span class="lineCov">          6 :         r = i2c_dw_init(dev);</span>
+<span class="lineNum">     279 </span>        [<span class="branchCov" title="Branch 0 was taken 6 times"> + </span><span class="branchNoCov" title="Branch 1 was not taken"> - </span>]:<span class="lineCov">          6 :         if (r)</span>
+<span class="lineNum">     280 </span>                :            :                 goto err_iounmap;
+<span class="lineNum">     281 </span>                :            : 
+<span class="lineNum">     282 </span>                :<span class="lineCov">          6 :         adap = &amp;dev-&gt;adapter;</span>
+<span class="lineNum">     283 </span>                :            :         i2c_set_adapdata(adap, dev);
+<span class="lineNum">     284 </span>                :<span class="lineCov">          6 :         adap-&gt;owner = THIS_MODULE;</span>
+<span class="lineNum">     285 </span>                :<span class="lineCov">          6 :         adap-&gt;class = 0;</span>
+<span class="lineNum">     286 </span>                :<span class="lineCov">          6 :         adap-&gt;algo = &amp;i2c_dw_algo;</span>
+<span class="lineNum">     287 </span>                :<span class="lineCov">          6 :         adap-&gt;dev.parent = &amp;pdev-&gt;dev;</span>
+<span class="lineNum">     288 </span>                :<span class="lineCov">          6 :         adap-&gt;nr = controller-&gt;bus_num;</span>
+<span class="lineNum">     289 </span>                :<span class="lineCov">          6 :         snprintf(adap-&gt;name, sizeof(adap-&gt;name), &quot;i2c-dw-pci-%d&quot;,</span>
+<span class="lineNum">     290 </span>                :            :                 adap-&gt;nr);
+<span class="lineNum">     291 </span>                :            : 
+<span class="lineNum">     292 </span>                :<span class="lineCov">         12 :         r = request_irq(pdev-&gt;irq, i2c_dw_isr, IRQF_SHARED, adap-&gt;name, dev);</span>
+<span class="lineNum">     293 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 6 times"> + </span>]:<span class="lineCov">          6 :         if (r) {</span>
+<span class="lineNum">     294 </span>                :<span class="lineNoCov">          0 :                 dev_err(&amp;pdev-&gt;dev, &quot;failure requesting irq %i\n&quot;, dev-&gt;irq);</span>
+<span class="lineNum">     295 </span>                :<span class="lineNoCov">          0 :                 goto err_iounmap;</span>
+<span class="lineNum">     296 </span>                :            :         }
+<span class="lineNum">     297 </span>                :            : 
+<span class="lineNum">     298 </span>                :<span class="lineCov">          6 :         dw_readl(dev, DW_IC_CLR_INTR);</span>
+<span class="lineNum">     299 </span>                :<span class="lineCov">          6 :         dw_writel(dev, 0, DW_IC_INTR_MASK); /* disable IRQ */</span>
+<span class="lineNum">     300 </span>                :<span class="lineCov">          6 :         r = i2c_add_numbered_adapter(adap);</span>
+<span class="lineNum">     301 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 6 times"> + </span>]:<span class="lineCov">          6 :         if (r) {</span>
+<span class="lineNum">     302 </span>                :<span class="lineNoCov">          0 :                 dev_err(&amp;pdev-&gt;dev, &quot;failure adding adapter\n&quot;);</span>
+<span class="lineNum">     303 </span>                :<span class="lineNoCov">          0 :                 goto err_free_irq;</span>
+<span class="lineNum">     304 </span>                :            :         }
+<span class="lineNum">     305 </span>                :            : 
+<span class="lineNum">     306 </span>                :<span class="lineCov">          6 :         pm_runtime_set_active(&amp;pdev-&gt;dev);</span>
+<span class="lineNum">     307 </span>                :<span class="lineCov">          6 :         pm_runtime_enable(&amp;pdev-&gt;dev);</span>
+<span class="lineNum">     308 </span>                :<span class="lineCov">          6 :         pm_runtime_allow(&amp;pdev-&gt;dev);</span>
+<span class="lineNum">     309 </span>                :            : 
+<span class="lineNum">     310 </span>                :<span class="lineCov">          6 :         return 0;</span>
+<span class="lineNum">     311 </span>                :            : 
+<span class="lineNum">     312 </span>                :            : err_free_irq:
+<span class="lineNum">     313 </span>                :<span class="lineNoCov">          0 :         free_irq(pdev-&gt;irq, dev);</span>
+<span class="lineNum">     314 </span>                :            : err_iounmap:
+<span class="lineNum">     315 </span>                :<span class="lineNoCov">          0 :         iounmap(dev-&gt;base);</span>
+<span class="lineNum">     316 </span>                :            :         pci_set_drvdata(pdev, NULL);
+<span class="lineNum">     317 </span>                :<span class="lineNoCov">          0 :         put_device(&amp;pdev-&gt;dev);</span>
+<span class="lineNum">     318 </span>                :<span class="lineNoCov">          0 :         kfree(dev);</span>
+<span class="lineNum">     319 </span>                :            : err_release_region:
+<span class="lineNum">     320 </span>                :<span class="lineNoCov">          0 :         pci_release_region(pdev, 0);</span>
+<span class="lineNum">     321 </span>                :            : exit:
+<span class="lineNum">     322 </span>                :<span class="lineCov">          6 :         return r;</span>
+<a name="323"><span class="lineNum">     323 </span>                :            : }</a>
+<span class="lineNum">     324 </span>                :            : 
+<span class="lineNum">     325 </span>                :<span class="lineNoCov">          0 : static void __devexit i2c_dw_pci_remove(struct pci_dev *pdev)</span>
+<span class="lineNum">     326 </span>                :            : {
+<span class="lineNum">     327 </span>                :<span class="lineNoCov">          0 :         struct dw_i2c_dev *dev = pci_get_drvdata(pdev);</span>
+<span class="lineNum">     328 </span>                :            : 
+<span class="lineNum">     329 </span>                :<span class="lineNoCov">          0 :         pm_runtime_forbid(&amp;pdev-&gt;dev);</span>
+<span class="lineNum">     330 </span>                :<span class="lineNoCov">          0 :         pm_runtime_disable(&amp;pdev-&gt;dev);</span>
+<span class="lineNum">     331 </span>                :            : 
+<span class="lineNum">     332 </span>                :<span class="lineNoCov">          0 :         i2c_dw_disable(dev);</span>
+<span class="lineNum">     333 </span>                :            :         pci_set_drvdata(pdev, NULL);
+<span class="lineNum">     334 </span>                :<span class="lineNoCov">          0 :         i2c_del_adapter(&amp;dev-&gt;adapter);</span>
+<span class="lineNum">     335 </span>                :<span class="lineNoCov">          0 :         put_device(&amp;pdev-&gt;dev);</span>
+<span class="lineNum">     336 </span>                :            : 
+<span class="lineNum">     337 </span>                :<span class="lineNoCov">          0 :         free_irq(dev-&gt;irq, dev);</span>
+<span class="lineNum">     338 </span>                :<span class="lineNoCov">          0 :         kfree(dev);</span>
+<span class="lineNum">     339 </span>                :<span class="lineNoCov">          0 :         pci_release_region(pdev, 0);</span>
+<span class="lineNum">     340 </span>                :<span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     341 </span>                :            : 
+<span class="lineNum">     342 </span>                :            : /* work with hotplug and coldplug */
+<span class="lineNum">     343 </span>                :            : MODULE_ALIAS(&quot;i2c_designware-pci&quot;);
+<span class="lineNum">     344 </span>                :            : 
+<span class="lineNum">     345 </span>                :            : static struct pci_device_id i2_designware_pci_ids[] = {
+<span class="lineNum">     346 </span>                :            :         /* Moorestown */
+<span class="lineNum">     347 </span>                :            :         { PCI_VDEVICE(INTEL, 0x0802), moorestown_0 },
+<span class="lineNum">     348 </span>                :            :         { PCI_VDEVICE(INTEL, 0x0803), moorestown_1 },
+<span class="lineNum">     349 </span>                :            :         { PCI_VDEVICE(INTEL, 0x0804), moorestown_2 },
+<span class="lineNum">     350 </span>                :            :         /* Medfield */
+<span class="lineNum">     351 </span>                :            :         { PCI_VDEVICE(INTEL, 0x0817), medfield_3,},
+<span class="lineNum">     352 </span>                :            :         { PCI_VDEVICE(INTEL, 0x0818), medfield_4 },
+<span class="lineNum">     353 </span>                :            :         { PCI_VDEVICE(INTEL, 0x0819), medfield_5 },
+<span class="lineNum">     354 </span>                :            :         { PCI_VDEVICE(INTEL, 0x082C), medfield_0 },
+<span class="lineNum">     355 </span>                :            :         { PCI_VDEVICE(INTEL, 0x082D), medfield_1 },
+<span class="lineNum">     356 </span>                :            :         { PCI_VDEVICE(INTEL, 0x082E), medfield_2 },
+<span class="lineNum">     357 </span>                :            :         { 0,}
+<span class="lineNum">     358 </span>                :            : };
+<span class="lineNum">     359 </span>                :            : MODULE_DEVICE_TABLE(pci, i2_designware_pci_ids);
+<span class="lineNum">     360 </span>                :            : 
+<span class="lineNum">     361 </span>                :            : static struct pci_driver dw_i2c_driver = {
+<span class="lineNum">     362 </span>                :            :         .name           = DRIVER_NAME,
+<span class="lineNum">     363 </span>                :            :         .id_table       = i2_designware_pci_ids,
+<span class="lineNum">     364 </span>                :            :         .probe          = i2c_dw_pci_probe,
+<span class="lineNum">     365 </span>                :            :         .remove         = __devexit_p(i2c_dw_pci_remove),
+<span class="lineNum">     366 </span>                :            :         .driver         = {
+<span class="lineNum">     367 </span>                :            :                 .pm     = &amp;i2c_dw_pm_ops,
+<span class="lineNum">     368 </span>                :            :         },
+<a name="369"><span class="lineNum">     369 </span>                :            : };</a>
+<span class="lineNum">     370 </span>                :            : 
+<span class="lineNum">     371 </span>                :<span class="lineCov">          1 : static int __init dw_i2c_init_driver(void)</span>
+<span class="lineNum">     372 </span>                :            : {
+<span class="lineNum">     373 </span>                :<span class="lineCov">          1 :         return  pci_register_driver(&amp;dw_i2c_driver);</span>
+<span class="lineNum">     374 </span>                :            : }
+<a name="375"><span class="lineNum">     375 </span>                :            : module_init(dw_i2c_init_driver);</a>
+<span class="lineNum">     376 </span>                :            : 
+<span class="lineNum">     377 </span>                :<span class="lineNoCov">          0 : static void __exit dw_i2c_exit_driver(void)</span>
+<span class="lineNum">     378 </span>                :            : {
+<span class="lineNum">     379 </span>                :<span class="lineNoCov">          0 :         pci_unregister_driver(&amp;dw_i2c_driver);</span>
+<span class="lineNum">     380 </span>                :<span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     381 </span>                :            : module_exit(dw_i2c_exit_driver);
+<span class="lineNum">     382 </span>                :            : 
+<span class="lineNum">     383 </span>                :            : MODULE_AUTHOR(&quot;Dirk Brandewie &lt;dirk.j.brandewie@intel.com&quot;);
+<span class="lineNum">     384 </span>                :            : MODULE_DESCRIPTION(&quot;Synopsys DesignWare PCI I2C bus adapter&quot;);
+<span class="lineNum">     385 </span>                :            : MODULE_LICENSE(&quot;GPL&quot;);
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.8</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,444 @@
+#!/bin/bash
+#
+
+MANIFEST_URL=git://android.intel.com/manifest
+REPO_BRANCH=gingerbread
+DEFAULT_MANIFEST=stable
+TARGET_PRODUCT=mfld_pr2
+
+DEBUG=
+VERSION=2.3
+GCOV_DIR=/system/gcov
+INSTALL_DIR=.gcovtest
+CONFIG_FILE=$INSTALL_DIR/config
+WORK_DIR=`pwd`
+
+ANDROID_DIR=
+KERNEL_DIR=
+DRIVER_DIR=
+MANIFEST=
+KERNEL_CONFIG=
+MAKE_JOBS=
+
+function usage()
+{
+    _name=`basename $0`
+    echo "Usage:    Install gcovtest here:          $_name -i manifest_path -d driver_path_in_kernel"
+    echo "          Run a testcase:                 $_name -t testcase_path"
+    echo "          Update images on board:         $_name -u manifest_path"
+    echo "          Rebuild and flash the kernel:   $_name -r"
+    echo "          Show this usage:                $_name -h"
+    echo "          Version:                        $_name -v"
+    exit
+}
+
+function exit_on_failure()
+{
+    $@
+    if [ $? -ne 0 ]; then
+        echo "$@ failed"
+        exit $?
+    fi
+}
+
+function debug_echo_cmd()
+{
+    if [ ! $DEBUG ]; then
+        exit_on_failure $@
+    else
+        echo "debug_echo_cmd: $@"
+    fi
+}
+
+function repo_update_manifest()
+{
+    _manifest_path=$1
+
+    if [ ! -f $_manifest_path ]; then
+        echo "manifest file $_manifest_path does not exist, ERROR!"
+        exit 1
+    fi
+    cp $_manifest_path $ANDROID_DIR/.repo/manifests
+
+    if [ -d $KERNEL_DIR ]; then
+        cd $KERNEL_DIR 
+        debug_echo_cmd git reset --hard HEAD
+        debug_echo_cmd make mrproper
+    fi
+
+    cd $ANDROID_DIR
+    MANIFEST=$(basename $_manifest_path)
+
+    repo init -m $MANIFEST << REPOINIT
+
+
+    yes
+REPOINIT
+    if [ $? -ne 0 ]; then
+        echo "repo init -m $_manifest FAILED!"
+        exit $?
+    fi
+    debug_echo_cmd repo sync
+}
+
+function prepare_kernel_build()
+{
+    cd $KERNEL_DIR
+    if [ ! -f $KERNEL_CONFIG ]; then
+        cd $ANDROID_DIR
+        exit_on_failure source ./build/envsetup.sh
+        exit_on_failure lunch $TARGET_PRODUCT-eng
+        debug_echo_cmd make -j${MAKE_JOBS} boottarball
+        cd - > /dev/null
+    fi
+    exit_on_failure cp $KERNEL_CONFIG .config
+
+    echo "CONFIG_GCOV_KERNEL=y" >> .config
+    make oldconfig << CONFIGENTER
+
+
+
+
+CONFIGENTER
+    if [ $? -ne 0 ]; then
+        echo "make oldconfig FAILED!"
+        exit $?
+    fi
+
+    cd $DRIVER_DIR
+    if [ ! -f Makefile ]; then
+        echo "There is no Makefile in $DRIVER_DIR, ERROR!"
+        exit 1
+    fi
+    if ! grep -q "GCOV_PROFILE := y" Makefile; then
+        cat Makefile | sed -e '1,/^$/ {/^$/i\
+        GCOV_PROFILE := y
+        }' > Makefile_gcov
+        mv Makefile_gcov Makefile
+    fi
+    cd - > /dev/null
+}
+
+function build_and_flash_images()
+{
+    _image=$1
+
+    cd $KERNEL_DIR
+
+    if [ "$_image" = "all" ]; then
+        prepare_kernel_build
+    fi
+
+    debug_echo_cmd make -j${MAKE_JOBS}
+
+    exit_on_failure cp arch/x86/boot/bzImage $ANDROID_DIR/out/target/product/$TARGET_PRODUCT/boot/kernel
+    exit_on_failure cd $ANDROID_DIR/out/target/product/$TARGET_PRODUCT/root
+    exit_on_failure find .|cpio -H newc -o|gzip -c > ../boot/ramdisk.img
+    cd $ANDROID_DIR
+    #use build_boot.sh to build boot.bin file
+    $ANDROID_DIR/vendor/intel/support/build_boot.sh $TARGET_PRODUCT out/target/product/$TARGET_PRODUCT/boot.bin
+
+    for ((;;))
+    do
+        if fastboot devices | grep -q fastboot; then
+            break
+        fi
+
+        if adb devices | grep -q 0123456789ABCDEF || adb devices | grep -q Medfield ; then
+            invalidate_osip=$(find out/target/product/$TARGET_PRODUCT -name "invalidate_osip")
+            invalidate_osip=$(echo $invalidate_osip | cut -d' ' -f1);
+            if [ "$invalidate_osip" != "" ]; then
+                adb push $invalidate_osip /system/bin/
+                adb shell invalidate_osip
+                echo "adb shell invalidate_osip has been done, please reboot the board into fastboot flash interface and press 'Enter'"
+            else
+                adb shell reboot recovery
+                echo "'adb shell reboot recovery' has been done, please reboot the board into fastboot flash interface and press 'Enter'"
+            fi
+        else
+            echo "Please power on the board, connect the board to host mechine and press 'Enter'"
+        fi
+        read
+    done
+
+    if [ "$_image" = "all" ]; then
+        exit_on_failure $ANDROID_DIR/vendor/intel/support/flash_device.sh -c $ANDROID_DIR/out/target/product/$TARGET_PRODUCT
+        echo "Flash kernel and system image completed!"    
+    elif [ "$_image" = "boot" ]; then
+        #fastboot erase boot
+        fastboot flash boot $ANDROID_DIR/out/target/product/$TARGET_PRODUCT/boot.bin
+        fastboot 'continue'
+        echo "Flash kernel image completed!"
+    else
+        echo "flash_images: invalid parameter!"
+        exit 1
+    fi
+}
+
+function gcov_test()
+{
+    _testcase=$1
+
+    if [ ! -f $_testcase ]; then
+        echo "$_testcase not exsited, ERROR!"
+        exit 1
+    fi
+
+    SOURCE_PATH=$KERNEL_DIR/$DRIVER_DIR
+    if [ ! -d $SOURCE_PATH ]; then
+        echo "$SOURCE_PATH not exsited, ERROR!"
+        exit 1
+    fi
+
+    cd $SOURCE_PATH
+    if ! ls | grep -q "\.gcno$"; then
+        echo "Can't find .gcno file in $SOURCE_PATH, ERROR!"
+        echo "Please run with option -u to update and flash images"
+        exit
+    fi
+    
+    for ((;;))
+    do
+        if ! adb devices | grep -q 0123456789ABCDEF && ! adb devices | grep -q Medfield ; then
+            echo "Please boot up board into android, connect the board to host mechine and press 'Enter'"
+            read
+        else
+            break
+        fi
+    done
+
+    adb shell << ADBCOMMAND >/dev/null
+    if [ ! -d $GCOV_DIR ]; then
+        mkdir $GCOV_DIR
+    fi
+    if ! `mount | grep -q /sys/kernel/debug`; then
+        mount -t debugfs none /sys/kernel/debug
+    fi
+    exit
+ADBCOMMAND
+
+    cd $WORK_DIR
+    exit_on_failure adb push $_testcase $GCOV_DIR
+
+    _testcase=$GCOV_DIR/`basename $_testcase`
+    adb shell << ADBCOMMAND > /dev/null
+    [ ! -x $_testcase ] && chmod +x $_testcase
+    $_testcase
+    exit
+ADBCOMMAND
+
+    exit_on_failure adb pull /sys/kernel/debug/gcov$SOURCE_PATH $INSTALL_DIR
+    cp $INSTALL_DIR/*.gcda $SOURCE_PATH
+
+    infoname=`basename $_testcase | cut -d. -f1`
+    exit_on_failure lcov -b $KERNEL_DIR --directory $SOURCE_PATH --capture --output-file $INSTALL_DIR/$infoname.info
+
+    dest_dir=$INSTALL_DIR/${infoname}_html
+    [ -d $dest_dir ] && rm -rf $dest_dir
+    exit_on_failure genhtml $INSTALL_DIR/$infoname.info -o $dest_dir
+    exit_on_failure firefox $dest_dir/index.html
+
+    echo "Coverage test done! Now you can see the results in firefox."
+}
+
+function gcov_init()
+{
+    _manifest_path=$1
+    _driver_dir=$2
+
+    ANDROID_DIR=$(pwd)
+    KERNEL_DIR=$ANDROID_DIR/hardware/intel/linux-2.6
+    DRIVER_DIR=$_driver_dir
+    KERNEL_CONFIG=$ANDROID_DIR/out/target/product/$TARGET_PRODUCT/kernel_build/.config
+
+    if [ ! -d ./.repo ]; then
+        repo init -u $MANIFEST_URL -b $REPO_BRANCH -m $DEFAULT_MANIFEST << REPOINIT
+
+
+        yes
+REPOINIT
+    
+        if [ $? -ne 0 ]; then
+            echo "repo init -u $MANIFEST_URL -b $REPO_BRANCH -m $DEFAULT_MANIFEST FAILED!"
+            exit $?
+        fi
+    fi
+
+    repo_update_manifest $_manifest_path
+
+    cd $ANDROID_DIR
+    [ ! -d $INSTALL_DIR ] && mkdir $INSTALL_DIR
+    exit_on_failure echo "gcovtest_android=$ANDROID_DIR" > $CONFIG_FILE
+    exit_on_failure echo "gcovtest_manifest=$MANIFEST" >> $CONFIG_FILE
+    exit_on_failure echo "gcovtest_driver=$DRIVER_DIR" >> $CONFIG_FILE
+    exit_on_failure echo "gcovtest_kernel_config=$KERNEL_CONFIG" >> $CONFIG_FILE
+
+    exit_on_failure source ./build/envsetup.sh
+    exit_on_failure lunch $TARGET_PRODUCT-eng
+    debug_echo_cmd make clean
+    debug_echo_cmd make -j${MAKE_JOBS} $TARGET_PRODUCT
+    
+    build_and_flash_images "all"
+
+    echo "Install gcovtest here successfully! Now you can reboot the board and run test case."
+}
+
+function update_config()
+{
+    _var_name=$1
+    _new_value=$2
+
+    _config_tmp=$INSTALL_DIR/config.tmp
+
+    exit_on_failure touch $_config_tmp
+
+    while read line
+    do
+        if echo $line | grep -q $_var_name; then
+            echo "$_var_name=$_new_value" >> $_config_tmp
+        else
+            echo $line >> $_config_tmp
+        fi  
+    done < $CONFIG_FILE
+
+    exit_on_failure mv $_config_tmp $CONFIG_FILE
+}
+
+function gcov_config()
+{
+    _topfile=./$CONFIG_FILE
+
+    for ((;;))
+    do
+        [ -f $_topfile ] && break
+        if [ `pwd` = "/" ]; then
+            echo "gcovtest are not installed, run with option -i to install here"
+            exit 1
+        fi
+        cd .. > /dev/null
+    done
+
+    while read line
+    do
+        if echo $line | grep -q "gcovtest_android"; then
+            ANDROID_DIR=`echo $line | cut -d= -f2`
+        elif echo $line | grep -q "gcovtest_driver"; then
+            DRIVER_DIR=`echo $line | cut -d= -f2`
+        elif echo $line | grep -q "gcovtest_manifest"; then
+            MANIFEST=`echo $line | cut -d= -f2`
+        elif echo $line | grep -q "gcovtest_kernel_config"; then
+            KERNEL_CONFIG=`echo $line | cut -d= -f2`
+        fi
+    done < $_topfile
+
+    if [ "$ANDROID_DIR" = "" ] || [ "$DRIVER_DIR" = "" ] || [ "$MANIFEST" = "" ] || [ "$KERNEL_CONFIG" = "" ]; then
+        echo "Config ERROR! Run with option -i to reinstall gcovtest here."
+        exit 1
+    fi
+    if [ "$KERNEL_CONFIG" = "i386_mfld_defconfig" ]; then
+        KERNEL_CONFIG=$ANDROID_DIR/out/target/product/$TARGET_PRODUCT/kernel_build/.config
+        update_config "gcovtest_kernel_config" "$KERNEL_CONFIG"
+    fi
+
+    KERNEL_DIR=$ANDROID_DIR/hardware/intel/linux-2.6
+}
+        
+function main()
+{
+    _driver_dir=
+    _manifest=
+    _testcase=
+
+    _init=0
+    _usage=0
+    _update=0
+    _debug_mode=0
+    _update_kernel_image=0
+
+    [ $# -eq 0 ] && usage
+
+    while getopts i:d:t:u:rxhv opt
+    do
+        case $opt in
+            i)
+                _init=1
+                _manifest=$OPTARG
+                if [ ! -f $_manifest ]; then
+                    echo "manifest file $_manifest does not exist, ERROR!"
+                    exit 1
+                fi
+                ;;
+            d)
+                _driver_dir=$OPTARG
+                ;;
+            t)
+                _testcase=$OPTARG
+                ;;
+            u)
+                _update=1
+                _manifest=$OPTARG
+                if [ ! -f $_manifest ]; then
+                    echo "manifest file $_manifest does not exist, ERROR!"
+                    exit 1
+                fi
+                ;;
+            r)
+                _update_kernel_image=1
+                ;;
+
+            x)
+                _debug_mode=1
+                ;;
+            h)
+                _usage=1
+                ;;
+            v)
+                echo "$(basename $0) version $VERSION"
+                exit
+                ;;
+            *)
+                usage
+        esac
+    done
+
+    [ $_usage -eq 1 ] && usage
+    [ $_debug_mode -eq 1 ] && set -x
+
+    export ARCH=x86
+    for i in $(cat /proc/cpuinfo | grep processor | cut -d: -f2);
+    do
+        ((MAKE_JOBS++))
+    done
+    ((MAKE_JOBS*=2))
+    if [ $MAKE_JOBS -lt 4 ]; then
+        MAKE_JOBS=4
+    fi
+
+    if [ $_init -eq 1 ]; then
+        if [ "$_manifest" != "" ] && [ "$_driver_dir" != "" ]; then
+            [ -d $INSTALL_DIR ] && rm -rf $INSTALL_DIR
+            gcov_init $_manifest $_driver_dir
+        else
+            usage
+        fi
+    fi
+
+    gcov_config
+
+    if [ $_update_kernel_image -eq 1 ]; then
+        build_and_flash_images "boot"
+        echo "Update kernel image completed!"
+    fi
+
+    if [ $_update -eq 1 ]; then 
+        repo_update_manifest $_manifest
+        build_and_flash_images "all"
+        echo "Images update completed!"
+    fi
+
+    if [ "$_testcase" != "" ]; then
+        gcov_test $_testcase
+    fi
+}
+
+main $@

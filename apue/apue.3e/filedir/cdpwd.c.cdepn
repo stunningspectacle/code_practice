@@ -1,0 +1,8 @@
+F {main} {cdpwd.c:4}
+C {main} {cdpwd.c:18} {exit}
+C {main} {cdpwd.c:18} {printf}
+C {main} {cdpwd.c:18} {err_sys}
+C {main} {cdpwd.c:18} {getcwd}
+C {main} {cdpwd.c:18} {path_alloc}
+C {main} {cdpwd.c:18} {err_sys}
+C {main} {cdpwd.c:18} {chdir}

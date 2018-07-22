@@ -1,0 +1,14 @@
+F {getenv} {/usr/include/stdlib.h:567}
+C {getenv} {getenv3.c:48} {pthread_mutex_unlock}
+C {getenv} {getenv3.c:48} {pthread_mutex_unlock}
+C {getenv} {getenv3.c:48} {strncpy}
+C {getenv} {getenv3.c:48} {strncmp}
+C {getenv} {getenv3.c:48} {strlen}
+C {getenv} {getenv3.c:48} {pthread_setspecific}
+C {getenv} {getenv3.c:48} {pthread_mutex_unlock}
+C {getenv} {getenv3.c:48} {malloc}
+C {getenv} {getenv3.c:48} {pthread_getspecific}
+C {getenv} {getenv3.c:48} {pthread_mutex_lock}
+C {getenv} {getenv3.c:48} {pthread_once}
+F {thread_init} {getenv3.c:15}
+C {thread_init} {getenv3.c:48} {pthread_key_create}

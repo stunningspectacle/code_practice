@@ -1,0 +1,4 @@
+F {cli_args} {cliargs.c:9}
+C {cli_args} {cliargs.c:18} {atoi}
+C {cli_args} {cliargs.c:18} {__builtin_memcpy}
+C {cli_args} {cliargs.c:18} {strcmp}

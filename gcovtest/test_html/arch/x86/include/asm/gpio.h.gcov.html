@@ -1,0 +1,138 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+  <title>LCOV - test.info - arch/x86/include/asm/gpio.h</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">arch/x86/include/asm</a> - gpio.h<span style="font-size: 80%;"> (source / <a href="gpio.h.func.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">test.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2011-05-12</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="headerItem">Branches:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">           Branch data     Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>                :            : /*</a>
+<span class="lineNum">       2 </span>                :            :  * Generic GPIO API implementation for x86.
+<span class="lineNum">       3 </span>                :            :  *
+<span class="lineNum">       4 </span>                :            :  * Derived from the generic GPIO API for powerpc:
+<span class="lineNum">       5 </span>                :            :  *
+<span class="lineNum">       6 </span>                :            :  * Copyright (c) 2007-2008  MontaVista Software, Inc.
+<span class="lineNum">       7 </span>                :            :  *
+<span class="lineNum">       8 </span>                :            :  * Author: Anton Vorontsov &lt;avorontsov@ru.mvista.com&gt;
+<span class="lineNum">       9 </span>                :            :  *
+<span class="lineNum">      10 </span>                :            :  * This program is free software; you can redistribute it and/or modify
+<span class="lineNum">      11 </span>                :            :  * it under the terms of the GNU General Public License as published by
+<span class="lineNum">      12 </span>                :            :  * the Free Software Foundation; either version 2 of the License, or
+<span class="lineNum">      13 </span>                :            :  * (at your option) any later version.
+<span class="lineNum">      14 </span>                :            :  */
+<span class="lineNum">      15 </span>                :            : 
+<span class="lineNum">      16 </span>                :            : #ifndef _ASM_X86_GPIO_H
+<span class="lineNum">      17 </span>                :            : #define _ASM_X86_GPIO_H
+<span class="lineNum">      18 </span>                :            : 
+<span class="lineNum">      19 </span>                :            : #include &lt;asm-generic/gpio.h&gt;
+<span class="lineNum">      20 </span>                :            : 
+<span class="lineNum">      21 </span>                :            : #ifdef CONFIG_GPIOLIB
+<span class="lineNum">      22 </span>                :            : 
+<span class="lineNum">      23 </span>                :            : /*
+<span class="lineNum">      24 </span>                :            :  * Just call gpiolib.
+<span class="lineNum">      25 </span>                :            :  */
+<span class="lineNum">      26 </span>                :            : static inline int gpio_get_value(unsigned int gpio)
+<span class="lineNum">      27 </span>                :            : {
+<span class="lineNum">      28 </span>                :<span class="lineNoCov">          0 :         return __gpio_get_value(gpio);</span>
+<span class="lineNum">      29 </span>                :            : }
+<span class="lineNum">      30 </span>                :            : 
+<span class="lineNum">      31 </span>                :            : static inline void gpio_set_value(unsigned int gpio, int value)
+<span class="lineNum">      32 </span>                :            : {
+<span class="lineNum">      33 </span>                :<span class="lineNoCov">          0 :         __gpio_set_value(gpio, value);</span>
+<span class="lineNum">      34 </span>                :            : }
+<span class="lineNum">      35 </span>                :            : 
+<span class="lineNum">      36 </span>                :            : static inline int gpio_cansleep(unsigned int gpio)
+<span class="lineNum">      37 </span>                :            : {
+<span class="lineNum">      38 </span>                :            :         return __gpio_cansleep(gpio);
+<span class="lineNum">      39 </span>                :            : }
+<span class="lineNum">      40 </span>                :            : 
+<span class="lineNum">      41 </span>                :            : static inline int gpio_to_irq(unsigned int gpio)
+<span class="lineNum">      42 </span>                :            : {
+<span class="lineNum">      43 </span>                :            :         return __gpio_to_irq(gpio);
+<span class="lineNum">      44 </span>                :            : }
+<span class="lineNum">      45 </span>                :            : 
+<span class="lineNum">      46 </span>                :            : static inline int irq_to_gpio(unsigned int irq)
+<span class="lineNum">      47 </span>                :            : {
+<span class="lineNum">      48 </span>                :            :         return -EINVAL;
+<span class="lineNum">      49 </span>                :            : }
+<span class="lineNum">      50 </span>                :            : 
+<span class="lineNum">      51 </span>                :            : #endif /* CONFIG_GPIOLIB */
+<span class="lineNum">      52 </span>                :            : 
+<span class="lineNum">      53 </span>                :            : #endif /* _ASM_X86_GPIO_H */
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.8</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

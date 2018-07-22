@@ -1,0 +1,11 @@
+F {main} {csize.c:5}
+C {main} {csize.c:35} {exit}
+C {main} {csize.c:35} {err_sys}
+C {main} {csize.c:35} {tcsetattr}
+C {main} {csize.c:35} {__builtin_puts}
+C {main} {csize.c:35} {__builtin_puts}
+C {main} {csize.c:35} {__builtin_puts}
+C {main} {csize.c:35} {__builtin_puts}
+C {main} {csize.c:35} {__builtin_puts}
+C {main} {csize.c:35} {err_sys}
+C {main} {csize.c:35} {tcgetattr}

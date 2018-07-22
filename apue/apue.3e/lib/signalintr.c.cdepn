@@ -1,0 +1,3 @@
+F {signal_intr} {signalintr.c:4}
+C {signal_intr} {signalintr.c:17} {sigaction}
+C {signal_intr} {signalintr.c:17} {sigemptyset}

@@ -1,0 +1,18 @@
+F {main} {goodexit.c:35}
+C {main} {goodexit.c:49} {exit}
+C {main} {goodexit.c:49} {printfoo}
+C {main} {goodexit.c:49} {err_exit}
+C {main} {goodexit.c:49} {pthread_join}
+C {main} {goodexit.c:49} {err_exit}
+C {main} {goodexit.c:49} {pthread_create}
+F {thr_fn1} {goodexit.c:20}
+C {thr_fn1} {goodexit.c:49} {printfoo}
+C {thr_fn1} {goodexit.c:49} {err_sys}
+C {thr_fn1} {goodexit.c:49} {malloc}
+F {printfoo} {goodexit.c:9}
+C {printfoo} {goodexit.c:49} {printf}
+C {printfoo} {goodexit.c:49} {printf}
+C {printfoo} {goodexit.c:49} {printf}
+C {printfoo} {goodexit.c:49} {printf}
+C {printfoo} {goodexit.c:49} {printf}
+C {printfoo} {goodexit.c:49} {fputs}

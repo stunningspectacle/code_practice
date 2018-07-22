@@ -1,0 +1,9 @@
+F {csopen} {open.c:9}
+C {csopen} {open.c:38} {recv_fd}
+C {csopen} {open.c:38} {err_ret}
+C {csopen} {open.c:38} {writev}
+C {csopen} {open.c:38} {strlen}
+C {csopen} {open.c:38} {strlen}
+C {csopen} {open.c:38} {sprintf}
+C {csopen} {open.c:38} {err_ret}
+C {csopen} {open.c:38} {cli_conn}

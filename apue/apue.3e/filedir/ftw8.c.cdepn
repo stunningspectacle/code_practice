@@ -1,0 +1,37 @@
+F {myfunc} {ftw8.c:124}
+C {myfunc} {ftw8.c:152} {err_dump}
+C {myfunc} {ftw8.c:152} {err_ret}
+C {myfunc} {ftw8.c:152} {err_ret}
+C {myfunc} {ftw8.c:152} {err_dump}
+F {dopath} {ftw8.c:77}
+C {dopath} {ftw8.c:152} {err_ret}
+C {dopath} {ftw8.c:152} {closedir}
+C {dopath} {ftw8.c:152} {readdir}
+C {dopath} {ftw8.c:152} {dopath}
+C {dopath} {ftw8.c:152} {strcpy}
+C {dopath} {ftw8.c:152} {strcmp}
+C {dopath} {ftw8.c:152} {strcmp}
+C {dopath} {ftw8.c:152} {opendir}
+C {dopath} {ftw8.c:152} {err_sys}
+C {dopath} {ftw8.c:152} {realloc}
+C {dopath} {ftw8.c:152} {strlen}
+C {dopath} {ftw8.c:152} {lstat}
+F {myftw} {ftw8.c:57}
+C {myftw} {ftw8.c:152} {dopath}
+C {myftw} {ftw8.c:152} {strcpy}
+C {myftw} {ftw8.c:152} {err_sys}
+C {myftw} {ftw8.c:152} {realloc}
+C {myftw} {ftw8.c:152} {strlen}
+C {myftw} {ftw8.c:152} {strlen}
+C {myftw} {ftw8.c:152} {path_alloc}
+F {main} {ftw8.c:15}
+C {main} {ftw8.c:152} {exit}
+C {main} {ftw8.c:152} {printf}
+C {main} {ftw8.c:152} {printf}
+C {main} {ftw8.c:152} {printf}
+C {main} {ftw8.c:152} {printf}
+C {main} {ftw8.c:152} {printf}
+C {main} {ftw8.c:152} {printf}
+C {main} {ftw8.c:152} {printf}
+C {main} {ftw8.c:152} {myftw}
+C {main} {ftw8.c:152} {err_quit}

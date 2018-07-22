@@ -1,0 +1,17 @@
+F {s_unlock} {slock.c:48}
+C {s_unlock} {slock.c:51} {sem_post}
+F {s_trylock} {slock.c:42}
+C {s_trylock} {slock.c:51} {sem_trywait}
+F {s_lock} {slock.c:36}
+C {s_lock} {slock.c:51} {sem_wait}
+F {s_free} {slock.c:29}
+C {s_free} {slock.c:51} {free}
+C {s_free} {slock.c:51} {sem_close}
+F {s_alloc} {slock.c:8}
+C {s_alloc} {slock.c:51} {sem_unlink}
+C {s_alloc} {slock.c:51} {free}
+C {s_alloc} {slock.c:51} {__errno_location}
+C {s_alloc} {slock.c:51} {sem_open}
+C {s_alloc} {slock.c:51} {snprintf}
+C {s_alloc} {slock.c:51} {getpid}
+C {s_alloc} {slock.c:51} {malloc}

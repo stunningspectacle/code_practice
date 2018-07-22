@@ -1,0 +1,5 @@
+F {main} {uidgid.c:4}
+C {main} {uidgid.c:8} {exit}
+C {main} {uidgid.c:8} {printf}
+C {main} {uidgid.c:8} {getuid}
+C {main} {uidgid.c:8} {getgid}

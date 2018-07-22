@@ -1,0 +1,11 @@
+F {main} {systest1.c:5}
+C {main} {systest1.c:25} {exit}
+C {main} {systest1.c:25} {pr_exit}
+C {main} {systest1.c:25} {err_sys}
+C {main} {systest1.c:25} {system}
+C {main} {systest1.c:25} {pr_exit}
+C {main} {systest1.c:25} {err_sys}
+C {main} {systest1.c:25} {system}
+C {main} {systest1.c:25} {pr_exit}
+C {main} {systest1.c:25} {err_sys}
+C {main} {systest1.c:25} {system}

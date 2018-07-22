@@ -1,0 +1,552 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+  <title>LCOV - test.info - arch/x86/include/asm/bitops.h</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">arch/x86/include/asm</a> - bitops.h<span style="font-size: 80%;"> (source / <a href="bitops.h.func.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">test.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2011-05-12</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="headerItem">Branches:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">           Branch data     Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>                :            : #ifndef _ASM_X86_BITOPS_H</a>
+<span class="lineNum">       2 </span>                :            : #define _ASM_X86_BITOPS_H
+<span class="lineNum">       3 </span>                :            : 
+<span class="lineNum">       4 </span>                :            : /*
+<span class="lineNum">       5 </span>                :            :  * Copyright 1992, Linus Torvalds.
+<span class="lineNum">       6 </span>                :            :  *
+<span class="lineNum">       7 </span>                :            :  * Note: inlines with more than a single statement should be marked
+<span class="lineNum">       8 </span>                :            :  * __always_inline to avoid problems with older gcc's inlining heuristics.
+<span class="lineNum">       9 </span>                :            :  */
+<span class="lineNum">      10 </span>                :            : 
+<span class="lineNum">      11 </span>                :            : #ifndef _LINUX_BITOPS_H
+<span class="lineNum">      12 </span>                :            : #error only &lt;linux/bitops.h&gt; can be included directly
+<span class="lineNum">      13 </span>                :            : #endif
+<span class="lineNum">      14 </span>                :            : 
+<span class="lineNum">      15 </span>                :            : #include &lt;linux/compiler.h&gt;
+<span class="lineNum">      16 </span>                :            : #include &lt;asm/alternative.h&gt;
+<span class="lineNum">      17 </span>                :            : 
+<span class="lineNum">      18 </span>                :            : /*
+<span class="lineNum">      19 </span>                :            :  * These have to be done with inline assembly: that way the bit-setting
+<span class="lineNum">      20 </span>                :            :  * is guaranteed to be atomic. All bit operations return 0 if the bit
+<span class="lineNum">      21 </span>                :            :  * was cleared before the operation and != 0 if it was not.
+<span class="lineNum">      22 </span>                :            :  *
+<span class="lineNum">      23 </span>                :            :  * bit 0 is the LSB of addr; bit 32 is the LSB of (addr+1).
+<span class="lineNum">      24 </span>                :            :  */
+<span class="lineNum">      25 </span>                :            : 
+<span class="lineNum">      26 </span>                :            : #if __GNUC__ &lt; 4 || (__GNUC__ == 4 &amp;&amp; __GNUC_MINOR__ &lt; 1)
+<span class="lineNum">      27 </span>                :            : /* Technically wrong, but this avoids compilation errors on some gcc
+<span class="lineNum">      28 </span>                :            :    versions. */
+<span class="lineNum">      29 </span>                :            : #define BITOP_ADDR(x) &quot;=m&quot; (*(volatile long *) (x))
+<span class="lineNum">      30 </span>                :            : #else
+<span class="lineNum">      31 </span>                :            : #define BITOP_ADDR(x) &quot;+m&quot; (*(volatile long *) (x))
+<span class="lineNum">      32 </span>                :            : #endif
+<span class="lineNum">      33 </span>                :            : 
+<span class="lineNum">      34 </span>                :            : #define ADDR                            BITOP_ADDR(addr)
+<span class="lineNum">      35 </span>                :            : 
+<span class="lineNum">      36 </span>                :            : /*
+<span class="lineNum">      37 </span>                :            :  * We do the locked ops that don't return the old value as
+<span class="lineNum">      38 </span>                :            :  * a mask operation on a byte.
+<span class="lineNum">      39 </span>                :            :  */
+<span class="lineNum">      40 </span>                :            : #define IS_IMMEDIATE(nr)                (__builtin_constant_p(nr))
+<span class="lineNum">      41 </span>                :            : #define CONST_MASK_ADDR(nr, addr)       BITOP_ADDR((void *)(addr) + ((nr)&gt;&gt;3))
+<span class="lineNum">      42 </span>                :            : #define CONST_MASK(nr)                  (1 &lt;&lt; ((nr) &amp; 7))
+<span class="lineNum">      43 </span>                :            : 
+<span class="lineNum">      44 </span>                :            : /**
+<span class="lineNum">      45 </span>                :            :  * set_bit - Atomically set a bit in memory
+<span class="lineNum">      46 </span>                :            :  * @nr: the bit to set
+<span class="lineNum">      47 </span>                :            :  * @addr: the address to start counting from
+<span class="lineNum">      48 </span>                :            :  *
+<span class="lineNum">      49 </span>                :            :  * This function is atomic and may not be reordered.  See __set_bit()
+<span class="lineNum">      50 </span>                :            :  * if you do not require the atomic guarantees.
+<span class="lineNum">      51 </span>                :            :  *
+<span class="lineNum">      52 </span>                :            :  * Note: there are no guarantees that this function will not be reordered
+<span class="lineNum">      53 </span>                :            :  * on non x86 architectures, so if you are writing portable code,
+<span class="lineNum">      54 </span>                :            :  * make sure not to rely on its reordering guarantees.
+<span class="lineNum">      55 </span>                :            :  *
+<span class="lineNum">      56 </span>                :            :  * Note that @nr may be almost arbitrarily large; this function is not
+<span class="lineNum">      57 </span>                :            :  * restricted to acting on a single-word quantity.
+<span class="lineNum">      58 </span>                :            :  */
+<span class="lineNum">      59 </span>                :            : static __always_inline void
+<span class="lineNum">      60 </span>                :            : set_bit(unsigned int nr, volatile unsigned long *addr)
+<span class="lineNum">      61 </span>                :            : {
+<span class="lineNum">      62 </span>                :            :         if (IS_IMMEDIATE(nr)) {
+<span class="lineNum">      63 </span>                :            :                 asm volatile(LOCK_PREFIX &quot;orb %1,%0&quot;
+<span class="lineNum">      64 </span>                :            :                         : CONST_MASK_ADDR(nr, addr)
+<span class="lineNum">      65 </span>                :            :                         : &quot;iq&quot; ((u8)CONST_MASK(nr))
+<span class="lineNum">      66 </span>                :            :                         : &quot;memory&quot;);
+<span class="lineNum">      67 </span>                :            :         } else {
+<span class="lineNum">      68 </span>                :            :                 asm volatile(LOCK_PREFIX &quot;bts %1,%0&quot;
+<span class="lineNum">      69 </span>                :            :                         : BITOP_ADDR(addr) : &quot;Ir&quot; (nr) : &quot;memory&quot;);
+<span class="lineNum">      70 </span>                :            :         }
+<span class="lineNum">      71 </span>                :            : }
+<span class="lineNum">      72 </span>                :            : 
+<span class="lineNum">      73 </span>                :            : /**
+<span class="lineNum">      74 </span>                :            :  * __set_bit - Set a bit in memory
+<span class="lineNum">      75 </span>                :            :  * @nr: the bit to set
+<span class="lineNum">      76 </span>                :            :  * @addr: the address to start counting from
+<span class="lineNum">      77 </span>                :            :  *
+<span class="lineNum">      78 </span>                :            :  * Unlike set_bit(), this function is non-atomic and may be reordered.
+<span class="lineNum">      79 </span>                :            :  * If it's called on the same region of memory simultaneously, the effect
+<span class="lineNum">      80 </span>                :            :  * may be that only one operation succeeds.
+<span class="lineNum">      81 </span>                :            :  */
+<span class="lineNum">      82 </span>                :            : static inline void __set_bit(int nr, volatile unsigned long *addr)
+<span class="lineNum">      83 </span>                :            : {
+<span class="lineNum">      84 </span>                :            :         asm volatile(&quot;bts %1,%0&quot; : ADDR : &quot;Ir&quot; (nr) : &quot;memory&quot;);
+<span class="lineNum">      85 </span>                :            : }
+<span class="lineNum">      86 </span>                :            : 
+<span class="lineNum">      87 </span>                :            : /**
+<span class="lineNum">      88 </span>                :            :  * clear_bit - Clears a bit in memory
+<span class="lineNum">      89 </span>                :            :  * @nr: Bit to clear
+<span class="lineNum">      90 </span>                :            :  * @addr: Address to start counting from
+<span class="lineNum">      91 </span>                :            :  *
+<span class="lineNum">      92 </span>                :            :  * clear_bit() is atomic and may not be reordered.  However, it does
+<span class="lineNum">      93 </span>                :            :  * not contain a memory barrier, so if it is used for locking purposes,
+<span class="lineNum">      94 </span>                :            :  * you should call smp_mb__before_clear_bit() and/or smp_mb__after_clear_bit()
+<span class="lineNum">      95 </span>                :            :  * in order to ensure changes are visible on other processors.
+<span class="lineNum">      96 </span>                :            :  */
+<span class="lineNum">      97 </span>                :            : static __always_inline void
+<span class="lineNum">      98 </span>                :            : clear_bit(int nr, volatile unsigned long *addr)
+<span class="lineNum">      99 </span>                :            : {
+<span class="lineNum">     100 </span>                :            :         if (IS_IMMEDIATE(nr)) {
+<span class="lineNum">     101 </span>                :            :                 asm volatile(LOCK_PREFIX &quot;andb %1,%0&quot;
+<span class="lineNum">     102 </span>                :            :                         : CONST_MASK_ADDR(nr, addr)
+<span class="lineNum">     103 </span>                :            :                         : &quot;iq&quot; ((u8)~CONST_MASK(nr)));
+<span class="lineNum">     104 </span>                :            :         } else {
+<span class="lineNum">     105 </span>                :            :                 asm volatile(LOCK_PREFIX &quot;btr %1,%0&quot;
+<span class="lineNum">     106 </span>                :            :                         : BITOP_ADDR(addr)
+<span class="lineNum">     107 </span>                :            :                         : &quot;Ir&quot; (nr));
+<span class="lineNum">     108 </span>                :            :         }
+<span class="lineNum">     109 </span>                :            : }
+<span class="lineNum">     110 </span>                :            : 
+<span class="lineNum">     111 </span>                :            : /*
+<span class="lineNum">     112 </span>                :            :  * clear_bit_unlock - Clears a bit in memory
+<span class="lineNum">     113 </span>                :            :  * @nr: Bit to clear
+<span class="lineNum">     114 </span>                :            :  * @addr: Address to start counting from
+<span class="lineNum">     115 </span>                :            :  *
+<span class="lineNum">     116 </span>                :            :  * clear_bit() is atomic and implies release semantics before the memory
+<span class="lineNum">     117 </span>                :            :  * operation. It can be used for an unlock.
+<span class="lineNum">     118 </span>                :            :  */
+<span class="lineNum">     119 </span>                :            : static inline void clear_bit_unlock(unsigned nr, volatile unsigned long *addr)
+<span class="lineNum">     120 </span>                :            : {
+<span class="lineNum">     121 </span>                :            :         barrier();
+<span class="lineNum">     122 </span>                :            :         clear_bit(nr, addr);
+<span class="lineNum">     123 </span>                :            : }
+<span class="lineNum">     124 </span>                :            : 
+<span class="lineNum">     125 </span>                :            : static inline void __clear_bit(int nr, volatile unsigned long *addr)
+<span class="lineNum">     126 </span>                :            : {
+<span class="lineNum">     127 </span>                :            :         asm volatile(&quot;btr %1,%0&quot; : ADDR : &quot;Ir&quot; (nr));
+<span class="lineNum">     128 </span>                :            : }
+<span class="lineNum">     129 </span>                :            : 
+<span class="lineNum">     130 </span>                :            : /*
+<span class="lineNum">     131 </span>                :            :  * __clear_bit_unlock - Clears a bit in memory
+<span class="lineNum">     132 </span>                :            :  * @nr: Bit to clear
+<span class="lineNum">     133 </span>                :            :  * @addr: Address to start counting from
+<span class="lineNum">     134 </span>                :            :  *
+<span class="lineNum">     135 </span>                :            :  * __clear_bit() is non-atomic and implies release semantics before the memory
+<span class="lineNum">     136 </span>                :            :  * operation. It can be used for an unlock if no other CPUs can concurrently
+<span class="lineNum">     137 </span>                :            :  * modify other bits in the word.
+<span class="lineNum">     138 </span>                :            :  *
+<span class="lineNum">     139 </span>                :            :  * No memory barrier is required here, because x86 cannot reorder stores past
+<span class="lineNum">     140 </span>                :            :  * older loads. Same principle as spin_unlock.
+<span class="lineNum">     141 </span>                :            :  */
+<span class="lineNum">     142 </span>                :            : static inline void __clear_bit_unlock(unsigned nr, volatile unsigned long *addr)
+<span class="lineNum">     143 </span>                :            : {
+<span class="lineNum">     144 </span>                :            :         barrier();
+<span class="lineNum">     145 </span>                :            :         __clear_bit(nr, addr);
+<span class="lineNum">     146 </span>                :            : }
+<span class="lineNum">     147 </span>                :            : 
+<span class="lineNum">     148 </span>                :            : #define smp_mb__before_clear_bit()      barrier()
+<span class="lineNum">     149 </span>                :            : #define smp_mb__after_clear_bit()       barrier()
+<span class="lineNum">     150 </span>                :            : 
+<span class="lineNum">     151 </span>                :            : /**
+<span class="lineNum">     152 </span>                :            :  * __change_bit - Toggle a bit in memory
+<span class="lineNum">     153 </span>                :            :  * @nr: the bit to change
+<span class="lineNum">     154 </span>                :            :  * @addr: the address to start counting from
+<span class="lineNum">     155 </span>                :            :  *
+<span class="lineNum">     156 </span>                :            :  * Unlike change_bit(), this function is non-atomic and may be reordered.
+<span class="lineNum">     157 </span>                :            :  * If it's called on the same region of memory simultaneously, the effect
+<span class="lineNum">     158 </span>                :            :  * may be that only one operation succeeds.
+<span class="lineNum">     159 </span>                :            :  */
+<span class="lineNum">     160 </span>                :            : static inline void __change_bit(int nr, volatile unsigned long *addr)
+<span class="lineNum">     161 </span>                :            : {
+<span class="lineNum">     162 </span>                :            :         asm volatile(&quot;btc %1,%0&quot; : ADDR : &quot;Ir&quot; (nr));
+<span class="lineNum">     163 </span>                :            : }
+<span class="lineNum">     164 </span>                :            : 
+<span class="lineNum">     165 </span>                :            : /**
+<span class="lineNum">     166 </span>                :            :  * change_bit - Toggle a bit in memory
+<span class="lineNum">     167 </span>                :            :  * @nr: Bit to change
+<span class="lineNum">     168 </span>                :            :  * @addr: Address to start counting from
+<span class="lineNum">     169 </span>                :            :  *
+<span class="lineNum">     170 </span>                :            :  * change_bit() is atomic and may not be reordered.
+<span class="lineNum">     171 </span>                :            :  * Note that @nr may be almost arbitrarily large; this function is not
+<span class="lineNum">     172 </span>                :            :  * restricted to acting on a single-word quantity.
+<span class="lineNum">     173 </span>                :            :  */
+<span class="lineNum">     174 </span>                :            : static inline void change_bit(int nr, volatile unsigned long *addr)
+<span class="lineNum">     175 </span>                :            : {
+<span class="lineNum">     176 </span>                :            :         if (IS_IMMEDIATE(nr)) {
+<span class="lineNum">     177 </span>                :            :                 asm volatile(LOCK_PREFIX &quot;xorb %1,%0&quot;
+<span class="lineNum">     178 </span>                :            :                         : CONST_MASK_ADDR(nr, addr)
+<span class="lineNum">     179 </span>                :            :                         : &quot;iq&quot; ((u8)CONST_MASK(nr)));
+<span class="lineNum">     180 </span>                :            :         } else {
+<span class="lineNum">     181 </span>                :            :                 asm volatile(LOCK_PREFIX &quot;btc %1,%0&quot;
+<span class="lineNum">     182 </span>                :            :                         : BITOP_ADDR(addr)
+<span class="lineNum">     183 </span>                :            :                         : &quot;Ir&quot; (nr));
+<span class="lineNum">     184 </span>                :            :         }
+<span class="lineNum">     185 </span>                :            : }
+<span class="lineNum">     186 </span>                :            : 
+<span class="lineNum">     187 </span>                :            : /**
+<span class="lineNum">     188 </span>                :            :  * test_and_set_bit - Set a bit and return its old value
+<span class="lineNum">     189 </span>                :            :  * @nr: Bit to set
+<span class="lineNum">     190 </span>                :            :  * @addr: Address to count from
+<span class="lineNum">     191 </span>                :            :  *
+<span class="lineNum">     192 </span>                :            :  * This operation is atomic and cannot be reordered.
+<span class="lineNum">     193 </span>                :            :  * It also implies a memory barrier.
+<span class="lineNum">     194 </span>                :            :  */
+<span class="lineNum">     195 </span>                :            : static inline int test_and_set_bit(int nr, volatile unsigned long *addr)
+<span class="lineNum">     196 </span>                :            : {
+<span class="lineNum">     197 </span>                :            :         int oldbit;
+<span class="lineNum">     198 </span>                :            : 
+<span class="lineNum">     199 </span>                :            :         asm volatile(LOCK_PREFIX &quot;bts %2,%1\n\t&quot;
+<span class="lineNum">     200 </span>                :            :                      &quot;sbb %0,%0&quot; : &quot;=r&quot; (oldbit), ADDR : &quot;Ir&quot; (nr) : &quot;memory&quot;);
+<span class="lineNum">     201 </span>                :            : 
+<span class="lineNum">     202 </span>                :            :         return oldbit;
+<span class="lineNum">     203 </span>                :            : }
+<span class="lineNum">     204 </span>                :            : 
+<span class="lineNum">     205 </span>                :            : /**
+<span class="lineNum">     206 </span>                :            :  * test_and_set_bit_lock - Set a bit and return its old value for lock
+<span class="lineNum">     207 </span>                :            :  * @nr: Bit to set
+<span class="lineNum">     208 </span>                :            :  * @addr: Address to count from
+<span class="lineNum">     209 </span>                :            :  *
+<span class="lineNum">     210 </span>                :            :  * This is the same as test_and_set_bit on x86.
+<span class="lineNum">     211 </span>                :            :  */
+<span class="lineNum">     212 </span>                :            : static __always_inline int
+<span class="lineNum">     213 </span>                :            : test_and_set_bit_lock(int nr, volatile unsigned long *addr)
+<span class="lineNum">     214 </span>                :            : {
+<span class="lineNum">     215 </span>                :            :         return test_and_set_bit(nr, addr);
+<span class="lineNum">     216 </span>                :            : }
+<span class="lineNum">     217 </span>                :            : 
+<span class="lineNum">     218 </span>                :            : /**
+<span class="lineNum">     219 </span>                :            :  * __test_and_set_bit - Set a bit and return its old value
+<span class="lineNum">     220 </span>                :            :  * @nr: Bit to set
+<span class="lineNum">     221 </span>                :            :  * @addr: Address to count from
+<span class="lineNum">     222 </span>                :            :  *
+<span class="lineNum">     223 </span>                :            :  * This operation is non-atomic and can be reordered.
+<span class="lineNum">     224 </span>                :            :  * If two examples of this operation race, one can appear to succeed
+<span class="lineNum">     225 </span>                :            :  * but actually fail.  You must protect multiple accesses with a lock.
+<span class="lineNum">     226 </span>                :            :  */
+<span class="lineNum">     227 </span>                :            : static inline int __test_and_set_bit(int nr, volatile unsigned long *addr)
+<span class="lineNum">     228 </span>                :            : {
+<span class="lineNum">     229 </span>                :            :         int oldbit;
+<span class="lineNum">     230 </span>                :            : 
+<span class="lineNum">     231 </span>                :            :         asm(&quot;bts %2,%1\n\t&quot;
+<span class="lineNum">     232 </span>                :            :             &quot;sbb %0,%0&quot;
+<span class="lineNum">     233 </span>                :            :             : &quot;=r&quot; (oldbit), ADDR
+<span class="lineNum">     234 </span>                :            :             : &quot;Ir&quot; (nr));
+<span class="lineNum">     235 </span>                :            :         return oldbit;
+<span class="lineNum">     236 </span>                :            : }
+<span class="lineNum">     237 </span>                :            : 
+<span class="lineNum">     238 </span>                :            : /**
+<span class="lineNum">     239 </span>                :            :  * test_and_clear_bit - Clear a bit and return its old value
+<span class="lineNum">     240 </span>                :            :  * @nr: Bit to clear
+<span class="lineNum">     241 </span>                :            :  * @addr: Address to count from
+<span class="lineNum">     242 </span>                :            :  *
+<span class="lineNum">     243 </span>                :            :  * This operation is atomic and cannot be reordered.
+<span class="lineNum">     244 </span>                :            :  * It also implies a memory barrier.
+<span class="lineNum">     245 </span>                :            :  */
+<span class="lineNum">     246 </span>                :            : static inline int test_and_clear_bit(int nr, volatile unsigned long *addr)
+<span class="lineNum">     247 </span>                :            : {
+<span class="lineNum">     248 </span>                :            :         int oldbit;
+<span class="lineNum">     249 </span>                :            : 
+<span class="lineNum">     250 </span>                :            :         asm volatile(LOCK_PREFIX &quot;btr %2,%1\n\t&quot;
+<span class="lineNum">     251 </span>                :            :                      &quot;sbb %0,%0&quot;
+<span class="lineNum">     252 </span>                :            :                      : &quot;=r&quot; (oldbit), ADDR : &quot;Ir&quot; (nr) : &quot;memory&quot;);
+<span class="lineNum">     253 </span>                :            : 
+<span class="lineNum">     254 </span>                :            :         return oldbit;
+<span class="lineNum">     255 </span>                :            : }
+<span class="lineNum">     256 </span>                :            : 
+<span class="lineNum">     257 </span>                :            : /**
+<span class="lineNum">     258 </span>                :            :  * __test_and_clear_bit - Clear a bit and return its old value
+<span class="lineNum">     259 </span>                :            :  * @nr: Bit to clear
+<span class="lineNum">     260 </span>                :            :  * @addr: Address to count from
+<span class="lineNum">     261 </span>                :            :  *
+<span class="lineNum">     262 </span>                :            :  * This operation is non-atomic and can be reordered.
+<span class="lineNum">     263 </span>                :            :  * If two examples of this operation race, one can appear to succeed
+<span class="lineNum">     264 </span>                :            :  * but actually fail.  You must protect multiple accesses with a lock.
+<span class="lineNum">     265 </span>                :            :  */
+<span class="lineNum">     266 </span>                :            : static inline int __test_and_clear_bit(int nr, volatile unsigned long *addr)
+<span class="lineNum">     267 </span>                :            : {
+<span class="lineNum">     268 </span>                :            :         int oldbit;
+<span class="lineNum">     269 </span>                :            : 
+<span class="lineNum">     270 </span>                :            :         asm volatile(&quot;btr %2,%1\n\t&quot;
+<span class="lineNum">     271 </span>                :            :                      &quot;sbb %0,%0&quot;
+<span class="lineNum">     272 </span>                :            :                      : &quot;=r&quot; (oldbit), ADDR
+<span class="lineNum">     273 </span>                :            :                      : &quot;Ir&quot; (nr));
+<span class="lineNum">     274 </span>                :            :         return oldbit;
+<span class="lineNum">     275 </span>                :            : }
+<span class="lineNum">     276 </span>                :            : 
+<span class="lineNum">     277 </span>                :            : /* WARNING: non atomic and it can be reordered! */
+<span class="lineNum">     278 </span>                :            : static inline int __test_and_change_bit(int nr, volatile unsigned long *addr)
+<span class="lineNum">     279 </span>                :            : {
+<span class="lineNum">     280 </span>                :            :         int oldbit;
+<span class="lineNum">     281 </span>                :            : 
+<span class="lineNum">     282 </span>                :            :         asm volatile(&quot;btc %2,%1\n\t&quot;
+<span class="lineNum">     283 </span>                :            :                      &quot;sbb %0,%0&quot;
+<span class="lineNum">     284 </span>                :            :                      : &quot;=r&quot; (oldbit), ADDR
+<span class="lineNum">     285 </span>                :            :                      : &quot;Ir&quot; (nr) : &quot;memory&quot;);
+<span class="lineNum">     286 </span>                :            : 
+<span class="lineNum">     287 </span>                :            :         return oldbit;
+<span class="lineNum">     288 </span>                :            : }
+<span class="lineNum">     289 </span>                :            : 
+<span class="lineNum">     290 </span>                :            : /**
+<span class="lineNum">     291 </span>                :            :  * test_and_change_bit - Change a bit and return its old value
+<span class="lineNum">     292 </span>                :            :  * @nr: Bit to change
+<span class="lineNum">     293 </span>                :            :  * @addr: Address to count from
+<span class="lineNum">     294 </span>                :            :  *
+<span class="lineNum">     295 </span>                :            :  * This operation is atomic and cannot be reordered.
+<span class="lineNum">     296 </span>                :            :  * It also implies a memory barrier.
+<span class="lineNum">     297 </span>                :            :  */
+<span class="lineNum">     298 </span>                :            : static inline int test_and_change_bit(int nr, volatile unsigned long *addr)
+<span class="lineNum">     299 </span>                :            : {
+<span class="lineNum">     300 </span>                :            :         int oldbit;
+<span class="lineNum">     301 </span>                :            : 
+<span class="lineNum">     302 </span>                :            :         asm volatile(LOCK_PREFIX &quot;btc %2,%1\n\t&quot;
+<span class="lineNum">     303 </span>                :            :                      &quot;sbb %0,%0&quot;
+<span class="lineNum">     304 </span>                :            :                      : &quot;=r&quot; (oldbit), ADDR : &quot;Ir&quot; (nr) : &quot;memory&quot;);
+<span class="lineNum">     305 </span>                :            : 
+<span class="lineNum">     306 </span>                :            :         return oldbit;
+<span class="lineNum">     307 </span>                :            : }
+<span class="lineNum">     308 </span>                :            : 
+<span class="lineNum">     309 </span>                :            : static __always_inline int constant_test_bit(unsigned int nr, const volatile unsigned long *addr)
+<span class="lineNum">     310 </span>                :            : {
+<span class="lineNum">     311 </span>                :<span class="lineNoCov">          0 :         return ((1UL &lt;&lt; (nr % BITS_PER_LONG)) &amp;</span>
+<span class="lineNum">     312 </span>                :<span class="lineNoCov">          0 :                 (((unsigned long *)addr)[nr / BITS_PER_LONG])) != 0;</span>
+<span class="lineNum">     313 </span>                :            : }
+<span class="lineNum">     314 </span>                :            : 
+<span class="lineNum">     315 </span>                :            : static inline int variable_test_bit(int nr, volatile const unsigned long *addr)
+<span class="lineNum">     316 </span>                :            : {
+<span class="lineNum">     317 </span>                :            :         int oldbit;
+<span class="lineNum">     318 </span>                :            : 
+<span class="lineNum">     319 </span>                :<span class="lineNoCov">          0 :         asm volatile(&quot;bt %2,%1\n\t&quot;</span>
+<span class="lineNum">     320 </span>                :            :                      &quot;sbb %0,%0&quot;
+<span class="lineNum">     321 </span>                :            :                      : &quot;=r&quot; (oldbit)
+<span class="lineNum">     322 </span>                :            :                      : &quot;m&quot; (*(unsigned long *)addr), &quot;Ir&quot; (nr));
+<span class="lineNum">     323 </span>                :            : 
+<span class="lineNum">     324 </span>                :<span class="lineNoCov">          0 :         return oldbit;</span>
+<span class="lineNum">     325 </span>                :            : }
+<span class="lineNum">     326 </span>                :            : 
+<span class="lineNum">     327 </span>                :            : #if 0 /* Fool kernel-doc since it doesn't do macros yet */
+<span class="lineNum">     328 </span>                :            : /**
+<span class="lineNum">     329 </span>                :            :  * test_bit - Determine whether a bit is set
+<span class="lineNum">     330 </span>                :            :  * @nr: bit number to test
+<span class="lineNum">     331 </span>                :            :  * @addr: Address to start counting from
+<span class="lineNum">     332 </span>                :            :  */
+<span class="lineNum">     333 </span>                :            : static int test_bit(int nr, const volatile unsigned long *addr);
+<span class="lineNum">     334 </span>                :            : #endif
+<span class="lineNum">     335 </span>                :            : 
+<span class="lineNum">     336 </span>                :            : #define test_bit(nr, addr)                      \
+<span class="lineNum">     337 </span>                :            :         (__builtin_constant_p((nr))             \
+<span class="lineNum">     338 </span>                :            :          ? constant_test_bit((nr), (addr))      \
+<span class="lineNum">     339 </span>                :            :          : variable_test_bit((nr), (addr)))
+<span class="lineNum">     340 </span>                :            : 
+<span class="lineNum">     341 </span>                :            : /**
+<span class="lineNum">     342 </span>                :            :  * __ffs - find first set bit in word
+<span class="lineNum">     343 </span>                :            :  * @word: The word to search
+<span class="lineNum">     344 </span>                :            :  *
+<span class="lineNum">     345 </span>                :            :  * Undefined if no bit exists, so code should check against 0 first.
+<span class="lineNum">     346 </span>                :            :  */
+<span class="lineNum">     347 </span>                :            : static inline unsigned long __ffs(unsigned long word)
+<span class="lineNum">     348 </span>                :            : {
+<span class="lineNum">     349 </span>                :<span class="lineNoCov">          0 :         asm(&quot;bsf %1,%0&quot;</span>
+<span class="lineNum">     350 </span>                :            :                 : &quot;=r&quot; (word)
+<span class="lineNum">     351 </span>                :            :                 : &quot;rm&quot; (word));
+<span class="lineNum">     352 </span>                :<span class="lineNoCov">          0 :         return word;</span>
+<span class="lineNum">     353 </span>                :            : }
+<span class="lineNum">     354 </span>                :            : 
+<span class="lineNum">     355 </span>                :            : /**
+<span class="lineNum">     356 </span>                :            :  * ffz - find first zero bit in word
+<span class="lineNum">     357 </span>                :            :  * @word: The word to search
+<span class="lineNum">     358 </span>                :            :  *
+<span class="lineNum">     359 </span>                :            :  * Undefined if no zero exists, so code should check against ~0UL first.
+<span class="lineNum">     360 </span>                :            :  */
+<span class="lineNum">     361 </span>                :            : static inline unsigned long ffz(unsigned long word)
+<span class="lineNum">     362 </span>                :            : {
+<span class="lineNum">     363 </span>                :            :         asm(&quot;bsf %1,%0&quot;
+<span class="lineNum">     364 </span>                :            :                 : &quot;=r&quot; (word)
+<span class="lineNum">     365 </span>                :            :                 : &quot;r&quot; (~word));
+<span class="lineNum">     366 </span>                :            :         return word;
+<span class="lineNum">     367 </span>                :            : }
+<span class="lineNum">     368 </span>                :            : 
+<span class="lineNum">     369 </span>                :            : /*
+<span class="lineNum">     370 </span>                :            :  * __fls: find last set bit in word
+<span class="lineNum">     371 </span>                :            :  * @word: The word to search
+<span class="lineNum">     372 </span>                :            :  *
+<span class="lineNum">     373 </span>                :            :  * Undefined if no set bit exists, so code should check against 0 first.
+<span class="lineNum">     374 </span>                :            :  */
+<span class="lineNum">     375 </span>                :            : static inline unsigned long __fls(unsigned long word)
+<span class="lineNum">     376 </span>                :            : {
+<span class="lineNum">     377 </span>                :            :         asm(&quot;bsr %1,%0&quot;
+<span class="lineNum">     378 </span>                :            :             : &quot;=r&quot; (word)
+<span class="lineNum">     379 </span>                :            :             : &quot;rm&quot; (word));
+<span class="lineNum">     380 </span>                :            :         return word;
+<span class="lineNum">     381 </span>                :            : }
+<span class="lineNum">     382 </span>                :            : 
+<span class="lineNum">     383 </span>                :            : #ifdef __KERNEL__
+<span class="lineNum">     384 </span>                :            : /**
+<span class="lineNum">     385 </span>                :            :  * ffs - find first set bit in word
+<span class="lineNum">     386 </span>                :            :  * @x: the word to search
+<span class="lineNum">     387 </span>                :            :  *
+<span class="lineNum">     388 </span>                :            :  * This is defined the same way as the libc and compiler builtin ffs
+<span class="lineNum">     389 </span>                :            :  * routines, therefore differs in spirit from the other bitops.
+<span class="lineNum">     390 </span>                :            :  *
+<span class="lineNum">     391 </span>                :            :  * ffs(value) returns 0 if value is 0 or the position of the first
+<span class="lineNum">     392 </span>                :            :  * set bit if value is nonzero. The first (least significant) bit
+<span class="lineNum">     393 </span>                :            :  * is at position 1.
+<span class="lineNum">     394 </span>                :            :  */
+<span class="lineNum">     395 </span>                :            : static inline int ffs(int x)
+<span class="lineNum">     396 </span>                :            : {
+<span class="lineNum">     397 </span>                :            :         int r;
+<span class="lineNum">     398 </span>                :            : #ifdef CONFIG_X86_CMOV
+<span class="lineNum">     399 </span>                :            :         asm(&quot;bsfl %1,%0\n\t&quot;
+<span class="lineNum">     400 </span>                :            :             &quot;cmovzl %2,%0&quot;
+<span class="lineNum">     401 </span>                :            :             : &quot;=r&quot; (r) : &quot;rm&quot; (x), &quot;r&quot; (-1));
+<span class="lineNum">     402 </span>                :            : #else
+<span class="lineNum">     403 </span>                :            :         asm(&quot;bsfl %1,%0\n\t&quot;
+<span class="lineNum">     404 </span>                :            :             &quot;jnz 1f\n\t&quot;
+<span class="lineNum">     405 </span>                :            :             &quot;movl $-1,%0\n&quot;
+<span class="lineNum">     406 </span>                :            :             &quot;1:&quot; : &quot;=r&quot; (r) : &quot;rm&quot; (x));
+<span class="lineNum">     407 </span>                :            : #endif
+<span class="lineNum">     408 </span>                :            :         return r + 1;
+<span class="lineNum">     409 </span>                :            : }
+<span class="lineNum">     410 </span>                :            : 
+<span class="lineNum">     411 </span>                :            : /**
+<span class="lineNum">     412 </span>                :            :  * fls - find last set bit in word
+<span class="lineNum">     413 </span>                :            :  * @x: the word to search
+<span class="lineNum">     414 </span>                :            :  *
+<span class="lineNum">     415 </span>                :            :  * This is defined in a similar way as the libc and compiler builtin
+<span class="lineNum">     416 </span>                :            :  * ffs, but returns the position of the most significant set bit.
+<span class="lineNum">     417 </span>                :            :  *
+<span class="lineNum">     418 </span>                :            :  * fls(value) returns 0 if value is 0 or the position of the last
+<span class="lineNum">     419 </span>                :            :  * set bit if value is nonzero. The last (most significant) bit is
+<span class="lineNum">     420 </span>                :            :  * at position 32.
+<span class="lineNum">     421 </span>                :            :  */
+<span class="lineNum">     422 </span>                :            : static inline int fls(int x)
+<span class="lineNum">     423 </span>                :            : {
+<span class="lineNum">     424 </span>                :            :         int r;
+<span class="lineNum">     425 </span>                :            : #ifdef CONFIG_X86_CMOV
+<span class="lineNum">     426 </span>                :            :         asm(&quot;bsrl %1,%0\n\t&quot;
+<span class="lineNum">     427 </span>                :            :             &quot;cmovzl %2,%0&quot;
+<span class="lineNum">     428 </span>                :            :             : &quot;=&amp;r&quot; (r) : &quot;rm&quot; (x), &quot;rm&quot; (-1));
+<span class="lineNum">     429 </span>                :            : #else
+<span class="lineNum">     430 </span>                :            :         asm(&quot;bsrl %1,%0\n\t&quot;
+<span class="lineNum">     431 </span>                :            :             &quot;jnz 1f\n\t&quot;
+<span class="lineNum">     432 </span>                :            :             &quot;movl $-1,%0\n&quot;
+<span class="lineNum">     433 </span>                :            :             &quot;1:&quot; : &quot;=r&quot; (r) : &quot;rm&quot; (x));
+<span class="lineNum">     434 </span>                :            : #endif
+<span class="lineNum">     435 </span>                :            :         return r + 1;
+<span class="lineNum">     436 </span>                :            : }
+<span class="lineNum">     437 </span>                :            : #endif /* __KERNEL__ */
+<span class="lineNum">     438 </span>                :            : 
+<span class="lineNum">     439 </span>                :            : #undef ADDR
+<span class="lineNum">     440 </span>                :            : 
+<span class="lineNum">     441 </span>                :            : #ifdef __KERNEL__
+<span class="lineNum">     442 </span>                :            : 
+<span class="lineNum">     443 </span>                :            : #include &lt;asm-generic/bitops/sched.h&gt;
+<span class="lineNum">     444 </span>                :            : 
+<span class="lineNum">     445 </span>                :            : #define ARCH_HAS_FAST_MULTIPLIER 1
+<span class="lineNum">     446 </span>                :            : 
+<span class="lineNum">     447 </span>                :            : #include &lt;asm/arch_hweight.h&gt;
+<span class="lineNum">     448 </span>                :            : 
+<span class="lineNum">     449 </span>                :            : #include &lt;asm-generic/bitops/const_hweight.h&gt;
+<span class="lineNum">     450 </span>                :            : 
+<span class="lineNum">     451 </span>                :            : #endif /* __KERNEL__ */
+<span class="lineNum">     452 </span>                :            : 
+<span class="lineNum">     453 </span>                :            : #include &lt;asm-generic/bitops/fls64.h&gt;
+<span class="lineNum">     454 </span>                :            : 
+<span class="lineNum">     455 </span>                :            : #ifdef __KERNEL__
+<span class="lineNum">     456 </span>                :            : 
+<span class="lineNum">     457 </span>                :            : #include &lt;asm-generic/bitops/ext2-non-atomic.h&gt;
+<span class="lineNum">     458 </span>                :            : 
+<span class="lineNum">     459 </span>                :            : #define ext2_set_bit_atomic(lock, nr, addr)                     \
+<span class="lineNum">     460 </span>                :            :         test_and_set_bit((nr), (unsigned long *)(addr))
+<span class="lineNum">     461 </span>                :            : #define ext2_clear_bit_atomic(lock, nr, addr)                   \
+<span class="lineNum">     462 </span>                :            :         test_and_clear_bit((nr), (unsigned long *)(addr))
+<span class="lineNum">     463 </span>                :            : 
+<span class="lineNum">     464 </span>                :            : #include &lt;asm-generic/bitops/minix.h&gt;
+<span class="lineNum">     465 </span>                :            : 
+<span class="lineNum">     466 </span>                :            : #endif /* __KERNEL__ */
+<span class="lineNum">     467 </span>                :            : #endif /* _ASM_X86_BITOPS_H */
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.8</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

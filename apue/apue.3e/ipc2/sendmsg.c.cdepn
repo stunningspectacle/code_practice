@@ -1,0 +1,12 @@
+F {main} {sendmsg.c:12}
+C {main} {sendmsg.c:33} {exit}
+C {main} {sendmsg.c:33} {err_sys}
+C {main} {sendmsg.c:33} {msgsnd}
+C {main} {sendmsg.c:33} {strlen}
+C {main} {sendmsg.c:33} {strncpy}
+C {main} {sendmsg.c:33} {memset}
+C {main} {sendmsg.c:33} {err_sys}
+C {main} {sendmsg.c:33} {msgget}
+C {main} {sendmsg.c:33} {strtol}
+C {main} {sendmsg.c:33} {exit}
+C {main} {sendmsg.c:33} {__builtin_fwrite}

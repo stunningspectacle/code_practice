@@ -1,0 +1,21 @@
+F {sig_quit} {critical.c:40}
+C {sig_quit} {critical.c:45} {err_sys}
+C {sig_quit} {critical.c:45} {signal}
+C {sig_quit} {critical.c:45} {__builtin_puts}
+F {main} {critical.c:6}
+C {main} {critical.c:45} {exit}
+C {main} {critical.c:45} {sleep}
+C {main} {critical.c:45} {__builtin_puts}
+C {main} {critical.c:45} {err_sys}
+C {main} {critical.c:45} {sigprocmask}
+C {main} {critical.c:45} {__builtin_puts}
+C {main} {critical.c:45} {sigismember}
+C {main} {critical.c:45} {err_sys}
+C {main} {critical.c:45} {sigpending}
+C {main} {critical.c:45} {sleep}
+C {main} {critical.c:45} {err_sys}
+C {main} {critical.c:45} {sigprocmask}
+C {main} {critical.c:45} {sigaddset}
+C {main} {critical.c:45} {sigemptyset}
+C {main} {critical.c:45} {err_sys}
+C {main} {critical.c:45} {signal}

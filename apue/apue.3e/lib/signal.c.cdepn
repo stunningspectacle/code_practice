@@ -1,0 +1,3 @@
+F {signal} {/usr/include/signal.h:101}
+C {signal} {signal.c:22} {sigaction}
+C {signal} {signal.c:22} {sigemptyset}

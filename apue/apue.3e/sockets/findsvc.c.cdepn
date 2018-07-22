@@ -1,0 +1,46 @@
+F {main} {findsvc.c:101}
+C {main} {findsvc.c:138} {exit}
+C {main} {findsvc.c:138} {__builtin_putchar}
+C {main} {findsvc.c:138} {printf}
+C {main} {findsvc.c:138} {ntohs}
+C {main} {findsvc.c:138} {printf}
+C {main} {findsvc.c:138} {inet_ntop}
+C {main} {findsvc.c:138} {printf}
+C {main} {findsvc.c:138} {print_protocol}
+C {main} {findsvc.c:138} {print_type}
+C {main} {findsvc.c:138} {print_family}
+C {main} {findsvc.c:138} {print_flags}
+C {main} {findsvc.c:138} {err_quit}
+C {main} {findsvc.c:138} {gai_strerror}
+C {main} {findsvc.c:138} {getaddrinfo}
+C {main} {findsvc.c:138} {err_quit}
+F {print_flags} {findsvc.c:79}
+C {print_flags} {findsvc.c:138} {printf}
+C {print_flags} {findsvc.c:138} {printf}
+C {print_flags} {findsvc.c:138} {printf}
+C {print_flags} {findsvc.c:138} {printf}
+C {print_flags} {findsvc.c:138} {printf}
+C {print_flags} {findsvc.c:138} {printf}
+C {print_flags} {findsvc.c:138} {printf}
+C {print_flags} {findsvc.c:138} {printf}
+F {print_protocol} {findsvc.c:57}
+C {print_protocol} {findsvc.c:138} {printf}
+C {print_protocol} {findsvc.c:138} {printf}
+C {print_protocol} {findsvc.c:138} {printf}
+C {print_protocol} {findsvc.c:138} {printf}
+C {print_protocol} {findsvc.c:138} {printf}
+C {print_protocol} {findsvc.c:138} {printf}
+F {print_type} {findsvc.c:35}
+C {print_type} {findsvc.c:138} {printf}
+C {print_type} {findsvc.c:138} {printf}
+C {print_type} {findsvc.c:138} {printf}
+C {print_type} {findsvc.c:138} {printf}
+C {print_type} {findsvc.c:138} {printf}
+C {print_type} {findsvc.c:138} {printf}
+F {print_family} {findsvc.c:13}
+C {print_family} {findsvc.c:138} {printf}
+C {print_family} {findsvc.c:138} {printf}
+C {print_family} {findsvc.c:138} {printf}
+C {print_family} {findsvc.c:138} {printf}
+C {print_family} {findsvc.c:138} {printf}
+C {print_family} {findsvc.c:138} {printf}

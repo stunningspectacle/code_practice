@@ -1,0 +1,6 @@
+F {main} {main.c:10}
+C {main} {main.c:32} {loop}
+C {main} {main.c:32} {daemonize}
+C {main} {main.c:32} {getopt}
+C {main} {main.c:32} {err_quit}
+C {main} {main.c:32} {log_open}

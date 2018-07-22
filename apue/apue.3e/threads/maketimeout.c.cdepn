@@ -1,0 +1,2 @@
+F {maketimeout} {maketimeout.c:5}
+C {maketimeout} {maketimeout.c:15} {gettimeofday}

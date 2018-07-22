@@ -1,0 +1,22 @@
+F {pr_times} {times1.c:41}
+C {pr_times} {times1.c:58} {printf}
+C {pr_times} {times1.c:58} {printf}
+C {pr_times} {times1.c:58} {printf}
+C {pr_times} {times1.c:58} {printf}
+C {pr_times} {times1.c:58} {printf}
+C {pr_times} {times1.c:58} {err_sys}
+C {pr_times} {times1.c:58} {sysconf}
+F {do_cmd} {times1.c:19}
+C {do_cmd} {times1.c:58} {pr_exit}
+C {do_cmd} {times1.c:58} {pr_times}
+C {do_cmd} {times1.c:58} {err_sys}
+C {do_cmd} {times1.c:58} {times}
+C {do_cmd} {times1.c:58} {err_sys}
+C {do_cmd} {times1.c:58} {system}
+C {do_cmd} {times1.c:58} {err_sys}
+C {do_cmd} {times1.c:58} {times}
+C {do_cmd} {times1.c:58} {printf}
+F {main} {times1.c:8}
+C {main} {times1.c:58} {exit}
+C {main} {times1.c:58} {do_cmd}
+C {main} {times1.c:58} {setbuf}

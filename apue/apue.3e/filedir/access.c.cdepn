@@ -1,0 +1,9 @@
+F {main} {access.c:5}
+C {main} {access.c:18} {exit}
+C {main} {access.c:18} {__builtin_puts}
+C {main} {access.c:18} {err_ret}
+C {main} {access.c:18} {open}
+C {main} {access.c:18} {__builtin_puts}
+C {main} {access.c:18} {err_ret}
+C {main} {access.c:18} {access}
+C {main} {access.c:18} {err_quit}

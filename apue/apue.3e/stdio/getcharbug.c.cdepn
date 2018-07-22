@@ -1,0 +1,3 @@
+F {main} {getcharbug.c:4}
+C {main} {getcharbug.c:10} {getchar}
+C {main} {getcharbug.c:10} {putchar}

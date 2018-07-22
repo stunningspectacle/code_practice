@@ -1,0 +1,13 @@
+F {serv_listen} {servlisten.c:13}
+C {serv_listen} {servlisten.c:52} {__errno_location}
+C {serv_listen} {servlisten.c:52} {close}
+C {serv_listen} {servlisten.c:52} {__errno_location}
+C {serv_listen} {servlisten.c:52} {listen}
+C {serv_listen} {servlisten.c:52} {bind}
+C {serv_listen} {servlisten.c:52} {strlen}
+C {serv_listen} {servlisten.c:52} {strcpy}
+C {serv_listen} {servlisten.c:52} {memset}
+C {serv_listen} {servlisten.c:52} {unlink}
+C {serv_listen} {servlisten.c:52} {socket}
+C {serv_listen} {servlisten.c:52} {__errno_location}
+C {serv_listen} {servlisten.c:52} {strlen}

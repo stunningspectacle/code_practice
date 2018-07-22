@@ -1,0 +1,13 @@
+F {f2} {testjmp.c:48}
+C {f2} {testjmp.c:51} {longjmp}
+F {f1} {testjmp.c:39}
+C {f1} {testjmp.c:51} {f2}
+C {f1} {testjmp.c:51} {printf}
+C {f1} {testjmp.c:51} {__builtin_puts}
+F {main} {testjmp.c:11}
+C {main} {testjmp.c:51} {exit}
+C {main} {testjmp.c:51} {f1}
+C {main} {testjmp.c:51} {exit}
+C {main} {testjmp.c:51} {printf}
+C {main} {testjmp.c:51} {__builtin_puts}
+C {main} {testjmp.c:51} {_setjmp}

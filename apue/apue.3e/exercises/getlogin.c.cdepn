@@ -1,0 +1,7 @@
+F {main} {getlogin.c:4}
+C {main} {getlogin.c:19} {exit}
+C {main} {getlogin.c:19} {fprintf}
+C {main} {getlogin.c:19} {__builtin_fwrite}
+C {main} {getlogin.c:19} {fopen}
+C {main} {getlogin.c:19} {getlogin}
+C {main} {getlogin.c:19} {daemonize}

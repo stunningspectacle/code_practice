@@ -1,0 +1,9 @@
+F {main} {bindunix.c:6}
+C {main} {bindunix.c:20} {exit}
+C {main} {bindunix.c:20} {__builtin_puts}
+C {main} {bindunix.c:20} {err_sys}
+C {main} {bindunix.c:20} {bind}
+C {main} {bindunix.c:20} {strlen}
+C {main} {bindunix.c:20} {err_sys}
+C {main} {bindunix.c:20} {socket}
+C {main} {bindunix.c:20} {__builtin_memcpy}

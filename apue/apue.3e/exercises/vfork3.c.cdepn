@@ -1,0 +1,8 @@
+F {f2} {vfork3.c:24}
+F {f1} {vfork3.c:14}
+C {f1} {vfork3.c:31} {err_sys}
+C {f1} {vfork3.c:31} {vfork}
+F {main} {vfork3.c:6}
+C {main} {vfork3.c:31} {_exit}
+C {main} {vfork3.c:31} {f2}
+C {main} {vfork3.c:31} {f1}

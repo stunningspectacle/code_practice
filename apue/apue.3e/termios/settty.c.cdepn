@@ -1,0 +1,10 @@
+F {main} {settty.c:5}
+C {main} {settty.c:26} {exit}
+C {main} {settty.c:26} {err_sys}
+C {main} {settty.c:26} {tcsetattr}
+C {main} {settty.c:26} {err_sys}
+C {main} {settty.c:26} {tcgetattr}
+C {main} {settty.c:26} {err_quit}
+C {main} {settty.c:26} {fpathconf}
+C {main} {settty.c:26} {err_quit}
+C {main} {settty.c:26} {isatty}

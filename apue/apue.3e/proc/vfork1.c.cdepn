@@ -1,0 +1,8 @@
+F {main} {vfork1.c:6}
+C {main} {vfork1.c:25} {exit}
+C {main} {vfork1.c:25} {printf}
+C {main} {vfork1.c:25} {getpid}
+C {main} {vfork1.c:25} {_exit}
+C {main} {vfork1.c:25} {err_sys}
+C {main} {vfork1.c:25} {vfork}
+C {main} {vfork1.c:25} {__builtin_puts}

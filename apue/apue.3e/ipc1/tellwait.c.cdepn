@@ -1,0 +1,18 @@
+F {WAIT_CHILD} {tellwait.c:39}
+C {WAIT_CHILD} {tellwait.c:48} {err_quit}
+C {WAIT_CHILD} {tellwait.c:48} {err_sys}
+C {WAIT_CHILD} {tellwait.c:48} {read}
+F {TELL_CHILD} {tellwait.c:32}
+C {TELL_CHILD} {tellwait.c:48} {err_sys}
+C {TELL_CHILD} {tellwait.c:48} {write}
+F {WAIT_PARENT} {tellwait.c:20}
+C {WAIT_PARENT} {tellwait.c:48} {err_quit}
+C {WAIT_PARENT} {tellwait.c:48} {err_sys}
+C {WAIT_PARENT} {tellwait.c:48} {read}
+F {TELL_PARENT} {tellwait.c:13}
+C {TELL_PARENT} {tellwait.c:48} {err_sys}
+C {TELL_PARENT} {tellwait.c:48} {write}
+F {TELL_WAIT} {tellwait.c:6}
+C {TELL_WAIT} {tellwait.c:48} {err_sys}
+C {TELL_WAIT} {tellwait.c:48} {pipe}
+C {TELL_WAIT} {tellwait.c:48} {pipe}

@@ -1,0 +1,24 @@
+F {pr_limits} {getrlimit.c:68}
+C {pr_limits} {getrlimit.c:89} {putchar}
+C {pr_limits} {getrlimit.c:89} {printf}
+C {pr_limits} {getrlimit.c:89} {printf}
+C {pr_limits} {getrlimit.c:89} {printf}
+C {pr_limits} {getrlimit.c:89} {printf}
+C {pr_limits} {getrlimit.c:89} {printf}
+C {pr_limits} {getrlimit.c:89} {err_sys}
+C {pr_limits} {getrlimit.c:89} {getrlimit}
+F {main} {getrlimit.c:9}
+C {main} {getrlimit.c:89} {exit}
+C {main} {getrlimit.c:89} {pr_limits}
+C {main} {getrlimit.c:89} {pr_limits}
+C {main} {getrlimit.c:89} {pr_limits}
+C {main} {getrlimit.c:89} {pr_limits}
+C {main} {getrlimit.c:89} {pr_limits}
+C {main} {getrlimit.c:89} {pr_limits}
+C {main} {getrlimit.c:89} {pr_limits}
+C {main} {getrlimit.c:89} {pr_limits}
+C {main} {getrlimit.c:89} {pr_limits}
+C {main} {getrlimit.c:89} {pr_limits}
+C {main} {getrlimit.c:89} {pr_limits}
+C {main} {getrlimit.c:89} {pr_limits}
+C {main} {getrlimit.c:89} {pr_limits}

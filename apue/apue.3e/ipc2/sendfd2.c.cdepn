@@ -1,0 +1,7 @@
+F {send_fd} {sendfd2.c:26}
+C {send_fd} {sendfd2.c:73} {sendmsg}
+C {send_fd} {sendfd2.c:73} {getpid}
+C {send_fd} {sendfd2.c:73} {getegid}
+C {send_fd} {sendfd2.c:73} {geteuid}
+C {send_fd} {sendfd2.c:73} {__cmsg_nxthdr}
+C {send_fd} {sendfd2.c:73} {malloc}

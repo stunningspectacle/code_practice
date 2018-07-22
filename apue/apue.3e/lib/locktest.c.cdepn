@@ -1,0 +1,3 @@
+F {lock_test} {locktest.c:5}
+C {lock_test} {locktest.c:20} {err_sys}
+C {lock_test} {locktest.c:20} {fcntl}

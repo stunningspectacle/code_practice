@@ -1,0 +1,10 @@
+F {sig_usr} {sigusr.c:17}
+C {sig_usr} {sigusr.c:25} {err_dump}
+C {sig_usr} {sigusr.c:25} {__builtin_puts}
+C {sig_usr} {sigusr.c:25} {__builtin_puts}
+F {main} {sigusr.c:6}
+C {main} {sigusr.c:25} {pause}
+C {main} {sigusr.c:25} {err_sys}
+C {main} {sigusr.c:25} {signal}
+C {main} {sigusr.c:25} {err_sys}
+C {main} {sigusr.c:25} {signal}

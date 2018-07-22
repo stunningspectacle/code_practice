@@ -1,0 +1,12 @@
+F {main} {systest2.c:16}
+C {main} {systest2.c:25} {exit}
+C {main} {systest2.c:25} {err_sys}
+C {main} {systest2.c:25} {system}
+C {main} {systest2.c:25} {err_sys}
+C {main} {systest2.c:25} {signal}
+C {main} {systest2.c:25} {err_sys}
+C {main} {systest2.c:25} {signal}
+F {sig_chld} {systest2.c:10}
+C {sig_chld} {systest2.c:25} {__builtin_puts}
+F {sig_int} {systest2.c:4}
+C {sig_int} {systest2.c:25} {__builtin_puts}

@@ -1,0 +1,63 @@
+
+hello:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000000bad000 <mymain>:
+  bad000:	55                   	push   %rbp
+  bad001:	48 89 e5             	mov    %rsp,%rbp
+  bad004:	c7 45 f4 11 01 00 00 	movl   $0x111,-0xc(%rbp)
+  bad00b:	c7 45 f8 22 02 00 00 	movl   $0x222,-0x8(%rbp)
+  bad012:	8b 45 f8             	mov    -0x8(%rbp),%eax
+  bad015:	8b 55 f4             	mov    -0xc(%rbp),%edx
+  bad018:	01 d0                	add    %edx,%eax
+  bad01a:	89 45 fc             	mov    %eax,-0x4(%rbp)
+  bad01d:	5d                   	pop    %rbp
+  bad01e:	c3                   	retq   
+
+Disassembly of section .eh_frame:
+
+0000000000bad020 <.eh_frame>:
+  bad020:	14 00                	adc    $0x0,%al
+  bad022:	00 00                	add    %al,(%rax)
+  bad024:	00 00                	add    %al,(%rax)
+  bad026:	00 00                	add    %al,(%rax)
+  bad028:	01 7a 52             	add    %edi,0x52(%rdx)
+  bad02b:	00 01                	add    %al,(%rcx)
+  bad02d:	78 10                	js     bad03f <START_ADD+0x3f>
+  bad02f:	01 1b                	add    %ebx,(%rbx)
+  bad031:	0c 07                	or     $0x7,%al
+  bad033:	08 90 01 00 00 1c    	or     %dl,0x1c000001(%rax)
+  bad039:	00 00                	add    %al,(%rax)
+  bad03b:	00 1c 00             	add    %bl,(%rax,%rax,1)
+  bad03e:	00 00                	add    %al,(%rax)
+  bad040:	c0 ff ff             	sar    $0xff,%bh
+  bad043:	ff 1f                	lcallq *(%rdi)
+  bad045:	00 00                	add    %al,(%rax)
+  bad047:	00 00                	add    %al,(%rax)
+  bad049:	41 0e                	rex.B (bad) 
+  bad04b:	10 86 02 43 0d 06    	adc    %al,0x60d4302(%rsi)
+  bad051:	5a                   	pop    %rdx
+  bad052:	0c 07                	or     $0x7,%al
+  bad054:	08 00                	or     %al,(%rax)
+	...
+
+Disassembly of section .comment:
+
+0000000000000000 <.comment>:
+   0:	47                   	rex.RXB
+   1:	43                   	rex.XB
+   2:	43 3a 20             	rex.XB cmp (%r8),%spl
+   5:	28 55 62             	sub    %dl,0x62(%rbp)
+   8:	75 6e                	jne    78 <START_ADD-0xbacf88>
+   a:	74 75                	je     81 <START_ADD-0xbacf7f>
+   c:	2f                   	(bad)  
+   d:	4c 69 6e 61 72 6f 20 	imul   $0x34206f72,0x61(%rsi),%r13
+  14:	34 
+  15:	2e 36 2e 33 2d 31 75 	cs ss xor %cs:%ss:0x75627531(%rip),%ebp        # 7562754f <START_ADD+0x74a7a54f>
+  1c:	62 75 
+  1e:	6e                   	outsb  %ds:(%rsi),(%dx)
+  1f:	74 75                	je     96 <START_ADD-0xbacf6a>
+  21:	35 29 20 34 2e       	xor    $0x2e342029,%eax
+  26:	36 2e 33 00          	ss xor %cs:%ss:(%rax),%eax

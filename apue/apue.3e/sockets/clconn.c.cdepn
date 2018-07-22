@@ -1,0 +1,3 @@
+F {connect_retry} {clconn.c:7}
+C {connect_retry} {clconn.c:29} {sleep}
+C {connect_retry} {clconn.c:29} {connect}

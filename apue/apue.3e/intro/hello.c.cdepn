@@ -1,0 +1,4 @@
+F {main} {hello.c:4}
+C {main} {hello.c:8} {exit}
+C {main} {hello.c:8} {printf}
+C {main} {hello.c:8} {getpid}

@@ -1,0 +1,482 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+  <title>LCOV - test.info - include/linux/tty_driver.h</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">include/linux</a> - tty_driver.h<span style="font-size: 80%;"> (source / <a href="tty_driver.h.func.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">test.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2011-05-12</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="headerItem">Branches:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">           Branch data     Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>                :            : #ifndef _LINUX_TTY_DRIVER_H</a>
+<span class="lineNum">       2 </span>                :            : #define _LINUX_TTY_DRIVER_H
+<span class="lineNum">       3 </span>                :            : 
+<span class="lineNum">       4 </span>                :            : /*
+<span class="lineNum">       5 </span>                :            :  * This structure defines the interface between the low-level tty
+<span class="lineNum">       6 </span>                :            :  * driver and the tty routines.  The following routines can be
+<span class="lineNum">       7 </span>                :            :  * defined; unless noted otherwise, they are optional, and can be
+<span class="lineNum">       8 </span>                :            :  * filled in with a null pointer.
+<span class="lineNum">       9 </span>                :            :  *
+<span class="lineNum">      10 </span>                :            :  * struct tty_struct * (*lookup)(struct tty_driver *self, int idx)
+<span class="lineNum">      11 </span>                :            :  *
+<span class="lineNum">      12 </span>                :            :  *      Return the tty device corresponding to idx, NULL if there is not
+<span class="lineNum">      13 </span>                :            :  *      one currently in use and an ERR_PTR value on error. Called under
+<span class="lineNum">      14 </span>                :            :  *      tty_mutex (for now!)
+<span class="lineNum">      15 </span>                :            :  *
+<span class="lineNum">      16 </span>                :            :  *      Optional method. Default behaviour is to use the ttys array
+<span class="lineNum">      17 </span>                :            :  *
+<span class="lineNum">      18 </span>                :            :  * int (*install)(struct tty_driver *self, struct tty_struct *tty)
+<span class="lineNum">      19 </span>                :            :  *
+<span class="lineNum">      20 </span>                :            :  *      Install a new tty into the tty driver internal tables. Used in
+<span class="lineNum">      21 </span>                :            :  *      conjunction with lookup and remove methods.
+<span class="lineNum">      22 </span>                :            :  *
+<span class="lineNum">      23 </span>                :            :  *      Optional method. Default behaviour is to use the ttys array
+<span class="lineNum">      24 </span>                :            :  *
+<span class="lineNum">      25 </span>                :            :  * void (*remove)(struct tty_driver *self, struct tty_struct *tty)
+<span class="lineNum">      26 </span>                :            :  *
+<span class="lineNum">      27 </span>                :            :  *      Remove a closed tty from the tty driver internal tables. Used in
+<span class="lineNum">      28 </span>                :            :  *      conjunction with lookup and remove methods.
+<span class="lineNum">      29 </span>                :            :  *
+<span class="lineNum">      30 </span>                :            :  *      Optional method. Default behaviour is to use the ttys array
+<span class="lineNum">      31 </span>                :            :  *
+<span class="lineNum">      32 </span>                :            :  * int  (*open)(struct tty_struct * tty, struct file * filp);
+<span class="lineNum">      33 </span>                :            :  *
+<span class="lineNum">      34 </span>                :            :  *      This routine is called when a particular tty device is opened.
+<span class="lineNum">      35 </span>                :            :  *      This routine is mandatory; if this routine is not filled in,
+<span class="lineNum">      36 </span>                :            :  *      the attempted open will fail with ENODEV.
+<span class="lineNum">      37 </span>                :            :  *
+<span class="lineNum">      38 </span>                :            :  *      Required method.
+<span class="lineNum">      39 </span>                :            :  *     
+<span class="lineNum">      40 </span>                :            :  * void (*close)(struct tty_struct * tty, struct file * filp);
+<span class="lineNum">      41 </span>                :            :  *
+<span class="lineNum">      42 </span>                :            :  *      This routine is called when a particular tty device is closed.
+<span class="lineNum">      43 </span>                :            :  *
+<span class="lineNum">      44 </span>                :            :  *      Required method.
+<span class="lineNum">      45 </span>                :            :  *
+<span class="lineNum">      46 </span>                :            :  * void (*shutdown)(struct tty_struct * tty);
+<span class="lineNum">      47 </span>                :            :  *
+<span class="lineNum">      48 </span>                :            :  *      This routine is called synchronously when a particular tty device
+<span class="lineNum">      49 </span>                :            :  *      is closed for the last time freeing up the resources.
+<span class="lineNum">      50 </span>                :            :  *
+<span class="lineNum">      51 </span>                :            :  *
+<span class="lineNum">      52 </span>                :            :  * void (*cleanup)(struct tty_struct * tty);
+<span class="lineNum">      53 </span>                :            :  *
+<span class="lineNum">      54 </span>                :            :  *      This routine is called asynchronously when a particular tty device
+<span class="lineNum">      55 </span>                :            :  *      is closed for the last time freeing up the resources. This is
+<span class="lineNum">      56 </span>                :            :  *      actually the second part of shutdown for routines that might sleep.
+<span class="lineNum">      57 </span>                :            :  *
+<span class="lineNum">      58 </span>                :            :  *
+<span class="lineNum">      59 </span>                :            :  * int (*write)(struct tty_struct * tty,
+<span class="lineNum">      60 </span>                :            :  *               const unsigned char *buf, int count);
+<span class="lineNum">      61 </span>                :            :  *
+<span class="lineNum">      62 </span>                :            :  *      This routine is called by the kernel to write a series of
+<span class="lineNum">      63 </span>                :            :  *      characters to the tty device.  The characters may come from
+<span class="lineNum">      64 </span>                :            :  *      user space or kernel space.  This routine will return the
+<span class="lineNum">      65 </span>                :            :  *      number of characters actually accepted for writing.
+<span class="lineNum">      66 </span>                :            :  *
+<span class="lineNum">      67 </span>                :            :  *      Optional: Required for writable devices.
+<span class="lineNum">      68 </span>                :            :  *
+<span class="lineNum">      69 </span>                :            :  * int (*put_char)(struct tty_struct *tty, unsigned char ch);
+<span class="lineNum">      70 </span>                :            :  *
+<span class="lineNum">      71 </span>                :            :  *      This routine is called by the kernel to write a single
+<span class="lineNum">      72 </span>                :            :  *      character to the tty device.  If the kernel uses this routine,
+<span class="lineNum">      73 </span>                :            :  *      it must call the flush_chars() routine (if defined) when it is
+<span class="lineNum">      74 </span>                :            :  *      done stuffing characters into the driver.  If there is no room
+<span class="lineNum">      75 </span>                :            :  *      in the queue, the character is ignored.
+<span class="lineNum">      76 </span>                :            :  *
+<span class="lineNum">      77 </span>                :            :  *      Optional: Kernel will use the write method if not provided.
+<span class="lineNum">      78 </span>                :            :  *
+<span class="lineNum">      79 </span>                :            :  *      Note: Do not call this function directly, call tty_put_char
+<span class="lineNum">      80 </span>                :            :  *
+<span class="lineNum">      81 </span>                :            :  * void (*flush_chars)(struct tty_struct *tty);
+<span class="lineNum">      82 </span>                :            :  *
+<span class="lineNum">      83 </span>                :            :  *      This routine is called by the kernel after it has written a
+<span class="lineNum">      84 </span>                :            :  *      series of characters to the tty device using put_char().  
+<span class="lineNum">      85 </span>                :            :  *
+<span class="lineNum">      86 </span>                :            :  *      Optional:
+<span class="lineNum">      87 </span>                :            :  *
+<span class="lineNum">      88 </span>                :            :  *      Note: Do not call this function directly, call tty_driver_flush_chars
+<span class="lineNum">      89 </span>                :            :  * 
+<span class="lineNum">      90 </span>                :            :  * int  (*write_room)(struct tty_struct *tty);
+<span class="lineNum">      91 </span>                :            :  *
+<span class="lineNum">      92 </span>                :            :  *      This routine returns the numbers of characters the tty driver
+<span class="lineNum">      93 </span>                :            :  *      will accept for queuing to be written.  This number is subject
+<span class="lineNum">      94 </span>                :            :  *      to change as output buffers get emptied, or if the output flow
+<span class="lineNum">      95 </span>                :            :  *      control is acted.
+<span class="lineNum">      96 </span>                :            :  *
+<span class="lineNum">      97 </span>                :            :  *      Required if write method is provided else not needed.
+<span class="lineNum">      98 </span>                :            :  *
+<span class="lineNum">      99 </span>                :            :  *      Note: Do not call this function directly, call tty_write_room
+<span class="lineNum">     100 </span>                :            :  * 
+<span class="lineNum">     101 </span>                :            :  * int  (*ioctl)(struct tty_struct *tty, struct file * file,
+<span class="lineNum">     102 </span>                :            :  *          unsigned int cmd, unsigned long arg);
+<span class="lineNum">     103 </span>                :            :  *
+<span class="lineNum">     104 </span>                :            :  *      This routine allows the tty driver to implement
+<span class="lineNum">     105 </span>                :            :  *      device-specific ioctl's.  If the ioctl number passed in cmd
+<span class="lineNum">     106 </span>                :            :  *      is not recognized by the driver, it should return ENOIOCTLCMD.
+<span class="lineNum">     107 </span>                :            :  *
+<span class="lineNum">     108 </span>                :            :  *      Optional
+<span class="lineNum">     109 </span>                :            :  *
+<span class="lineNum">     110 </span>                :            :  * long (*compat_ioctl)(struct tty_struct *tty, struct file * file,
+<span class="lineNum">     111 </span>                :            :  *                      unsigned int cmd, unsigned long arg);
+<span class="lineNum">     112 </span>                :            :  *
+<span class="lineNum">     113 </span>                :            :  *      implement ioctl processing for 32 bit process on 64 bit system
+<span class="lineNum">     114 </span>                :            :  *
+<span class="lineNum">     115 </span>                :            :  *      Optional
+<span class="lineNum">     116 </span>                :            :  * 
+<span class="lineNum">     117 </span>                :            :  * void (*set_termios)(struct tty_struct *tty, struct ktermios * old);
+<span class="lineNum">     118 </span>                :            :  *
+<span class="lineNum">     119 </span>                :            :  *      This routine allows the tty driver to be notified when
+<span class="lineNum">     120 </span>                :            :  *      device's termios settings have changed.
+<span class="lineNum">     121 </span>                :            :  *
+<span class="lineNum">     122 </span>                :            :  *      Optional: Called under the termios lock
+<span class="lineNum">     123 </span>                :            :  *
+<span class="lineNum">     124 </span>                :            :  *
+<span class="lineNum">     125 </span>                :            :  * void (*set_ldisc)(struct tty_struct *tty);
+<span class="lineNum">     126 </span>                :            :  *
+<span class="lineNum">     127 </span>                :            :  *      This routine allows the tty driver to be notified when the
+<span class="lineNum">     128 </span>                :            :  *      device's termios settings have changed.
+<span class="lineNum">     129 </span>                :            :  *
+<span class="lineNum">     130 </span>                :            :  *      Optional: Called under BKL (currently)
+<span class="lineNum">     131 </span>                :            :  * 
+<span class="lineNum">     132 </span>                :            :  * void (*throttle)(struct tty_struct * tty);
+<span class="lineNum">     133 </span>                :            :  *
+<span class="lineNum">     134 </span>                :            :  *      This routine notifies the tty driver that input buffers for
+<span class="lineNum">     135 </span>                :            :  *      the line discipline are close to full, and it should somehow
+<span class="lineNum">     136 </span>                :            :  *      signal that no more characters should be sent to the tty.
+<span class="lineNum">     137 </span>                :            :  *
+<span class="lineNum">     138 </span>                :            :  *      Optional: Always invoke via tty_throttle(), called under the
+<span class="lineNum">     139 </span>                :            :  *      termios lock.
+<span class="lineNum">     140 </span>                :            :  * 
+<span class="lineNum">     141 </span>                :            :  * void (*unthrottle)(struct tty_struct * tty);
+<span class="lineNum">     142 </span>                :            :  *
+<span class="lineNum">     143 </span>                :            :  *      This routine notifies the tty drivers that it should signals
+<span class="lineNum">     144 </span>                :            :  *      that characters can now be sent to the tty without fear of
+<span class="lineNum">     145 </span>                :            :  *      overrunning the input buffers of the line disciplines.
+<span class="lineNum">     146 </span>                :            :  * 
+<span class="lineNum">     147 </span>                :            :  *      Optional: Always invoke via tty_unthrottle(), called under the
+<span class="lineNum">     148 </span>                :            :  *      termios lock.
+<span class="lineNum">     149 </span>                :            :  *
+<span class="lineNum">     150 </span>                :            :  * void (*stop)(struct tty_struct *tty);
+<span class="lineNum">     151 </span>                :            :  *
+<span class="lineNum">     152 </span>                :            :  *      This routine notifies the tty driver that it should stop
+<span class="lineNum">     153 </span>                :            :  *      outputting characters to the tty device.  
+<span class="lineNum">     154 </span>                :            :  *
+<span class="lineNum">     155 </span>                :            :  *      Optional:
+<span class="lineNum">     156 </span>                :            :  *
+<span class="lineNum">     157 </span>                :            :  *      Note: Call stop_tty not this method.
+<span class="lineNum">     158 </span>                :            :  * 
+<span class="lineNum">     159 </span>                :            :  * void (*start)(struct tty_struct *tty);
+<span class="lineNum">     160 </span>                :            :  *
+<span class="lineNum">     161 </span>                :            :  *      This routine notifies the tty driver that it resume sending
+<span class="lineNum">     162 </span>                :            :  *      characters to the tty device.
+<span class="lineNum">     163 </span>                :            :  *
+<span class="lineNum">     164 </span>                :            :  *      Optional:
+<span class="lineNum">     165 </span>                :            :  *
+<span class="lineNum">     166 </span>                :            :  *      Note: Call start_tty not this method.
+<span class="lineNum">     167 </span>                :            :  * 
+<span class="lineNum">     168 </span>                :            :  * void (*hangup)(struct tty_struct *tty);
+<span class="lineNum">     169 </span>                :            :  *
+<span class="lineNum">     170 </span>                :            :  *      This routine notifies the tty driver that it should hangup the
+<span class="lineNum">     171 </span>                :            :  *      tty device.
+<span class="lineNum">     172 </span>                :            :  *
+<span class="lineNum">     173 </span>                :            :  *      Optional:
+<span class="lineNum">     174 </span>                :            :  *
+<span class="lineNum">     175 </span>                :            :  * int (*break_ctl)(struct tty_stuct *tty, int state);
+<span class="lineNum">     176 </span>                :            :  *
+<span class="lineNum">     177 </span>                :            :  *      This optional routine requests the tty driver to turn on or
+<span class="lineNum">     178 </span>                :            :  *      off BREAK status on the RS-232 port.  If state is -1,
+<span class="lineNum">     179 </span>                :            :  *      then the BREAK status should be turned on; if state is 0, then
+<span class="lineNum">     180 </span>                :            :  *      BREAK should be turned off.
+<span class="lineNum">     181 </span>                :            :  *
+<span class="lineNum">     182 </span>                :            :  *      If this routine is implemented, the high-level tty driver will
+<span class="lineNum">     183 </span>                :            :  *      handle the following ioctls: TCSBRK, TCSBRKP, TIOCSBRK,
+<span class="lineNum">     184 </span>                :            :  *      TIOCCBRK.
+<span class="lineNum">     185 </span>                :            :  *
+<span class="lineNum">     186 </span>                :            :  *      If the driver sets TTY_DRIVER_HARDWARE_BREAK then the interface
+<span class="lineNum">     187 </span>                :            :  *      will also be called with actual times and the hardware is expected
+<span class="lineNum">     188 </span>                :            :  *      to do the delay work itself. 0 and -1 are still used for on/off.
+<span class="lineNum">     189 </span>                :            :  *
+<span class="lineNum">     190 </span>                :            :  *      Optional: Required for TCSBRK/BRKP/etc handling.
+<span class="lineNum">     191 </span>                :            :  *
+<span class="lineNum">     192 </span>                :            :  * void (*wait_until_sent)(struct tty_struct *tty, int timeout);
+<span class="lineNum">     193 </span>                :            :  * 
+<span class="lineNum">     194 </span>                :            :  *      This routine waits until the device has written out all of the
+<span class="lineNum">     195 </span>                :            :  *      characters in its transmitter FIFO.
+<span class="lineNum">     196 </span>                :            :  *
+<span class="lineNum">     197 </span>                :            :  *      Optional: If not provided the device is assumed to have no FIFO
+<span class="lineNum">     198 </span>                :            :  *
+<span class="lineNum">     199 </span>                :            :  *      Note: Usually correct to call tty_wait_until_sent
+<span class="lineNum">     200 </span>                :            :  *
+<span class="lineNum">     201 </span>                :            :  * void (*send_xchar)(struct tty_struct *tty, char ch);
+<span class="lineNum">     202 </span>                :            :  *
+<span class="lineNum">     203 </span>                :            :  *      This routine is used to send a high-priority XON/XOFF
+<span class="lineNum">     204 </span>                :            :  *      character to the device.
+<span class="lineNum">     205 </span>                :            :  *
+<span class="lineNum">     206 </span>                :            :  *      Optional: If not provided then the write method is called under
+<span class="lineNum">     207 </span>                :            :  *      the atomic write lock to keep it serialized with the ldisc.
+<span class="lineNum">     208 </span>                :            :  *
+<span class="lineNum">     209 </span>                :            :  * int (*resize)(struct tty_struct *tty, struct winsize *ws)
+<span class="lineNum">     210 </span>                :            :  *
+<span class="lineNum">     211 </span>                :            :  *      Called when a termios request is issued which changes the
+<span class="lineNum">     212 </span>                :            :  *      requested terminal geometry.
+<span class="lineNum">     213 </span>                :            :  *
+<span class="lineNum">     214 </span>                :            :  *      Optional: the default action is to update the termios structure
+<span class="lineNum">     215 </span>                :            :  *      without error. This is usually the correct behaviour. Drivers should
+<span class="lineNum">     216 </span>                :            :  *      not force errors here if they are not resizable objects (eg a serial
+<span class="lineNum">     217 </span>                :            :  *      line). See tty_do_resize() if you need to wrap the standard method
+<span class="lineNum">     218 </span>                :            :  *      in your own logic - the usual case.
+<span class="lineNum">     219 </span>                :            :  *
+<span class="lineNum">     220 </span>                :            :  * void (*set_termiox)(struct tty_struct *tty, struct termiox *new);
+<span class="lineNum">     221 </span>                :            :  *
+<span class="lineNum">     222 </span>                :            :  *      Called when the device receives a termiox based ioctl. Passes down
+<span class="lineNum">     223 </span>                :            :  *      the requested data from user space. This method will not be invoked
+<span class="lineNum">     224 </span>                :            :  *      unless the tty also has a valid tty-&gt;termiox pointer.
+<span class="lineNum">     225 </span>                :            :  *
+<span class="lineNum">     226 </span>                :            :  *      Optional: Called under the termios lock
+<span class="lineNum">     227 </span>                :            :  */
+<span class="lineNum">     228 </span>                :            : 
+<span class="lineNum">     229 </span>                :            : #include &lt;linux/fs.h&gt;
+<span class="lineNum">     230 </span>                :            : #include &lt;linux/list.h&gt;
+<span class="lineNum">     231 </span>                :            : #include &lt;linux/cdev.h&gt;
+<span class="lineNum">     232 </span>                :            : 
+<span class="lineNum">     233 </span>                :            : struct tty_struct;
+<span class="lineNum">     234 </span>                :            : struct tty_driver;
+<span class="lineNum">     235 </span>                :            : 
+<span class="lineNum">     236 </span>                :            : struct tty_operations {
+<span class="lineNum">     237 </span>                :            :         struct tty_struct * (*lookup)(struct tty_driver *driver,
+<span class="lineNum">     238 </span>                :            :                         struct inode *inode, int idx);
+<span class="lineNum">     239 </span>                :            :         int  (*install)(struct tty_driver *driver, struct tty_struct *tty);
+<span class="lineNum">     240 </span>                :            :         void (*remove)(struct tty_driver *driver, struct tty_struct *tty);
+<span class="lineNum">     241 </span>                :            :         int  (*open)(struct tty_struct * tty, struct file * filp);
+<span class="lineNum">     242 </span>                :            :         void (*close)(struct tty_struct * tty, struct file * filp);
+<span class="lineNum">     243 </span>                :            :         void (*shutdown)(struct tty_struct *tty);
+<span class="lineNum">     244 </span>                :            :         void (*cleanup)(struct tty_struct *tty);
+<span class="lineNum">     245 </span>                :            :         int  (*write)(struct tty_struct * tty,
+<span class="lineNum">     246 </span>                :            :                       const unsigned char *buf, int count);
+<span class="lineNum">     247 </span>                :            :         int  (*put_char)(struct tty_struct *tty, unsigned char ch);
+<span class="lineNum">     248 </span>                :            :         void (*flush_chars)(struct tty_struct *tty);
+<span class="lineNum">     249 </span>                :            :         int  (*write_room)(struct tty_struct *tty);
+<span class="lineNum">     250 </span>                :            :         int  (*chars_in_buffer)(struct tty_struct *tty);
+<span class="lineNum">     251 </span>                :            :         int  (*ioctl)(struct tty_struct *tty, struct file * file,
+<span class="lineNum">     252 </span>                :            :                     unsigned int cmd, unsigned long arg);
+<span class="lineNum">     253 </span>                :            :         long (*compat_ioctl)(struct tty_struct *tty, struct file * file,
+<span class="lineNum">     254 </span>                :            :                              unsigned int cmd, unsigned long arg);
+<span class="lineNum">     255 </span>                :            :         void (*set_termios)(struct tty_struct *tty, struct ktermios * old);
+<span class="lineNum">     256 </span>                :            :         void (*throttle)(struct tty_struct * tty);
+<span class="lineNum">     257 </span>                :            :         void (*unthrottle)(struct tty_struct * tty);
+<span class="lineNum">     258 </span>                :            :         void (*stop)(struct tty_struct *tty);
+<span class="lineNum">     259 </span>                :            :         void (*start)(struct tty_struct *tty);
+<span class="lineNum">     260 </span>                :            :         void (*hangup)(struct tty_struct *tty);
+<span class="lineNum">     261 </span>                :            :         int (*break_ctl)(struct tty_struct *tty, int state);
+<span class="lineNum">     262 </span>                :            :         void (*flush_buffer)(struct tty_struct *tty);
+<span class="lineNum">     263 </span>                :            :         void (*set_ldisc)(struct tty_struct *tty);
+<span class="lineNum">     264 </span>                :            :         void (*wait_until_sent)(struct tty_struct *tty, int timeout);
+<span class="lineNum">     265 </span>                :            :         void (*send_xchar)(struct tty_struct *tty, char ch);
+<span class="lineNum">     266 </span>                :            :         int (*tiocmget)(struct tty_struct *tty, struct file *file);
+<span class="lineNum">     267 </span>                :            :         int (*tiocmset)(struct tty_struct *tty, struct file *file,
+<span class="lineNum">     268 </span>                :            :                         unsigned int set, unsigned int clear);
+<span class="lineNum">     269 </span>                :            :         int (*resize)(struct tty_struct *tty, struct winsize *ws);
+<span class="lineNum">     270 </span>                :            :         int (*set_termiox)(struct tty_struct *tty, struct termiox *tnew);
+<span class="lineNum">     271 </span>                :            : #ifdef CONFIG_CONSOLE_POLL
+<span class="lineNum">     272 </span>                :            :         int (*poll_init)(struct tty_driver *driver, int line, char *options);
+<span class="lineNum">     273 </span>                :            :         int (*poll_get_char)(struct tty_driver *driver, int line);
+<span class="lineNum">     274 </span>                :            :         void (*poll_put_char)(struct tty_driver *driver, int line, char ch);
+<span class="lineNum">     275 </span>                :            : #endif
+<span class="lineNum">     276 </span>                :            :         const struct file_operations *proc_fops;
+<span class="lineNum">     277 </span>                :            : };
+<span class="lineNum">     278 </span>                :            : 
+<span class="lineNum">     279 </span>                :            : struct tty_driver {
+<span class="lineNum">     280 </span>                :            :         int     magic;          /* magic number for this structure */
+<span class="lineNum">     281 </span>                :            :         struct kref kref;       /* Reference management */
+<span class="lineNum">     282 </span>                :            :         struct cdev cdev;
+<span class="lineNum">     283 </span>                :            :         struct module   *owner;
+<span class="lineNum">     284 </span>                :            :         const char      *driver_name;
+<span class="lineNum">     285 </span>                :            :         const char      *name;
+<span class="lineNum">     286 </span>                :            :         int     name_base;      /* offset of printed name */
+<span class="lineNum">     287 </span>                :            :         int     major;          /* major device number */
+<span class="lineNum">     288 </span>                :            :         int     minor_start;    /* start of minor device number */
+<span class="lineNum">     289 </span>                :            :         int     minor_num;      /* number of *possible* devices */
+<span class="lineNum">     290 </span>                :            :         int     num;            /* number of devices allocated */
+<span class="lineNum">     291 </span>                :            :         short   type;           /* type of tty driver */
+<span class="lineNum">     292 </span>                :            :         short   subtype;        /* subtype of tty driver */
+<span class="lineNum">     293 </span>                :            :         struct ktermios init_termios; /* Initial termios */
+<span class="lineNum">     294 </span>                :            :         int     flags;          /* tty driver flags */
+<span class="lineNum">     295 </span>                :            :         struct proc_dir_entry *proc_entry; /* /proc fs entry */
+<span class="lineNum">     296 </span>                :            :         struct tty_driver *other; /* only used for the PTY driver */
+<span class="lineNum">     297 </span>                :            : 
+<span class="lineNum">     298 </span>                :            :         /*
+<span class="lineNum">     299 </span>                :            :          * Pointer to the tty data structures
+<span class="lineNum">     300 </span>                :            :          */
+<span class="lineNum">     301 </span>                :            :         struct tty_struct **ttys;
+<span class="lineNum">     302 </span>                :            :         struct ktermios **termios;
+<span class="lineNum">     303 </span>                :            :         struct ktermios **termios_locked;
+<span class="lineNum">     304 </span>                :            :         void *driver_state;
+<span class="lineNum">     305 </span>                :            : 
+<span class="lineNum">     306 </span>                :            :         /*
+<span class="lineNum">     307 </span>                :            :          * Driver methods
+<span class="lineNum">     308 </span>                :            :          */
+<span class="lineNum">     309 </span>                :            : 
+<span class="lineNum">     310 </span>                :            :         const struct tty_operations *ops;
+<span class="lineNum">     311 </span>                :            :         struct list_head tty_drivers;
+<span class="lineNum">     312 </span>                :            : };
+<span class="lineNum">     313 </span>                :            : 
+<span class="lineNum">     314 </span>                :            : extern struct list_head tty_drivers;
+<span class="lineNum">     315 </span>                :            : 
+<span class="lineNum">     316 </span>                :            : extern struct tty_driver *alloc_tty_driver(int lines);
+<span class="lineNum">     317 </span>                :            : extern void put_tty_driver(struct tty_driver *driver);
+<span class="lineNum">     318 </span>                :            : extern void tty_set_operations(struct tty_driver *driver,
+<span class="lineNum">     319 </span>                :            :                         const struct tty_operations *op);
+<span class="lineNum">     320 </span>                :            : extern struct tty_driver *tty_find_polling_driver(char *name, int *line);
+<span class="lineNum">     321 </span>                :            : 
+<span class="lineNum">     322 </span>                :            : extern void tty_driver_kref_put(struct tty_driver *driver);
+<span class="lineNum">     323 </span>                :            : 
+<span class="lineNum">     324 </span>                :            : static inline struct tty_driver *tty_driver_kref_get(struct tty_driver *d)
+<span class="lineNum">     325 </span>                :            : {
+<span class="lineNum">     326 </span>                :<span class="lineNoCov">          0 :         kref_get(&amp;d-&gt;kref);</span>
+<span class="lineNum">     327 </span>                :<span class="lineNoCov">          0 :         return d;</span>
+<span class="lineNum">     328 </span>                :            : }
+<span class="lineNum">     329 </span>                :            : 
+<span class="lineNum">     330 </span>                :            : /* tty driver magic number */
+<span class="lineNum">     331 </span>                :            : #define TTY_DRIVER_MAGIC                0x5402
+<span class="lineNum">     332 </span>                :            : 
+<span class="lineNum">     333 </span>                :            : /*
+<span class="lineNum">     334 </span>                :            :  * tty driver flags
+<span class="lineNum">     335 </span>                :            :  * 
+<span class="lineNum">     336 </span>                :            :  * TTY_DRIVER_RESET_TERMIOS --- requests the tty layer to reset the
+<span class="lineNum">     337 </span>                :            :  *      termios setting when the last process has closed the device.
+<span class="lineNum">     338 </span>                :            :  *      Used for PTY's, in particular.
+<span class="lineNum">     339 </span>                :            :  * 
+<span class="lineNum">     340 </span>                :            :  * TTY_DRIVER_REAL_RAW --- if set, indicates that the driver will
+<span class="lineNum">     341 </span>                :            :  *      guarantee never not to set any special character handling
+<span class="lineNum">     342 </span>                :            :  *      flags if ((IGNBRK || (!BRKINT &amp;&amp; !PARMRK)) &amp;&amp; (IGNPAR ||
+<span class="lineNum">     343 </span>                :            :  *      !INPCK)).  That is, if there is no reason for the driver to
+<span class="lineNum">     344 </span>                :            :  *      send notifications of parity and break characters up to the
+<span class="lineNum">     345 </span>                :            :  *      line driver, it won't do so.  This allows the line driver to
+<span class="lineNum">     346 </span>                :            :  *      optimize for this case if this flag is set.  (Note that there
+<span class="lineNum">     347 </span>                :            :  *      is also a promise, if the above case is true, not to signal
+<span class="lineNum">     348 </span>                :            :  *      overruns, either.)
+<span class="lineNum">     349 </span>                :            :  *
+<span class="lineNum">     350 </span>                :            :  * TTY_DRIVER_DYNAMIC_DEV --- if set, the individual tty devices need
+<span class="lineNum">     351 </span>                :            :  *      to be registered with a call to tty_register_driver() when the
+<span class="lineNum">     352 </span>                :            :  *      device is found in the system and unregistered with a call to
+<span class="lineNum">     353 </span>                :            :  *      tty_unregister_device() so the devices will be show up
+<span class="lineNum">     354 </span>                :            :  *      properly in sysfs.  If not set, driver-&gt;num entries will be
+<span class="lineNum">     355 </span>                :            :  *      created by the tty core in sysfs when tty_register_driver() is
+<span class="lineNum">     356 </span>                :            :  *      called.  This is to be used by drivers that have tty devices
+<span class="lineNum">     357 </span>                :            :  *      that can appear and disappear while the main tty driver is
+<span class="lineNum">     358 </span>                :            :  *      registered with the tty core.
+<span class="lineNum">     359 </span>                :            :  *
+<span class="lineNum">     360 </span>                :            :  * TTY_DRIVER_DEVPTS_MEM -- don't use the standard arrays, instead
+<span class="lineNum">     361 </span>                :            :  *      use dynamic memory keyed through the devpts filesystem.  This
+<span class="lineNum">     362 </span>                :            :  *      is only applicable to the pty driver.
+<span class="lineNum">     363 </span>                :            :  *
+<span class="lineNum">     364 </span>                :            :  * TTY_DRIVER_HARDWARE_BREAK -- hardware handles break signals. Pass
+<span class="lineNum">     365 </span>                :            :  *      the requested timeout to the caller instead of using a simple
+<span class="lineNum">     366 </span>                :            :  *      on/off interface.
+<span class="lineNum">     367 </span>                :            :  *
+<span class="lineNum">     368 </span>                :            :  */
+<span class="lineNum">     369 </span>                :            : #define TTY_DRIVER_INSTALLED            0x0001
+<span class="lineNum">     370 </span>                :            : #define TTY_DRIVER_RESET_TERMIOS        0x0002
+<span class="lineNum">     371 </span>                :            : #define TTY_DRIVER_REAL_RAW             0x0004
+<span class="lineNum">     372 </span>                :            : #define TTY_DRIVER_DYNAMIC_DEV          0x0008
+<span class="lineNum">     373 </span>                :            : #define TTY_DRIVER_DEVPTS_MEM           0x0010
+<span class="lineNum">     374 </span>                :            : #define TTY_DRIVER_HARDWARE_BREAK       0x0020
+<span class="lineNum">     375 </span>                :            : 
+<span class="lineNum">     376 </span>                :            : /* tty driver types */
+<span class="lineNum">     377 </span>                :            : #define TTY_DRIVER_TYPE_SYSTEM          0x0001
+<span class="lineNum">     378 </span>                :            : #define TTY_DRIVER_TYPE_CONSOLE         0x0002
+<span class="lineNum">     379 </span>                :            : #define TTY_DRIVER_TYPE_SERIAL          0x0003
+<span class="lineNum">     380 </span>                :            : #define TTY_DRIVER_TYPE_PTY             0x0004
+<span class="lineNum">     381 </span>                :            : #define TTY_DRIVER_TYPE_SCC             0x0005  /* scc driver */
+<span class="lineNum">     382 </span>                :            : #define TTY_DRIVER_TYPE_SYSCONS         0x0006
+<span class="lineNum">     383 </span>                :            : 
+<span class="lineNum">     384 </span>                :            : /* system subtypes (magic, used by tty_io.c) */
+<span class="lineNum">     385 </span>                :            : #define SYSTEM_TYPE_TTY                 0x0001
+<span class="lineNum">     386 </span>                :            : #define SYSTEM_TYPE_CONSOLE             0x0002
+<span class="lineNum">     387 </span>                :            : #define SYSTEM_TYPE_SYSCONS             0x0003
+<span class="lineNum">     388 </span>                :            : #define SYSTEM_TYPE_SYSPTMX             0x0004
+<span class="lineNum">     389 </span>                :            : 
+<span class="lineNum">     390 </span>                :            : /* pty subtypes (magic, used by tty_io.c) */
+<span class="lineNum">     391 </span>                :            : #define PTY_TYPE_MASTER                 0x0001
+<span class="lineNum">     392 </span>                :            : #define PTY_TYPE_SLAVE                  0x0002
+<span class="lineNum">     393 </span>                :            : 
+<span class="lineNum">     394 </span>                :            : /* serial subtype definitions */
+<span class="lineNum">     395 </span>                :            : #define SERIAL_TYPE_NORMAL      1
+<span class="lineNum">     396 </span>                :            : 
+<span class="lineNum">     397 </span>                :            : #endif /* #ifdef _LINUX_TTY_DRIVER_H */
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.8</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

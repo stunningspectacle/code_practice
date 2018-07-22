@@ -1,0 +1,2 @@
+F {lockfile} {lockfile.c:5}
+C {lockfile} {lockfile.c:14} {fcntl}

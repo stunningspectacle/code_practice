@@ -1,0 +1,26 @@
+F {main} {badexit2.c:36}
+C {main} {badexit2.c:56} {exit}
+C {main} {badexit2.c:56} {printfoo}
+C {main} {badexit2.c:56} {sleep}
+C {main} {badexit2.c:56} {err_exit}
+C {main} {badexit2.c:56} {pthread_create}
+C {main} {badexit2.c:56} {__builtin_puts}
+C {main} {badexit2.c:56} {sleep}
+C {main} {badexit2.c:56} {err_exit}
+C {main} {badexit2.c:56} {pthread_join}
+C {main} {badexit2.c:56} {err_exit}
+C {main} {badexit2.c:56} {pthread_create}
+F {thr_fn2} {badexit2.c:29}
+C {thr_fn2} {badexit2.c:56} {pthread_exit}
+C {thr_fn2} {badexit2.c:56} {printf}
+C {thr_fn2} {badexit2.c:56} {pthread_self}
+F {thr_fn1} {badexit2.c:20}
+C {thr_fn1} {badexit2.c:56} {pthread_exit}
+C {thr_fn1} {badexit2.c:56} {printfoo}
+F {printfoo} {badexit2.c:9}
+C {printfoo} {badexit2.c:56} {printf}
+C {printfoo} {badexit2.c:56} {printf}
+C {printfoo} {badexit2.c:56} {printf}
+C {printfoo} {badexit2.c:56} {printf}
+C {printfoo} {badexit2.c:56} {printf}
+C {printfoo} {badexit2.c:56} {printf}

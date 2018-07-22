@@ -1,0 +1,7 @@
+F {recv_fd} {recvfd.c:21}
+C {recv_fd} {recvfd.c:74} {err_dump}
+C {recv_fd} {recvfd.c:74} {err_dump}
+C {recv_fd} {recvfd.c:74} {err_ret}
+C {recv_fd} {recvfd.c:74} {err_ret}
+C {recv_fd} {recvfd.c:74} {recvmsg}
+C {recv_fd} {recvfd.c:74} {malloc}

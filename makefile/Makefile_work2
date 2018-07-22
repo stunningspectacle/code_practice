@@ -1,0 +1,24 @@
+TARGETS := main main1 main2
+OUT := out
+#OBJS := $(patsubst %.c, $(OUT)/%.o, $(wildcard *.c))
+#OBJS := $(patsubst %, $(OUT)/%, $(TARGET))
+OUT_TARGETS := $(patsubst %, $(OUT)/%, $(TARGETS))
+
+all: $(OUT) $(OUT_TARGETS)
+
+$(OUT)/%: %.c
+	@echo $(OUT_TARGETS)
+	@#@echo $(basename $@)
+	@#@echo $(notdir $@)
+	@#@echo $(suffix $@)
+	@#gcc -c -o $@ $<
+	@#ld --eh-frame-hdr -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -o $(basename $@) -L/usr/lib32/../lib -L/usr/lib/gcc/x86_64-linux-gnu/4.6 -L/usr/lib/gcc/x86_64-linux-gnu/4.6/../../../x86_64-linux-gnu -L/usr/lib/gcc/x86_64-linux-gnu/4.6/../../../../lib -L/lib/x86_64-linux-gnu -L/lib/../lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib32 -L/usr/lib/gcc/x86_64-linux-gnu/4.6/../../.. $@  -lc
+	@#gcc -o $(basename $@) $<
+	gcc -o $@ $<
+
+$(OUT):
+	mkdir $@
+
+.PHONY: clean
+clean:
+	rm -rf $(OUT)

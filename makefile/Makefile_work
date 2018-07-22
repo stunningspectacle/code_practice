@@ -1,0 +1,22 @@
+CC := gcc
+
+ROOT_DIR := $(dir $(abspath $(firstword MAKEFILE_LIST)))
+OUT := $(ROOT_DIR)out
+SRC := $(wildcard *.c)
+OBJS := $(patsubst %.c, $(OUT)/%.o, $(SRC))
+
+all: $(OUT) $(OBJS) 
+
+$(OUT)/%.o: %.c
+	@echo $(basename $@)
+	@#$(CC) -c -o $@ $<
+	$(CC) -o $(basename $@) $<
+
+$(OUT):
+	mkdir $@
+
+.PHONY: clean
+clean:
+	rm -rf $(OUT)
+
+

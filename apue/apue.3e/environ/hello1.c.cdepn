@@ -1,0 +1,2 @@
+F {main} {hello1.c:3}
+C {main} {hello1.c:6} {__builtin_puts}

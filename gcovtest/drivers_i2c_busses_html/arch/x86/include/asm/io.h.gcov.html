@@ -1,0 +1,439 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+  <title>LCOV - drivers_i2c_busses.info - arch/x86/include/asm/io.h</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">arch/x86/include/asm</a> - io.h<span style="font-size: 80%;"> (source / <a href="io.h.func.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">drivers_i2c_busses.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2011-04-26</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="headerItem">Branches:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">           Branch data     Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>                :            : #ifndef _ASM_X86_IO_H</a>
+<span class="lineNum">       2 </span>                :            : #define _ASM_X86_IO_H
+<span class="lineNum">       3 </span>                :            : 
+<span class="lineNum">       4 </span>                :            : /*
+<span class="lineNum">       5 </span>                :            :  * This file contains the definitions for the x86 IO instructions
+<span class="lineNum">       6 </span>                :            :  * inb/inw/inl/outb/outw/outl and the &quot;string versions&quot; of the same
+<span class="lineNum">       7 </span>                :            :  * (insb/insw/insl/outsb/outsw/outsl). You can also use &quot;pausing&quot;
+<span class="lineNum">       8 </span>                :            :  * versions of the single-IO instructions (inb_p/inw_p/..).
+<span class="lineNum">       9 </span>                :            :  *
+<span class="lineNum">      10 </span>                :            :  * This file is not meant to be obfuscating: it's just complicated
+<span class="lineNum">      11 </span>                :            :  * to (a) handle it all in a way that makes gcc able to optimize it
+<span class="lineNum">      12 </span>                :            :  * as well as possible and (b) trying to avoid writing the same thing
+<span class="lineNum">      13 </span>                :            :  * over and over again with slight variations and possibly making a
+<span class="lineNum">      14 </span>                :            :  * mistake somewhere.
+<span class="lineNum">      15 </span>                :            :  */
+<span class="lineNum">      16 </span>                :            : 
+<span class="lineNum">      17 </span>                :            : /*
+<span class="lineNum">      18 </span>                :            :  * Thanks to James van Artsdalen for a better timing-fix than
+<span class="lineNum">      19 </span>                :            :  * the two short jumps: using outb's to a nonexistent port seems
+<span class="lineNum">      20 </span>                :            :  * to guarantee better timings even on fast machines.
+<span class="lineNum">      21 </span>                :            :  *
+<span class="lineNum">      22 </span>                :            :  * On the other hand, I'd like to be sure of a non-existent port:
+<span class="lineNum">      23 </span>                :            :  * I feel a bit unsafe about using 0x80 (should be safe, though)
+<span class="lineNum">      24 </span>                :            :  *
+<span class="lineNum">      25 </span>                :            :  *              Linus
+<span class="lineNum">      26 </span>                :            :  */
+<span class="lineNum">      27 </span>                :            : 
+<span class="lineNum">      28 </span>                :            :  /*
+<span class="lineNum">      29 </span>                :            :   *  Bit simplified and optimized by Jan Hubicka
+<span class="lineNum">      30 </span>                :            :   *  Support of BIGMEM added by Gerhard Wichert, Siemens AG, July 1999.
+<span class="lineNum">      31 </span>                :            :   *
+<span class="lineNum">      32 </span>                :            :   *  isa_memset_io, isa_memcpy_fromio, isa_memcpy_toio added,
+<span class="lineNum">      33 </span>                :            :   *  isa_read[wl] and isa_write[wl] fixed
+<span class="lineNum">      34 </span>                :            :   *  - Arnaldo Carvalho de Melo &lt;acme@conectiva.com.br&gt;
+<span class="lineNum">      35 </span>                :            :   */
+<span class="lineNum">      36 </span>                :            : 
+<span class="lineNum">      37 </span>                :            : #define ARCH_HAS_IOREMAP_WC
+<span class="lineNum">      38 </span>                :            : 
+<span class="lineNum">      39 </span>                :            : #include &lt;linux/string.h&gt;
+<span class="lineNum">      40 </span>                :            : #include &lt;linux/compiler.h&gt;
+<span class="lineNum">      41 </span>                :            : #include &lt;asm-generic/int-ll64.h&gt;
+<span class="lineNum">      42 </span>                :            : #include &lt;asm/page.h&gt;
+<span class="lineNum">      43 </span>                :            : 
+<span class="lineNum">      44 </span>                :            : #define build_mmio_read(name, size, type, reg, barrier) \
+<span class="lineNum">      45 </span>                :            : static inline type name(const volatile void __iomem *addr) \
+<span class="lineNum">      46 </span>                :            : { type ret; asm volatile(&quot;mov&quot; size &quot; %1,%0&quot;:reg (ret) \
+<span class="lineNum">      47 </span>                :            : :&quot;m&quot; (*(volatile type __force *)addr) barrier); return ret; }
+<span class="lineNum">      48 </span>                :            : 
+<span class="lineNum">      49 </span>                :            : #define build_mmio_write(name, size, type, reg, barrier) \
+<span class="lineNum">      50 </span>                :            : static inline void name(type val, volatile void __iomem *addr) \
+<span class="lineNum">      51 </span>                :            : { asm volatile(&quot;mov&quot; size &quot; %0,%1&quot;: :reg (val), \
+<span class="lineNum">      52 </span>                :            : &quot;m&quot; (*(volatile type __force *)addr) barrier); }
+<span class="lineNum">      53 </span>                :            : 
+<span class="lineNum">      54 </span>                :            : build_mmio_read(readb, &quot;b&quot;, unsigned char, &quot;=q&quot;, :&quot;memory&quot;)
+<span class="lineNum">      55 </span>                :            : build_mmio_read(readw, &quot;w&quot;, unsigned short, &quot;=r&quot;, :&quot;memory&quot;)
+<span class="lineNum">      56 </span>                :<span class="lineCov">     103244 : build_mmio_read(readl, &quot;l&quot;, unsigned int, &quot;=r&quot;, :&quot;memory&quot;)</span>
+<span class="lineNum">      57 </span>                :            : 
+<span class="lineNum">      58 </span>                :            : build_mmio_read(__readb, &quot;b&quot;, unsigned char, &quot;=q&quot;, )
+<span class="lineNum">      59 </span>                :            : build_mmio_read(__readw, &quot;w&quot;, unsigned short, &quot;=r&quot;, )
+<span class="lineNum">      60 </span>                :            : build_mmio_read(__readl, &quot;l&quot;, unsigned int, &quot;=r&quot;, )
+<span class="lineNum">      61 </span>                :            : 
+<span class="lineNum">      62 </span>                :            : build_mmio_write(writeb, &quot;b&quot;, unsigned char, &quot;q&quot;, :&quot;memory&quot;)
+<span class="lineNum">      63 </span>                :            : build_mmio_write(writew, &quot;w&quot;, unsigned short, &quot;r&quot;, :&quot;memory&quot;)
+<span class="lineNum">      64 </span>                :<span class="lineCov">      55431 : build_mmio_write(writel, &quot;l&quot;, unsigned int, &quot;r&quot;, :&quot;memory&quot;)</span>
+<span class="lineNum">      65 </span>                :            : 
+<span class="lineNum">      66 </span>                :            : build_mmio_write(__writeb, &quot;b&quot;, unsigned char, &quot;q&quot;, )
+<span class="lineNum">      67 </span>                :            : build_mmio_write(__writew, &quot;w&quot;, unsigned short, &quot;r&quot;, )
+<span class="lineNum">      68 </span>                :            : build_mmio_write(__writel, &quot;l&quot;, unsigned int, &quot;r&quot;, )
+<span class="lineNum">      69 </span>                :            : 
+<span class="lineNum">      70 </span>                :            : #define readb_relaxed(a) __readb(a)
+<span class="lineNum">      71 </span>                :            : #define readw_relaxed(a) __readw(a)
+<span class="lineNum">      72 </span>                :            : #define readl_relaxed(a) __readl(a)
+<span class="lineNum">      73 </span>                :            : #define __raw_readb __readb
+<span class="lineNum">      74 </span>                :            : #define __raw_readw __readw
+<span class="lineNum">      75 </span>                :            : #define __raw_readl __readl
+<span class="lineNum">      76 </span>                :            : 
+<span class="lineNum">      77 </span>                :            : #define __raw_writeb __writeb
+<span class="lineNum">      78 </span>                :            : #define __raw_writew __writew
+<span class="lineNum">      79 </span>                :            : #define __raw_writel __writel
+<span class="lineNum">      80 </span>                :            : 
+<span class="lineNum">      81 </span>                :            : #define mmiowb() barrier()
+<span class="lineNum">      82 </span>                :            : 
+<span class="lineNum">      83 </span>                :            : #ifdef CONFIG_X86_64
+<span class="lineNum">      84 </span>                :            : 
+<span class="lineNum">      85 </span>                :            : build_mmio_read(readq, &quot;q&quot;, unsigned long, &quot;=r&quot;, :&quot;memory&quot;)
+<span class="lineNum">      86 </span>                :            : build_mmio_write(writeq, &quot;q&quot;, unsigned long, &quot;r&quot;, :&quot;memory&quot;)
+<span class="lineNum">      87 </span>                :            : 
+<span class="lineNum">      88 </span>                :            : #else
+<span class="lineNum">      89 </span>                :            : 
+<span class="lineNum">      90 </span>                :            : static inline __u64 readq(const volatile void __iomem *addr)
+<span class="lineNum">      91 </span>                :            : {
+<span class="lineNum">      92 </span>                :            :         const volatile u32 __iomem *p = addr;
+<span class="lineNum">      93 </span>                :            :         u32 low, high;
+<span class="lineNum">      94 </span>                :            : 
+<span class="lineNum">      95 </span>                :            :         low = readl(p);
+<span class="lineNum">      96 </span>                :            :         high = readl(p + 1);
+<span class="lineNum">      97 </span>                :            : 
+<span class="lineNum">      98 </span>                :            :         return low + ((u64)high &lt;&lt; 32);
+<span class="lineNum">      99 </span>                :            : }
+<span class="lineNum">     100 </span>                :            : 
+<span class="lineNum">     101 </span>                :            : static inline void writeq(__u64 val, volatile void __iomem *addr)
+<span class="lineNum">     102 </span>                :            : {
+<span class="lineNum">     103 </span>                :            :         writel(val, addr);
+<span class="lineNum">     104 </span>                :            :         writel(val &gt;&gt; 32, addr+4);
+<span class="lineNum">     105 </span>                :            : }
+<span class="lineNum">     106 </span>                :            : 
+<span class="lineNum">     107 </span>                :            : #endif
+<span class="lineNum">     108 </span>                :            : 
+<span class="lineNum">     109 </span>                :            : #define readq_relaxed(a)        readq(a)
+<span class="lineNum">     110 </span>                :            : 
+<span class="lineNum">     111 </span>                :            : #define __raw_readq(a)          readq(a)
+<span class="lineNum">     112 </span>                :            : #define __raw_writeq(val, addr) writeq(val, addr)
+<span class="lineNum">     113 </span>                :            : 
+<span class="lineNum">     114 </span>                :            : /* Let people know that we have them */
+<span class="lineNum">     115 </span>                :            : #define readq                   readq
+<span class="lineNum">     116 </span>                :            : #define writeq                  writeq
+<span class="lineNum">     117 </span>                :            : 
+<span class="lineNum">     118 </span>                :            : /**
+<span class="lineNum">     119 </span>                :            :  *      virt_to_phys    -       map virtual addresses to physical
+<span class="lineNum">     120 </span>                :            :  *      @address: address to remap
+<span class="lineNum">     121 </span>                :            :  *
+<span class="lineNum">     122 </span>                :            :  *      The returned physical address is the physical (CPU) mapping for
+<span class="lineNum">     123 </span>                :            :  *      the memory address given. It is only valid to use this function on
+<span class="lineNum">     124 </span>                :            :  *      addresses directly mapped or allocated via kmalloc.
+<span class="lineNum">     125 </span>                :            :  *
+<span class="lineNum">     126 </span>                :            :  *      This function does not give bus mappings for DMA transfers. In
+<span class="lineNum">     127 </span>                :            :  *      almost all conceivable cases a device driver should not be using
+<span class="lineNum">     128 </span>                :            :  *      this function
+<span class="lineNum">     129 </span>                :            :  */
+<span class="lineNum">     130 </span>                :            : 
+<span class="lineNum">     131 </span>                :            : static inline phys_addr_t virt_to_phys(volatile void *address)
+<span class="lineNum">     132 </span>                :            : {
+<span class="lineNum">     133 </span>                :            :         return __pa(address);
+<span class="lineNum">     134 </span>                :            : }
+<span class="lineNum">     135 </span>                :            : 
+<span class="lineNum">     136 </span>                :            : /**
+<span class="lineNum">     137 </span>                :            :  *      phys_to_virt    -       map physical address to virtual
+<span class="lineNum">     138 </span>                :            :  *      @address: address to remap
+<span class="lineNum">     139 </span>                :            :  *
+<span class="lineNum">     140 </span>                :            :  *      The returned virtual address is a current CPU mapping for
+<span class="lineNum">     141 </span>                :            :  *      the memory address given. It is only valid to use this function on
+<span class="lineNum">     142 </span>                :            :  *      addresses that have a kernel mapping
+<span class="lineNum">     143 </span>                :            :  *
+<span class="lineNum">     144 </span>                :            :  *      This function does not handle bus mappings for DMA transfers. In
+<span class="lineNum">     145 </span>                :            :  *      almost all conceivable cases a device driver should not be using
+<span class="lineNum">     146 </span>                :            :  *      this function
+<span class="lineNum">     147 </span>                :            :  */
+<span class="lineNum">     148 </span>                :            : 
+<span class="lineNum">     149 </span>                :            : static inline void *phys_to_virt(phys_addr_t address)
+<span class="lineNum">     150 </span>                :            : {
+<span class="lineNum">     151 </span>                :            :         return __va(address);
+<span class="lineNum">     152 </span>                :            : }
+<span class="lineNum">     153 </span>                :            : 
+<span class="lineNum">     154 </span>                :            : /*
+<span class="lineNum">     155 </span>                :            :  * Change &quot;struct page&quot; to physical address.
+<span class="lineNum">     156 </span>                :            :  */
+<span class="lineNum">     157 </span>                :            : #define page_to_phys(page)    ((dma_addr_t)page_to_pfn(page) &lt;&lt; PAGE_SHIFT)
+<span class="lineNum">     158 </span>                :            : 
+<span class="lineNum">     159 </span>                :            : /*
+<span class="lineNum">     160 </span>                :            :  * ISA I/O bus memory addresses are 1:1 with the physical address.
+<span class="lineNum">     161 </span>                :            :  * However, we truncate the address to unsigned int to avoid undesirable
+<span class="lineNum">     162 </span>                :            :  * promitions in legacy drivers.
+<span class="lineNum">     163 </span>                :            :  */
+<span class="lineNum">     164 </span>                :            : static inline unsigned int isa_virt_to_bus(volatile void *address)
+<span class="lineNum">     165 </span>                :            : {
+<span class="lineNum">     166 </span>                :            :         return (unsigned int)virt_to_phys(address);
+<span class="lineNum">     167 </span>                :            : }
+<span class="lineNum">     168 </span>                :            : #define isa_page_to_bus(page)   ((unsigned int)page_to_phys(page))
+<span class="lineNum">     169 </span>                :            : #define isa_bus_to_virt         phys_to_virt
+<span class="lineNum">     170 </span>                :            : 
+<span class="lineNum">     171 </span>                :            : /*
+<span class="lineNum">     172 </span>                :            :  * However PCI ones are not necessarily 1:1 and therefore these interfaces
+<span class="lineNum">     173 </span>                :            :  * are forbidden in portable PCI drivers.
+<span class="lineNum">     174 </span>                :            :  *
+<span class="lineNum">     175 </span>                :            :  * Allow them on x86 for legacy drivers, though.
+<span class="lineNum">     176 </span>                :            :  */
+<span class="lineNum">     177 </span>                :            : #define virt_to_bus virt_to_phys
+<span class="lineNum">     178 </span>                :            : #define bus_to_virt phys_to_virt
+<span class="lineNum">     179 </span>                :            : 
+<span class="lineNum">     180 </span>                :            : /**
+<span class="lineNum">     181 </span>                :            :  * ioremap     -   map bus memory into CPU space
+<span class="lineNum">     182 </span>                :            :  * @offset:    bus address of the memory
+<span class="lineNum">     183 </span>                :            :  * @size:      size of the resource to map
+<span class="lineNum">     184 </span>                :            :  *
+<span class="lineNum">     185 </span>                :            :  * ioremap performs a platform specific sequence of operations to
+<span class="lineNum">     186 </span>                :            :  * make bus memory CPU accessible via the readb/readw/readl/writeb/
+<span class="lineNum">     187 </span>                :            :  * writew/writel functions and the other mmio helpers. The returned
+<span class="lineNum">     188 </span>                :            :  * address is not guaranteed to be usable directly as a virtual
+<span class="lineNum">     189 </span>                :            :  * address.
+<span class="lineNum">     190 </span>                :            :  *
+<span class="lineNum">     191 </span>                :            :  * If the area you are trying to map is a PCI BAR you should have a
+<span class="lineNum">     192 </span>                :            :  * look at pci_iomap().
+<span class="lineNum">     193 </span>                :            :  */
+<span class="lineNum">     194 </span>                :            : extern void __iomem *ioremap_nocache(resource_size_t offset, unsigned long size);
+<span class="lineNum">     195 </span>                :            : extern void __iomem *ioremap_cache(resource_size_t offset, unsigned long size);
+<span class="lineNum">     196 </span>                :            : extern void __iomem *ioremap_prot(resource_size_t offset, unsigned long size,
+<span class="lineNum">     197 </span>                :            :                                 unsigned long prot_val);
+<span class="lineNum">     198 </span>                :            : 
+<span class="lineNum">     199 </span>                :            : /*
+<span class="lineNum">     200 </span>                :            :  * The default ioremap() behavior is non-cached:
+<span class="lineNum">     201 </span>                :            :  */
+<span class="lineNum">     202 </span>                :            : static inline void __iomem *ioremap(resource_size_t offset, unsigned long size)
+<span class="lineNum">     203 </span>                :            : {
+<span class="lineNum">     204 </span>                :            :         return ioremap_nocache(offset, size);
+<span class="lineNum">     205 </span>                :            : }
+<span class="lineNum">     206 </span>                :            : 
+<span class="lineNum">     207 </span>                :            : extern void iounmap(volatile void __iomem *addr);
+<span class="lineNum">     208 </span>                :            : 
+<span class="lineNum">     209 </span>                :            : 
+<span class="lineNum">     210 </span>                :            : #ifdef __KERNEL__
+<span class="lineNum">     211 </span>                :            : 
+<span class="lineNum">     212 </span>                :            : #include &lt;asm-generic/iomap.h&gt;
+<span class="lineNum">     213 </span>                :            : 
+<span class="lineNum">     214 </span>                :            : #include &lt;linux/vmalloc.h&gt;
+<span class="lineNum">     215 </span>                :            : 
+<span class="lineNum">     216 </span>                :            : /*
+<span class="lineNum">     217 </span>                :            :  * Convert a virtual cached pointer to an uncached pointer
+<span class="lineNum">     218 </span>                :            :  */
+<span class="lineNum">     219 </span>                :            : #define xlate_dev_kmem_ptr(p)   p
+<span class="lineNum">     220 </span>                :            : 
+<span class="lineNum">     221 </span>                :            : static inline void
+<span class="lineNum">     222 </span>                :            : memset_io(volatile void __iomem *addr, unsigned char val, size_t count)
+<span class="lineNum">     223 </span>                :            : {
+<span class="lineNum">     224 </span>                :            :         memset((void __force *)addr, val, count);
+<span class="lineNum">     225 </span>                :            : }
+<span class="lineNum">     226 </span>                :            : 
+<span class="lineNum">     227 </span>                :            : static inline void
+<span class="lineNum">     228 </span>                :            : memcpy_fromio(void *dst, const volatile void __iomem *src, size_t count)
+<span class="lineNum">     229 </span>                :            : {
+<span class="lineNum">     230 </span>                :            :         memcpy(dst, (const void __force *)src, count);
+<span class="lineNum">     231 </span>                :            : }
+<span class="lineNum">     232 </span>                :            : 
+<span class="lineNum">     233 </span>                :            : static inline void
+<span class="lineNum">     234 </span>                :            : memcpy_toio(volatile void __iomem *dst, const void *src, size_t count)
+<span class="lineNum">     235 </span>                :            : {
+<span class="lineNum">     236 </span>                :            :         memcpy((void __force *)dst, src, count);
+<span class="lineNum">     237 </span>                :            : }
+<span class="lineNum">     238 </span>                :            : 
+<span class="lineNum">     239 </span>                :            : /*
+<span class="lineNum">     240 </span>                :            :  * ISA space is 'always mapped' on a typical x86 system, no need to
+<span class="lineNum">     241 </span>                :            :  * explicitly ioremap() it. The fact that the ISA IO space is mapped
+<span class="lineNum">     242 </span>                :            :  * to PAGE_OFFSET is pure coincidence - it does not mean ISA values
+<span class="lineNum">     243 </span>                :            :  * are physical addresses. The following constant pointer can be
+<span class="lineNum">     244 </span>                :            :  * used as the IO-area pointer (it can be iounmapped as well, so the
+<span class="lineNum">     245 </span>                :            :  * analogy with PCI is quite large):
+<span class="lineNum">     246 </span>                :            :  */
+<span class="lineNum">     247 </span>                :            : #define __ISA_IO_base ((char __iomem *)(PAGE_OFFSET))
+<span class="lineNum">     248 </span>                :            : 
+<span class="lineNum">     249 </span>                :            : /*
+<span class="lineNum">     250 </span>                :            :  *      Cache management
+<span class="lineNum">     251 </span>                :            :  *
+<span class="lineNum">     252 </span>                :            :  *      This needed for two cases
+<span class="lineNum">     253 </span>                :            :  *      1. Out of order aware processors
+<span class="lineNum">     254 </span>                :            :  *      2. Accidentally out of order processors (PPro errata #51)
+<span class="lineNum">     255 </span>                :            :  */
+<span class="lineNum">     256 </span>                :            : 
+<span class="lineNum">     257 </span>                :            : static inline void flush_write_buffers(void)
+<span class="lineNum">     258 </span>                :            : {
+<span class="lineNum">     259 </span>                :            : #if defined(CONFIG_X86_OOSTORE) || defined(CONFIG_X86_PPRO_FENCE)
+<span class="lineNum">     260 </span>                :            :         asm volatile(&quot;lock; addl $0,0(%%esp)&quot;: : :&quot;memory&quot;);
+<span class="lineNum">     261 </span>                :            : #endif
+<span class="lineNum">     262 </span>                :            : }
+<span class="lineNum">     263 </span>                :            : 
+<span class="lineNum">     264 </span>                :            : #endif /* __KERNEL__ */
+<span class="lineNum">     265 </span>                :            : 
+<span class="lineNum">     266 </span>                :            : extern void native_io_delay(void);
+<span class="lineNum">     267 </span>                :            : 
+<span class="lineNum">     268 </span>                :            : extern int io_delay_type;
+<span class="lineNum">     269 </span>                :            : extern void io_delay_init(void);
+<span class="lineNum">     270 </span>                :            : 
+<span class="lineNum">     271 </span>                :            : #if defined(CONFIG_PARAVIRT)
+<span class="lineNum">     272 </span>                :            : #include &lt;asm/paravirt.h&gt;
+<span class="lineNum">     273 </span>                :            : #else
+<span class="lineNum">     274 </span>                :            : 
+<span class="lineNum">     275 </span>                :            : static inline void slow_down_io(void)
+<span class="lineNum">     276 </span>                :            : {
+<span class="lineNum">     277 </span>                :            :         native_io_delay();
+<span class="lineNum">     278 </span>                :            : #ifdef REALLY_SLOW_IO
+<span class="lineNum">     279 </span>                :            :         native_io_delay();
+<span class="lineNum">     280 </span>                :            :         native_io_delay();
+<span class="lineNum">     281 </span>                :            :         native_io_delay();
+<span class="lineNum">     282 </span>                :            : #endif
+<span class="lineNum">     283 </span>                :            : }
+<span class="lineNum">     284 </span>                :            : 
+<span class="lineNum">     285 </span>                :            : #endif
+<span class="lineNum">     286 </span>                :            : 
+<span class="lineNum">     287 </span>                :            : #define BUILDIO(bwl, bw, type)                                          \
+<span class="lineNum">     288 </span>                :            : static inline void out##bwl(unsigned type value, int port)              \
+<span class="lineNum">     289 </span>                :            : {                                                                       \
+<span class="lineNum">     290 </span>                :            :         asm volatile(&quot;out&quot; #bwl &quot; %&quot; #bw &quot;0, %w1&quot;                 \
+<span class="lineNum">     291 </span>                :            :                      : : &quot;a&quot;(value), &quot;Nd&quot;(port));                   \
+<span class="lineNum">     292 </span>                :            : }                                                                       \
+<span class="lineNum">     293 </span>                :            :                                                                         \
+<span class="lineNum">     294 </span>                :            : static inline unsigned type in##bwl(int port)                           \
+<span class="lineNum">     295 </span>                :            : {                                                                       \
+<span class="lineNum">     296 </span>                :            :         unsigned type value;                                            \
+<span class="lineNum">     297 </span>                :            :         asm volatile(&quot;in&quot; #bwl &quot; %w1, %&quot; #bw &quot;0&quot;                  \
+<span class="lineNum">     298 </span>                :            :                      : &quot;=a&quot;(value) : &quot;Nd&quot;(port));                   \
+<span class="lineNum">     299 </span>                :            :         return value;                                                   \
+<span class="lineNum">     300 </span>                :            : }                                                                       \
+<span class="lineNum">     301 </span>                :            :                                                                         \
+<span class="lineNum">     302 </span>                :            : static inline void out##bwl##_p(unsigned type value, int port)          \
+<span class="lineNum">     303 </span>                :            : {                                                                       \
+<span class="lineNum">     304 </span>                :            :         out##bwl(value, port);                                          \
+<span class="lineNum">     305 </span>                :            :         slow_down_io();                                                 \
+<span class="lineNum">     306 </span>                :            : }                                                                       \
+<span class="lineNum">     307 </span>                :            :                                                                         \
+<span class="lineNum">     308 </span>                :            : static inline unsigned type in##bwl##_p(int port)                       \
+<span class="lineNum">     309 </span>                :            : {                                                                       \
+<span class="lineNum">     310 </span>                :            :         unsigned type value = in##bwl(port);                            \
+<span class="lineNum">     311 </span>                :            :         slow_down_io();                                                 \
+<span class="lineNum">     312 </span>                :            :         return value;                                                   \
+<span class="lineNum">     313 </span>                :            : }                                                                       \
+<span class="lineNum">     314 </span>                :            :                                                                         \
+<span class="lineNum">     315 </span>                :            : static inline void outs##bwl(int port, const void *addr, unsigned long count) \
+<span class="lineNum">     316 </span>                :            : {                                                                       \
+<span class="lineNum">     317 </span>                :            :         asm volatile(&quot;rep; outs&quot; #bwl                                 \
+<span class="lineNum">     318 </span>                :            :                      : &quot;+S&quot;(addr), &quot;+c&quot;(count) : &quot;d&quot;(port));              \
+<span class="lineNum">     319 </span>                :            : }                                                                       \
+<span class="lineNum">     320 </span>                :            :                                                                         \
+<span class="lineNum">     321 </span>                :            : static inline void ins##bwl(int port, void *addr, unsigned long count)  \
+<span class="lineNum">     322 </span>                :            : {                                                                       \
+<span class="lineNum">     323 </span>                :            :         asm volatile(&quot;rep; ins&quot; #bwl                                  \
+<span class="lineNum">     324 </span>                :            :                      : &quot;+D&quot;(addr), &quot;+c&quot;(count) : &quot;d&quot;(port));              \
+<span class="lineNum">     325 </span>                :            : }
+<span class="lineNum">     326 </span>                :            : 
+<span class="lineNum">     327 </span>                :            : BUILDIO(b, b, char)
+<span class="lineNum">     328 </span>                :            : BUILDIO(w, w, short)
+<span class="lineNum">     329 </span>                :            : BUILDIO(l, , int)
+<span class="lineNum">     330 </span>                :            : 
+<span class="lineNum">     331 </span>                :            : extern void *xlate_dev_mem_ptr(unsigned long phys);
+<span class="lineNum">     332 </span>                :            : extern void unxlate_dev_mem_ptr(unsigned long phys, void *addr);
+<span class="lineNum">     333 </span>                :            : 
+<span class="lineNum">     334 </span>                :            : extern int ioremap_change_attr(unsigned long vaddr, unsigned long size,
+<span class="lineNum">     335 </span>                :            :                                 unsigned long prot_val);
+<span class="lineNum">     336 </span>                :            : extern void __iomem *ioremap_wc(resource_size_t offset, unsigned long size);
+<span class="lineNum">     337 </span>                :            : 
+<span class="lineNum">     338 </span>                :            : /*
+<span class="lineNum">     339 </span>                :            :  * early_ioremap() and early_iounmap() are for temporary early boot-time
+<span class="lineNum">     340 </span>                :            :  * mappings, before the real ioremap() is functional.
+<span class="lineNum">     341 </span>                :            :  * A boot-time mapping is currently limited to at most 16 pages.
+<span class="lineNum">     342 </span>                :            :  */
+<span class="lineNum">     343 </span>                :            : extern void early_ioremap_init(void);
+<span class="lineNum">     344 </span>                :            : extern void early_ioremap_reset(void);
+<span class="lineNum">     345 </span>                :            : extern void __iomem *early_ioremap(resource_size_t phys_addr,
+<span class="lineNum">     346 </span>                :            :                                    unsigned long size);
+<span class="lineNum">     347 </span>                :            : extern void __iomem *early_memremap(resource_size_t phys_addr,
+<span class="lineNum">     348 </span>                :            :                                     unsigned long size);
+<span class="lineNum">     349 </span>                :            : extern void early_iounmap(void __iomem *addr, unsigned long size);
+<span class="lineNum">     350 </span>                :            : extern void fixup_early_ioremap(void);
+<span class="lineNum">     351 </span>                :            : 
+<span class="lineNum">     352 </span>                :            : #define IO_SPACE_LIMIT 0xffff
+<span class="lineNum">     353 </span>                :            : 
+<span class="lineNum">     354 </span>                :            : #endif /* _ASM_X86_IO_H */
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.8</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,39 @@
+F {log_doit} {errorlog.c:107}
+C {log_doit} {errorlog.c:124} {syslog}
+C {log_doit} {errorlog.c:124} {fflush}
+C {log_doit} {errorlog.c:124} {fputs}
+C {log_doit} {errorlog.c:124} {fflush}
+C {log_doit} {errorlog.c:124} {__builtin_memcpy}
+C {log_doit} {errorlog.c:124} {__builtin_strlen}
+C {log_doit} {errorlog.c:124} {snprintf}
+C {log_doit} {errorlog.c:124} {strlen}
+C {log_doit} {errorlog.c:124} {strlen}
+C {log_doit} {errorlog.c:124} {strerror}
+C {log_doit} {errorlog.c:124} {vsnprintf}
+F {log_exit} {errorlog.c:92}
+C {log_exit} {errorlog.c:124} {exit}
+C {log_exit} {errorlog.c:124} {__builtin_va_end}
+C {log_exit} {errorlog.c:124} {log_doit}
+C {log_exit} {errorlog.c:124} {__builtin_va_start}
+F {log_quit} {errorlog.c:76}
+C {log_quit} {errorlog.c:124} {exit}
+C {log_quit} {errorlog.c:124} {__builtin_va_end}
+C {log_quit} {errorlog.c:124} {log_doit}
+C {log_quit} {errorlog.c:124} {__builtin_va_start}
+F {log_msg} {errorlog.c:62}
+C {log_msg} {errorlog.c:124} {__builtin_va_end}
+C {log_msg} {errorlog.c:124} {log_doit}
+C {log_msg} {errorlog.c:124} {__builtin_va_start}
+F {log_sys} {errorlog.c:47}
+C {log_sys} {errorlog.c:124} {exit}
+C {log_sys} {errorlog.c:124} {__builtin_va_end}
+C {log_sys} {errorlog.c:124} {log_doit}
+C {log_sys} {errorlog.c:124} {__errno_location}
+C {log_sys} {errorlog.c:124} {__builtin_va_start}
+F {log_ret} {errorlog.c:33}
+C {log_ret} {errorlog.c:124} {__builtin_va_end}
+C {log_ret} {errorlog.c:124} {log_doit}
+C {log_ret} {errorlog.c:124} {__errno_location}
+C {log_ret} {errorlog.c:124} {__builtin_va_start}
+F {log_open} {errorlog.c:22}
+C {log_open} {errorlog.c:124} {openlog}

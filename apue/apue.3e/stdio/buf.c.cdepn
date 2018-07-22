@@ -1,0 +1,26 @@
+F {buffer_size} {buf.c:62}
+F {is_linebuffered} {buf.c:56}
+F {is_unbuffered} {buf.c:50}
+F {pr_stdio} {buf.c:31}
+C {pr_stdio} {buf.c:65} {printf}
+C {pr_stdio} {buf.c:65} {buffer_size}
+C {pr_stdio} {buf.c:65} {printf}
+C {pr_stdio} {buf.c:65} {printf}
+C {pr_stdio} {buf.c:65} {is_linebuffered}
+C {pr_stdio} {buf.c:65} {printf}
+C {pr_stdio} {buf.c:65} {is_unbuffered}
+C {pr_stdio} {buf.c:65} {printf}
+F {main} {buf.c:9}
+C {main} {buf.c:65} {exit}
+C {main} {buf.c:65} {pr_stdio}
+C {main} {buf.c:65} {err_sys}
+C {main} {buf.c:65} {_IO_getc}
+C {main} {buf.c:65} {err_sys}
+C {main} {buf.c:65} {fopen}
+C {main} {buf.c:65} {pr_stdio}
+C {main} {buf.c:65} {pr_stdio}
+C {main} {buf.c:65} {pr_stdio}
+C {main} {buf.c:65} {__builtin_fwrite}
+C {main} {buf.c:65} {err_sys}
+C {main} {buf.c:65} {getchar}
+C {main} {buf.c:65} {__builtin_fwrite}

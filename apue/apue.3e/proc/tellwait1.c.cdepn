@@ -1,0 +1,9 @@
+F {charatatime} {tellwait1.c:21}
+C {charatatime} {tellwait1.c:29} {_IO_putc}
+C {charatatime} {tellwait1.c:29} {setbuf}
+F {main} {tellwait1.c:6}
+C {main} {tellwait1.c:29} {exit}
+C {main} {tellwait1.c:29} {charatatime}
+C {main} {tellwait1.c:29} {charatatime}
+C {main} {tellwait1.c:29} {err_sys}
+C {main} {tellwait1.c:29} {fork}

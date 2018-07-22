@@ -1,0 +1,605 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+  <title>LCOV - drivers_i2c_busses.info - include/linux/rcupdate.h</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">include/linux</a> - rcupdate.h<span style="font-size: 80%;"> (source / <a href="rcupdate.h.func.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">drivers_i2c_busses.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2011-04-26</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="headerItem">Branches:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">           Branch data     Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>                :            : /*</a>
+<span class="lineNum">       2 </span>                :            :  * Read-Copy Update mechanism for mutual exclusion
+<span class="lineNum">       3 </span>                :            :  *
+<span class="lineNum">       4 </span>                :            :  * This program is free software; you can redistribute it and/or modify
+<span class="lineNum">       5 </span>                :            :  * it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>                :            :  * the Free Software Foundation; either version 2 of the License, or
+<span class="lineNum">       7 </span>                :            :  * (at your option) any later version.
+<span class="lineNum">       8 </span>                :            :  *
+<span class="lineNum">       9 </span>                :            :  * This program is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>                :            :  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>                :            :  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>                :            :  * GNU General Public License for more details.
+<span class="lineNum">      13 </span>                :            :  *
+<span class="lineNum">      14 </span>                :            :  * You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>                :            :  * along with this program; if not, write to the Free Software
+<span class="lineNum">      16 </span>                :            :  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+<span class="lineNum">      17 </span>                :            :  *
+<span class="lineNum">      18 </span>                :            :  * Copyright IBM Corporation, 2001
+<span class="lineNum">      19 </span>                :            :  *
+<span class="lineNum">      20 </span>                :            :  * Author: Dipankar Sarma &lt;dipankar@in.ibm.com&gt;
+<span class="lineNum">      21 </span>                :            :  *
+<span class="lineNum">      22 </span>                :            :  * Based on the original work by Paul McKenney &lt;paulmck@us.ibm.com&gt;
+<span class="lineNum">      23 </span>                :            :  * and inputs from Rusty Russell, Andrea Arcangeli and Andi Kleen.
+<span class="lineNum">      24 </span>                :            :  * Papers:
+<span class="lineNum">      25 </span>                :            :  * http://www.rdrop.com/users/paulmck/paper/rclockpdcsproof.pdf
+<span class="lineNum">      26 </span>                :            :  * http://lse.sourceforge.net/locking/rclock_OLS.2001.05.01c.sc.pdf (OLS2001)
+<span class="lineNum">      27 </span>                :            :  *
+<span class="lineNum">      28 </span>                :            :  * For detailed explanation of Read-Copy Update mechanism see -
+<span class="lineNum">      29 </span>                :            :  *              http://lse.sourceforge.net/locking/rcupdate.html
+<span class="lineNum">      30 </span>                :            :  *
+<span class="lineNum">      31 </span>                :            :  */
+<span class="lineNum">      32 </span>                :            : 
+<span class="lineNum">      33 </span>                :            : #ifndef __LINUX_RCUPDATE_H
+<span class="lineNum">      34 </span>                :            : #define __LINUX_RCUPDATE_H
+<span class="lineNum">      35 </span>                :            : 
+<span class="lineNum">      36 </span>                :            : #include &lt;linux/cache.h&gt;
+<span class="lineNum">      37 </span>                :            : #include &lt;linux/spinlock.h&gt;
+<span class="lineNum">      38 </span>                :            : #include &lt;linux/threads.h&gt;
+<span class="lineNum">      39 </span>                :            : #include &lt;linux/cpumask.h&gt;
+<span class="lineNum">      40 </span>                :            : #include &lt;linux/seqlock.h&gt;
+<span class="lineNum">      41 </span>                :            : #include &lt;linux/lockdep.h&gt;
+<span class="lineNum">      42 </span>                :            : #include &lt;linux/completion.h&gt;
+<span class="lineNum">      43 </span>                :            : 
+<span class="lineNum">      44 </span>                :            : #ifdef CONFIG_RCU_TORTURE_TEST
+<span class="lineNum">      45 </span>                :            : extern int rcutorture_runnable; /* for sysctl */
+<span class="lineNum">      46 </span>                :            : #endif /* #ifdef CONFIG_RCU_TORTURE_TEST */
+<span class="lineNum">      47 </span>                :            : 
+<span class="lineNum">      48 </span>                :            : /**
+<span class="lineNum">      49 </span>                :            :  * struct rcu_head - callback structure for use with RCU
+<span class="lineNum">      50 </span>                :            :  * @next: next update requests in a list
+<span class="lineNum">      51 </span>                :            :  * @func: actual update function to call after the grace period.
+<span class="lineNum">      52 </span>                :            :  */
+<span class="lineNum">      53 </span>                :            : struct rcu_head {
+<span class="lineNum">      54 </span>                :            :         struct rcu_head *next;
+<span class="lineNum">      55 </span>                :            :         void (*func)(struct rcu_head *head);
+<span class="lineNum">      56 </span>                :            : };
+<span class="lineNum">      57 </span>                :            : 
+<span class="lineNum">      58 </span>                :            : /* Exported common interfaces */
+<span class="lineNum">      59 </span>                :            : extern void rcu_barrier(void);
+<span class="lineNum">      60 </span>                :            : extern void rcu_barrier_bh(void);
+<span class="lineNum">      61 </span>                :            : extern void rcu_barrier_sched(void);
+<span class="lineNum">      62 </span>                :            : extern void synchronize_sched_expedited(void);
+<span class="lineNum">      63 </span>                :            : extern int sched_expedited_torture_stats(char *page);
+<span class="lineNum">      64 </span>                :            : 
+<span class="lineNum">      65 </span>                :            : /* Internal to kernel */
+<span class="lineNum">      66 </span>                :            : extern void rcu_init(void);
+<span class="lineNum">      67 </span>                :            : 
+<span class="lineNum">      68 </span>                :            : #if defined(CONFIG_TREE_RCU) || defined(CONFIG_TREE_PREEMPT_RCU)
+<span class="lineNum">      69 </span>                :            : #include &lt;linux/rcutree.h&gt;
+<span class="lineNum">      70 </span>                :            : #elif defined(CONFIG_TINY_RCU)
+<span class="lineNum">      71 </span>                :            : #include &lt;linux/rcutiny.h&gt;
+<span class="lineNum">      72 </span>                :            : #else
+<span class="lineNum">      73 </span>                :            : #error &quot;Unknown RCU implementation specified to kernel configuration&quot;
+<span class="lineNum">      74 </span>                :            : #endif
+<span class="lineNum">      75 </span>                :            : 
+<span class="lineNum">      76 </span>                :            : #define RCU_HEAD_INIT   { .next = NULL, .func = NULL }
+<span class="lineNum">      77 </span>                :            : #define RCU_HEAD(head) struct rcu_head head = RCU_HEAD_INIT
+<span class="lineNum">      78 </span>                :            : #define INIT_RCU_HEAD(ptr) do { \
+<span class="lineNum">      79 </span>                :            :        (ptr)-&gt;next = NULL; (ptr)-&gt;func = NULL; \
+<span class="lineNum">      80 </span>                :            : } while (0)
+<span class="lineNum">      81 </span>                :            : 
+<span class="lineNum">      82 </span>                :            : static inline void init_rcu_head_on_stack(struct rcu_head *head)
+<span class="lineNum">      83 </span>                :            : {
+<span class="lineNum">      84 </span>                :            : }
+<span class="lineNum">      85 </span>                :            : 
+<span class="lineNum">      86 </span>                :            : static inline void destroy_rcu_head_on_stack(struct rcu_head *head)
+<span class="lineNum">      87 </span>                :            : {
+<span class="lineNum">      88 </span>                :            : }
+<span class="lineNum">      89 </span>                :            : 
+<span class="lineNum">      90 </span>                :            : #ifdef CONFIG_DEBUG_LOCK_ALLOC
+<span class="lineNum">      91 </span>                :            : 
+<span class="lineNum">      92 </span>                :            : extern struct lockdep_map rcu_lock_map;
+<span class="lineNum">      93 </span>                :            : # define rcu_read_acquire() \
+<span class="lineNum">      94 </span>                :            :                 lock_acquire(&amp;rcu_lock_map, 0, 0, 2, 1, NULL, _THIS_IP_)
+<span class="lineNum">      95 </span>                :            : # define rcu_read_release()     lock_release(&amp;rcu_lock_map, 1, _THIS_IP_)
+<span class="lineNum">      96 </span>                :            : 
+<span class="lineNum">      97 </span>                :            : extern struct lockdep_map rcu_bh_lock_map;
+<span class="lineNum">      98 </span>                :            : # define rcu_read_acquire_bh() \
+<span class="lineNum">      99 </span>                :            :                 lock_acquire(&amp;rcu_bh_lock_map, 0, 0, 2, 1, NULL, _THIS_IP_)
+<span class="lineNum">     100 </span>                :            : # define rcu_read_release_bh()  lock_release(&amp;rcu_bh_lock_map, 1, _THIS_IP_)
+<span class="lineNum">     101 </span>                :            : 
+<span class="lineNum">     102 </span>                :            : extern struct lockdep_map rcu_sched_lock_map;
+<span class="lineNum">     103 </span>                :            : # define rcu_read_acquire_sched() \
+<span class="lineNum">     104 </span>                :            :                 lock_acquire(&amp;rcu_sched_lock_map, 0, 0, 2, 1, NULL, _THIS_IP_)
+<span class="lineNum">     105 </span>                :            : # define rcu_read_release_sched() \
+<span class="lineNum">     106 </span>                :            :                 lock_release(&amp;rcu_sched_lock_map, 1, _THIS_IP_)
+<span class="lineNum">     107 </span>                :            : 
+<span class="lineNum">     108 </span>                :            : extern int debug_lockdep_rcu_enabled(void);
+<span class="lineNum">     109 </span>                :            : 
+<span class="lineNum">     110 </span>                :            : /**
+<span class="lineNum">     111 </span>                :            :  * rcu_read_lock_held - might we be in RCU read-side critical section?
+<span class="lineNum">     112 </span>                :            :  *
+<span class="lineNum">     113 </span>                :            :  * If CONFIG_DEBUG_LOCK_ALLOC is selected, returns nonzero iff in an RCU
+<span class="lineNum">     114 </span>                :            :  * read-side critical section.  In absence of CONFIG_DEBUG_LOCK_ALLOC,
+<span class="lineNum">     115 </span>                :            :  * this assumes we are in an RCU read-side critical section unless it can
+<span class="lineNum">     116 </span>                :            :  * prove otherwise.
+<span class="lineNum">     117 </span>                :            :  *
+<span class="lineNum">     118 </span>                :            :  * Check debug_lockdep_rcu_enabled() to prevent false positives during boot
+<span class="lineNum">     119 </span>                :            :  * and while lockdep is disabled.
+<span class="lineNum">     120 </span>                :            :  */
+<span class="lineNum">     121 </span>                :            : static inline int rcu_read_lock_held(void)
+<span class="lineNum">     122 </span>                :            : {
+<span class="lineNum">     123 </span>                :            :         if (!debug_lockdep_rcu_enabled())
+<span class="lineNum">     124 </span>                :            :                 return 1;
+<span class="lineNum">     125 </span>                :            :         return lock_is_held(&amp;rcu_lock_map);
+<span class="lineNum">     126 </span>                :            : }
+<span class="lineNum">     127 </span>                :            : 
+<span class="lineNum">     128 </span>                :            : /*
+<span class="lineNum">     129 </span>                :            :  * rcu_read_lock_bh_held() is defined out of line to avoid #include-file
+<span class="lineNum">     130 </span>                :            :  * hell.
+<span class="lineNum">     131 </span>                :            :  */
+<span class="lineNum">     132 </span>                :            : extern int rcu_read_lock_bh_held(void);
+<span class="lineNum">     133 </span>                :            : 
+<span class="lineNum">     134 </span>                :            : /**
+<span class="lineNum">     135 </span>                :            :  * rcu_read_lock_sched_held - might we be in RCU-sched read-side critical section?
+<span class="lineNum">     136 </span>                :            :  *
+<span class="lineNum">     137 </span>                :            :  * If CONFIG_DEBUG_LOCK_ALLOC is selected, returns nonzero iff in an
+<span class="lineNum">     138 </span>                :            :  * RCU-sched read-side critical section.  In absence of
+<span class="lineNum">     139 </span>                :            :  * CONFIG_DEBUG_LOCK_ALLOC, this assumes we are in an RCU-sched read-side
+<span class="lineNum">     140 </span>                :            :  * critical section unless it can prove otherwise.  Note that disabling
+<span class="lineNum">     141 </span>                :            :  * of preemption (including disabling irqs) counts as an RCU-sched
+<span class="lineNum">     142 </span>                :            :  * read-side critical section.
+<span class="lineNum">     143 </span>                :            :  *
+<span class="lineNum">     144 </span>                :            :  * Check debug_lockdep_rcu_enabled() to prevent false positives during boot
+<span class="lineNum">     145 </span>                :            :  * and while lockdep is disabled.
+<span class="lineNum">     146 </span>                :            :  */
+<span class="lineNum">     147 </span>                :            : #ifdef CONFIG_PREEMPT
+<span class="lineNum">     148 </span>                :            : static inline int rcu_read_lock_sched_held(void)
+<span class="lineNum">     149 </span>                :            : {
+<span class="lineNum">     150 </span>                :            :         int lockdep_opinion = 0;
+<span class="lineNum">     151 </span>                :            : 
+<span class="lineNum">     152 </span>                :            :         if (!debug_lockdep_rcu_enabled())
+<span class="lineNum">     153 </span>                :            :                 return 1;
+<span class="lineNum">     154 </span>                :            :         if (debug_locks)
+<span class="lineNum">     155 </span>                :            :                 lockdep_opinion = lock_is_held(&amp;rcu_sched_lock_map);
+<span class="lineNum">     156 </span>                :            :         return lockdep_opinion || preempt_count() != 0 || irqs_disabled();
+<span class="lineNum">     157 </span>                :            : }
+<span class="lineNum">     158 </span>                :            : #else /* #ifdef CONFIG_PREEMPT */
+<span class="lineNum">     159 </span>                :            : static inline int rcu_read_lock_sched_held(void)
+<span class="lineNum">     160 </span>                :            : {
+<span class="lineNum">     161 </span>                :            :         return 1;
+<span class="lineNum">     162 </span>                :            : }
+<span class="lineNum">     163 </span>                :            : #endif /* #else #ifdef CONFIG_PREEMPT */
+<span class="lineNum">     164 </span>                :            : 
+<span class="lineNum">     165 </span>                :            : #else /* #ifdef CONFIG_DEBUG_LOCK_ALLOC */
+<span class="lineNum">     166 </span>                :            : 
+<span class="lineNum">     167 </span>                :            : # define rcu_read_acquire()             do { } while (0)
+<span class="lineNum">     168 </span>                :            : # define rcu_read_release()             do { } while (0)
+<span class="lineNum">     169 </span>                :            : # define rcu_read_acquire_bh()          do { } while (0)
+<span class="lineNum">     170 </span>                :            : # define rcu_read_release_bh()          do { } while (0)
+<span class="lineNum">     171 </span>                :            : # define rcu_read_acquire_sched()       do { } while (0)
+<span class="lineNum">     172 </span>                :            : # define rcu_read_release_sched()       do { } while (0)
+<span class="lineNum">     173 </span>                :            : 
+<span class="lineNum">     174 </span>                :            : static inline int rcu_read_lock_held(void)
+<span class="lineNum">     175 </span>                :            : {
+<span class="lineNum">     176 </span>                :            :         return 1;
+<span class="lineNum">     177 </span>                :            : }
+<span class="lineNum">     178 </span>                :            : 
+<span class="lineNum">     179 </span>                :            : static inline int rcu_read_lock_bh_held(void)
+<span class="lineNum">     180 </span>                :            : {
+<span class="lineNum">     181 </span>                :            :         return 1;
+<span class="lineNum">     182 </span>                :            : }
+<span class="lineNum">     183 </span>                :            : 
+<span class="lineNum">     184 </span>                :            : #ifdef CONFIG_PREEMPT
+<span class="lineNum">     185 </span>                :            : static inline int rcu_read_lock_sched_held(void)
+<span class="lineNum">     186 </span>                :            : {
+<span class="lineNum">     187 </span>                :            :         return preempt_count() != 0 || irqs_disabled();
+<span class="lineNum">     188 </span>                :            : }
+<span class="lineNum">     189 </span>                :            : #else /* #ifdef CONFIG_PREEMPT */
+<span class="lineNum">     190 </span>                :            : static inline int rcu_read_lock_sched_held(void)
+<span class="lineNum">     191 </span>                :            : {
+<span class="lineNum">     192 </span>                :            :         return 1;
+<span class="lineNum">     193 </span>                :            : }
+<span class="lineNum">     194 </span>                :            : #endif /* #else #ifdef CONFIG_PREEMPT */
+<span class="lineNum">     195 </span>                :            : 
+<span class="lineNum">     196 </span>                :            : #endif /* #else #ifdef CONFIG_DEBUG_LOCK_ALLOC */
+<span class="lineNum">     197 </span>                :            : 
+<span class="lineNum">     198 </span>                :            : #ifdef CONFIG_PROVE_RCU
+<span class="lineNum">     199 </span>                :            : 
+<span class="lineNum">     200 </span>                :            : extern int rcu_my_thread_group_empty(void);
+<span class="lineNum">     201 </span>                :            : 
+<span class="lineNum">     202 </span>                :            : #define __do_rcu_dereference_check(c)                                   \
+<span class="lineNum">     203 </span>                :            :         do {                                                            \
+<span class="lineNum">     204 </span>                :            :                 static bool __warned;                                   \
+<span class="lineNum">     205 </span>                :            :                 if (debug_lockdep_rcu_enabled() &amp;&amp; !__warned &amp;&amp; !(c)) { \
+<span class="lineNum">     206 </span>                :            :                         __warned = true;                                \
+<span class="lineNum">     207 </span>                :            :                         lockdep_rcu_dereference(__FILE__, __LINE__);    \
+<span class="lineNum">     208 </span>                :            :                 }                                                       \
+<span class="lineNum">     209 </span>                :            :         } while (0)
+<span class="lineNum">     210 </span>                :            : 
+<span class="lineNum">     211 </span>                :            : /**
+<span class="lineNum">     212 </span>                :            :  * rcu_dereference_check - rcu_dereference with debug checking
+<span class="lineNum">     213 </span>                :            :  * @p: The pointer to read, prior to dereferencing
+<span class="lineNum">     214 </span>                :            :  * @c: The conditions under which the dereference will take place
+<span class="lineNum">     215 </span>                :            :  *
+<span class="lineNum">     216 </span>                :            :  * Do an rcu_dereference(), but check that the conditions under which the
+<span class="lineNum">     217 </span>                :            :  * dereference will take place are correct.  Typically the conditions indicate
+<span class="lineNum">     218 </span>                :            :  * the various locking conditions that should be held at that point.  The check
+<span class="lineNum">     219 </span>                :            :  * should return true if the conditions are satisfied.
+<span class="lineNum">     220 </span>                :            :  *
+<span class="lineNum">     221 </span>                :            :  * For example:
+<span class="lineNum">     222 </span>                :            :  *
+<span class="lineNum">     223 </span>                :            :  *      bar = rcu_dereference_check(foo-&gt;bar, rcu_read_lock_held() ||
+<span class="lineNum">     224 </span>                :            :  *                                            lockdep_is_held(&amp;foo-&gt;lock));
+<span class="lineNum">     225 </span>                :            :  *
+<span class="lineNum">     226 </span>                :            :  * could be used to indicate to lockdep that foo-&gt;bar may only be dereferenced
+<span class="lineNum">     227 </span>                :            :  * if either the RCU read lock is held, or that the lock required to replace
+<span class="lineNum">     228 </span>                :            :  * the bar struct at foo-&gt;bar is held.
+<span class="lineNum">     229 </span>                :            :  *
+<span class="lineNum">     230 </span>                :            :  * Note that the list of conditions may also include indications of when a lock
+<span class="lineNum">     231 </span>                :            :  * need not be held, for example during initialisation or destruction of the
+<span class="lineNum">     232 </span>                :            :  * target struct:
+<span class="lineNum">     233 </span>                :            :  *
+<span class="lineNum">     234 </span>                :            :  *      bar = rcu_dereference_check(foo-&gt;bar, rcu_read_lock_held() ||
+<span class="lineNum">     235 </span>                :            :  *                                            lockdep_is_held(&amp;foo-&gt;lock) ||
+<span class="lineNum">     236 </span>                :            :  *                                            atomic_read(&amp;foo-&gt;usage) == 0);
+<span class="lineNum">     237 </span>                :            :  */
+<span class="lineNum">     238 </span>                :            : #define rcu_dereference_check(p, c) \
+<span class="lineNum">     239 </span>                :            :         ({ \
+<span class="lineNum">     240 </span>                :            :                 __do_rcu_dereference_check(c); \
+<span class="lineNum">     241 </span>                :            :                 rcu_dereference_raw(p); \
+<span class="lineNum">     242 </span>                :            :         })
+<span class="lineNum">     243 </span>                :            : 
+<span class="lineNum">     244 </span>                :            : /**
+<span class="lineNum">     245 </span>                :            :  * rcu_dereference_protected - fetch RCU pointer when updates prevented
+<span class="lineNum">     246 </span>                :            :  *
+<span class="lineNum">     247 </span>                :            :  * Return the value of the specified RCU-protected pointer, but omit
+<span class="lineNum">     248 </span>                :            :  * both the smp_read_barrier_depends() and the ACCESS_ONCE().  This
+<span class="lineNum">     249 </span>                :            :  * is useful in cases where update-side locks prevent the value of the
+<span class="lineNum">     250 </span>                :            :  * pointer from changing.  Please note that this primitive does -not-
+<span class="lineNum">     251 </span>                :            :  * prevent the compiler from repeating this reference or combining it
+<span class="lineNum">     252 </span>                :            :  * with other references, so it should not be used without protection
+<span class="lineNum">     253 </span>                :            :  * of appropriate locks.
+<span class="lineNum">     254 </span>                :            :  */
+<span class="lineNum">     255 </span>                :            : #define rcu_dereference_protected(p, c) \
+<span class="lineNum">     256 </span>                :            :         ({ \
+<span class="lineNum">     257 </span>                :            :                 __do_rcu_dereference_check(c); \
+<span class="lineNum">     258 </span>                :            :                 (p); \
+<span class="lineNum">     259 </span>                :            :         })
+<span class="lineNum">     260 </span>                :            : 
+<span class="lineNum">     261 </span>                :            : #else /* #ifdef CONFIG_PROVE_RCU */
+<span class="lineNum">     262 </span>                :            : 
+<span class="lineNum">     263 </span>                :            : #define rcu_dereference_check(p, c)     rcu_dereference_raw(p)
+<span class="lineNum">     264 </span>                :            : #define rcu_dereference_protected(p, c) (p)
+<span class="lineNum">     265 </span>                :            : 
+<span class="lineNum">     266 </span>                :            : #endif /* #else #ifdef CONFIG_PROVE_RCU */
+<span class="lineNum">     267 </span>                :            : 
+<span class="lineNum">     268 </span>                :            : /**
+<span class="lineNum">     269 </span>                :            :  * rcu_access_pointer - fetch RCU pointer with no dereferencing
+<span class="lineNum">     270 </span>                :            :  *
+<span class="lineNum">     271 </span>                :            :  * Return the value of the specified RCU-protected pointer, but omit the
+<span class="lineNum">     272 </span>                :            :  * smp_read_barrier_depends() and keep the ACCESS_ONCE().  This is useful
+<span class="lineNum">     273 </span>                :            :  * when the value of this pointer is accessed, but the pointer is not
+<span class="lineNum">     274 </span>                :            :  * dereferenced, for example, when testing an RCU-protected pointer against
+<span class="lineNum">     275 </span>                :            :  * NULL.  This may also be used in cases where update-side locks prevent
+<span class="lineNum">     276 </span>                :            :  * the value of the pointer from changing, but rcu_dereference_protected()
+<span class="lineNum">     277 </span>                :            :  * is a lighter-weight primitive for this use case.
+<span class="lineNum">     278 </span>                :            :  */
+<span class="lineNum">     279 </span>                :            : #define rcu_access_pointer(p)   ACCESS_ONCE(p)
+<span class="lineNum">     280 </span>                :            : 
+<span class="lineNum">     281 </span>                :            : /**
+<span class="lineNum">     282 </span>                :            :  * rcu_read_lock - mark the beginning of an RCU read-side critical section.
+<span class="lineNum">     283 </span>                :            :  *
+<span class="lineNum">     284 </span>                :            :  * When synchronize_rcu() is invoked on one CPU while other CPUs
+<span class="lineNum">     285 </span>                :            :  * are within RCU read-side critical sections, then the
+<span class="lineNum">     286 </span>                :            :  * synchronize_rcu() is guaranteed to block until after all the other
+<span class="lineNum">     287 </span>                :            :  * CPUs exit their critical sections.  Similarly, if call_rcu() is invoked
+<span class="lineNum">     288 </span>                :            :  * on one CPU while other CPUs are within RCU read-side critical
+<span class="lineNum">     289 </span>                :            :  * sections, invocation of the corresponding RCU callback is deferred
+<span class="lineNum">     290 </span>                :            :  * until after the all the other CPUs exit their critical sections.
+<span class="lineNum">     291 </span>                :            :  *
+<span class="lineNum">     292 </span>                :            :  * Note, however, that RCU callbacks are permitted to run concurrently
+<span class="lineNum">     293 </span>                :            :  * with RCU read-side critical sections.  One way that this can happen
+<span class="lineNum">     294 </span>                :            :  * is via the following sequence of events: (1) CPU 0 enters an RCU
+<span class="lineNum">     295 </span>                :            :  * read-side critical section, (2) CPU 1 invokes call_rcu() to register
+<span class="lineNum">     296 </span>                :            :  * an RCU callback, (3) CPU 0 exits the RCU read-side critical section,
+<span class="lineNum">     297 </span>                :            :  * (4) CPU 2 enters a RCU read-side critical section, (5) the RCU
+<span class="lineNum">     298 </span>                :            :  * callback is invoked.  This is legal, because the RCU read-side critical
+<span class="lineNum">     299 </span>                :            :  * section that was running concurrently with the call_rcu() (and which
+<span class="lineNum">     300 </span>                :            :  * therefore might be referencing something that the corresponding RCU
+<span class="lineNum">     301 </span>                :            :  * callback would free up) has completed before the corresponding
+<span class="lineNum">     302 </span>                :            :  * RCU callback is invoked.
+<span class="lineNum">     303 </span>                :            :  *
+<span class="lineNum">     304 </span>                :            :  * RCU read-side critical sections may be nested.  Any deferred actions
+<span class="lineNum">     305 </span>                :            :  * will be deferred until the outermost RCU read-side critical section
+<span class="lineNum">     306 </span>                :            :  * completes.
+<span class="lineNum">     307 </span>                :            :  *
+<span class="lineNum">     308 </span>                :            :  * It is illegal to block while in an RCU read-side critical section.
+<span class="lineNum">     309 </span>                :            :  */
+<span class="lineNum">     310 </span>                :            : static inline void rcu_read_lock(void)
+<span class="lineNum">     311 </span>                :            : {
+<span class="lineNum">     312 </span>                :            :         __rcu_read_lock();
+<span class="lineNum">     313 </span>                :            :         __acquire(RCU);
+<span class="lineNum">     314 </span>                :            :         rcu_read_acquire();
+<span class="lineNum">     315 </span>                :            : }
+<span class="lineNum">     316 </span>                :            : 
+<span class="lineNum">     317 </span>                :            : /*
+<span class="lineNum">     318 </span>                :            :  * So where is rcu_write_lock()?  It does not exist, as there is no
+<span class="lineNum">     319 </span>                :            :  * way for writers to lock out RCU readers.  This is a feature, not
+<span class="lineNum">     320 </span>                :            :  * a bug -- this property is what provides RCU's performance benefits.
+<span class="lineNum">     321 </span>                :            :  * Of course, writers must coordinate with each other.  The normal
+<span class="lineNum">     322 </span>                :            :  * spinlock primitives work well for this, but any other technique may be
+<span class="lineNum">     323 </span>                :            :  * used as well.  RCU does not care how the writers keep out of each
+<span class="lineNum">     324 </span>                :            :  * others' way, as long as they do so.
+<span class="lineNum">     325 </span>                :            :  */
+<span class="lineNum">     326 </span>                :            : 
+<span class="lineNum">     327 </span>                :            : /**
+<span class="lineNum">     328 </span>                :            :  * rcu_read_unlock - marks the end of an RCU read-side critical section.
+<span class="lineNum">     329 </span>                :            :  *
+<span class="lineNum">     330 </span>                :            :  * See rcu_read_lock() for more information.
+<span class="lineNum">     331 </span>                :            :  */
+<span class="lineNum">     332 </span>                :            : static inline void rcu_read_unlock(void)
+<span class="lineNum">     333 </span>                :            : {
+<span class="lineNum">     334 </span>                :            :         rcu_read_release();
+<span class="lineNum">     335 </span>                :            :         __release(RCU);
+<span class="lineNum">     336 </span>                :            :         __rcu_read_unlock();
+<span class="lineNum">     337 </span>                :            : }
+<span class="lineNum">     338 </span>                :            : 
+<span class="lineNum">     339 </span>                :            : /**
+<span class="lineNum">     340 </span>                :            :  * rcu_read_lock_bh - mark the beginning of a softirq-only RCU critical section
+<span class="lineNum">     341 </span>                :            :  *
+<span class="lineNum">     342 </span>                :            :  * This is equivalent of rcu_read_lock(), but to be used when updates
+<span class="lineNum">     343 </span>                :            :  * are being done using call_rcu_bh(). Since call_rcu_bh() callbacks
+<span class="lineNum">     344 </span>                :            :  * consider completion of a softirq handler to be a quiescent state,
+<span class="lineNum">     345 </span>                :            :  * a process in RCU read-side critical section must be protected by
+<span class="lineNum">     346 </span>                :            :  * disabling softirqs. Read-side critical sections in interrupt context
+<span class="lineNum">     347 </span>                :            :  * can use just rcu_read_lock().
+<span class="lineNum">     348 </span>                :            :  *
+<span class="lineNum">     349 </span>                :            :  */
+<span class="lineNum">     350 </span>                :            : static inline void rcu_read_lock_bh(void)
+<span class="lineNum">     351 </span>                :            : {
+<span class="lineNum">     352 </span>                :            :         __rcu_read_lock_bh();
+<span class="lineNum">     353 </span>                :            :         __acquire(RCU_BH);
+<span class="lineNum">     354 </span>                :            :         rcu_read_acquire_bh();
+<span class="lineNum">     355 </span>                :            : }
+<span class="lineNum">     356 </span>                :            : 
+<span class="lineNum">     357 </span>                :            : /*
+<span class="lineNum">     358 </span>                :            :  * rcu_read_unlock_bh - marks the end of a softirq-only RCU critical section
+<span class="lineNum">     359 </span>                :            :  *
+<span class="lineNum">     360 </span>                :            :  * See rcu_read_lock_bh() for more information.
+<span class="lineNum">     361 </span>                :            :  */
+<span class="lineNum">     362 </span>                :            : static inline void rcu_read_unlock_bh(void)
+<span class="lineNum">     363 </span>                :            : {
+<span class="lineNum">     364 </span>                :            :         rcu_read_release_bh();
+<span class="lineNum">     365 </span>                :            :         __release(RCU_BH);
+<span class="lineNum">     366 </span>                :            :         __rcu_read_unlock_bh();
+<span class="lineNum">     367 </span>                :            : }
+<span class="lineNum">     368 </span>                :            : 
+<span class="lineNum">     369 </span>                :            : /**
+<span class="lineNum">     370 </span>                :            :  * rcu_read_lock_sched - mark the beginning of a RCU-classic critical section
+<span class="lineNum">     371 </span>                :            :  *
+<span class="lineNum">     372 </span>                :            :  * Should be used with either
+<span class="lineNum">     373 </span>                :            :  * - synchronize_sched()
+<span class="lineNum">     374 </span>                :            :  * or
+<span class="lineNum">     375 </span>                :            :  * - call_rcu_sched() and rcu_barrier_sched()
+<span class="lineNum">     376 </span>                :            :  * on the write-side to insure proper synchronization.
+<span class="lineNum">     377 </span>                :            :  */
+<span class="lineNum">     378 </span>                :            : static inline void rcu_read_lock_sched(void)
+<span class="lineNum">     379 </span>                :            : {
+<span class="lineNum">     380 </span>                :            :         preempt_disable();
+<span class="lineNum">     381 </span>                :            :         __acquire(RCU_SCHED);
+<span class="lineNum">     382 </span>                :            :         rcu_read_acquire_sched();
+<span class="lineNum">     383 </span>                :            : }
+<span class="lineNum">     384 </span>                :            : 
+<span class="lineNum">     385 </span>                :            : /* Used by lockdep and tracing: cannot be traced, cannot call lockdep. */
+<span class="lineNum">     386 </span>                :            : static inline notrace void rcu_read_lock_sched_notrace(void)
+<span class="lineNum">     387 </span>                :            : {
+<span class="lineNum">     388 </span>                :<span class="lineNoCov">          0 :         preempt_disable_notrace();</span>
+<span class="lineNum">     389 </span>                :            :         __acquire(RCU_SCHED);
+<span class="lineNum">     390 </span>                :            : }
+<span class="lineNum">     391 </span>                :            : 
+<span class="lineNum">     392 </span>                :            : /*
+<span class="lineNum">     393 </span>                :            :  * rcu_read_unlock_sched - marks the end of a RCU-classic critical section
+<span class="lineNum">     394 </span>                :            :  *
+<span class="lineNum">     395 </span>                :            :  * See rcu_read_lock_sched for more information.
+<span class="lineNum">     396 </span>                :            :  */
+<span class="lineNum">     397 </span>                :            : static inline void rcu_read_unlock_sched(void)
+<span class="lineNum">     398 </span>                :            : {
+<span class="lineNum">     399 </span>                :            :         rcu_read_release_sched();
+<span class="lineNum">     400 </span>                :            :         __release(RCU_SCHED);
+<span class="lineNum">     401 </span>                :            :         preempt_enable();
+<span class="lineNum">     402 </span>                :            : }
+<span class="lineNum">     403 </span>                :            : 
+<span class="lineNum">     404 </span>                :            : /* Used by lockdep and tracing: cannot be traced, cannot call lockdep. */
+<span class="lineNum">     405 </span>                :            : static inline notrace void rcu_read_unlock_sched_notrace(void)
+<span class="lineNum">     406 </span>                :            : {
+<span class="lineNum">     407 </span>                :            :         __release(RCU_SCHED);
+<span class="lineNum">     408 </span>        [<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :         preempt_enable_notrace();</span>
+<span class="lineNum">     409 </span>                :            : }
+<span class="lineNum">     410 </span>                :            : 
+<span class="lineNum">     411 </span>                :            : 
+<span class="lineNum">     412 </span>                :            : /**
+<span class="lineNum">     413 </span>                :            :  * rcu_dereference_raw - fetch an RCU-protected pointer
+<span class="lineNum">     414 </span>                :            :  *
+<span class="lineNum">     415 </span>                :            :  * The caller must be within some flavor of RCU read-side critical
+<span class="lineNum">     416 </span>                :            :  * section, or must be otherwise preventing the pointer from changing,
+<span class="lineNum">     417 </span>                :            :  * for example, by holding an appropriate lock.  This pointer may later
+<span class="lineNum">     418 </span>                :            :  * be safely dereferenced.  It is the caller's responsibility to have
+<span class="lineNum">     419 </span>                :            :  * done the right thing, as this primitive does no checking of any kind.
+<span class="lineNum">     420 </span>                :            :  *
+<span class="lineNum">     421 </span>                :            :  * Inserts memory barriers on architectures that require them
+<span class="lineNum">     422 </span>                :            :  * (currently only the Alpha), and, more importantly, documents
+<span class="lineNum">     423 </span>                :            :  * exactly which pointers are protected by RCU.
+<span class="lineNum">     424 </span>                :            :  */
+<span class="lineNum">     425 </span>                :            : #define rcu_dereference_raw(p)  ({ \
+<span class="lineNum">     426 </span>                :            :                                 typeof(p) _________p1 = ACCESS_ONCE(p); \
+<span class="lineNum">     427 </span>                :            :                                 smp_read_barrier_depends(); \
+<span class="lineNum">     428 </span>                :            :                                 (_________p1); \
+<span class="lineNum">     429 </span>                :            :                                 })
+<span class="lineNum">     430 </span>                :            : 
+<span class="lineNum">     431 </span>                :            : /**
+<span class="lineNum">     432 </span>                :            :  * rcu_dereference - fetch an RCU-protected pointer, checking for RCU
+<span class="lineNum">     433 </span>                :            :  *
+<span class="lineNum">     434 </span>                :            :  * Makes rcu_dereference_check() do the dirty work.
+<span class="lineNum">     435 </span>                :            :  */
+<span class="lineNum">     436 </span>                :            : #define rcu_dereference(p) \
+<span class="lineNum">     437 </span>                :            :         rcu_dereference_check(p, rcu_read_lock_held())
+<span class="lineNum">     438 </span>                :            : 
+<span class="lineNum">     439 </span>                :            : /**
+<span class="lineNum">     440 </span>                :            :  * rcu_dereference_bh - fetch an RCU-protected pointer, checking for RCU-bh
+<span class="lineNum">     441 </span>                :            :  *
+<span class="lineNum">     442 </span>                :            :  * Makes rcu_dereference_check() do the dirty work.
+<span class="lineNum">     443 </span>                :            :  */
+<span class="lineNum">     444 </span>                :            : #define rcu_dereference_bh(p) \
+<span class="lineNum">     445 </span>                :            :                 rcu_dereference_check(p, rcu_read_lock_bh_held())
+<span class="lineNum">     446 </span>                :            : 
+<span class="lineNum">     447 </span>                :            : /**
+<span class="lineNum">     448 </span>                :            :  * rcu_dereference_sched - fetch RCU-protected pointer, checking for RCU-sched
+<span class="lineNum">     449 </span>                :            :  *
+<span class="lineNum">     450 </span>                :            :  * Makes rcu_dereference_check() do the dirty work.
+<span class="lineNum">     451 </span>                :            :  */
+<span class="lineNum">     452 </span>                :            : #define rcu_dereference_sched(p) \
+<span class="lineNum">     453 </span>                :            :                 rcu_dereference_check(p, rcu_read_lock_sched_held())
+<span class="lineNum">     454 </span>                :            : 
+<span class="lineNum">     455 </span>                :            : /**
+<span class="lineNum">     456 </span>                :            :  * rcu_assign_pointer - assign (publicize) a pointer to a newly
+<span class="lineNum">     457 </span>                :            :  * initialized structure that will be dereferenced by RCU read-side
+<span class="lineNum">     458 </span>                :            :  * critical sections.  Returns the value assigned.
+<span class="lineNum">     459 </span>                :            :  *
+<span class="lineNum">     460 </span>                :            :  * Inserts memory barriers on architectures that require them
+<span class="lineNum">     461 </span>                :            :  * (pretty much all of them other than x86), and also prevents
+<span class="lineNum">     462 </span>                :            :  * the compiler from reordering the code that initializes the
+<span class="lineNum">     463 </span>                :            :  * structure after the pointer assignment.  More importantly, this
+<span class="lineNum">     464 </span>                :            :  * call documents which pointers will be dereferenced by RCU read-side
+<span class="lineNum">     465 </span>                :            :  * code.
+<span class="lineNum">     466 </span>                :            :  */
+<span class="lineNum">     467 </span>                :            : 
+<span class="lineNum">     468 </span>                :            : #define rcu_assign_pointer(p, v) \
+<span class="lineNum">     469 </span>                :            :         ({ \
+<span class="lineNum">     470 </span>                :            :                 if (!__builtin_constant_p(v) || \
+<span class="lineNum">     471 </span>                :            :                     ((v) != NULL)) \
+<span class="lineNum">     472 </span>                :            :                         smp_wmb(); \
+<span class="lineNum">     473 </span>                :            :                 (p) = (v); \
+<span class="lineNum">     474 </span>                :            :         })
+<span class="lineNum">     475 </span>                :            : 
+<span class="lineNum">     476 </span>                :            : /* Infrastructure to implement the synchronize_() primitives. */
+<span class="lineNum">     477 </span>                :            : 
+<span class="lineNum">     478 </span>                :            : struct rcu_synchronize {
+<span class="lineNum">     479 </span>                :            :         struct rcu_head head;
+<span class="lineNum">     480 </span>                :            :         struct completion completion;
+<span class="lineNum">     481 </span>                :            : };
+<span class="lineNum">     482 </span>                :            : 
+<span class="lineNum">     483 </span>                :            : extern void wakeme_after_rcu(struct rcu_head  *head);
+<span class="lineNum">     484 </span>                :            : 
+<span class="lineNum">     485 </span>                :            : /**
+<span class="lineNum">     486 </span>                :            :  * call_rcu - Queue an RCU callback for invocation after a grace period.
+<span class="lineNum">     487 </span>                :            :  * @head: structure to be used for queueing the RCU updates.
+<span class="lineNum">     488 </span>                :            :  * @func: actual update function to be invoked after the grace period
+<span class="lineNum">     489 </span>                :            :  *
+<span class="lineNum">     490 </span>                :            :  * The update function will be invoked some time after a full grace
+<span class="lineNum">     491 </span>                :            :  * period elapses, in other words after all currently executing RCU
+<span class="lineNum">     492 </span>                :            :  * read-side critical sections have completed.  RCU read-side critical
+<span class="lineNum">     493 </span>                :            :  * sections are delimited by rcu_read_lock() and rcu_read_unlock(),
+<span class="lineNum">     494 </span>                :            :  * and may be nested.
+<span class="lineNum">     495 </span>                :            :  */
+<span class="lineNum">     496 </span>                :            : extern void call_rcu(struct rcu_head *head,
+<span class="lineNum">     497 </span>                :            :                               void (*func)(struct rcu_head *head));
+<span class="lineNum">     498 </span>                :            : 
+<span class="lineNum">     499 </span>                :            : /**
+<span class="lineNum">     500 </span>                :            :  * call_rcu_bh - Queue an RCU for invocation after a quicker grace period.
+<span class="lineNum">     501 </span>                :            :  * @head: structure to be used for queueing the RCU updates.
+<span class="lineNum">     502 </span>                :            :  * @func: actual update function to be invoked after the grace period
+<span class="lineNum">     503 </span>                :            :  *
+<span class="lineNum">     504 </span>                :            :  * The update function will be invoked some time after a full grace
+<span class="lineNum">     505 </span>                :            :  * period elapses, in other words after all currently executing RCU
+<span class="lineNum">     506 </span>                :            :  * read-side critical sections have completed. call_rcu_bh() assumes
+<span class="lineNum">     507 </span>                :            :  * that the read-side critical sections end on completion of a softirq
+<span class="lineNum">     508 </span>                :            :  * handler. This means that read-side critical sections in process
+<span class="lineNum">     509 </span>                :            :  * context must not be interrupted by softirqs. This interface is to be
+<span class="lineNum">     510 </span>                :            :  * used when most of the read-side critical sections are in softirq context.
+<span class="lineNum">     511 </span>                :            :  * RCU read-side critical sections are delimited by :
+<span class="lineNum">     512 </span>                :            :  *  - rcu_read_lock() and  rcu_read_unlock(), if in interrupt context.
+<span class="lineNum">     513 </span>                :            :  *  OR
+<span class="lineNum">     514 </span>                :            :  *  - rcu_read_lock_bh() and rcu_read_unlock_bh(), if in process context.
+<span class="lineNum">     515 </span>                :            :  *  These may be nested.
+<span class="lineNum">     516 </span>                :            :  */
+<span class="lineNum">     517 </span>                :            : extern void call_rcu_bh(struct rcu_head *head,
+<span class="lineNum">     518 </span>                :            :                         void (*func)(struct rcu_head *head));
+<span class="lineNum">     519 </span>                :            : 
+<span class="lineNum">     520 </span>                :            : #endif /* __LINUX_RCUPDATE_H */
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.8</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

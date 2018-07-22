@@ -1,0 +1,141 @@
+D/CallCard( 1609): updateState(########### Dump CallManager ############
+D/CallCard( 1609): CallManager state = OFFHOOK
+D/CallCard( 1609):    - Foreground: DIALING from Handler{b3c1cfd8}
+D/CallCard( 1609):      Conn: [ incoming: false state: DIALING post dial state: NOT_STARTED]
+D/CallCard( 1609):    - Background: IDLE from Handler{b3c1cfd8}
+D/CallCard( 1609):      Conn: []
+D/CallCard( 1609):    - Ringing: IDLE from Handler{b3c1cfd8}
+D/CallCard( 1609):  Phone: Handler{b3c1cfd8}, name = GSM, state = OFFHOOK
+D/CallCard( 1609):    - Foreground: DIALING Background: IDLE Ringing: IDLE
+D/CallCard( 1609): ########## End Dump CallManager ##########)...
+D/CallCard( 1609): updateForegroundCall()...
+D/CallCard( 1609): displayMainCallStatus(call DIALING)...
+D/CallCard( 1609):   - call.state: DIALING
+D/CallCard( 1609): updateCardTitleWidgets(call DIALING)...
+D/CallCard( 1609): - getTitleForCallCard(Call DIALING)...
+D/CallCard( 1609):   ==> result: Dialing
+D/CallCard( 1609): updateCardTitleWidgets: Dialing
+D/CallCard( 1609):   - CONN:  incoming: false state: DIALING post dial state: NOT_STARTED, state = DIALING
+D/CallCard( 1609): - displayMainCallStatus: using data we already have...
+D/CallCard( 1609): - displayMainCallStatus: CNAP data from Connection: CNAP name=null, Number/Name Presentation=1
+D/CallCard( 1609):    ==> Got CallerInfo; updating display: ci = CallerInfo { name null, phoneNumber non-null }
+D/CallCard( 1609): updateDisplayForPerson(CallerInfo { name null, phoneNumber non-null })
+D/CallCard( 1609): presentation:1 isTemporary:false
+D/CallCard( 1609): - got personUri: 'content://com.android.contacts/contacts/0', based on info.person_id: 0
+D/CallCard( 1609): updatePhotoForCallState(DIALING)...
+D/CallCard( 1609): displayOnHoldCallStatus(call =IDLE)...
+D/PhoneApp( 1609): - isOtaCallInActiveState false
+D/InCallScreen( 1609): [okToDialDTMFTones] foreground state: DIALING, ringing state: false, call screen mode: NORMAL, result: false
+D/InCallScreen( 1609): isBluetoothAudioConnected: ==> isAudioOn = false
+D/InCallTouchUi( 1609): - updateState: CallManager state is OFFHOOK
+D/InCallScreen( 1609): getUpdatedInCallControlState()...
+D/InCallScreen( 1609): isBluetoothAvailable()...
+D/InCallScreen( 1609):   - headset state = 0
+D/InCallScreen( 1609):   - headset address: null
+D/InCallScreen( 1609):   ==> false
+D/InCallScreen( 1609): [okToDialDTMFTones] foreground state: DIALING, ringing state: false, call screen mode: NORMAL, result: false
+D/InCallControlState( 1609): InCallControlState:
+D/InCallControlState( 1609):   manageConferenceVisible: false
+D/InCallControlState( 1609):   manageConferenceEnabled: false
+D/InCallControlState( 1609):   canAddCall: false
+D/InCallControlState( 1609):   canSwap: false
+D/InCallControlState( 1609):   canMerge: false
+D/InCallControlState( 1609):   bluetoothEnabled: false
+D/InCallControlState( 1609):   bluetoothIndicatorOn: false
+D/InCallControlState( 1609):   speakerEnabled: true
+D/InCallControlState( 1609):   speakerOn: false
+D/InCallControlState( 1609):   canMute: false
+D/InCallControlState( 1609):   muteIndicatorOn: false
+D/InCallControlState( 1609):   dialpadEnabled: false
+D/InCallControlState( 1609):   dialpadVisible: false
+D/InCallControlState( 1609):   onHold: false
+D/InCallControlState( 1609):   canHold: false
+D/InCallScreen( 1609): updateProviderOverlay: false
+D/InCallScreen( 1609): updateMenuButtonHint()...
+D/PhoneApp( 1609): - preventScreenOn(false)...
+I/power   ( 1520): *** set_screen_state 1
+I/GrallocFB( 1520): uevent detected in fb_thread:142
+D/PhoneApp( 1609): updateWakeState: callscreen true, dialer false, speaker false...
+D/PhoneApp( 1609): setScreenTimeout(MEDIUM)...
+D/PhoneApp( 1609): updateWakeState: keepScreenOn = true (isRinging false, isDialing true, showingDisc false)
+D/PhoneApp( 1609): requestWakeState(FULL)...
+D/InCallScreen( 1609): enableTouchLock(false)...
+D/InCallScreen( 1609): onResume() done.
+I/GrallocFB( 1520): uevent detected in fb_thread:142
+I/GrallocFB( 1520): uevent detected in fb_thread:142
+I/GrallocFB( 1520): uevent detected in fb_thread:142
+I/GrallocFB( 1520): uevent detected in fb_thread:142
+I/GrallocFB( 1520): uevent detected in fb_thread:142
+D/BT HS/HF( 1609): updatePhoneState()
+D/CallNotifier( 1609): onPhoneStateChanged: state = OFFHOOK
+D/PhoneApp( 1609): updateProximitySensorMode: state = OFFHOOK
+D/PhoneApp( 1609): updateProximitySensorMode: lock already held.
+D/AccelerometerListener( 1609): enable(true)
+D/CallNotifier( 1609): onPhoneStateChanged: OFF HOOK
+D/PhoneUtils( 1609): setAudioMode()...OFFHOOK
+D/PhoneUtils( 1609): setAudioMode() no change: MODE_IN_CALL
+D/CallNotifier( 1609): stopRing()... (OFFHOOK state)
+D/Ringer  ( 1609): stopRing()...
+D/Ringer  ( 1609): - stopRing: null mRingHandler!
+D/CallNotifier( 1609): - updating notification for phone state change...
+D/NotificationMgr( 1609): updateInCallNotification()...
+D/NotificationMgr( 1609):   - hasRingingCall = false
+D/NotificationMgr( 1609):   - hasActiveCall = true
+D/NotificationMgr( 1609):   - hasHoldingCall = false
+D/NotificationMgr( 1609): updateInCallNotification: enhancedVoicePrivacy = false
+D/NotificationMgr( 1609): - Updating status bar icon: resId = 2130837684
+D/NotificationMgr( 1609): - Updating expanded view: line 1 'xxxxxxx'
+D/PhoneUtils( 1609): startGetCallerInfo: query already done, returning CallerInfo
+D/PhoneUtils( 1609): getCompactNameFromCallerInfo: info = CallerInfo { name null, phoneNumber non-null }
+D/PhoneUtils( 1609): modifyForSpecialCnapCases: initially, number=Emergency number, presentation=1 ci CallerInfo { name null, phoneNumber non-null }
+D/PhoneUtils( 1609): checkCnapSpecialCases, normal str. number: Emergency number
+D/PhoneUtils( 1609): modifyForSpecialCnapCases: returning number string=Emergency number
+D/PhoneUtils( 1609): getCompactNameFromCallerInfo: compactName=Emergency number
+D/NotificationMgr( 1609): - Updating expanded view: line 2 'xxxxxxx'
+D/NotificationMgr( 1609): Notifying IN_CALL_NOTIFICATION: Notification(vibrate=null,sound=null,defaults=0x0,flags=0x2)
+D/NotificationMgr( 1609): updateSpeakerNotification: speaker OFF (or not offhook)
+D/NotificationMgr( 1609): updateMuteNotification: not muted (or not offhook)
+D/PhoneUtils( 1609): ConnectionHandler: updating mute state for each connection
+D/PhoneUtils( 1609): setMuteInternal: false
+I/GrallocFB( 1520): uevent detected in fb_thread:142
+D/NotificationMgr( 1609): updateMuteNotification: not muted (or not offhook)
+D/InCallScreen( 1609): onPhoneStateChanged()...
+D/InCallScreen( 1609): updateScreen()...
+D/InCallScreen( 1609): - updateScreen: updating the in-call UI...
+D/CallCard( 1609): updateState(########### Dump CallManager ############
+D/CallCard( 1609): CallManager state = OFFHOOK
+D/CallCard( 1609):    - Foreground: DIALING from Handler{b3c1cfd8}
+D/CallCard( 1609):      Conn: [ incoming: false state: DIALING post dial state: NOT_STARTED]
+D/CallCard( 1609):    - Background: IDLE from Handler{b3c1cfd8}
+D/CallCard( 1609):      Conn: []
+D/CallCard( 1609):    - Ringing: IDLE from Handler{b3c1cfd8}
+D/CallCard( 1609):  Phone: Handler{b3c1cfd8}, name = GSM, state = OFFHOOK
+D/CallCard( 1609):    - Foreground: DIALING Background: IDLE Ringing: IDLE
+D/CallCard( 1609): ########## End Dump CallManager ##########)...
+D/CallCard( 1609): updateForegroundCall()...
+D/CallCard( 1609): displayMainCallStatus(call DIALING)...
+D/CallCard( 1609):   - call.state: DIALING
+D/CallCard( 1609): updateCardTitleWidgets(call DIALING)...
+D/CallCard( 1609): - getTitleForCallCard(Call DIALING)...
+D/CallCard( 1609):   ==> result: Dialing
+D/CallCard( 1609): updateCardTitleWidgets: Dialing
+D/CallCard( 1609):   - CONN:  incoming: false state: DIALING post dial state: NOT_STARTED, state = DIALING
+D/CallCard( 1609): - displayMainCallStatus: using data we already have...
+D/CallCard( 1609): - displayMainCallStatus: CNAP data from Connection: CNAP name=null, Number/Name Presentation=1
+D/CallCard( 1609):    ==> Got CallerInfo; updating display: ci = CallerInfo { name null, phoneNumber non-null }
+D/CallCard( 1609): updateDisplayForPerson(CallerInfo { name null, phoneNumber non-null })
+D/CallCard( 1609): presentation:1 isTemporary:false
+D/CallCard( 1609): - got personUri: 'content://com.android.contacts/contacts/0', based on info.person_id: 0
+D/CallCard( 1609): updatePhotoForCallState(DIALING)...
+D/CallCard( 1609): displayOnHoldCallStatus(call =IDLE)...
+D/PhoneApp( 1609): - isOtaCallInActiveState false
+D/InCallScreen( 1609): [okToDialDTMFTones] foreground state: DIALING, ringing state: false, call screen mode: NORMAL, result: false
+D/InCallScreen( 1609): isBluetoothAudioConnected: ==> isAudioOn = false
+D/InCallTouchUi( 1609): - updateState: CallManager state is OFFHOOK
+D/InCallScreen( 1609): getUpdatedInCallControlState()...
+D/InCallScreen( 1609): isBluetoothAvailable()...
+I/GrallocFB( 1520): uevent detected in fb_thread:142
+D/InCallScreen( 1609):   - headset state = 0
+D/InCallScreen( 1609):   - headset address: null
+D/InCallScreen( 1609):   ==> false
+

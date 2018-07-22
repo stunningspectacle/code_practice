@@ -1,0 +1,1090 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+  <title>LCOV - test.info - arch/x86/include/asm/processor.h</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">arch/x86/include/asm</a> - processor.h<span style="font-size: 80%;"> (source / <a href="processor.h.func.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">test.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2011-05-12</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="headerItem">Branches:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">           Branch data     Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>                :            : #ifndef _ASM_X86_PROCESSOR_H</a>
+<span class="lineNum">       2 </span>                :            : #define _ASM_X86_PROCESSOR_H
+<span class="lineNum">       3 </span>                :            : 
+<span class="lineNum">       4 </span>                :            : #include &lt;asm/processor-flags.h&gt;
+<span class="lineNum">       5 </span>                :            : 
+<span class="lineNum">       6 </span>                :            : /* Forward declaration, a strange C thing */
+<span class="lineNum">       7 </span>                :            : struct task_struct;
+<span class="lineNum">       8 </span>                :            : struct mm_struct;
+<span class="lineNum">       9 </span>                :            : 
+<span class="lineNum">      10 </span>                :            : #include &lt;asm/vm86.h&gt;
+<span class="lineNum">      11 </span>                :            : #include &lt;asm/math_emu.h&gt;
+<span class="lineNum">      12 </span>                :            : #include &lt;asm/segment.h&gt;
+<span class="lineNum">      13 </span>                :            : #include &lt;asm/types.h&gt;
+<span class="lineNum">      14 </span>                :            : #include &lt;asm/sigcontext.h&gt;
+<span class="lineNum">      15 </span>                :            : #include &lt;asm/current.h&gt;
+<span class="lineNum">      16 </span>                :            : #include &lt;asm/cpufeature.h&gt;
+<span class="lineNum">      17 </span>                :            : #include &lt;asm/system.h&gt;
+<span class="lineNum">      18 </span>                :            : #include &lt;asm/page.h&gt;
+<span class="lineNum">      19 </span>                :            : #include &lt;asm/pgtable_types.h&gt;
+<span class="lineNum">      20 </span>                :            : #include &lt;asm/percpu.h&gt;
+<span class="lineNum">      21 </span>                :            : #include &lt;asm/msr.h&gt;
+<span class="lineNum">      22 </span>                :            : #include &lt;asm/desc_defs.h&gt;
+<span class="lineNum">      23 </span>                :            : #include &lt;asm/nops.h&gt;
+<span class="lineNum">      24 </span>                :            : 
+<span class="lineNum">      25 </span>                :            : #include &lt;linux/personality.h&gt;
+<span class="lineNum">      26 </span>                :            : #include &lt;linux/cpumask.h&gt;
+<span class="lineNum">      27 </span>                :            : #include &lt;linux/cache.h&gt;
+<span class="lineNum">      28 </span>                :            : #include &lt;linux/threads.h&gt;
+<span class="lineNum">      29 </span>                :            : #include &lt;linux/math64.h&gt;
+<span class="lineNum">      30 </span>                :            : #include &lt;linux/init.h&gt;
+<span class="lineNum">      31 </span>                :            : #include &lt;linux/err.h&gt;
+<span class="lineNum">      32 </span>                :            : 
+<span class="lineNum">      33 </span>                :            : #define HBP_NUM 4
+<span class="lineNum">      34 </span>                :            : /*
+<span class="lineNum">      35 </span>                :            :  * Default implementation of macro that returns current
+<span class="lineNum">      36 </span>                :            :  * instruction pointer (&quot;program counter&quot;).
+<span class="lineNum">      37 </span>                :            :  */
+<span class="lineNum">      38 </span>                :            : static inline void *current_text_addr(void)
+<span class="lineNum">      39 </span>                :            : {
+<span class="lineNum">      40 </span>                :            :         void *pc;
+<span class="lineNum">      41 </span>                :            : 
+<span class="lineNum">      42 </span>                :            :         asm volatile(&quot;mov $1f, %0; 1:&quot;:&quot;=r&quot; (pc));
+<span class="lineNum">      43 </span>                :            : 
+<span class="lineNum">      44 </span>                :            :         return pc;
+<span class="lineNum">      45 </span>                :            : }
+<span class="lineNum">      46 </span>                :            : 
+<span class="lineNum">      47 </span>                :            : #ifdef CONFIG_X86_VSMP
+<span class="lineNum">      48 </span>                :            : # define ARCH_MIN_TASKALIGN             (1 &lt;&lt; INTERNODE_CACHE_SHIFT)
+<span class="lineNum">      49 </span>                :            : # define ARCH_MIN_MMSTRUCT_ALIGN        (1 &lt;&lt; INTERNODE_CACHE_SHIFT)
+<span class="lineNum">      50 </span>                :            : #else
+<span class="lineNum">      51 </span>                :            : # define ARCH_MIN_TASKALIGN             16
+<span class="lineNum">      52 </span>                :            : # define ARCH_MIN_MMSTRUCT_ALIGN        0
+<span class="lineNum">      53 </span>                :            : #endif
+<span class="lineNum">      54 </span>                :            : 
+<span class="lineNum">      55 </span>                :            : /*
+<span class="lineNum">      56 </span>                :            :  *  CPU type and hardware bug flags. Kept separately for each CPU.
+<span class="lineNum">      57 </span>                :            :  *  Members of this structure are referenced in head.S, so think twice
+<span class="lineNum">      58 </span>                :            :  *  before touching them. [mj]
+<span class="lineNum">      59 </span>                :            :  */
+<span class="lineNum">      60 </span>                :            : 
+<span class="lineNum">      61 </span>                :            : struct cpuinfo_x86 {
+<span class="lineNum">      62 </span>                :            :         __u8                    x86;            /* CPU family */
+<span class="lineNum">      63 </span>                :            :         __u8                    x86_vendor;     /* CPU vendor */
+<span class="lineNum">      64 </span>                :            :         __u8                    x86_model;
+<span class="lineNum">      65 </span>                :            :         __u8                    x86_mask;
+<span class="lineNum">      66 </span>                :            : #ifdef CONFIG_X86_32
+<span class="lineNum">      67 </span>                :            :         char                    wp_works_ok;    /* It doesn't on 386's */
+<span class="lineNum">      68 </span>                :            : 
+<span class="lineNum">      69 </span>                :            :         /* Problems on some 486Dx4's and old 386's: */
+<span class="lineNum">      70 </span>                :            :         char                    hlt_works_ok;
+<span class="lineNum">      71 </span>                :            :         char                    hard_math;
+<span class="lineNum">      72 </span>                :            :         char                    rfu;
+<span class="lineNum">      73 </span>                :            :         char                    fdiv_bug;
+<span class="lineNum">      74 </span>                :            :         char                    f00f_bug;
+<span class="lineNum">      75 </span>                :            :         char                    coma_bug;
+<span class="lineNum">      76 </span>                :            :         char                    pad0;
+<span class="lineNum">      77 </span>                :            : #else
+<span class="lineNum">      78 </span>                :            :         /* Number of 4K pages in DTLB/ITLB combined(in pages): */
+<span class="lineNum">      79 </span>                :            :         int                     x86_tlbsize;
+<span class="lineNum">      80 </span>                :            : #endif
+<span class="lineNum">      81 </span>                :            :         __u8                    x86_virt_bits;
+<span class="lineNum">      82 </span>                :            :         __u8                    x86_phys_bits;
+<span class="lineNum">      83 </span>                :            :         /* CPUID returned core id bits: */
+<span class="lineNum">      84 </span>                :            :         __u8                    x86_coreid_bits;
+<span class="lineNum">      85 </span>                :            :         /* Max extended CPUID function supported: */
+<span class="lineNum">      86 </span>                :            :         __u32                   extended_cpuid_level;
+<span class="lineNum">      87 </span>                :            :         /* Maximum supported CPUID level, -1=no CPUID: */
+<span class="lineNum">      88 </span>                :            :         int                     cpuid_level;
+<span class="lineNum">      89 </span>                :            :         __u32                   x86_capability[NCAPINTS];
+<span class="lineNum">      90 </span>                :            :         char                    x86_vendor_id[16];
+<span class="lineNum">      91 </span>                :            :         char                    x86_model_id[64];
+<span class="lineNum">      92 </span>                :            :         /* in KB - valid for CPUS which support this call: */
+<span class="lineNum">      93 </span>                :            :         int                     x86_cache_size;
+<span class="lineNum">      94 </span>                :            :         int                     x86_cache_alignment;    /* In bytes */
+<span class="lineNum">      95 </span>                :            :         int                     x86_power;
+<span class="lineNum">      96 </span>                :            :         unsigned long           loops_per_jiffy;
+<span class="lineNum">      97 </span>                :            : #ifdef CONFIG_SMP
+<span class="lineNum">      98 </span>                :            :         /* cpus sharing the last level cache: */
+<span class="lineNum">      99 </span>                :            :         cpumask_var_t           llc_shared_map;
+<span class="lineNum">     100 </span>                :            : #endif
+<span class="lineNum">     101 </span>                :            :         /* cpuid returned max cores value: */
+<span class="lineNum">     102 </span>                :            :         u16                      x86_max_cores;
+<span class="lineNum">     103 </span>                :            :         u16                     apicid;
+<span class="lineNum">     104 </span>                :            :         u16                     initial_apicid;
+<span class="lineNum">     105 </span>                :            :         u16                     x86_clflush_size;
+<span class="lineNum">     106 </span>                :            : #ifdef CONFIG_SMP
+<span class="lineNum">     107 </span>                :            :         /* number of cores as seen by the OS: */
+<span class="lineNum">     108 </span>                :            :         u16                     booted_cores;
+<span class="lineNum">     109 </span>                :            :         /* Physical processor id: */
+<span class="lineNum">     110 </span>                :            :         u16                     phys_proc_id;
+<span class="lineNum">     111 </span>                :            :         /* Core id: */
+<span class="lineNum">     112 </span>                :            :         u16                     cpu_core_id;
+<span class="lineNum">     113 </span>                :            :         /* Index into per_cpu list: */
+<span class="lineNum">     114 </span>                :            :         u16                     cpu_index;
+<span class="lineNum">     115 </span>                :            : #endif
+<span class="lineNum">     116 </span>                :            : } __attribute__((__aligned__(SMP_CACHE_BYTES)));
+<span class="lineNum">     117 </span>                :            : 
+<span class="lineNum">     118 </span>                :            : #define X86_VENDOR_INTEL        0
+<span class="lineNum">     119 </span>                :            : #define X86_VENDOR_CYRIX        1
+<span class="lineNum">     120 </span>                :            : #define X86_VENDOR_AMD          2
+<span class="lineNum">     121 </span>                :            : #define X86_VENDOR_UMC          3
+<span class="lineNum">     122 </span>                :            : #define X86_VENDOR_CENTAUR      5
+<span class="lineNum">     123 </span>                :            : #define X86_VENDOR_TRANSMETA    7
+<span class="lineNum">     124 </span>                :            : #define X86_VENDOR_NSC          8
+<span class="lineNum">     125 </span>                :            : #define X86_VENDOR_NUM          9
+<span class="lineNum">     126 </span>                :            : 
+<span class="lineNum">     127 </span>                :            : #define X86_VENDOR_UNKNOWN      0xff
+<span class="lineNum">     128 </span>                :            : 
+<span class="lineNum">     129 </span>                :            : /*
+<span class="lineNum">     130 </span>                :            :  * capabilities of CPUs
+<span class="lineNum">     131 </span>                :            :  */
+<span class="lineNum">     132 </span>                :            : extern struct cpuinfo_x86       boot_cpu_data;
+<span class="lineNum">     133 </span>                :            : extern struct cpuinfo_x86       new_cpu_data;
+<span class="lineNum">     134 </span>                :            : 
+<span class="lineNum">     135 </span>                :            : extern struct tss_struct        doublefault_tss;
+<span class="lineNum">     136 </span>                :            : extern __u32                    cpu_caps_cleared[NCAPINTS];
+<span class="lineNum">     137 </span>                :            : extern __u32                    cpu_caps_set[NCAPINTS];
+<span class="lineNum">     138 </span>                :            : 
+<span class="lineNum">     139 </span>                :            : #ifdef CONFIG_SMP
+<span class="lineNum">     140 </span>                :            : DECLARE_PER_CPU_SHARED_ALIGNED(struct cpuinfo_x86, cpu_info);
+<span class="lineNum">     141 </span>                :            : #define cpu_data(cpu)           per_cpu(cpu_info, cpu)
+<span class="lineNum">     142 </span>                :            : #define current_cpu_data        __get_cpu_var(cpu_info)
+<span class="lineNum">     143 </span>                :            : #else
+<span class="lineNum">     144 </span>                :            : #define cpu_data(cpu)           boot_cpu_data
+<span class="lineNum">     145 </span>                :            : #define current_cpu_data        boot_cpu_data
+<span class="lineNum">     146 </span>                :            : #endif
+<span class="lineNum">     147 </span>                :            : 
+<span class="lineNum">     148 </span>                :            : extern const struct seq_operations cpuinfo_op;
+<span class="lineNum">     149 </span>                :            : 
+<span class="lineNum">     150 </span>                :            : static inline int hlt_works(int cpu)
+<span class="lineNum">     151 </span>                :            : {
+<span class="lineNum">     152 </span>                :            : #ifdef CONFIG_X86_32
+<span class="lineNum">     153 </span>                :            :         return cpu_data(cpu).hlt_works_ok;
+<span class="lineNum">     154 </span>                :            : #else
+<span class="lineNum">     155 </span>                :            :         return 1;
+<span class="lineNum">     156 </span>                :            : #endif
+<span class="lineNum">     157 </span>                :            : }
+<span class="lineNum">     158 </span>                :            : 
+<span class="lineNum">     159 </span>                :            : #define cache_line_size()       (boot_cpu_data.x86_cache_alignment)
+<span class="lineNum">     160 </span>                :            : 
+<span class="lineNum">     161 </span>                :            : extern void cpu_detect(struct cpuinfo_x86 *c);
+<span class="lineNum">     162 </span>                :            : 
+<span class="lineNum">     163 </span>                :            : extern struct pt_regs *idle_regs(struct pt_regs *);
+<span class="lineNum">     164 </span>                :            : 
+<span class="lineNum">     165 </span>                :            : extern void early_cpu_init(void);
+<span class="lineNum">     166 </span>                :            : extern void identify_boot_cpu(void);
+<span class="lineNum">     167 </span>                :            : extern void identify_secondary_cpu(struct cpuinfo_x86 *);
+<span class="lineNum">     168 </span>                :            : extern void print_cpu_info(struct cpuinfo_x86 *);
+<span class="lineNum">     169 </span>                :            : extern void init_scattered_cpuid_features(struct cpuinfo_x86 *c);
+<span class="lineNum">     170 </span>                :            : extern unsigned int init_intel_cacheinfo(struct cpuinfo_x86 *c);
+<span class="lineNum">     171 </span>                :            : extern unsigned short num_cache_leaves;
+<span class="lineNum">     172 </span>                :            : 
+<span class="lineNum">     173 </span>                :            : extern void detect_extended_topology(struct cpuinfo_x86 *c);
+<span class="lineNum">     174 </span>                :            : extern void detect_ht(struct cpuinfo_x86 *c);
+<span class="lineNum">     175 </span>                :            : 
+<span class="lineNum">     176 </span>                :            : static inline void native_cpuid(unsigned int *eax, unsigned int *ebx,
+<span class="lineNum">     177 </span>                :            :                                 unsigned int *ecx, unsigned int *edx)
+<span class="lineNum">     178 </span>                :            : {
+<span class="lineNum">     179 </span>                :            :         /* ecx is often an input as well as an output. */
+<span class="lineNum">     180 </span>                :            :         asm volatile(&quot;cpuid&quot;
+<span class="lineNum">     181 </span>                :            :             : &quot;=a&quot; (*eax),
+<span class="lineNum">     182 </span>                :            :               &quot;=b&quot; (*ebx),
+<span class="lineNum">     183 </span>                :            :               &quot;=c&quot; (*ecx),
+<span class="lineNum">     184 </span>                :            :               &quot;=d&quot; (*edx)
+<span class="lineNum">     185 </span>                :            :             : &quot;0&quot; (*eax), &quot;2&quot; (*ecx));
+<span class="lineNum">     186 </span>                :            : }
+<span class="lineNum">     187 </span>                :            : 
+<span class="lineNum">     188 </span>                :            : static inline void load_cr3(pgd_t *pgdir)
+<span class="lineNum">     189 </span>                :            : {
+<span class="lineNum">     190 </span>                :            :         write_cr3(__pa(pgdir));
+<span class="lineNum">     191 </span>                :            : }
+<span class="lineNum">     192 </span>                :            : 
+<span class="lineNum">     193 </span>                :            : #ifdef CONFIG_X86_32
+<span class="lineNum">     194 </span>                :            : /* This is the TSS defined by the hardware. */
+<span class="lineNum">     195 </span>                :            : struct x86_hw_tss {
+<span class="lineNum">     196 </span>                :            :         unsigned short          back_link, __blh;
+<span class="lineNum">     197 </span>                :            :         unsigned long           sp0;
+<span class="lineNum">     198 </span>                :            :         unsigned short          ss0, __ss0h;
+<span class="lineNum">     199 </span>                :            :         unsigned long           sp1;
+<span class="lineNum">     200 </span>                :            :         /* ss1 caches MSR_IA32_SYSENTER_CS: */
+<span class="lineNum">     201 </span>                :            :         unsigned short          ss1, __ss1h;
+<span class="lineNum">     202 </span>                :            :         unsigned long           sp2;
+<span class="lineNum">     203 </span>                :            :         unsigned short          ss2, __ss2h;
+<span class="lineNum">     204 </span>                :            :         unsigned long           __cr3;
+<span class="lineNum">     205 </span>                :            :         unsigned long           ip;
+<span class="lineNum">     206 </span>                :            :         unsigned long           flags;
+<span class="lineNum">     207 </span>                :            :         unsigned long           ax;
+<span class="lineNum">     208 </span>                :            :         unsigned long           cx;
+<span class="lineNum">     209 </span>                :            :         unsigned long           dx;
+<span class="lineNum">     210 </span>                :            :         unsigned long           bx;
+<span class="lineNum">     211 </span>                :            :         unsigned long           sp;
+<span class="lineNum">     212 </span>                :            :         unsigned long           bp;
+<span class="lineNum">     213 </span>                :            :         unsigned long           si;
+<span class="lineNum">     214 </span>                :            :         unsigned long           di;
+<span class="lineNum">     215 </span>                :            :         unsigned short          es, __esh;
+<span class="lineNum">     216 </span>                :            :         unsigned short          cs, __csh;
+<span class="lineNum">     217 </span>                :            :         unsigned short          ss, __ssh;
+<span class="lineNum">     218 </span>                :            :         unsigned short          ds, __dsh;
+<span class="lineNum">     219 </span>                :            :         unsigned short          fs, __fsh;
+<span class="lineNum">     220 </span>                :            :         unsigned short          gs, __gsh;
+<span class="lineNum">     221 </span>                :            :         unsigned short          ldt, __ldth;
+<span class="lineNum">     222 </span>                :            :         unsigned short          trace;
+<span class="lineNum">     223 </span>                :            :         unsigned short          io_bitmap_base;
+<span class="lineNum">     224 </span>                :            : 
+<span class="lineNum">     225 </span>                :            : } __attribute__((packed));
+<span class="lineNum">     226 </span>                :            : #else
+<span class="lineNum">     227 </span>                :            : struct x86_hw_tss {
+<span class="lineNum">     228 </span>                :            :         u32                     reserved1;
+<span class="lineNum">     229 </span>                :            :         u64                     sp0;
+<span class="lineNum">     230 </span>                :            :         u64                     sp1;
+<span class="lineNum">     231 </span>                :            :         u64                     sp2;
+<span class="lineNum">     232 </span>                :            :         u64                     reserved2;
+<span class="lineNum">     233 </span>                :            :         u64                     ist[7];
+<span class="lineNum">     234 </span>                :            :         u32                     reserved3;
+<span class="lineNum">     235 </span>                :            :         u32                     reserved4;
+<span class="lineNum">     236 </span>                :            :         u16                     reserved5;
+<span class="lineNum">     237 </span>                :            :         u16                     io_bitmap_base;
+<span class="lineNum">     238 </span>                :            : 
+<span class="lineNum">     239 </span>                :            : } __attribute__((packed)) ____cacheline_aligned;
+<span class="lineNum">     240 </span>                :            : #endif
+<span class="lineNum">     241 </span>                :            : 
+<span class="lineNum">     242 </span>                :            : /*
+<span class="lineNum">     243 </span>                :            :  * IO-bitmap sizes:
+<span class="lineNum">     244 </span>                :            :  */
+<span class="lineNum">     245 </span>                :            : #define IO_BITMAP_BITS                  65536
+<span class="lineNum">     246 </span>                :            : #define IO_BITMAP_BYTES                 (IO_BITMAP_BITS/8)
+<span class="lineNum">     247 </span>                :            : #define IO_BITMAP_LONGS                 (IO_BITMAP_BYTES/sizeof(long))
+<span class="lineNum">     248 </span>                :            : #define IO_BITMAP_OFFSET                offsetof(struct tss_struct, io_bitmap)
+<span class="lineNum">     249 </span>                :            : #define INVALID_IO_BITMAP_OFFSET        0x8000
+<span class="lineNum">     250 </span>                :            : 
+<span class="lineNum">     251 </span>                :            : struct tss_struct {
+<span class="lineNum">     252 </span>                :            :         /*
+<span class="lineNum">     253 </span>                :            :          * The hardware state:
+<span class="lineNum">     254 </span>                :            :          */
+<span class="lineNum">     255 </span>                :            :         struct x86_hw_tss       x86_tss;
+<span class="lineNum">     256 </span>                :            : 
+<span class="lineNum">     257 </span>                :            :         /*
+<span class="lineNum">     258 </span>                :            :          * The extra 1 is there because the CPU will access an
+<span class="lineNum">     259 </span>                :            :          * additional byte beyond the end of the IO permission
+<span class="lineNum">     260 </span>                :            :          * bitmap. The extra byte must be all 1 bits, and must
+<span class="lineNum">     261 </span>                :            :          * be within the limit.
+<span class="lineNum">     262 </span>                :            :          */
+<span class="lineNum">     263 </span>                :            :         unsigned long           io_bitmap[IO_BITMAP_LONGS + 1];
+<span class="lineNum">     264 </span>                :            : 
+<span class="lineNum">     265 </span>                :            :         /*
+<span class="lineNum">     266 </span>                :            :          * .. and then another 0x100 bytes for the emergency kernel stack:
+<span class="lineNum">     267 </span>                :            :          */
+<span class="lineNum">     268 </span>                :            :         unsigned long           stack[64];
+<span class="lineNum">     269 </span>                :            : 
+<span class="lineNum">     270 </span>                :            : } ____cacheline_aligned;
+<span class="lineNum">     271 </span>                :            : 
+<span class="lineNum">     272 </span>                :            : DECLARE_PER_CPU_SHARED_ALIGNED(struct tss_struct, init_tss);
+<span class="lineNum">     273 </span>                :            : 
+<span class="lineNum">     274 </span>                :            : /*
+<span class="lineNum">     275 </span>                :            :  * Save the original ist values for checking stack pointers during debugging
+<span class="lineNum">     276 </span>                :            :  */
+<span class="lineNum">     277 </span>                :            : struct orig_ist {
+<span class="lineNum">     278 </span>                :            :         unsigned long           ist[7];
+<span class="lineNum">     279 </span>                :            : };
+<span class="lineNum">     280 </span>                :            : 
+<span class="lineNum">     281 </span>                :            : #define MXCSR_DEFAULT           0x1f80
+<span class="lineNum">     282 </span>                :            : 
+<span class="lineNum">     283 </span>                :            : struct i387_fsave_struct {
+<span class="lineNum">     284 </span>                :            :         u32                     cwd;    /* FPU Control Word             */
+<span class="lineNum">     285 </span>                :            :         u32                     swd;    /* FPU Status Word              */
+<span class="lineNum">     286 </span>                :            :         u32                     twd;    /* FPU Tag Word                 */
+<span class="lineNum">     287 </span>                :            :         u32                     fip;    /* FPU IP Offset                */
+<span class="lineNum">     288 </span>                :            :         u32                     fcs;    /* FPU IP Selector              */
+<span class="lineNum">     289 </span>                :            :         u32                     foo;    /* FPU Operand Pointer Offset   */
+<span class="lineNum">     290 </span>                :            :         u32                     fos;    /* FPU Operand Pointer Selector */
+<span class="lineNum">     291 </span>                :            : 
+<span class="lineNum">     292 </span>                :            :         /* 8*10 bytes for each FP-reg = 80 bytes:                       */
+<span class="lineNum">     293 </span>                :            :         u32                     st_space[20];
+<span class="lineNum">     294 </span>                :            : 
+<span class="lineNum">     295 </span>                :            :         /* Software status information [not touched by FSAVE ]:         */
+<span class="lineNum">     296 </span>                :            :         u32                     status;
+<span class="lineNum">     297 </span>                :            : };
+<span class="lineNum">     298 </span>                :            : 
+<span class="lineNum">     299 </span>                :            : struct i387_fxsave_struct {
+<span class="lineNum">     300 </span>                :            :         u16                     cwd; /* Control Word                    */
+<span class="lineNum">     301 </span>                :            :         u16                     swd; /* Status Word                     */
+<span class="lineNum">     302 </span>                :            :         u16                     twd; /* Tag Word                        */
+<span class="lineNum">     303 </span>                :            :         u16                     fop; /* Last Instruction Opcode         */
+<span class="lineNum">     304 </span>                :            :         union {
+<span class="lineNum">     305 </span>                :            :                 struct {
+<span class="lineNum">     306 </span>                :            :                         u64     rip; /* Instruction Pointer             */
+<span class="lineNum">     307 </span>                :            :                         u64     rdp; /* Data Pointer                    */
+<span class="lineNum">     308 </span>                :            :                 };
+<span class="lineNum">     309 </span>                :            :                 struct {
+<span class="lineNum">     310 </span>                :            :                         u32     fip; /* FPU IP Offset                   */
+<span class="lineNum">     311 </span>                :            :                         u32     fcs; /* FPU IP Selector                 */
+<span class="lineNum">     312 </span>                :            :                         u32     foo; /* FPU Operand Offset              */
+<span class="lineNum">     313 </span>                :            :                         u32     fos; /* FPU Operand Selector            */
+<span class="lineNum">     314 </span>                :            :                 };
+<span class="lineNum">     315 </span>                :            :         };
+<span class="lineNum">     316 </span>                :            :         u32                     mxcsr;          /* MXCSR Register State */
+<span class="lineNum">     317 </span>                :            :         u32                     mxcsr_mask;     /* MXCSR Mask           */
+<span class="lineNum">     318 </span>                :            : 
+<span class="lineNum">     319 </span>                :            :         /* 8*16 bytes for each FP-reg = 128 bytes:                      */
+<span class="lineNum">     320 </span>                :            :         u32                     st_space[32];
+<span class="lineNum">     321 </span>                :            : 
+<span class="lineNum">     322 </span>                :            :         /* 16*16 bytes for each XMM-reg = 256 bytes:                    */
+<span class="lineNum">     323 </span>                :            :         u32                     xmm_space[64];
+<span class="lineNum">     324 </span>                :            : 
+<span class="lineNum">     325 </span>                :            :         u32                     padding[12];
+<span class="lineNum">     326 </span>                :            : 
+<span class="lineNum">     327 </span>                :            :         union {
+<span class="lineNum">     328 </span>                :            :                 u32             padding1[12];
+<span class="lineNum">     329 </span>                :            :                 u32             sw_reserved[12];
+<span class="lineNum">     330 </span>                :            :         };
+<span class="lineNum">     331 </span>                :            : 
+<span class="lineNum">     332 </span>                :            : } __attribute__((aligned(16)));
+<span class="lineNum">     333 </span>                :            : 
+<span class="lineNum">     334 </span>                :            : struct i387_soft_struct {
+<span class="lineNum">     335 </span>                :            :         u32                     cwd;
+<span class="lineNum">     336 </span>                :            :         u32                     swd;
+<span class="lineNum">     337 </span>                :            :         u32                     twd;
+<span class="lineNum">     338 </span>                :            :         u32                     fip;
+<span class="lineNum">     339 </span>                :            :         u32                     fcs;
+<span class="lineNum">     340 </span>                :            :         u32                     foo;
+<span class="lineNum">     341 </span>                :            :         u32                     fos;
+<span class="lineNum">     342 </span>                :            :         /* 8*10 bytes for each FP-reg = 80 bytes: */
+<span class="lineNum">     343 </span>                :            :         u32                     st_space[20];
+<span class="lineNum">     344 </span>                :            :         u8                      ftop;
+<span class="lineNum">     345 </span>                :            :         u8                      changed;
+<span class="lineNum">     346 </span>                :            :         u8                      lookahead;
+<span class="lineNum">     347 </span>                :            :         u8                      no_update;
+<span class="lineNum">     348 </span>                :            :         u8                      rm;
+<span class="lineNum">     349 </span>                :            :         u8                      alimit;
+<span class="lineNum">     350 </span>                :            :         struct math_emu_info    *info;
+<span class="lineNum">     351 </span>                :            :         u32                     entry_eip;
+<span class="lineNum">     352 </span>                :            : };
+<span class="lineNum">     353 </span>                :            : 
+<span class="lineNum">     354 </span>                :            : struct ymmh_struct {
+<span class="lineNum">     355 </span>                :            :         /* 16 * 16 bytes for each YMMH-reg = 256 bytes */
+<span class="lineNum">     356 </span>                :            :         u32 ymmh_space[64];
+<span class="lineNum">     357 </span>                :            : };
+<span class="lineNum">     358 </span>                :            : 
+<span class="lineNum">     359 </span>                :            : struct xsave_hdr_struct {
+<span class="lineNum">     360 </span>                :            :         u64 xstate_bv;
+<span class="lineNum">     361 </span>                :            :         u64 reserved1[2];
+<span class="lineNum">     362 </span>                :            :         u64 reserved2[5];
+<span class="lineNum">     363 </span>                :            : } __attribute__((packed));
+<span class="lineNum">     364 </span>                :            : 
+<span class="lineNum">     365 </span>                :            : struct xsave_struct {
+<span class="lineNum">     366 </span>                :            :         struct i387_fxsave_struct i387;
+<span class="lineNum">     367 </span>                :            :         struct xsave_hdr_struct xsave_hdr;
+<span class="lineNum">     368 </span>                :            :         struct ymmh_struct ymmh;
+<span class="lineNum">     369 </span>                :            :         /* new processor state extensions will go here */
+<span class="lineNum">     370 </span>                :            : } __attribute__ ((packed, aligned (64)));
+<span class="lineNum">     371 </span>                :            : 
+<span class="lineNum">     372 </span>                :            : union thread_xstate {
+<span class="lineNum">     373 </span>                :            :         struct i387_fsave_struct        fsave;
+<span class="lineNum">     374 </span>                :            :         struct i387_fxsave_struct       fxsave;
+<span class="lineNum">     375 </span>                :            :         struct i387_soft_struct         soft;
+<span class="lineNum">     376 </span>                :            :         struct xsave_struct             xsave;
+<span class="lineNum">     377 </span>                :            : };
+<span class="lineNum">     378 </span>                :            : 
+<span class="lineNum">     379 </span>                :            : struct fpu {
+<span class="lineNum">     380 </span>                :            :         union thread_xstate *state;
+<span class="lineNum">     381 </span>                :            : };
+<span class="lineNum">     382 </span>                :            : 
+<span class="lineNum">     383 </span>                :            : #ifdef CONFIG_X86_64
+<span class="lineNum">     384 </span>                :            : DECLARE_PER_CPU(struct orig_ist, orig_ist);
+<span class="lineNum">     385 </span>                :            : 
+<span class="lineNum">     386 </span>                :            : union irq_stack_union {
+<span class="lineNum">     387 </span>                :            :         char irq_stack[IRQ_STACK_SIZE];
+<span class="lineNum">     388 </span>                :            :         /*
+<span class="lineNum">     389 </span>                :            :          * GCC hardcodes the stack canary as %gs:40.  Since the
+<span class="lineNum">     390 </span>                :            :          * irq_stack is the object at %gs:0, we reserve the bottom
+<span class="lineNum">     391 </span>                :            :          * 48 bytes of the irq stack for the canary.
+<span class="lineNum">     392 </span>                :            :          */
+<span class="lineNum">     393 </span>                :            :         struct {
+<span class="lineNum">     394 </span>                :            :                 char gs_base[40];
+<span class="lineNum">     395 </span>                :            :                 unsigned long stack_canary;
+<span class="lineNum">     396 </span>                :            :         };
+<span class="lineNum">     397 </span>                :            : };
+<span class="lineNum">     398 </span>                :            : 
+<span class="lineNum">     399 </span>                :            : DECLARE_PER_CPU_FIRST(union irq_stack_union, irq_stack_union);
+<span class="lineNum">     400 </span>                :            : DECLARE_INIT_PER_CPU(irq_stack_union);
+<span class="lineNum">     401 </span>                :            : 
+<span class="lineNum">     402 </span>                :            : DECLARE_PER_CPU(char *, irq_stack_ptr);
+<span class="lineNum">     403 </span>                :            : DECLARE_PER_CPU(unsigned int, irq_count);
+<span class="lineNum">     404 </span>                :            : extern unsigned long kernel_eflags;
+<span class="lineNum">     405 </span>                :            : extern asmlinkage void ignore_sysret(void);
+<span class="lineNum">     406 </span>                :            : #else   /* X86_64 */
+<span class="lineNum">     407 </span>                :            : #ifdef CONFIG_CC_STACKPROTECTOR
+<span class="lineNum">     408 </span>                :            : /*
+<span class="lineNum">     409 </span>                :            :  * Make sure stack canary segment base is cached-aligned:
+<span class="lineNum">     410 </span>                :            :  *   &quot;For Intel Atom processors, avoid non zero segment base address
+<span class="lineNum">     411 </span>                :            :  *    that is not aligned to cache line boundary at all cost.&quot;
+<span class="lineNum">     412 </span>                :            :  * (Optim Ref Manual Assembly/Compiler Coding Rule 15.)
+<span class="lineNum">     413 </span>                :            :  */
+<span class="lineNum">     414 </span>                :            : struct stack_canary {
+<span class="lineNum">     415 </span>                :            :         char __pad[20];         /* canary at %gs:20 */
+<span class="lineNum">     416 </span>                :            :         unsigned long canary;
+<span class="lineNum">     417 </span>                :            : };
+<span class="lineNum">     418 </span>                :            : DECLARE_PER_CPU_ALIGNED(struct stack_canary, stack_canary);
+<span class="lineNum">     419 </span>                :            : #endif
+<span class="lineNum">     420 </span>                :            : #endif  /* X86_64 */
+<span class="lineNum">     421 </span>                :            : 
+<span class="lineNum">     422 </span>                :            : extern unsigned int xstate_size;
+<span class="lineNum">     423 </span>                :            : extern void free_thread_xstate(struct task_struct *);
+<span class="lineNum">     424 </span>                :            : extern struct kmem_cache *task_xstate_cachep;
+<span class="lineNum">     425 </span>                :            : 
+<span class="lineNum">     426 </span>                :            : struct perf_event;
+<span class="lineNum">     427 </span>                :            : 
+<span class="lineNum">     428 </span>                :            : struct thread_struct {
+<span class="lineNum">     429 </span>                :            :         /* Cached TLS descriptors: */
+<span class="lineNum">     430 </span>                :            :         struct desc_struct      tls_array[GDT_ENTRY_TLS_ENTRIES];
+<span class="lineNum">     431 </span>                :            :         unsigned long           sp0;
+<span class="lineNum">     432 </span>                :            :         unsigned long           sp;
+<span class="lineNum">     433 </span>                :            : #ifdef CONFIG_X86_32
+<span class="lineNum">     434 </span>                :            :         unsigned long           sysenter_cs;
+<span class="lineNum">     435 </span>                :            : #else
+<span class="lineNum">     436 </span>                :            :         unsigned long           usersp; /* Copy from PDA */
+<span class="lineNum">     437 </span>                :            :         unsigned short          es;
+<span class="lineNum">     438 </span>                :            :         unsigned short          ds;
+<span class="lineNum">     439 </span>                :            :         unsigned short          fsindex;
+<span class="lineNum">     440 </span>                :            :         unsigned short          gsindex;
+<span class="lineNum">     441 </span>                :            : #endif
+<span class="lineNum">     442 </span>                :            : #ifdef CONFIG_X86_32
+<span class="lineNum">     443 </span>                :            :         unsigned long           ip;
+<span class="lineNum">     444 </span>                :            : #endif
+<span class="lineNum">     445 </span>                :            : #ifdef CONFIG_X86_64
+<span class="lineNum">     446 </span>                :            :         unsigned long           fs;
+<span class="lineNum">     447 </span>                :            : #endif
+<span class="lineNum">     448 </span>                :            :         unsigned long           gs;
+<span class="lineNum">     449 </span>                :            :         /* Save middle states of ptrace breakpoints */
+<span class="lineNum">     450 </span>                :            :         struct perf_event       *ptrace_bps[HBP_NUM];
+<span class="lineNum">     451 </span>                :            :         /* Debug status used for traps, single steps, etc... */
+<span class="lineNum">     452 </span>                :            :         unsigned long           debugreg6;
+<span class="lineNum">     453 </span>                :            :         /* Keep track of the exact dr7 value set by the user */
+<span class="lineNum">     454 </span>                :            :         unsigned long           ptrace_dr7;
+<span class="lineNum">     455 </span>                :            :         /* Fault info: */
+<span class="lineNum">     456 </span>                :            :         unsigned long           cr2;
+<span class="lineNum">     457 </span>                :            :         unsigned long           trap_no;
+<span class="lineNum">     458 </span>                :            :         unsigned long           error_code;
+<span class="lineNum">     459 </span>                :            :         /* floating point and extended processor state */
+<span class="lineNum">     460 </span>                :            :         struct fpu              fpu;
+<span class="lineNum">     461 </span>                :            : #ifdef CONFIG_X86_32
+<span class="lineNum">     462 </span>                :            :         /* Virtual 86 mode info */
+<span class="lineNum">     463 </span>                :            :         struct vm86_struct __user *vm86_info;
+<span class="lineNum">     464 </span>                :            :         unsigned long           screen_bitmap;
+<span class="lineNum">     465 </span>                :            :         unsigned long           v86flags;
+<span class="lineNum">     466 </span>                :            :         unsigned long           v86mask;
+<span class="lineNum">     467 </span>                :            :         unsigned long           saved_sp0;
+<span class="lineNum">     468 </span>                :            :         unsigned int            saved_fs;
+<span class="lineNum">     469 </span>                :            :         unsigned int            saved_gs;
+<span class="lineNum">     470 </span>                :            : #endif
+<span class="lineNum">     471 </span>                :            :         /* IO permissions: */
+<span class="lineNum">     472 </span>                :            :         unsigned long           *io_bitmap_ptr;
+<span class="lineNum">     473 </span>                :            :         unsigned long           iopl;
+<span class="lineNum">     474 </span>                :            :         /* Max allowed port in the bitmap, in bytes: */
+<span class="lineNum">     475 </span>                :            :         unsigned                io_bitmap_max;
+<span class="lineNum">     476 </span>                :            : };
+<span class="lineNum">     477 </span>                :            : 
+<span class="lineNum">     478 </span>                :            : static inline unsigned long native_get_debugreg(int regno)
+<span class="lineNum">     479 </span>                :            : {
+<span class="lineNum">     480 </span>                :            :         unsigned long val = 0;  /* Damn you, gcc! */
+<span class="lineNum">     481 </span>                :            : 
+<span class="lineNum">     482 </span>                :            :         switch (regno) {
+<span class="lineNum">     483 </span>                :            :         case 0:
+<span class="lineNum">     484 </span>                :            :                 asm(&quot;mov %%db0, %0&quot; :&quot;=r&quot; (val));
+<span class="lineNum">     485 </span>                :            :                 break;
+<span class="lineNum">     486 </span>                :            :         case 1:
+<span class="lineNum">     487 </span>                :            :                 asm(&quot;mov %%db1, %0&quot; :&quot;=r&quot; (val));
+<span class="lineNum">     488 </span>                :            :                 break;
+<span class="lineNum">     489 </span>                :            :         case 2:
+<span class="lineNum">     490 </span>                :            :                 asm(&quot;mov %%db2, %0&quot; :&quot;=r&quot; (val));
+<span class="lineNum">     491 </span>                :            :                 break;
+<span class="lineNum">     492 </span>                :            :         case 3:
+<span class="lineNum">     493 </span>                :            :                 asm(&quot;mov %%db3, %0&quot; :&quot;=r&quot; (val));
+<span class="lineNum">     494 </span>                :            :                 break;
+<span class="lineNum">     495 </span>                :            :         case 6:
+<span class="lineNum">     496 </span>                :            :                 asm(&quot;mov %%db6, %0&quot; :&quot;=r&quot; (val));
+<span class="lineNum">     497 </span>                :            :                 break;
+<span class="lineNum">     498 </span>                :            :         case 7:
+<span class="lineNum">     499 </span>                :            :                 asm(&quot;mov %%db7, %0&quot; :&quot;=r&quot; (val));
+<span class="lineNum">     500 </span>                :            :                 break;
+<span class="lineNum">     501 </span>                :            :         default:
+<span class="lineNum">     502 </span>                :            :                 BUG();
+<span class="lineNum">     503 </span>                :            :         }
+<span class="lineNum">     504 </span>                :            :         return val;
+<span class="lineNum">     505 </span>                :            : }
+<span class="lineNum">     506 </span>                :            : 
+<span class="lineNum">     507 </span>                :            : static inline void native_set_debugreg(int regno, unsigned long value)
+<span class="lineNum">     508 </span>                :            : {
+<span class="lineNum">     509 </span>                :            :         switch (regno) {
+<span class="lineNum">     510 </span>                :            :         case 0:
+<span class="lineNum">     511 </span>                :            :                 asm(&quot;mov %0, %%db0&quot;   ::&quot;r&quot; (value));
+<span class="lineNum">     512 </span>                :            :                 break;
+<span class="lineNum">     513 </span>                :            :         case 1:
+<span class="lineNum">     514 </span>                :            :                 asm(&quot;mov %0, %%db1&quot;   ::&quot;r&quot; (value));
+<span class="lineNum">     515 </span>                :            :                 break;
+<span class="lineNum">     516 </span>                :            :         case 2:
+<span class="lineNum">     517 </span>                :            :                 asm(&quot;mov %0, %%db2&quot;   ::&quot;r&quot; (value));
+<span class="lineNum">     518 </span>                :            :                 break;
+<span class="lineNum">     519 </span>                :            :         case 3:
+<span class="lineNum">     520 </span>                :            :                 asm(&quot;mov %0, %%db3&quot;   ::&quot;r&quot; (value));
+<span class="lineNum">     521 </span>                :            :                 break;
+<span class="lineNum">     522 </span>                :            :         case 6:
+<span class="lineNum">     523 </span>                :            :                 asm(&quot;mov %0, %%db6&quot;   ::&quot;r&quot; (value));
+<span class="lineNum">     524 </span>                :            :                 break;
+<span class="lineNum">     525 </span>                :            :         case 7:
+<span class="lineNum">     526 </span>                :            :                 asm(&quot;mov %0, %%db7&quot;   ::&quot;r&quot; (value));
+<span class="lineNum">     527 </span>                :            :                 break;
+<span class="lineNum">     528 </span>                :            :         default:
+<span class="lineNum">     529 </span>                :            :                 BUG();
+<span class="lineNum">     530 </span>                :            :         }
+<span class="lineNum">     531 </span>                :            : }
+<span class="lineNum">     532 </span>                :            : 
+<span class="lineNum">     533 </span>                :            : /*
+<span class="lineNum">     534 </span>                :            :  * Set IOPL bits in EFLAGS from given mask
+<span class="lineNum">     535 </span>                :            :  */
+<span class="lineNum">     536 </span>                :            : static inline void native_set_iopl_mask(unsigned mask)
+<span class="lineNum">     537 </span>                :            : {
+<span class="lineNum">     538 </span>                :            : #ifdef CONFIG_X86_32
+<span class="lineNum">     539 </span>                :            :         unsigned int reg;
+<span class="lineNum">     540 </span>                :            : 
+<span class="lineNum">     541 </span>                :            :         asm volatile (&quot;pushfl;&quot;
+<span class="lineNum">     542 </span>                :            :                       &quot;popl %0;&quot;
+<span class="lineNum">     543 </span>                :            :                       &quot;andl %1, %0;&quot;
+<span class="lineNum">     544 </span>                :            :                       &quot;orl %2, %0;&quot;
+<span class="lineNum">     545 </span>                :            :                       &quot;pushl %0;&quot;
+<span class="lineNum">     546 </span>                :            :                       &quot;popfl&quot;
+<span class="lineNum">     547 </span>                :            :                       : &quot;=&amp;r&quot; (reg)
+<span class="lineNum">     548 </span>                :            :                       : &quot;i&quot; (~X86_EFLAGS_IOPL), &quot;r&quot; (mask));
+<span class="lineNum">     549 </span>                :            : #endif
+<span class="lineNum">     550 </span>                :            : }
+<span class="lineNum">     551 </span>                :            : 
+<span class="lineNum">     552 </span>                :            : static inline void
+<span class="lineNum">     553 </span>                :            : native_load_sp0(struct tss_struct *tss, struct thread_struct *thread)
+<span class="lineNum">     554 </span>                :            : {
+<span class="lineNum">     555 </span>                :            :         tss-&gt;x86_tss.sp0 = thread-&gt;sp0;
+<span class="lineNum">     556 </span>                :            : #ifdef CONFIG_X86_32
+<span class="lineNum">     557 </span>                :            :         /* Only happens when SEP is enabled, no need to test &quot;SEP&quot;arately: */
+<span class="lineNum">     558 </span>                :            :         if (unlikely(tss-&gt;x86_tss.ss1 != thread-&gt;sysenter_cs)) {
+<span class="lineNum">     559 </span>                :            :                 tss-&gt;x86_tss.ss1 = thread-&gt;sysenter_cs;
+<span class="lineNum">     560 </span>                :            :                 wrmsr(MSR_IA32_SYSENTER_CS, thread-&gt;sysenter_cs, 0);
+<span class="lineNum">     561 </span>                :            :         }
+<span class="lineNum">     562 </span>                :            : #endif
+<span class="lineNum">     563 </span>                :            : }
+<span class="lineNum">     564 </span>                :            : 
+<span class="lineNum">     565 </span>                :            : static inline void native_swapgs(void)
+<span class="lineNum">     566 </span>                :            : {
+<span class="lineNum">     567 </span>                :            : #ifdef CONFIG_X86_64
+<span class="lineNum">     568 </span>                :            :         asm volatile(&quot;swapgs&quot; ::: &quot;memory&quot;);
+<span class="lineNum">     569 </span>                :            : #endif
+<span class="lineNum">     570 </span>                :            : }
+<span class="lineNum">     571 </span>                :            : 
+<span class="lineNum">     572 </span>                :            : #ifdef CONFIG_PARAVIRT
+<span class="lineNum">     573 </span>                :            : #include &lt;asm/paravirt.h&gt;
+<span class="lineNum">     574 </span>                :            : #else
+<span class="lineNum">     575 </span>                :            : #define __cpuid                 native_cpuid
+<span class="lineNum">     576 </span>                :            : #define paravirt_enabled()      0
+<span class="lineNum">     577 </span>                :            : 
+<span class="lineNum">     578 </span>                :            : /*
+<span class="lineNum">     579 </span>                :            :  * These special macros can be used to get or set a debugging register
+<span class="lineNum">     580 </span>                :            :  */
+<span class="lineNum">     581 </span>                :            : #define get_debugreg(var, register)                             \
+<span class="lineNum">     582 </span>                :            :         (var) = native_get_debugreg(register)
+<span class="lineNum">     583 </span>                :            : #define set_debugreg(value, register)                           \
+<span class="lineNum">     584 </span>                :            :         native_set_debugreg(register, value)
+<span class="lineNum">     585 </span>                :            : 
+<span class="lineNum">     586 </span>                :            : static inline void load_sp0(struct tss_struct *tss,
+<span class="lineNum">     587 </span>                :            :                             struct thread_struct *thread)
+<span class="lineNum">     588 </span>                :            : {
+<span class="lineNum">     589 </span>                :            :         native_load_sp0(tss, thread);
+<span class="lineNum">     590 </span>                :            : }
+<span class="lineNum">     591 </span>                :            : 
+<span class="lineNum">     592 </span>                :            : #define set_iopl_mask native_set_iopl_mask
+<span class="lineNum">     593 </span>                :            : #endif /* CONFIG_PARAVIRT */
+<span class="lineNum">     594 </span>                :            : 
+<span class="lineNum">     595 </span>                :            : /*
+<span class="lineNum">     596 </span>                :            :  * Save the cr4 feature set we're using (ie
+<span class="lineNum">     597 </span>                :            :  * Pentium 4MB enable and PPro Global page
+<span class="lineNum">     598 </span>                :            :  * enable), so that any CPU's that boot up
+<span class="lineNum">     599 </span>                :            :  * after us can get the correct flags.
+<span class="lineNum">     600 </span>                :            :  */
+<span class="lineNum">     601 </span>                :            : extern unsigned long            mmu_cr4_features;
+<span class="lineNum">     602 </span>                :            : 
+<span class="lineNum">     603 </span>                :            : static inline void set_in_cr4(unsigned long mask)
+<span class="lineNum">     604 </span>                :            : {
+<span class="lineNum">     605 </span>                :            :         unsigned cr4;
+<span class="lineNum">     606 </span>                :            : 
+<span class="lineNum">     607 </span>                :            :         mmu_cr4_features |= mask;
+<span class="lineNum">     608 </span>                :            :         cr4 = read_cr4();
+<span class="lineNum">     609 </span>                :            :         cr4 |= mask;
+<span class="lineNum">     610 </span>                :            :         write_cr4(cr4);
+<span class="lineNum">     611 </span>                :            : }
+<span class="lineNum">     612 </span>                :            : 
+<span class="lineNum">     613 </span>                :            : static inline void clear_in_cr4(unsigned long mask)
+<span class="lineNum">     614 </span>                :            : {
+<span class="lineNum">     615 </span>                :            :         unsigned cr4;
+<span class="lineNum">     616 </span>                :            : 
+<span class="lineNum">     617 </span>                :            :         mmu_cr4_features &amp;= ~mask;
+<span class="lineNum">     618 </span>                :            :         cr4 = read_cr4();
+<span class="lineNum">     619 </span>                :            :         cr4 &amp;= ~mask;
+<span class="lineNum">     620 </span>                :            :         write_cr4(cr4);
+<span class="lineNum">     621 </span>                :            : }
+<span class="lineNum">     622 </span>                :            : 
+<span class="lineNum">     623 </span>                :            : typedef struct {
+<span class="lineNum">     624 </span>                :            :         unsigned long           seg;
+<span class="lineNum">     625 </span>                :            : } mm_segment_t;
+<span class="lineNum">     626 </span>                :            : 
+<span class="lineNum">     627 </span>                :            : 
+<span class="lineNum">     628 </span>                :            : /*
+<span class="lineNum">     629 </span>                :            :  * create a kernel thread without removing it from tasklists
+<span class="lineNum">     630 </span>                :            :  */
+<span class="lineNum">     631 </span>                :            : extern int kernel_thread(int (*fn)(void *), void *arg, unsigned long flags);
+<span class="lineNum">     632 </span>                :            : 
+<span class="lineNum">     633 </span>                :            : /* Free all resources held by a thread. */
+<span class="lineNum">     634 </span>                :            : extern void release_thread(struct task_struct *);
+<span class="lineNum">     635 </span>                :            : 
+<span class="lineNum">     636 </span>                :            : /* Prepare to copy thread state - unlazy all lazy state */
+<span class="lineNum">     637 </span>                :            : extern void prepare_to_copy(struct task_struct *tsk);
+<span class="lineNum">     638 </span>                :            : 
+<span class="lineNum">     639 </span>                :            : unsigned long get_wchan(struct task_struct *p);
+<span class="lineNum">     640 </span>                :            : 
+<span class="lineNum">     641 </span>                :            : /*
+<span class="lineNum">     642 </span>                :            :  * Generic CPUID function
+<span class="lineNum">     643 </span>                :            :  * clear %ecx since some cpus (Cyrix MII) do not set or clear %ecx
+<span class="lineNum">     644 </span>                :            :  * resulting in stale register contents being returned.
+<span class="lineNum">     645 </span>                :            :  */
+<span class="lineNum">     646 </span>                :            : static inline void cpuid(unsigned int op,
+<span class="lineNum">     647 </span>                :            :                          unsigned int *eax, unsigned int *ebx,
+<span class="lineNum">     648 </span>                :            :                          unsigned int *ecx, unsigned int *edx)
+<span class="lineNum">     649 </span>                :            : {
+<span class="lineNum">     650 </span>                :            :         *eax = op;
+<span class="lineNum">     651 </span>                :            :         *ecx = 0;
+<span class="lineNum">     652 </span>                :            :         __cpuid(eax, ebx, ecx, edx);
+<span class="lineNum">     653 </span>                :            : }
+<span class="lineNum">     654 </span>                :            : 
+<span class="lineNum">     655 </span>                :            : /* Some CPUID calls want 'count' to be placed in ecx */
+<span class="lineNum">     656 </span>                :            : static inline void cpuid_count(unsigned int op, int count,
+<span class="lineNum">     657 </span>                :            :                                unsigned int *eax, unsigned int *ebx,
+<span class="lineNum">     658 </span>                :            :                                unsigned int *ecx, unsigned int *edx)
+<span class="lineNum">     659 </span>                :            : {
+<span class="lineNum">     660 </span>                :            :         *eax = op;
+<span class="lineNum">     661 </span>                :            :         *ecx = count;
+<span class="lineNum">     662 </span>                :            :         __cpuid(eax, ebx, ecx, edx);
+<span class="lineNum">     663 </span>                :            : }
+<span class="lineNum">     664 </span>                :            : 
+<span class="lineNum">     665 </span>                :            : /*
+<span class="lineNum">     666 </span>                :            :  * CPUID functions returning a single datum
+<span class="lineNum">     667 </span>                :            :  */
+<span class="lineNum">     668 </span>                :            : static inline unsigned int cpuid_eax(unsigned int op)
+<span class="lineNum">     669 </span>                :            : {
+<span class="lineNum">     670 </span>                :            :         unsigned int eax, ebx, ecx, edx;
+<span class="lineNum">     671 </span>                :            : 
+<span class="lineNum">     672 </span>                :            :         cpuid(op, &amp;eax, &amp;ebx, &amp;ecx, &amp;edx);
+<span class="lineNum">     673 </span>                :            : 
+<span class="lineNum">     674 </span>                :            :         return eax;
+<span class="lineNum">     675 </span>                :            : }
+<span class="lineNum">     676 </span>                :            : 
+<span class="lineNum">     677 </span>                :            : static inline unsigned int cpuid_ebx(unsigned int op)
+<span class="lineNum">     678 </span>                :            : {
+<span class="lineNum">     679 </span>                :            :         unsigned int eax, ebx, ecx, edx;
+<span class="lineNum">     680 </span>                :            : 
+<span class="lineNum">     681 </span>                :            :         cpuid(op, &amp;eax, &amp;ebx, &amp;ecx, &amp;edx);
+<span class="lineNum">     682 </span>                :            : 
+<span class="lineNum">     683 </span>                :            :         return ebx;
+<span class="lineNum">     684 </span>                :            : }
+<span class="lineNum">     685 </span>                :            : 
+<span class="lineNum">     686 </span>                :            : static inline unsigned int cpuid_ecx(unsigned int op)
+<span class="lineNum">     687 </span>                :            : {
+<span class="lineNum">     688 </span>                :            :         unsigned int eax, ebx, ecx, edx;
+<span class="lineNum">     689 </span>                :            : 
+<span class="lineNum">     690 </span>                :            :         cpuid(op, &amp;eax, &amp;ebx, &amp;ecx, &amp;edx);
+<span class="lineNum">     691 </span>                :            : 
+<span class="lineNum">     692 </span>                :            :         return ecx;
+<span class="lineNum">     693 </span>                :            : }
+<span class="lineNum">     694 </span>                :            : 
+<span class="lineNum">     695 </span>                :            : static inline unsigned int cpuid_edx(unsigned int op)
+<span class="lineNum">     696 </span>                :            : {
+<span class="lineNum">     697 </span>                :            :         unsigned int eax, ebx, ecx, edx;
+<span class="lineNum">     698 </span>                :            : 
+<span class="lineNum">     699 </span>                :            :         cpuid(op, &amp;eax, &amp;ebx, &amp;ecx, &amp;edx);
+<span class="lineNum">     700 </span>                :            : 
+<span class="lineNum">     701 </span>                :            :         return edx;
+<span class="lineNum">     702 </span>                :            : }
+<span class="lineNum">     703 </span>                :            : 
+<span class="lineNum">     704 </span>                :            : /* REP NOP (PAUSE) is a good thing to insert into busy-wait loops. */
+<span class="lineNum">     705 </span>                :            : static inline void rep_nop(void)
+<span class="lineNum">     706 </span>                :            : {
+<span class="lineNum">     707 </span>                :            :         asm volatile(&quot;rep; nop&quot; ::: &quot;memory&quot;);
+<span class="lineNum">     708 </span>                :            : }
+<span class="lineNum">     709 </span>                :            : 
+<span class="lineNum">     710 </span>                :            : static inline void cpu_relax(void)
+<span class="lineNum">     711 </span>                :            : {
+<span class="lineNum">     712 </span>                :            :         rep_nop();
+<span class="lineNum">     713 </span>                :            : }
+<span class="lineNum">     714 </span>                :            : 
+<span class="lineNum">     715 </span>                :            : /* Stop speculative execution and prefetching of modified code. */
+<span class="lineNum">     716 </span>                :            : static inline void sync_core(void)
+<span class="lineNum">     717 </span>                :            : {
+<span class="lineNum">     718 </span>                :            :         int tmp;
+<span class="lineNum">     719 </span>                :            : 
+<span class="lineNum">     720 </span>                :            : #if defined(CONFIG_M386) || defined(CONFIG_M486)
+<span class="lineNum">     721 </span>                :            :         if (boot_cpu_data.x86 &lt; 5)
+<span class="lineNum">     722 </span>                :            :                 /* There is no speculative execution.
+<span class="lineNum">     723 </span>                :            :                  * jmp is a barrier to prefetching. */
+<span class="lineNum">     724 </span>                :            :                 asm volatile(&quot;jmp 1f\n1:\n&quot; ::: &quot;memory&quot;);
+<span class="lineNum">     725 </span>                :            :         else
+<span class="lineNum">     726 </span>                :            : #endif
+<span class="lineNum">     727 </span>                :            :                 /* cpuid is a barrier to speculative execution.
+<span class="lineNum">     728 </span>                :            :                  * Prefetched instructions are automatically
+<span class="lineNum">     729 </span>                :            :                  * invalidated when modified. */
+<span class="lineNum">     730 </span>                :            :                 asm volatile(&quot;cpuid&quot; : &quot;=a&quot; (tmp) : &quot;0&quot; (1)
+<span class="lineNum">     731 </span>                :            :                              : &quot;ebx&quot;, &quot;ecx&quot;, &quot;edx&quot;, &quot;memory&quot;);
+<span class="lineNum">     732 </span>                :            : }
+<span class="lineNum">     733 </span>                :            : 
+<span class="lineNum">     734 </span>                :            : static inline void __monitor(const void *eax, unsigned long ecx,
+<span class="lineNum">     735 </span>                :            :                              unsigned long edx)
+<span class="lineNum">     736 </span>                :            : {
+<span class="lineNum">     737 </span>                :            :         /* &quot;monitor %eax, %ecx, %edx;&quot; */
+<span class="lineNum">     738 </span>                :            :         asm volatile(&quot;.byte 0x0f, 0x01, 0xc8;&quot;
+<span class="lineNum">     739 </span>                :            :                      :: &quot;a&quot; (eax), &quot;c&quot; (ecx), &quot;d&quot;(edx));
+<span class="lineNum">     740 </span>                :            : }
+<span class="lineNum">     741 </span>                :            : 
+<span class="lineNum">     742 </span>                :            : static inline void __mwait(unsigned long eax, unsigned long ecx)
+<span class="lineNum">     743 </span>                :            : {
+<span class="lineNum">     744 </span>                :            :         /* &quot;mwait %eax, %ecx;&quot; */
+<span class="lineNum">     745 </span>                :            :         asm volatile(&quot;.byte 0x0f, 0x01, 0xc9;&quot;
+<span class="lineNum">     746 </span>                :            :                      :: &quot;a&quot; (eax), &quot;c&quot; (ecx));
+<span class="lineNum">     747 </span>                :            : }
+<span class="lineNum">     748 </span>                :            : 
+<span class="lineNum">     749 </span>                :            : static inline void __sti_mwait(unsigned long eax, unsigned long ecx)
+<span class="lineNum">     750 </span>                :            : {
+<span class="lineNum">     751 </span>                :            :         trace_hardirqs_on();
+<span class="lineNum">     752 </span>                :            :         /* &quot;mwait %eax, %ecx;&quot; */
+<span class="lineNum">     753 </span>                :            :         asm volatile(&quot;sti; .byte 0x0f, 0x01, 0xc9;&quot;
+<span class="lineNum">     754 </span>                :            :                      :: &quot;a&quot; (eax), &quot;c&quot; (ecx));
+<span class="lineNum">     755 </span>                :            : }
+<span class="lineNum">     756 </span>                :            : 
+<span class="lineNum">     757 </span>                :            : extern void mwait_idle_with_hints(unsigned long eax, unsigned long ecx);
+<span class="lineNum">     758 </span>                :            : 
+<span class="lineNum">     759 </span>                :            : extern void select_idle_routine(const struct cpuinfo_x86 *c);
+<span class="lineNum">     760 </span>                :            : extern void init_c1e_mask(void);
+<span class="lineNum">     761 </span>                :            : 
+<span class="lineNum">     762 </span>                :            : extern unsigned long            boot_option_idle_override;
+<span class="lineNum">     763 </span>                :            : extern unsigned long            idle_halt;
+<span class="lineNum">     764 </span>                :            : extern unsigned long            idle_nomwait;
+<span class="lineNum">     765 </span>                :            : 
+<span class="lineNum">     766 </span>                :            : extern void enable_sep_cpu(void);
+<span class="lineNum">     767 </span>                :            : extern int sysenter_setup(void);
+<span class="lineNum">     768 </span>                :            : 
+<span class="lineNum">     769 </span>                :            : extern void early_trap_init(void);
+<span class="lineNum">     770 </span>                :            : 
+<span class="lineNum">     771 </span>                :            : /* Defined in head.S */
+<span class="lineNum">     772 </span>                :            : extern struct desc_ptr          early_gdt_descr;
+<span class="lineNum">     773 </span>                :            : 
+<span class="lineNum">     774 </span>                :            : extern void cpu_set_gdt(int);
+<span class="lineNum">     775 </span>                :            : extern void switch_to_new_gdt(int);
+<span class="lineNum">     776 </span>                :            : extern void load_percpu_segment(int);
+<span class="lineNum">     777 </span>                :            : extern void cpu_init(void);
+<span class="lineNum">     778 </span>                :            : 
+<span class="lineNum">     779 </span>                :            : static inline unsigned long get_debugctlmsr(void)
+<span class="lineNum">     780 </span>                :            : {
+<span class="lineNum">     781 </span>                :            :         unsigned long debugctlmsr = 0;
+<span class="lineNum">     782 </span>                :            : 
+<span class="lineNum">     783 </span>                :            : #ifndef CONFIG_X86_DEBUGCTLMSR
+<span class="lineNum">     784 </span>                :            :         if (boot_cpu_data.x86 &lt; 6)
+<span class="lineNum">     785 </span>                :            :                 return 0;
+<span class="lineNum">     786 </span>                :            : #endif
+<span class="lineNum">     787 </span>                :            :         rdmsrl(MSR_IA32_DEBUGCTLMSR, debugctlmsr);
+<span class="lineNum">     788 </span>                :            : 
+<span class="lineNum">     789 </span>                :            :         return debugctlmsr;
+<span class="lineNum">     790 </span>                :            : }
+<span class="lineNum">     791 </span>                :            : 
+<span class="lineNum">     792 </span>                :            : static inline void update_debugctlmsr(unsigned long debugctlmsr)
+<span class="lineNum">     793 </span>                :            : {
+<span class="lineNum">     794 </span>                :            : #ifndef CONFIG_X86_DEBUGCTLMSR
+<span class="lineNum">     795 </span>                :            :         if (boot_cpu_data.x86 &lt; 6)
+<span class="lineNum">     796 </span>                :            :                 return;
+<span class="lineNum">     797 </span>                :            : #endif
+<span class="lineNum">     798 </span>                :            :         wrmsrl(MSR_IA32_DEBUGCTLMSR, debugctlmsr);
+<span class="lineNum">     799 </span>                :            : }
+<span class="lineNum">     800 </span>                :            : 
+<span class="lineNum">     801 </span>                :            : /*
+<span class="lineNum">     802 </span>                :            :  * from system description table in BIOS. Mostly for MCA use, but
+<span class="lineNum">     803 </span>                :            :  * others may find it useful:
+<span class="lineNum">     804 </span>                :            :  */
+<span class="lineNum">     805 </span>                :            : extern unsigned int             machine_id;
+<span class="lineNum">     806 </span>                :            : extern unsigned int             machine_submodel_id;
+<span class="lineNum">     807 </span>                :            : extern unsigned int             BIOS_revision;
+<span class="lineNum">     808 </span>                :            : 
+<span class="lineNum">     809 </span>                :            : /* Boot loader type from the setup header: */
+<span class="lineNum">     810 </span>                :            : extern int                      bootloader_type;
+<span class="lineNum">     811 </span>                :            : extern int                      bootloader_version;
+<span class="lineNum">     812 </span>                :            : 
+<span class="lineNum">     813 </span>                :            : extern char                     ignore_fpu_irq;
+<span class="lineNum">     814 </span>                :            : 
+<span class="lineNum">     815 </span>                :            : #define HAVE_ARCH_PICK_MMAP_LAYOUT 1
+<span class="lineNum">     816 </span>                :            : #define ARCH_HAS_PREFETCHW
+<span class="lineNum">     817 </span>                :            : #define ARCH_HAS_SPINLOCK_PREFETCH
+<span class="lineNum">     818 </span>                :            : 
+<span class="lineNum">     819 </span>                :            : #ifdef CONFIG_X86_32
+<span class="lineNum">     820 </span>                :            : # define BASE_PREFETCH          ASM_NOP4
+<span class="lineNum">     821 </span>                :            : # define ARCH_HAS_PREFETCH
+<span class="lineNum">     822 </span>                :            : #else
+<span class="lineNum">     823 </span>                :            : # define BASE_PREFETCH          &quot;prefetcht0 (%1)&quot;
+<span class="lineNum">     824 </span>                :            : #endif
+<span class="lineNum">     825 </span>                :            : 
+<span class="lineNum">     826 </span>                :            : /*
+<span class="lineNum">     827 </span>                :            :  * Prefetch instructions for Pentium III (+) and AMD Athlon (+)
+<span class="lineNum">     828 </span>                :            :  *
+<span class="lineNum">     829 </span>                :            :  * It's not worth to care about 3dnow prefetches for the K6
+<span class="lineNum">     830 </span>                :            :  * because they are microcoded there and very slow.
+<span class="lineNum">     831 </span>                :            :  */
+<span class="lineNum">     832 </span>                :            : static inline void prefetch(const void *x)
+<span class="lineNum">     833 </span>                :            : {
+<span class="lineNum">     834 </span>                :<span class="lineNoCov">          0 :         alternative_input(BASE_PREFETCH,</span>
+<span class="lineNum">     835 </span>                :            :                           &quot;prefetchnta (%1)&quot;,
+<span class="lineNum">     836 </span>                :            :                           X86_FEATURE_XMM,
+<span class="lineNum">     837 </span>                :            :                           &quot;r&quot; (x));
+<span class="lineNum">     838 </span>                :            : }
+<span class="lineNum">     839 </span>                :            : 
+<span class="lineNum">     840 </span>                :            : /*
+<span class="lineNum">     841 </span>                :            :  * 3dnow prefetch to get an exclusive cache line.
+<span class="lineNum">     842 </span>                :            :  * Useful for spinlocks to avoid one state transition in the
+<span class="lineNum">     843 </span>                :            :  * cache coherency protocol:
+<span class="lineNum">     844 </span>                :            :  */
+<span class="lineNum">     845 </span>                :            : static inline void prefetchw(const void *x)
+<span class="lineNum">     846 </span>                :            : {
+<span class="lineNum">     847 </span>                :            :         alternative_input(BASE_PREFETCH,
+<span class="lineNum">     848 </span>                :            :                           &quot;prefetchw (%1)&quot;,
+<span class="lineNum">     849 </span>                :            :                           X86_FEATURE_3DNOW,
+<span class="lineNum">     850 </span>                :            :                           &quot;r&quot; (x));
+<span class="lineNum">     851 </span>                :            : }
+<span class="lineNum">     852 </span>                :            : 
+<span class="lineNum">     853 </span>                :            : static inline void spin_lock_prefetch(const void *x)
+<span class="lineNum">     854 </span>                :            : {
+<span class="lineNum">     855 </span>                :            :         prefetchw(x);
+<span class="lineNum">     856 </span>                :            : }
+<span class="lineNum">     857 </span>                :            : 
+<span class="lineNum">     858 </span>                :            : #ifdef CONFIG_X86_32
+<span class="lineNum">     859 </span>                :            : /*
+<span class="lineNum">     860 </span>                :            :  * User space process size: 3GB (default).
+<span class="lineNum">     861 </span>                :            :  */
+<span class="lineNum">     862 </span>                :            : #define TASK_SIZE               PAGE_OFFSET
+<span class="lineNum">     863 </span>                :            : #define TASK_SIZE_MAX           TASK_SIZE
+<span class="lineNum">     864 </span>                :            : #define STACK_TOP               TASK_SIZE
+<span class="lineNum">     865 </span>                :            : #define STACK_TOP_MAX           STACK_TOP
+<span class="lineNum">     866 </span>                :            : 
+<span class="lineNum">     867 </span>                :            : #define INIT_THREAD  {                                                    \
+<span class="lineNum">     868 </span>                :            :         .sp0                    = sizeof(init_stack) + (long)&amp;init_stack, \
+<span class="lineNum">     869 </span>                :            :         .vm86_info              = NULL,                                   \
+<span class="lineNum">     870 </span>                :            :         .sysenter_cs            = __KERNEL_CS,                            \
+<span class="lineNum">     871 </span>                :            :         .io_bitmap_ptr          = NULL,                                   \
+<span class="lineNum">     872 </span>                :            : }
+<span class="lineNum">     873 </span>                :            : 
+<span class="lineNum">     874 </span>                :            : /*
+<span class="lineNum">     875 </span>                :            :  * Note that the .io_bitmap member must be extra-big. This is because
+<span class="lineNum">     876 </span>                :            :  * the CPU will access an additional byte beyond the end of the IO
+<span class="lineNum">     877 </span>                :            :  * permission bitmap. The extra byte must be all 1 bits, and must
+<span class="lineNum">     878 </span>                :            :  * be within the limit.
+<span class="lineNum">     879 </span>                :            :  */
+<span class="lineNum">     880 </span>                :            : #define INIT_TSS  {                                                       \
+<span class="lineNum">     881 </span>                :            :         .x86_tss = {                                                      \
+<span class="lineNum">     882 </span>                :            :                 .sp0            = sizeof(init_stack) + (long)&amp;init_stack, \
+<span class="lineNum">     883 </span>                :            :                 .ss0            = __KERNEL_DS,                            \
+<span class="lineNum">     884 </span>                :            :                 .ss1            = __KERNEL_CS,                            \
+<span class="lineNum">     885 </span>                :            :                 .io_bitmap_base = INVALID_IO_BITMAP_OFFSET,               \
+<span class="lineNum">     886 </span>                :            :          },                                                               \
+<span class="lineNum">     887 </span>                :            :         .io_bitmap              = { [0 ... IO_BITMAP_LONGS] = ~0 },       \
+<span class="lineNum">     888 </span>                :            : }
+<span class="lineNum">     889 </span>                :            : 
+<span class="lineNum">     890 </span>                :            : extern unsigned long thread_saved_pc(struct task_struct *tsk);
+<span class="lineNum">     891 </span>                :            : 
+<span class="lineNum">     892 </span>                :            : #define THREAD_SIZE_LONGS      (THREAD_SIZE/sizeof(unsigned long))
+<span class="lineNum">     893 </span>                :            : #define KSTK_TOP(info)                                                 \
+<span class="lineNum">     894 </span>                :            : ({                                                                     \
+<span class="lineNum">     895 </span>                :            :        unsigned long *__ptr = (unsigned long *)(info);                 \
+<span class="lineNum">     896 </span>                :            :        (unsigned long)(&amp;__ptr[THREAD_SIZE_LONGS]);                     \
+<span class="lineNum">     897 </span>                :            : })
+<span class="lineNum">     898 </span>                :            : 
+<span class="lineNum">     899 </span>                :            : /*
+<span class="lineNum">     900 </span>                :            :  * The below -8 is to reserve 8 bytes on top of the ring0 stack.
+<span class="lineNum">     901 </span>                :            :  * This is necessary to guarantee that the entire &quot;struct pt_regs&quot;
+<span class="lineNum">     902 </span>                :            :  * is accessable even if the CPU haven't stored the SS/ESP registers
+<span class="lineNum">     903 </span>                :            :  * on the stack (interrupt gate does not save these registers
+<span class="lineNum">     904 </span>                :            :  * when switching to the same priv ring).
+<span class="lineNum">     905 </span>                :            :  * Therefore beware: accessing the ss/esp fields of the
+<span class="lineNum">     906 </span>                :            :  * &quot;struct pt_regs&quot; is possible, but they may contain the
+<span class="lineNum">     907 </span>                :            :  * completely wrong values.
+<span class="lineNum">     908 </span>                :            :  */
+<span class="lineNum">     909 </span>                :            : #define task_pt_regs(task)                                             \
+<span class="lineNum">     910 </span>                :            : ({                                                                     \
+<span class="lineNum">     911 </span>                :            :        struct pt_regs *__regs__;                                       \
+<span class="lineNum">     912 </span>                :            :        __regs__ = (struct pt_regs *)(KSTK_TOP(task_stack_page(task))-8); \
+<span class="lineNum">     913 </span>                :            :        __regs__ - 1;                                                   \
+<span class="lineNum">     914 </span>                :            : })
+<span class="lineNum">     915 </span>                :            : 
+<span class="lineNum">     916 </span>                :            : #define KSTK_ESP(task)          (task_pt_regs(task)-&gt;sp)
+<span class="lineNum">     917 </span>                :            : 
+<span class="lineNum">     918 </span>                :            : #else
+<span class="lineNum">     919 </span>                :            : /*
+<span class="lineNum">     920 </span>                :            :  * User space process size. 47bits minus one guard page.
+<span class="lineNum">     921 </span>                :            :  */
+<span class="lineNum">     922 </span>                :            : #define TASK_SIZE_MAX   ((1UL &lt;&lt; 47) - PAGE_SIZE)
+<span class="lineNum">     923 </span>                :            : 
+<span class="lineNum">     924 </span>                :            : /* This decides where the kernel will search for a free chunk of vm
+<span class="lineNum">     925 </span>                :            :  * space during mmap's.
+<span class="lineNum">     926 </span>                :            :  */
+<span class="lineNum">     927 </span>                :            : #define IA32_PAGE_OFFSET        ((current-&gt;personality &amp; ADDR_LIMIT_3GB) ? \
+<span class="lineNum">     928 </span>                :            :                                         0xc0000000 : 0xFFFFe000)
+<span class="lineNum">     929 </span>                :            : 
+<span class="lineNum">     930 </span>                :            : #define TASK_SIZE               (test_thread_flag(TIF_IA32) ? \
+<span class="lineNum">     931 </span>                :            :                                         IA32_PAGE_OFFSET : TASK_SIZE_MAX)
+<span class="lineNum">     932 </span>                :            : #define TASK_SIZE_OF(child)     ((test_tsk_thread_flag(child, TIF_IA32)) ? \
+<span class="lineNum">     933 </span>                :            :                                         IA32_PAGE_OFFSET : TASK_SIZE_MAX)
+<span class="lineNum">     934 </span>                :            : 
+<span class="lineNum">     935 </span>                :            : #define STACK_TOP               TASK_SIZE
+<span class="lineNum">     936 </span>                :            : #define STACK_TOP_MAX           TASK_SIZE_MAX
+<span class="lineNum">     937 </span>                :            : 
+<span class="lineNum">     938 </span>                :            : #define INIT_THREAD  { \
+<span class="lineNum">     939 </span>                :            :         .sp0 = (unsigned long)&amp;init_stack + sizeof(init_stack) \
+<span class="lineNum">     940 </span>                :            : }
+<span class="lineNum">     941 </span>                :            : 
+<span class="lineNum">     942 </span>                :            : #define INIT_TSS  { \
+<span class="lineNum">     943 </span>                :            :         .x86_tss.sp0 = (unsigned long)&amp;init_stack + sizeof(init_stack) \
+<span class="lineNum">     944 </span>                :            : }
+<span class="lineNum">     945 </span>                :            : 
+<span class="lineNum">     946 </span>                :            : /*
+<span class="lineNum">     947 </span>                :            :  * Return saved PC of a blocked thread.
+<span class="lineNum">     948 </span>                :            :  * What is this good for? it will be always the scheduler or ret_from_fork.
+<span class="lineNum">     949 </span>                :            :  */
+<span class="lineNum">     950 </span>                :            : #define thread_saved_pc(t)      (*(unsigned long *)((t)-&gt;thread.sp - 8))
+<span class="lineNum">     951 </span>                :            : 
+<span class="lineNum">     952 </span>                :            : #define task_pt_regs(tsk)       ((struct pt_regs *)(tsk)-&gt;thread.sp0 - 1)
+<span class="lineNum">     953 </span>                :            : extern unsigned long KSTK_ESP(struct task_struct *task);
+<span class="lineNum">     954 </span>                :            : #endif /* CONFIG_X86_64 */
+<span class="lineNum">     955 </span>                :            : 
+<span class="lineNum">     956 </span>                :            : extern void start_thread(struct pt_regs *regs, unsigned long new_ip,
+<span class="lineNum">     957 </span>                :            :                                                unsigned long new_sp);
+<span class="lineNum">     958 </span>                :            : 
+<span class="lineNum">     959 </span>                :            : /*
+<span class="lineNum">     960 </span>                :            :  * This decides where the kernel will search for a free chunk of vm
+<span class="lineNum">     961 </span>                :            :  * space during mmap's.
+<span class="lineNum">     962 </span>                :            :  */
+<span class="lineNum">     963 </span>                :            : #define TASK_UNMAPPED_BASE      (PAGE_ALIGN(TASK_SIZE / 3))
+<span class="lineNum">     964 </span>                :            : 
+<span class="lineNum">     965 </span>                :            : #define KSTK_EIP(task)          (task_pt_regs(task)-&gt;ip)
+<span class="lineNum">     966 </span>                :            : 
+<span class="lineNum">     967 </span>                :            : /* Get/set a process' ability to use the timestamp counter instruction */
+<span class="lineNum">     968 </span>                :            : #define GET_TSC_CTL(adr)        get_tsc_mode((adr))
+<span class="lineNum">     969 </span>                :            : #define SET_TSC_CTL(val)        set_tsc_mode((val))
+<span class="lineNum">     970 </span>                :            : 
+<span class="lineNum">     971 </span>                :            : extern int get_tsc_mode(unsigned long adr);
+<span class="lineNum">     972 </span>                :            : extern int set_tsc_mode(unsigned int val);
+<span class="lineNum">     973 </span>                :            : 
+<span class="lineNum">     974 </span>                :            : extern int amd_get_nb_id(int cpu);
+<span class="lineNum">     975 </span>                :            : 
+<span class="lineNum">     976 </span>                :            : struct aperfmperf {
+<span class="lineNum">     977 </span>                :            :         u64 aperf, mperf;
+<span class="lineNum">     978 </span>                :            : };
+<span class="lineNum">     979 </span>                :            : 
+<span class="lineNum">     980 </span>                :            : static inline void get_aperfmperf(struct aperfmperf *am)
+<span class="lineNum">     981 </span>                :            : {
+<span class="lineNum">     982 </span>                :            :         WARN_ON_ONCE(!boot_cpu_has(X86_FEATURE_APERFMPERF));
+<span class="lineNum">     983 </span>                :            : 
+<span class="lineNum">     984 </span>                :            :         rdmsrl(MSR_IA32_APERF, am-&gt;aperf);
+<span class="lineNum">     985 </span>                :            :         rdmsrl(MSR_IA32_MPERF, am-&gt;mperf);
+<span class="lineNum">     986 </span>                :            : }
+<span class="lineNum">     987 </span>                :            : 
+<span class="lineNum">     988 </span>                :            : #define APERFMPERF_SHIFT 10
+<span class="lineNum">     989 </span>                :            : 
+<span class="lineNum">     990 </span>                :            : static inline
+<span class="lineNum">     991 </span>                :            : unsigned long calc_aperfmperf_ratio(struct aperfmperf *old,
+<span class="lineNum">     992 </span>                :            :                                     struct aperfmperf *new)
+<span class="lineNum">     993 </span>                :            : {
+<span class="lineNum">     994 </span>                :            :         u64 aperf = new-&gt;aperf - old-&gt;aperf;
+<span class="lineNum">     995 </span>                :            :         u64 mperf = new-&gt;mperf - old-&gt;mperf;
+<span class="lineNum">     996 </span>                :            :         unsigned long ratio = aperf;
+<span class="lineNum">     997 </span>                :            : 
+<span class="lineNum">     998 </span>                :            :         mperf &gt;&gt;= APERFMPERF_SHIFT;
+<span class="lineNum">     999 </span>                :            :         if (mperf)
+<span class="lineNum">    1000 </span>                :            :                 ratio = div64_u64(aperf, mperf);
+<span class="lineNum">    1001 </span>                :            : 
+<span class="lineNum">    1002 </span>                :            :         return ratio;
+<span class="lineNum">    1003 </span>                :            : }
+<span class="lineNum">    1004 </span>                :            : 
+<span class="lineNum">    1005 </span>                :            : #endif /* _ASM_X86_PROCESSOR_H */
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.8</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

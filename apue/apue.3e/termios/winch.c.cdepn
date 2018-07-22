@@ -1,0 +1,14 @@
+F {main} {winch.c:25}
+C {main} {winch.c:34} {pause}
+C {main} {winch.c:34} {pr_winsize}
+C {main} {winch.c:34} {err_sys}
+C {main} {winch.c:34} {signal}
+C {main} {winch.c:34} {exit}
+C {main} {winch.c:34} {isatty}
+F {sig_winch} {winch.c:18}
+C {sig_winch} {winch.c:34} {pr_winsize}
+C {sig_winch} {winch.c:34} {__builtin_puts}
+F {pr_winsize} {winch.c:8}
+C {pr_winsize} {winch.c:34} {printf}
+C {pr_winsize} {winch.c:34} {err_sys}
+C {pr_winsize} {winch.c:34} {ioctl}

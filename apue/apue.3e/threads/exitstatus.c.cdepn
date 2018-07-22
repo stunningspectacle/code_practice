@@ -1,0 +1,17 @@
+F {main} {exitstatus.c:19}
+C {main} {exitstatus.c:40} {exit}
+C {main} {exitstatus.c:40} {printf}
+C {main} {exitstatus.c:40} {err_exit}
+C {main} {exitstatus.c:40} {pthread_join}
+C {main} {exitstatus.c:40} {printf}
+C {main} {exitstatus.c:40} {err_exit}
+C {main} {exitstatus.c:40} {pthread_join}
+C {main} {exitstatus.c:40} {err_exit}
+C {main} {exitstatus.c:40} {pthread_create}
+C {main} {exitstatus.c:40} {err_exit}
+C {main} {exitstatus.c:40} {pthread_create}
+F {thr_fn2} {exitstatus.c:12}
+C {thr_fn2} {exitstatus.c:40} {pthread_exit}
+C {thr_fn2} {exitstatus.c:40} {__builtin_puts}
+F {thr_fn1} {exitstatus.c:5}
+C {thr_fn1} {exitstatus.c:40} {__builtin_puts}

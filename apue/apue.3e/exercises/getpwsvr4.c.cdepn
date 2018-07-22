@@ -1,0 +1,5 @@
+F {main} {getpwsvr4.c:5}
+C {main} {getpwsvr4.c:14} {exit}
+C {main} {getpwsvr4.c:14} {printf}
+C {main} {getpwsvr4.c:14} {err_sys}
+C {main} {getpwsvr4.c:14} {getspnam}

@@ -1,0 +1,23 @@
+F {treadn} {util.c:139}
+C {treadn} {util.c:158} {tread}
+F {tread} {util.c:112}
+C {tread} {util.c:158} {read}
+C {tread} {util.c:158} {__errno_location}
+C {tread} {util.c:158} {select}
+F {get_printaddr} {util.c:87}
+C {get_printaddr} {util.c:158} {log_msg}
+C {get_printaddr} {util.c:158} {log_msg}
+C {get_printaddr} {util.c:158} {getaddrlist}
+C {get_printaddr} {util.c:158} {scan_configfile}
+F {get_printserver} {util.c:76}
+C {get_printserver} {util.c:158} {scan_configfile}
+F {scan_configfile} {util.c:44}
+C {scan_configfile} {util.c:158} {fclose}
+C {scan_configfile} {util.c:158} {fgets}
+C {scan_configfile} {util.c:158} {strcmp}
+C {scan_configfile} {util.c:158} {sscanf}
+C {scan_configfile} {util.c:158} {sprintf}
+C {scan_configfile} {util.c:158} {log_sys}
+C {scan_configfile} {util.c:158} {fopen}
+F {getaddrlist} {util.c:19}
+C {getaddrlist} {util.c:158} {getaddrinfo}

@@ -1,0 +1,11 @@
+F {main} {t4.c:6}
+C {main} {t4.c:23} {exit}
+C {main} {t4.c:23} {db_close}
+C {main} {t4.c:23} {err_quit}
+C {main} {t4.c:23} {db_store}
+C {main} {t4.c:23} {err_quit}
+C {main} {t4.c:23} {db_store}
+C {main} {t4.c:23} {err_quit}
+C {main} {t4.c:23} {db_store}
+C {main} {t4.c:23} {err_sys}
+C {main} {t4.c:23} {db_open}

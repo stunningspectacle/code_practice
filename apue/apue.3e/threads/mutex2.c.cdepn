@@ -1,0 +1,27 @@
+F {foo_rele} {mutex2.c:69}
+C {foo_rele} {mutex2.c:104} {pthread_mutex_unlock}
+C {foo_rele} {mutex2.c:104} {free}
+C {foo_rele} {mutex2.c:104} {pthread_mutex_destroy}
+C {foo_rele} {mutex2.c:104} {pthread_mutex_unlock}
+C {foo_rele} {mutex2.c:104} {pthread_mutex_unlock}
+C {foo_rele} {mutex2.c:104} {pthread_mutex_unlock}
+C {foo_rele} {mutex2.c:104} {pthread_mutex_unlock}
+C {foo_rele} {mutex2.c:104} {pthread_mutex_lock}
+C {foo_rele} {mutex2.c:104} {pthread_mutex_lock}
+C {foo_rele} {mutex2.c:104} {pthread_mutex_unlock}
+C {foo_rele} {mutex2.c:104} {pthread_mutex_lock}
+F {foo_find} {mutex2.c:53}
+C {foo_find} {mutex2.c:104} {pthread_mutex_unlock}
+C {foo_find} {mutex2.c:104} {foo_hold}
+C {foo_find} {mutex2.c:104} {pthread_mutex_lock}
+F {foo_hold} {mutex2.c:45}
+C {foo_hold} {mutex2.c:104} {pthread_mutex_unlock}
+C {foo_hold} {mutex2.c:104} {pthread_mutex_lock}
+F {foo_alloc} {mutex2.c:20}
+C {foo_alloc} {mutex2.c:104} {pthread_mutex_unlock}
+C {foo_alloc} {mutex2.c:104} {pthread_mutex_unlock}
+C {foo_alloc} {mutex2.c:104} {pthread_mutex_lock}
+C {foo_alloc} {mutex2.c:104} {pthread_mutex_lock}
+C {foo_alloc} {mutex2.c:104} {free}
+C {foo_alloc} {mutex2.c:104} {pthread_mutex_init}
+C {foo_alloc} {mutex2.c:104} {malloc}

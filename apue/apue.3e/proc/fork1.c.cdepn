@@ -1,0 +1,10 @@
+F {main} {fork1.c:7}
+C {main} {fork1.c:29} {exit}
+C {main} {fork1.c:29} {printf}
+C {main} {fork1.c:29} {getpid}
+C {main} {fork1.c:29} {sleep}
+C {main} {fork1.c:29} {err_sys}
+C {main} {fork1.c:29} {fork}
+C {main} {fork1.c:29} {__builtin_puts}
+C {main} {fork1.c:29} {err_sys}
+C {main} {fork1.c:29} {write}

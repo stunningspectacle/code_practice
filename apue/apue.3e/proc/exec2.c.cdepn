@@ -1,0 +1,8 @@
+F {main} {exec2.c:5}
+C {main} {exec2.c:19} {exit}
+C {main} {exec2.c:19} {err_sys}
+C {main} {exec2.c:19} {waitpid}
+C {main} {exec2.c:19} {err_sys}
+C {main} {exec2.c:19} {execl}
+C {main} {exec2.c:19} {err_sys}
+C {main} {exec2.c:19} {fork}

@@ -1,0 +1,13 @@
+F {sleep} {/usr/include/unistd.h:445}
+C {sleep} {sleep.c:46} {sigprocmask}
+C {sleep} {sleep.c:46} {sigaction}
+C {sleep} {sleep.c:46} {alarm}
+C {sleep} {sleep.c:46} {sigsuspend}
+C {sleep} {sleep.c:46} {sigdelset}
+C {sleep} {sleep.c:46} {alarm}
+C {sleep} {sleep.c:46} {sigprocmask}
+C {sleep} {sleep.c:46} {sigaddset}
+C {sleep} {sleep.c:46} {sigemptyset}
+C {sleep} {sleep.c:46} {sigaction}
+C {sleep} {sleep.c:46} {sigemptyset}
+F {sig_alrm} {sleep.c:4}

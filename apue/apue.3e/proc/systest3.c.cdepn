@@ -1,0 +1,6 @@
+F {main} {systest3.c:4}
+C {main} {systest3.c:17} {exit}
+C {main} {systest3.c:17} {pr_exit}
+C {main} {systest3.c:17} {err_sys}
+C {main} {systest3.c:17} {system}
+C {main} {systest3.c:17} {err_quit}

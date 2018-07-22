@@ -1,0 +1,15 @@
+F {main} {rot13a.c:26}
+C {main} {rot13a.c:50} {exit}
+C {main} {rot13a.c:50} {fsync}
+C {main} {rot13a.c:50} {read}
+C {main} {rot13a.c:50} {err_quit}
+C {main} {rot13a.c:50} {err_sys}
+C {main} {rot13a.c:50} {write}
+C {main} {rot13a.c:50} {translate}
+C {main} {rot13a.c:50} {err_sys}
+C {main} {rot13a.c:50} {open}
+C {main} {rot13a.c:50} {err_sys}
+C {main} {rot13a.c:50} {open}
+C {main} {rot13a.c:50} {err_quit}
+F {translate} {rot13a.c:10}
+C {translate} {rot13a.c:50} {__ctype_b_loc}

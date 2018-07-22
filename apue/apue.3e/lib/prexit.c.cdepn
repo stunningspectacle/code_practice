@@ -1,0 +1,4 @@
+F {pr_exit} {prexit.c:5}
+C {pr_exit} {prexit.c:21} {printf}
+C {pr_exit} {prexit.c:21} {printf}
+C {pr_exit} {prexit.c:21} {printf}

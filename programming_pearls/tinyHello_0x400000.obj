@@ -1,0 +1,42 @@
+
+tinyHello_0x400000:     file format elf64-x86-64
+
+
+Disassembly of section .tinytext:
+
+0000000000400128 <print>:
+  400128:	55                   	push   %rbp
+  400129:	48 89 e5             	mov    %rsp,%rbp
+  40012c:	48 8b 05 45 00 00 00 	mov    0x45(%rip),%rax        # 400178 <str>
+  400133:	ba 0d 00 00 00       	mov    $0xd,%edx
+  400138:	48 89 c1             	mov    %rax,%rcx
+  40013b:	bb 00 00 00 00       	mov    $0x0,%ebx
+  400140:	b8 04 00 00 00       	mov    $0x4,%eax
+  400145:	cd 80                	int    $0x80
+  400147:	5d                   	pop    %rbp
+  400148:	c3                   	retq   
+
+0000000000400149 <exit>:
+  400149:	55                   	push   %rbp
+  40014a:	48 89 e5             	mov    %rsp,%rbp
+  40014d:	b8 01 00 00 00       	mov    $0x1,%eax
+  400152:	bb 2a 00 00 00       	mov    $0x2a,%ebx
+  400157:	cd 80                	int    $0x80
+  400159:	5d                   	pop    %rbp
+  40015a:	c3                   	retq   
+
+000000000040015b <nomain>:
+  40015b:	55                   	push   %rbp
+  40015c:	48 89 e5             	mov    %rsp,%rbp
+  40015f:	b8 00 00 00 00       	mov    $0x0,%eax
+  400164:	e8 bf ff ff ff       	callq  400128 <print>
+  400169:	b8 00 00 00 00       	mov    $0x0,%eax
+  40016e:	e8 d6 ff ff ff       	callq  400149 <exit>
+  400173:	5d                   	pop    %rbp
+  400174:	c3                   	retq   
+  400175:	00 00                	add    %al,(%rax)
+	...
+
+0000000000400178 <str>:
+  400178:	80 01 40 00 00 00 00 00 48 65 6c 6c 6f 20 57 6f     ..@.....Hello Wo
+  400188:	72 6c 64 21 0a 00                                   rld!..

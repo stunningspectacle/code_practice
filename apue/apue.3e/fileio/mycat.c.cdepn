@@ -1,0 +1,6 @@
+F {main} {mycat.c:6}
+C {main} {mycat.c:19} {exit}
+C {main} {mycat.c:19} {err_sys}
+C {main} {mycat.c:19} {read}
+C {main} {mycat.c:19} {err_sys}
+C {main} {mycat.c:19} {write}

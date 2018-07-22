@@ -1,0 +1,14 @@
+F {main} {tshm.c:12}
+C {main} {tshm.c:37} {exit}
+C {main} {tshm.c:37} {err_sys}
+C {main} {tshm.c:37} {shmctl}
+C {main} {tshm.c:37} {printf}
+C {main} {tshm.c:37} {err_sys}
+C {main} {tshm.c:37} {shmat}
+C {main} {tshm.c:37} {err_sys}
+C {main} {tshm.c:37} {shmget}
+C {main} {tshm.c:37} {printf}
+C {main} {tshm.c:37} {err_sys}
+C {main} {tshm.c:37} {malloc}
+C {main} {tshm.c:37} {printf}
+C {main} {tshm.c:37} {printf}

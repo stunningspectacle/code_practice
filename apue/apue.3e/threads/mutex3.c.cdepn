@@ -1,0 +1,20 @@
+F {foo_rele} {mutex3.c:68}
+C {foo_rele} {mutex3.c:90} {pthread_mutex_unlock}
+C {foo_rele} {mutex3.c:90} {free}
+C {foo_rele} {mutex3.c:90} {pthread_mutex_destroy}
+C {foo_rele} {mutex3.c:90} {pthread_mutex_unlock}
+C {foo_rele} {mutex3.c:90} {pthread_mutex_lock}
+F {foo_find} {mutex3.c:52}
+C {foo_find} {mutex3.c:90} {pthread_mutex_unlock}
+C {foo_find} {mutex3.c:90} {pthread_mutex_lock}
+F {foo_hold} {mutex3.c:44}
+C {foo_hold} {mutex3.c:90} {pthread_mutex_unlock}
+C {foo_hold} {mutex3.c:90} {pthread_mutex_lock}
+F {foo_alloc} {mutex3.c:19}
+C {foo_alloc} {mutex3.c:90} {pthread_mutex_unlock}
+C {foo_alloc} {mutex3.c:90} {pthread_mutex_unlock}
+C {foo_alloc} {mutex3.c:90} {pthread_mutex_lock}
+C {foo_alloc} {mutex3.c:90} {pthread_mutex_lock}
+C {foo_alloc} {mutex3.c:90} {free}
+C {foo_alloc} {mutex3.c:90} {pthread_mutex_init}
+C {foo_alloc} {mutex3.c:90} {malloc}

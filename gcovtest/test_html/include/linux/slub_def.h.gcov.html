@@ -1,0 +1,420 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+  <title>LCOV - test.info - include/linux/slub_def.h</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">include/linux</a> - slub_def.h<span style="font-size: 80%;"> (source / <a href="slub_def.h.func.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">test.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">22</td>
+            <td class="headerCovTableEntry">48</td>
+            <td class="headerCovTableEntryLo">45.8 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2011-05-12</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="headerItem">Branches:</td>
+            <td class="headerCovTableEntry">29</td>
+            <td class="headerCovTableEntry">224</td>
+            <td class="headerCovTableEntryLo">12.9 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">           Branch data     Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>                :            : #ifndef _LINUX_SLUB_DEF_H</a>
+<span class="lineNum">       2 </span>                :            : #define _LINUX_SLUB_DEF_H
+<span class="lineNum">       3 </span>                :            : 
+<span class="lineNum">       4 </span>                :            : /*
+<span class="lineNum">       5 </span>                :            :  * SLUB : A Slab allocator without object queues.
+<span class="lineNum">       6 </span>                :            :  *
+<span class="lineNum">       7 </span>                :            :  * (C) 2007 SGI, Christoph Lameter
+<span class="lineNum">       8 </span>                :            :  */
+<span class="lineNum">       9 </span>                :            : #include &lt;linux/types.h&gt;
+<span class="lineNum">      10 </span>                :            : #include &lt;linux/gfp.h&gt;
+<span class="lineNum">      11 </span>                :            : #include &lt;linux/workqueue.h&gt;
+<span class="lineNum">      12 </span>                :            : #include &lt;linux/kobject.h&gt;
+<span class="lineNum">      13 </span>                :            : #include &lt;linux/kmemtrace.h&gt;
+<span class="lineNum">      14 </span>                :            : #include &lt;linux/kmemleak.h&gt;
+<span class="lineNum">      15 </span>                :            : 
+<span class="lineNum">      16 </span>                :            : enum stat_item {
+<span class="lineNum">      17 </span>                :            :         ALLOC_FASTPATH,         /* Allocation from cpu slab */
+<span class="lineNum">      18 </span>                :            :         ALLOC_SLOWPATH,         /* Allocation by getting a new cpu slab */
+<span class="lineNum">      19 </span>                :            :         FREE_FASTPATH,          /* Free to cpu slub */
+<span class="lineNum">      20 </span>                :            :         FREE_SLOWPATH,          /* Freeing not to cpu slab */
+<span class="lineNum">      21 </span>                :            :         FREE_FROZEN,            /* Freeing to frozen slab */
+<span class="lineNum">      22 </span>                :            :         FREE_ADD_PARTIAL,       /* Freeing moves slab to partial list */
+<span class="lineNum">      23 </span>                :            :         FREE_REMOVE_PARTIAL,    /* Freeing removes last object */
+<span class="lineNum">      24 </span>                :            :         ALLOC_FROM_PARTIAL,     /* Cpu slab acquired from partial list */
+<span class="lineNum">      25 </span>                :            :         ALLOC_SLAB,             /* Cpu slab acquired from page allocator */
+<span class="lineNum">      26 </span>                :            :         ALLOC_REFILL,           /* Refill cpu slab from slab freelist */
+<span class="lineNum">      27 </span>                :            :         FREE_SLAB,              /* Slab freed to the page allocator */
+<span class="lineNum">      28 </span>                :            :         CPUSLAB_FLUSH,          /* Abandoning of the cpu slab */
+<span class="lineNum">      29 </span>                :            :         DEACTIVATE_FULL,        /* Cpu slab was full when deactivated */
+<span class="lineNum">      30 </span>                :            :         DEACTIVATE_EMPTY,       /* Cpu slab was empty when deactivated */
+<span class="lineNum">      31 </span>                :            :         DEACTIVATE_TO_HEAD,     /* Cpu slab was moved to the head of partials */
+<span class="lineNum">      32 </span>                :            :         DEACTIVATE_TO_TAIL,     /* Cpu slab was moved to the tail of partials */
+<span class="lineNum">      33 </span>                :            :         DEACTIVATE_REMOTE_FREES,/* Slab contained remotely freed objects */
+<span class="lineNum">      34 </span>                :            :         ORDER_FALLBACK,         /* Number of times fallback was necessary */
+<span class="lineNum">      35 </span>                :            :         NR_SLUB_STAT_ITEMS };
+<span class="lineNum">      36 </span>                :            : 
+<span class="lineNum">      37 </span>                :            : struct kmem_cache_cpu {
+<span class="lineNum">      38 </span>                :            :         void **freelist;        /* Pointer to first free per cpu object */
+<span class="lineNum">      39 </span>                :            :         struct page *page;      /* The slab from which we are allocating */
+<span class="lineNum">      40 </span>                :            :         int node;               /* The node of the page (or -1 for debug) */
+<span class="lineNum">      41 </span>                :            : #ifdef CONFIG_SLUB_STATS
+<span class="lineNum">      42 </span>                :            :         unsigned stat[NR_SLUB_STAT_ITEMS];
+<span class="lineNum">      43 </span>                :            : #endif
+<span class="lineNum">      44 </span>                :            : };
+<span class="lineNum">      45 </span>                :            : 
+<span class="lineNum">      46 </span>                :            : struct kmem_cache_node {
+<span class="lineNum">      47 </span>                :            :         spinlock_t list_lock;   /* Protect partial list and nr_partial */
+<span class="lineNum">      48 </span>                :            :         unsigned long nr_partial;
+<span class="lineNum">      49 </span>                :            :         struct list_head partial;
+<span class="lineNum">      50 </span>                :            : #ifdef CONFIG_SLUB_DEBUG
+<span class="lineNum">      51 </span>                :            :         atomic_long_t nr_slabs;
+<span class="lineNum">      52 </span>                :            :         atomic_long_t total_objects;
+<span class="lineNum">      53 </span>                :            :         struct list_head full;
+<span class="lineNum">      54 </span>                :            : #endif
+<span class="lineNum">      55 </span>                :            : };
+<span class="lineNum">      56 </span>                :            : 
+<span class="lineNum">      57 </span>                :            : /*
+<span class="lineNum">      58 </span>                :            :  * Word size structure that can be atomically updated or read and that
+<span class="lineNum">      59 </span>                :            :  * contains both the order and the number of objects that a slab of the
+<span class="lineNum">      60 </span>                :            :  * given order would contain.
+<span class="lineNum">      61 </span>                :            :  */
+<span class="lineNum">      62 </span>                :            : struct kmem_cache_order_objects {
+<span class="lineNum">      63 </span>                :            :         unsigned long x;
+<span class="lineNum">      64 </span>                :            : };
+<span class="lineNum">      65 </span>                :            : 
+<span class="lineNum">      66 </span>                :            : /*
+<span class="lineNum">      67 </span>                :            :  * Slab cache management.
+<span class="lineNum">      68 </span>                :            :  */
+<span class="lineNum">      69 </span>                :            : struct kmem_cache {
+<span class="lineNum">      70 </span>                :            :         struct kmem_cache_cpu *cpu_slab;
+<span class="lineNum">      71 </span>                :            :         /* Used for retriving partial slabs etc */
+<span class="lineNum">      72 </span>                :            :         unsigned long flags;
+<span class="lineNum">      73 </span>                :            :         int size;               /* The size of an object including meta data */
+<span class="lineNum">      74 </span>                :            :         int objsize;            /* The size of an object without meta data */
+<span class="lineNum">      75 </span>                :            :         int offset;             /* Free pointer offset. */
+<span class="lineNum">      76 </span>                :            :         struct kmem_cache_order_objects oo;
+<span class="lineNum">      77 </span>                :            : 
+<span class="lineNum">      78 </span>                :            :         /* Allocation and freeing of slabs */
+<span class="lineNum">      79 </span>                :            :         struct kmem_cache_order_objects max;
+<span class="lineNum">      80 </span>                :            :         struct kmem_cache_order_objects min;
+<span class="lineNum">      81 </span>                :            :         gfp_t allocflags;       /* gfp flags to use on each alloc */
+<span class="lineNum">      82 </span>                :            :         int refcount;           /* Refcount for slab cache destroy */
+<span class="lineNum">      83 </span>                :            :         void (*ctor)(void *);
+<span class="lineNum">      84 </span>                :            :         int inuse;              /* Offset to metadata */
+<span class="lineNum">      85 </span>                :            :         int align;              /* Alignment */
+<span class="lineNum">      86 </span>                :            :         unsigned long min_partial;
+<span class="lineNum">      87 </span>                :            :         const char *name;       /* Name (only for display!) */
+<span class="lineNum">      88 </span>                :            :         struct list_head list;  /* List of slab caches */
+<span class="lineNum">      89 </span>                :            : #ifdef CONFIG_SLUB_DEBUG
+<span class="lineNum">      90 </span>                :            :         struct kobject kobj;    /* For sysfs */
+<span class="lineNum">      91 </span>                :            : #endif
+<span class="lineNum">      92 </span>                :            : 
+<span class="lineNum">      93 </span>                :            : #ifdef CONFIG_NUMA
+<span class="lineNum">      94 </span>                :            :         /*
+<span class="lineNum">      95 </span>                :            :          * Defragmentation by allocating from a remote node.
+<span class="lineNum">      96 </span>                :            :          */
+<span class="lineNum">      97 </span>                :            :         int remote_node_defrag_ratio;
+<span class="lineNum">      98 </span>                :            :         struct kmem_cache_node *node[MAX_NUMNODES];
+<span class="lineNum">      99 </span>                :            : #else
+<span class="lineNum">     100 </span>                :            :         /* Avoid an extra cache line for UP */
+<span class="lineNum">     101 </span>                :            :         struct kmem_cache_node local_node;
+<span class="lineNum">     102 </span>                :            : #endif
+<span class="lineNum">     103 </span>                :            : };
+<span class="lineNum">     104 </span>                :            : 
+<span class="lineNum">     105 </span>                :            : /*
+<span class="lineNum">     106 </span>                :            :  * Kmalloc subsystem.
+<span class="lineNum">     107 </span>                :            :  */
+<span class="lineNum">     108 </span>                :            : #if defined(ARCH_KMALLOC_MINALIGN) &amp;&amp; ARCH_KMALLOC_MINALIGN &gt; 8
+<span class="lineNum">     109 </span>                :            : #define KMALLOC_MIN_SIZE ARCH_KMALLOC_MINALIGN
+<span class="lineNum">     110 </span>                :            : #else
+<span class="lineNum">     111 </span>                :            : #define KMALLOC_MIN_SIZE 8
+<span class="lineNum">     112 </span>                :            : #endif
+<span class="lineNum">     113 </span>                :            : 
+<span class="lineNum">     114 </span>                :            : #define KMALLOC_SHIFT_LOW ilog2(KMALLOC_MIN_SIZE)
+<span class="lineNum">     115 </span>                :            : 
+<span class="lineNum">     116 </span>                :            : #ifndef ARCH_KMALLOC_MINALIGN
+<span class="lineNum">     117 </span>                :            : #define ARCH_KMALLOC_MINALIGN __alignof__(unsigned long long)
+<span class="lineNum">     118 </span>                :            : #endif
+<span class="lineNum">     119 </span>                :            : 
+<span class="lineNum">     120 </span>                :            : #ifndef ARCH_SLAB_MINALIGN
+<span class="lineNum">     121 </span>                :            : #define ARCH_SLAB_MINALIGN __alignof__(unsigned long long)
+<span class="lineNum">     122 </span>                :            : #endif
+<span class="lineNum">     123 </span>                :            : 
+<span class="lineNum">     124 </span>                :            : /*
+<span class="lineNum">     125 </span>                :            :  * Maximum kmalloc object size handled by SLUB. Larger object allocations
+<span class="lineNum">     126 </span>                :            :  * are passed through to the page allocator. The page allocator &quot;fastpath&quot;
+<span class="lineNum">     127 </span>                :            :  * is relatively slow so we need this value sufficiently high so that
+<span class="lineNum">     128 </span>                :            :  * performance critical objects are allocated through the SLUB fastpath.
+<span class="lineNum">     129 </span>                :            :  *
+<span class="lineNum">     130 </span>                :            :  * This should be dropped to PAGE_SIZE / 2 once the page allocator
+<span class="lineNum">     131 </span>                :            :  * &quot;fastpath&quot; becomes competitive with the slab allocator fastpaths.
+<span class="lineNum">     132 </span>                :            :  */
+<span class="lineNum">     133 </span>                :            : #define SLUB_MAX_SIZE (2 * PAGE_SIZE)
+<span class="lineNum">     134 </span>                :            : 
+<span class="lineNum">     135 </span>                :            : #define SLUB_PAGE_SHIFT (PAGE_SHIFT + 2)
+<span class="lineNum">     136 </span>                :            : 
+<span class="lineNum">     137 </span>                :            : #ifdef CONFIG_ZONE_DMA
+<span class="lineNum">     138 </span>                :            : #define SLUB_DMA __GFP_DMA
+<span class="lineNum">     139 </span>                :            : /* Reserve extra caches for potential DMA use */
+<span class="lineNum">     140 </span>                :            : #define KMALLOC_CACHES (2 * SLUB_PAGE_SHIFT)
+<span class="lineNum">     141 </span>                :            : #else
+<span class="lineNum">     142 </span>                :            : /* Disable DMA functionality */
+<span class="lineNum">     143 </span>                :            : #define SLUB_DMA (__force gfp_t)0
+<span class="lineNum">     144 </span>                :            : #define KMALLOC_CACHES SLUB_PAGE_SHIFT
+<span class="lineNum">     145 </span>                :            : #endif
+<span class="lineNum">     146 </span>                :            : 
+<span class="lineNum">     147 </span>                :            : /*
+<span class="lineNum">     148 </span>                :            :  * We keep the general caches in an array of slab caches that are used for
+<span class="lineNum">     149 </span>                :            :  * 2^x bytes of allocations.
+<span class="lineNum">     150 </span>                :            :  */
+<span class="lineNum">     151 </span>                :            : extern struct kmem_cache kmalloc_caches[KMALLOC_CACHES];
+<span class="lineNum">     152 </span>                :            : 
+<span class="lineNum">     153 </span>                :            : /*
+<span class="lineNum">     154 </span>                :            :  * Sorry that the following has to be that ugly but some versions of GCC
+<span class="lineNum">     155 </span>                :            :  * have trouble with constant propagation and loops.
+<span class="lineNum">     156 </span>                :            :  */
+<span class="lineNum">     157 </span>                :            : static __always_inline int kmalloc_index(size_t size)
+<span class="lineNum">     158 </span>                :            : {
+<span class="lineNum">     159 </span>[<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 1 time"> + </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineCov">          2 :         if (!size)</span>
+<span class="lineNum">         </span>[<span class="branchNoCov" title="Branch 4 was not taken"> - </span><span class="branchCov" title="Branch 5 was taken 1 time"> + </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">     160 </span>                :<span class="lineNoCov">          0 :                 return 0;</span>
+<span class="lineNum">     161 </span>                :            : 
+<span class="lineNum">     162 </span>[<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 1 time"> + </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineCov">          2 :         if (size &lt;= KMALLOC_MIN_SIZE)</span>
+<span class="lineNum">         </span>[<span class="branchNoCov" title="Branch 4 was not taken"> - </span><span class="branchCov" title="Branch 5 was taken 1 time"> + </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">     163 </span>                :<span class="lineNoCov">          0 :                 return KMALLOC_SHIFT_LOW;</span>
+<span class="lineNum">     164 </span>                :            : 
+<span class="lineNum">     165 </span>[<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 1 time"> + </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineCov">          2 :         if (KMALLOC_MIN_SIZE &lt;= 32 &amp;&amp; size &gt; 64 &amp;&amp; size &lt;= 96)</span>
+<span class="lineNum">         </span>[<span class="branchNoCov" title="Branch 4 was not taken"> - </span><span class="branchCov" title="Branch 5 was taken 1 time"> + </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">     166 </span>                :<span class="lineNoCov">          0 :                 return 1;</span>
+<span class="lineNum">     167 </span>[<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 1 time"> + </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineCov">          2 :         if (KMALLOC_MIN_SIZE &lt;= 64 &amp;&amp; size &gt; 128 &amp;&amp; size &lt;= 192)</span>
+<span class="lineNum">         </span>[<span class="branchNoCov" title="Branch 4 was not taken"> - </span><span class="branchCov" title="Branch 5 was taken 1 time"> + </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">     168 </span>                :<span class="lineNoCov">          0 :                 return 2;</span>
+<span class="lineNum">     169 </span>[<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 1 time"> + </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineCov">          2 :         if (size &lt;=          8) return 3;</span>
+<span class="lineNum">         </span>[<span class="branchNoCov" title="Branch 4 was not taken"> - </span><span class="branchCov" title="Branch 5 was taken 1 time"> + </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">     170 </span>[<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 1 time"> + </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineCov">          2 :         if (size &lt;=         16) return 4;</span>
+<span class="lineNum">         </span>[<span class="branchNoCov" title="Branch 4 was not taken"> - </span><span class="branchCov" title="Branch 5 was taken 1 time"> + </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">     171 </span>[<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 1 time"> + </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineCov">          2 :         if (size &lt;=         32) return 5;</span>
+<span class="lineNum">         </span>[<span class="branchNoCov" title="Branch 4 was not taken"> - </span><span class="branchCov" title="Branch 5 was taken 1 time"> + </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">     172 </span>[<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchNoCov" title="Branch 1 was not taken"> - </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineCov">          2 :         if (size &lt;=         64) return 6;</span>
+<span class="lineNum">         </span>[<span class="branchNoCov" title="Branch 4 was not taken"> - </span><span class="branchCov" title="Branch 5 was taken 1 time"> + </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">     173 </span>[<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineCov">          1 :         if (size &lt;=        128) return 7;</span>
+<span class="lineNum">         </span>[<span class="branchNoCov" title="Branch 4 was not taken"> - </span><span class="branchCov" title="Branch 5 was taken 1 time"> + </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">     174 </span>[<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineCov">          1 :         if (size &lt;=        256) return 8;</span>
+<span class="lineNum">         </span>[<span class="branchNoCov" title="Branch 4 was not taken"> - </span><span class="branchCov" title="Branch 5 was taken 1 time"> + </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">     175 </span>[<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineCov">          1 :         if (size &lt;=        512) return 9;</span>
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 4 was taken 1 time"> + </span><span class="branchNoCov" title="Branch 5 was not taken"> - </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">     176 </span>[<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (size &lt;=       1024) return 10;</span>
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Block containing branch 4 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 5 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">     177 </span>[<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (size &lt;=   2 * 1024) return 11;</span>
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Block containing branch 4 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 5 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">     178 </span>[<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (size &lt;=   4 * 1024) return 12;</span>
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Block containing branch 4 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 5 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">     179 </span>                :            : /*
+<span class="lineNum">     180 </span>                :            :  * The following is only needed to support architectures with a larger page
+<span class="lineNum">     181 </span>                :            :  * size than 4k.
+<span class="lineNum">     182 </span>                :            :  */
+<span class="lineNum">     183 </span>[<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (size &lt;=   8 * 1024) return 13;</span>
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Block containing branch 4 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 5 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">     184 </span>[<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (size &lt;=  16 * 1024) return 14;</span>
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Block containing branch 4 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 5 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">     185 </span>[<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (size &lt;=  32 * 1024) return 15;</span>
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Block containing branch 4 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 5 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">     186 </span>[<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (size &lt;=  64 * 1024) return 16;</span>
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Block containing branch 4 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 5 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">     187 </span>[<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (size &lt;= 128 * 1024) return 17;</span>
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Block containing branch 4 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 5 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">     188 </span>[<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (size &lt;= 256 * 1024) return 18;</span>
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Block containing branch 4 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 5 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">     189 </span>[<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (size &lt;= 512 * 1024) return 19;</span>
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Block containing branch 4 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 5 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">     190 </span>[<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (size &lt;= 1024 * 1024) return 20;</span>
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Block containing branch 4 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 5 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">     191 </span>[<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (size &lt;=  2 * 1024 * 1024) return 21;</span>
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Block containing branch 4 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 5 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">     192 </span>                :<span class="lineNoCov">          0 :         return -1;</span>
+<span class="lineNum">     193 </span>                :            : 
+<span class="lineNum">     194 </span>                :            : /*
+<span class="lineNum">     195 </span>                :            :  * What we really wanted to do and cannot do because of compiler issues is:
+<span class="lineNum">     196 </span>                :            :  *      int i;
+<span class="lineNum">     197 </span>                :            :  *      for (i = KMALLOC_SHIFT_LOW; i &lt;= KMALLOC_SHIFT_HIGH; i++)
+<span class="lineNum">     198 </span>                :            :  *              if (size &lt;= (1 &lt;&lt; i))
+<span class="lineNum">     199 </span>                :            :  *                      return i;
+<span class="lineNum">     200 </span>                :            :  */
+<span class="lineNum">     201 </span>                :            : }
+<span class="lineNum">     202 </span>                :            : 
+<span class="lineNum">     203 </span>                :            : /*
+<span class="lineNum">     204 </span>                :            :  * Find the slab cache for a given combination of allocation flags and size.
+<span class="lineNum">     205 </span>                :            :  *
+<span class="lineNum">     206 </span>                :            :  * This ought to end up with a global pointer to the right cache
+<span class="lineNum">     207 </span>                :            :  * in kmalloc_caches.
+<span class="lineNum">     208 </span>                :            :  */
+<span class="lineNum">     209 </span>                :            : static __always_inline struct kmem_cache *kmalloc_slab(size_t size)
+<span class="lineNum">     210 </span>                :            : {
+<span class="lineNum">     211 </span>                :<span class="lineCov">          2 :         int index = kmalloc_index(size);</span>
+<span class="lineNum">     212 </span>                :            : 
+<span class="lineNum">     213 </span>[<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 1 time"> + </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineCov">          2 :         if (index == 0)</span>
+<span class="lineNum">         </span>[<span class="branchNoCov" title="Branch 4 was not taken"> - </span><span class="branchCov" title="Branch 5 was taken 1 time"> + </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">     214 </span>                :<span class="lineNoCov">          0 :                 return NULL;</span>
+<span class="lineNum">     215 </span>                :            : 
+<span class="lineNum">     216 </span>                :<span class="lineCov">          2 :         return &amp;kmalloc_caches[index];</span>
+<span class="lineNum">     217 </span>                :            : }
+<span class="lineNum">     218 </span>                :            : 
+<span class="lineNum">     219 </span>                :            : void *kmem_cache_alloc(struct kmem_cache *, gfp_t);
+<span class="lineNum">     220 </span>                :            : void *__kmalloc(size_t size, gfp_t flags);
+<span class="lineNum">     221 </span>                :            : 
+<span class="lineNum">     222 </span>                :            : #ifdef CONFIG_TRACING
+<span class="lineNum">     223 </span>                :            : extern void *kmem_cache_alloc_notrace(struct kmem_cache *s, gfp_t gfpflags);
+<span class="lineNum">     224 </span>                :            : #else
+<span class="lineNum">     225 </span>                :            : static __always_inline void *
+<span class="lineNum">     226 </span>                :            : kmem_cache_alloc_notrace(struct kmem_cache *s, gfp_t gfpflags)
+<span class="lineNum">     227 </span>                :            : {
+<span class="lineNum">     228 </span>                :            :         return kmem_cache_alloc(s, gfpflags);
+<span class="lineNum">     229 </span>                :            : }
+<span class="lineNum">     230 </span>                :            : #endif
+<span class="lineNum">     231 </span>                :            : 
+<span class="lineNum">     232 </span>                :            : static __always_inline void *kmalloc_large(size_t size, gfp_t flags)
+<span class="lineNum">     233 </span>                :            : {
+<span class="lineNum">     234 </span>                :<span class="lineNoCov">          0 :         unsigned int order = get_order(size);</span>
+<span class="lineNum">     235 </span>                :<span class="lineNoCov">          0 :         void *ret = (void *) __get_free_pages(flags | __GFP_COMP, order);</span>
+<span class="lineNum">     236 </span>                :            : 
+<span class="lineNum">     237 </span>                :<span class="lineNoCov">          0 :         kmemleak_alloc(ret, size, 1, flags);</span>
+<span class="lineNum">     238 </span>                :<span class="lineNoCov">          0 :         trace_kmalloc(_THIS_IP_, ret, size, PAGE_SIZE &lt;&lt; order, flags);</span>
+<span class="lineNum">     239 </span>                :            : 
+<span class="lineNum">     240 </span>                :<span class="lineNoCov">          0 :         return ret;</span>
+<span class="lineNum">     241 </span>                :            : }
+<span class="lineNum">     242 </span>                :            : 
+<span class="lineNum">     243 </span>                :            : static __always_inline void *kmalloc(size_t size, gfp_t flags)
+<span class="lineNum">     244 </span>                :            : {
+<span class="lineNum">     245 </span>                :            :         void *ret;
+<span class="lineNum">     246 </span>                :            : 
+<span class="lineNum">     247 </span>[<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchNoCov" title="Branch 1 was not taken"> - </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineCov">          2 :         if (__builtin_constant_p(size)) {</span>
+<span class="lineNum">         </span>  [<span class="branchCov" title="Branch 4 was taken 1 time"> + </span><span class="branchNoCov" title="Branch 5 was not taken"> - </span><span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">     248 </span>[<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 1 time"> + </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineCov">          2 :                 if (size &gt; SLUB_MAX_SIZE)</span>
+<span class="lineNum">         </span>[<span class="branchNoCov" title="Branch 4 was not taken"> - </span><span class="branchCov" title="Branch 5 was taken 1 time"> + </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">     249 </span>                :<span class="lineNoCov">          0 :                         return kmalloc_large(size, flags);</span>
+<span class="lineNum">     250 </span>                :            : 
+<span class="lineNum">     251 </span>[<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchNoCov" title="Branch 1 was not taken"> - </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineCov">          2 :                 if (!(flags &amp; SLUB_DMA)) {</span>
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 4 was taken 1 time"> + </span><span class="branchNoCov" title="Branch 5 was not taken"> - </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">     252 </span>                :<span class="lineCov">          2 :                         struct kmem_cache *s = kmalloc_slab(size);</span>
+<span class="lineNum">     253 </span>                :            : 
+<span class="lineNum">     254 </span>[<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 1 time"> + </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineCov">          2 :                         if (!s)</span>
+<span class="lineNum">         </span>[<span class="branchNoCov" title="Branch 4 was not taken"> - </span><span class="branchCov" title="Branch 5 was taken 1 time"> + </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">     255 </span>                :<span class="lineNoCov">          0 :                                 return ZERO_SIZE_PTR;</span>
+<span class="lineNum">     256 </span>                :            : 
+<span class="lineNum">     257 </span>                :<span class="lineCov">          2 :                         ret = kmem_cache_alloc_notrace(s, flags);</span>
+<span class="lineNum">     258 </span>                :            : 
+<span class="lineNum">     259 </span>                :<span class="lineCov">          2 :                         trace_kmalloc(_THIS_IP_, ret, size, s-&gt;size, flags);</span>
+<span class="lineNum">     260 </span>                :            : 
+<span class="lineNum">     261 </span>                :<span class="lineCov">          2 :                         return ret;</span>
+<span class="lineNum">     262 </span>                :            :                 }
+<span class="lineNum">     263 </span>                :            :         }
+<span class="lineNum">     264 </span>                :<span class="lineNoCov">          0 :         return __kmalloc(size, flags);</span>
+<span class="lineNum">     265 </span>                :            : }
+<span class="lineNum">     266 </span>                :            : 
+<span class="lineNum">     267 </span>                :            : #ifdef CONFIG_NUMA
+<span class="lineNum">     268 </span>                :            : void *__kmalloc_node(size_t size, gfp_t flags, int node);
+<span class="lineNum">     269 </span>                :            : void *kmem_cache_alloc_node(struct kmem_cache *, gfp_t flags, int node);
+<span class="lineNum">     270 </span>                :            : 
+<span class="lineNum">     271 </span>                :            : #ifdef CONFIG_TRACING
+<span class="lineNum">     272 </span>                :            : extern void *kmem_cache_alloc_node_notrace(struct kmem_cache *s,
+<span class="lineNum">     273 </span>                :            :                                            gfp_t gfpflags,
+<span class="lineNum">     274 </span>                :            :                                            int node);
+<span class="lineNum">     275 </span>                :            : #else
+<span class="lineNum">     276 </span>                :            : static __always_inline void *
+<span class="lineNum">     277 </span>                :            : kmem_cache_alloc_node_notrace(struct kmem_cache *s,
+<span class="lineNum">     278 </span>                :            :                               gfp_t gfpflags,
+<span class="lineNum">     279 </span>                :            :                               int node)
+<span class="lineNum">     280 </span>                :            : {
+<span class="lineNum">     281 </span>                :            :         return kmem_cache_alloc_node(s, gfpflags, node);
+<span class="lineNum">     282 </span>                :            : }
+<span class="lineNum">     283 </span>                :            : #endif
+<span class="lineNum">     284 </span>                :            : 
+<span class="lineNum">     285 </span>                :            : static __always_inline void *kmalloc_node(size_t size, gfp_t flags, int node)
+<span class="lineNum">     286 </span>                :            : {
+<span class="lineNum">     287 </span>                :            :         void *ret;
+<span class="lineNum">     288 </span>                :            : 
+<span class="lineNum">     289 </span>                :            :         if (__builtin_constant_p(size) &amp;&amp;
+<span class="lineNum">     290 </span>                :            :                 size &lt;= SLUB_MAX_SIZE &amp;&amp; !(flags &amp; SLUB_DMA)) {
+<span class="lineNum">     291 </span>                :            :                         struct kmem_cache *s = kmalloc_slab(size);
+<span class="lineNum">     292 </span>                :            : 
+<span class="lineNum">     293 </span>                :            :                 if (!s)
+<span class="lineNum">     294 </span>                :            :                         return ZERO_SIZE_PTR;
+<span class="lineNum">     295 </span>                :            : 
+<span class="lineNum">     296 </span>                :            :                 ret = kmem_cache_alloc_node_notrace(s, flags, node);
+<span class="lineNum">     297 </span>                :            : 
+<span class="lineNum">     298 </span>                :            :                 trace_kmalloc_node(_THIS_IP_, ret,
+<span class="lineNum">     299 </span>                :            :                                    size, s-&gt;size, flags, node);
+<span class="lineNum">     300 </span>                :            : 
+<span class="lineNum">     301 </span>                :            :                 return ret;
+<span class="lineNum">     302 </span>                :            :         }
+<span class="lineNum">     303 </span>                :            :         return __kmalloc_node(size, flags, node);
+<span class="lineNum">     304 </span>                :            : }
+<span class="lineNum">     305 </span>                :            : #endif
+<span class="lineNum">     306 </span>                :            : 
+<span class="lineNum">     307 </span>                :            : #endif /* _LINUX_SLUB_DEF_H */
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.8</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

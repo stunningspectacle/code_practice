@@ -1,0 +1,4 @@
+F {getenv} {getenv1.c:11}
+C {getenv} {getenv1.c:24} {strncpy}
+C {getenv} {getenv1.c:24} {strncmp}
+C {getenv} {getenv1.c:24} {strlen}

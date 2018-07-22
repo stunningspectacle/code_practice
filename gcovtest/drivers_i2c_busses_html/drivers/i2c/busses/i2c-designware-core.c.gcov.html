@@ -1,0 +1,712 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+  <title>LCOV - drivers_i2c_busses.info - drivers/i2c/busses/i2c-designware-core.c</title>
+  <link rel="stylesheet" type="text/css" href="../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../index.html">top level</a> - <a href="index.html">drivers/i2c/busses</a> - i2c-designware-core.c<span style="font-size: 80%;"> (source / <a href="i2c-designware-core.c.func.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">drivers_i2c_busses.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">175</td>
+            <td class="headerCovTableEntry">234</td>
+            <td class="headerCovTableEntryLo">74.8 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2011-04-26</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">14</td>
+            <td class="headerCovTableEntry">16</td>
+            <td class="headerCovTableEntryMed">87.5 %</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="headerItem">Branches:</td>
+            <td class="headerCovTableEntry">60</td>
+            <td class="headerCovTableEntry">106</td>
+            <td class="headerCovTableEntryLo">56.6 %</td>
+          </tr>
+          <tr><td><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">           Branch data     Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>                :            : /*</a>
+<span class="lineNum">       2 </span>                :            :  * Synopsys DesignWare I2C adapter driver (master only).
+<span class="lineNum">       3 </span>                :            :  *
+<span class="lineNum">       4 </span>                :            :  * Based on the TI DAVINCI I2C adapter driver.
+<span class="lineNum">       5 </span>                :            :  *
+<span class="lineNum">       6 </span>                :            :  * Copyright (C) 2006 Texas Instruments.
+<span class="lineNum">       7 </span>                :            :  * Copyright (C) 2007 MontaVista Software Inc.
+<span class="lineNum">       8 </span>                :            :  * Copyright (C) 2009 Provigent Ltd.
+<span class="lineNum">       9 </span>                :            :  *
+<span class="lineNum">      10 </span>                :            :  * ----------------------------------------------------------------------------
+<span class="lineNum">      11 </span>                :            :  *
+<span class="lineNum">      12 </span>                :            :  * This program is free software; you can redistribute it and/or modify
+<span class="lineNum">      13 </span>                :            :  * it under the terms of the GNU General Public License as published by
+<span class="lineNum">      14 </span>                :            :  * the Free Software Foundation; either version 2 of the License, or
+<span class="lineNum">      15 </span>                :            :  * (at your option) any later version.
+<span class="lineNum">      16 </span>                :            :  *
+<span class="lineNum">      17 </span>                :            :  * This program is distributed in the hope that it will be useful,
+<span class="lineNum">      18 </span>                :            :  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      19 </span>                :            :  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      20 </span>                :            :  * GNU General Public License for more details.
+<span class="lineNum">      21 </span>                :            :  *
+<span class="lineNum">      22 </span>                :            :  * You should have received a copy of the GNU General Public License
+<span class="lineNum">      23 </span>                :            :  * along with this program; if not, write to the Free Software
+<span class="lineNum">      24 </span>                :            :  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+<span class="lineNum">      25 </span>                :            :  * ----------------------------------------------------------------------------
+<span class="lineNum">      26 </span>                :            :  *
+<span class="lineNum">      27 </span>                :            :  */
+<span class="lineNum">      28 </span>                :            : 
+<span class="lineNum">      29 </span>                :            : #include &lt;linux/kernel.h&gt;
+<span class="lineNum">      30 </span>                :            : #include &lt;linux/module.h&gt;
+<span class="lineNum">      31 </span>                :            : #include &lt;linux/delay.h&gt;
+<span class="lineNum">      32 </span>                :            : #include &lt;linux/i2c.h&gt;
+<span class="lineNum">      33 </span>                :            : #include &lt;linux/clk.h&gt;
+<span class="lineNum">      34 </span>                :            : #include &lt;linux/errno.h&gt;
+<span class="lineNum">      35 </span>                :            : #include &lt;linux/sched.h&gt;
+<span class="lineNum">      36 </span>                :            : #include &lt;linux/err.h&gt;
+<span class="lineNum">      37 </span>                :            : #include &lt;linux/interrupt.h&gt;
+<span class="lineNum">      38 </span>                :            : #include &lt;linux/platform_device.h&gt;
+<span class="lineNum">      39 </span>                :            : #include &lt;linux/io.h&gt;
+<span class="lineNum">      40 </span>                :            : #include &lt;linux/slab.h&gt;
+<span class="lineNum">      41 </span>                :            : #include &lt;linux/pm_runtime.h&gt;
+<span class="lineNum">      42 </span>                :            : #include &quot;i2c-designware-core.h&quot;
+<span class="lineNum">      43 </span>                :            : 
+<span class="lineNum">      44 </span>                :            : static u32 i2c_dw_clk_get_rate(struct dw_i2c_dev *dev)
+<a name="45"><span class="lineNum">      45 </span>                :            : {</a>
+<span class="lineNum">      46 </span>                :            : #ifndef CONFIG_HAVE_CLK
+<span class="lineNum">      47 </span>                :<span class="lineCov">         11 :         return dev-&gt;clk_khz;</span>
+<span class="lineNum">      48 </span>                :            : #else
+<span class="lineNum">      49 </span>                :            :         return clk_get_rate(dev-&gt;clk)/1000;
+<span class="lineNum">      50 </span>                :            : #endif
+<a name="51"><span class="lineNum">      51 </span>                :            : }</a>
+<span class="lineNum">      52 </span>                :            : 
+<span class="lineNum">      53 </span>                :<span class="lineCov">     103233 : u32 dw_readl(struct dw_i2c_dev *dev, int offset)</span>
+<span class="lineNum">      54 </span>                :            : {
+<span class="lineNum">      55 </span>                :<span class="lineCov">     206466 :         u32 value = readl(dev-&gt;base + offset);</span>
+<span class="lineNum">      56 </span>                :            : 
+<span class="lineNum">      57 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 103233 times"> + </span>]:<span class="lineCov">     103233 :         if (dev-&gt;swab)</span>
+<span class="lineNum">      58 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :                 return swab32(value);</span>
+<span class="lineNum">      59 </span>                :            :         else
+<span class="lineNum">      60 </span>                :<span class="lineCov">     103233 :                 return value;</span>
+<span class="lineNum">      61 </span>                :            : }
+<a name="62"><span class="lineNum">      62 </span>                :            : EXPORT_SYMBOL(dw_readl);</a>
+<span class="lineNum">      63 </span>                :            : 
+<span class="lineNum">      64 </span>                :<span class="lineCov">      55415 : void dw_writel(struct dw_i2c_dev *dev, u32 b, int offset)</span>
+<span class="lineNum">      65 </span>                :            : {
+<span class="lineNum">      66 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 55415 times"> + </span>]:<span class="lineCov">      55415 :         if (dev-&gt;swab)</span>
+<span class="lineNum">      67 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :                 b = swab32(b);</span>
+<span class="lineNum">      68 </span>                :            : 
+<span class="lineNum">      69 </span>                :<span class="lineCov">      55415 :         writel(b, dev-&gt;base + offset);</span>
+<span class="lineNum">      70 </span>                :<span class="lineCov">      55415 : }</span>
+<span class="lineNum">      71 </span>                :            : EXPORT_SYMBOL(dw_writel);
+<span class="lineNum">      72 </span>                :            : 
+<span class="lineNum">      73 </span>                :            : static char *abort_sources[] = {
+<span class="lineNum">      74 </span>                :            :         [ABRT_7B_ADDR_NOACK] =
+<span class="lineNum">      75 </span>                :            :                 &quot;slave address not acknowledged (7bit mode)&quot;,
+<span class="lineNum">      76 </span>                :            :         [ABRT_10ADDR1_NOACK] =
+<span class="lineNum">      77 </span>                :            :                 &quot;first address byte not acknowledged (10bit mode)&quot;,
+<span class="lineNum">      78 </span>                :            :         [ABRT_10ADDR2_NOACK] =
+<span class="lineNum">      79 </span>                :            :                 &quot;second address byte not acknowledged (10bit mode)&quot;,
+<span class="lineNum">      80 </span>                :            :         [ABRT_TXDATA_NOACK] =
+<span class="lineNum">      81 </span>                :            :                 &quot;data not acknowledged&quot;,
+<span class="lineNum">      82 </span>                :            :         [ABRT_GCALL_NOACK] =
+<span class="lineNum">      83 </span>                :            :                 &quot;no acknowledgement for a general call&quot;,
+<span class="lineNum">      84 </span>                :            :         [ABRT_GCALL_READ] =
+<span class="lineNum">      85 </span>                :            :                 &quot;read after general call&quot;,
+<span class="lineNum">      86 </span>                :            :         [ABRT_SBYTE_ACKDET] =
+<span class="lineNum">      87 </span>                :            :                 &quot;start byte acknowledged&quot;,
+<span class="lineNum">      88 </span>                :            :         [ABRT_SBYTE_NORSTRT] =
+<span class="lineNum">      89 </span>                :            :                 &quot;trying to send start byte when restart is disabled&quot;,
+<span class="lineNum">      90 </span>                :            :         [ABRT_10B_RD_NORSTRT] =
+<span class="lineNum">      91 </span>                :            :                 &quot;trying to read when restart is disabled (10bit mode)&quot;,
+<span class="lineNum">      92 </span>                :            :         [ABRT_MASTER_DIS] =
+<span class="lineNum">      93 </span>                :            :                 &quot;trying to use disabled adapter&quot;,
+<span class="lineNum">      94 </span>                :            :         [ARB_LOST] =
+<span class="lineNum">      95 </span>                :            :                 &quot;lost arbitration&quot;,
+<span class="lineNum">      96 </span>                :            : };
+<a name="97"><span class="lineNum">      97 </span>                :            : </a>
+<span class="lineNum">      98 </span>                :            : u32
+<span class="lineNum">      99 </span>                :<span class="lineCov">         22 : i2c_dw_scl_hcnt(u32 ic_clk, u32 tSYMBOL, u32 tf, int cond, int offset)</span>
+<span class="lineNum">     100 </span>                :            : {
+<span class="lineNum">     101 </span>                :            :         /*
+<span class="lineNum">     102 </span>                :            :          * DesignWare I2C core doesn't seem to have solid strategy to meet
+<span class="lineNum">     103 </span>                :            :          * the tHD;STA timing spec.  Configuring _HCNT based on tHIGH spec
+<span class="lineNum">     104 </span>                :            :          * will result in violation of the tHD;STA spec.
+<span class="lineNum">     105 </span>                :            :          */
+<span class="lineNum">     106 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 22 times"> + </span>]:<span class="lineCov">         22 :         if (cond)</span>
+<span class="lineNum">     107 </span>                :            :                 /*
+<span class="lineNum">     108 </span>                :            :                  * Conditional expression:
+<span class="lineNum">     109 </span>                :            :                  *
+<span class="lineNum">     110 </span>                :            :                  *   IC_[FS]S_SCL_HCNT + (1+4+3) &gt;= IC_CLK * tHIGH
+<span class="lineNum">     111 </span>                :            :                  *
+<span class="lineNum">     112 </span>                :            :                  * This is based on the DW manuals, and represents an ideal
+<span class="lineNum">     113 </span>                :            :                  * configuration.  The resulting I2C bus speed will be
+<span class="lineNum">     114 </span>                :            :                  * faster than any of the others.
+<span class="lineNum">     115 </span>                :            :                  *
+<span class="lineNum">     116 </span>                :            :                  * If your hardware is free from tHD;STA issue, try this one.
+<span class="lineNum">     117 </span>                :            :                  */
+<span class="lineNum">     118 </span>                :<span class="lineNoCov">          0 :                 return (ic_clk * tSYMBOL + 5000) / 10000 - 8 + offset;</span>
+<span class="lineNum">     119 </span>                :            :         else
+<span class="lineNum">     120 </span>                :            :                 /*
+<span class="lineNum">     121 </span>                :            :                  * Conditional expression:
+<span class="lineNum">     122 </span>                :            :                  *
+<span class="lineNum">     123 </span>                :            :                  *   IC_[FS]S_SCL_HCNT + 3 &gt;= IC_CLK * (tHD;STA + tf)
+<span class="lineNum">     124 </span>                :            :                  *
+<span class="lineNum">     125 </span>                :            :                  * This is just experimental rule; the tHD;STA period turned
+<span class="lineNum">     126 </span>                :            :                  * out to be proportinal to (_HCNT + 3).  With this setting,
+<span class="lineNum">     127 </span>                :            :                  * we could meet both tHIGH and tHD;STA timing specs.
+<span class="lineNum">     128 </span>                :            :                  *
+<span class="lineNum">     129 </span>                :            :                  * If unsure, you'd better to take this alternative.
+<span class="lineNum">     130 </span>                :            :                  *
+<span class="lineNum">     131 </span>                :            :                  * The reason why we need to take into account &quot;tf&quot; here,
+<span class="lineNum">     132 </span>                :            :                  * is the same as described in i2c_dw_scl_lcnt().
+<span class="lineNum">     133 </span>                :            :                  */
+<span class="lineNum">     134 </span>                :<span class="lineCov">         22 :                 return (ic_clk * (tSYMBOL + tf) + 5000) / 10000 - 3 + offset;</span>
+<a name="135"><span class="lineNum">     135 </span>                :            : }</a>
+<span class="lineNum">     136 </span>                :            : 
+<span class="lineNum">     137 </span>                :<span class="lineNoCov">          0 : u32 i2c_dw_scl_lcnt(u32 ic_clk, u32 tLOW, u32 tf, int offset)</span>
+<span class="lineNum">     138 </span>                :            : {
+<span class="lineNum">     139 </span>                :            :         /*
+<span class="lineNum">     140 </span>                :            :          * Conditional expression:
+<span class="lineNum">     141 </span>                :            :          *
+<span class="lineNum">     142 </span>                :            :          *   IC_[FS]S_SCL_LCNT + 1 &gt;= IC_CLK * (tLOW + tf)
+<span class="lineNum">     143 </span>                :            :          *
+<span class="lineNum">     144 </span>                :            :          * DW I2C core starts counting the SCL CNTs for the LOW period
+<span class="lineNum">     145 </span>                :            :          * of the SCL clock (tLOW) as soon as it pulls the SCL line.
+<span class="lineNum">     146 </span>                :            :          * In order to meet the tLOW timing spec, we need to take into
+<span class="lineNum">     147 </span>                :            :          * account the fall time of SCL signal (tf).  Default tf value
+<span class="lineNum">     148 </span>                :            :          * should be 0.3 us, for safety.
+<span class="lineNum">     149 </span>                :            :          */
+<span class="lineNum">     150 </span>                :<span class="lineNoCov">          0 :         return ((ic_clk * (tLOW + tf) + 5000) / 10000) - 1 + offset;</span>
+<span class="lineNum">     151 </span>                :            : }
+<span class="lineNum">     152 </span>                :            : 
+<span class="lineNum">     153 </span>                :            : /**
+<span class="lineNum">     154 </span>                :            :  * i2c_dw_init() - initialize the designware i2c master hardware
+<span class="lineNum">     155 </span>                :            :  * @dev: device private data
+<span class="lineNum">     156 </span>                :            :  *
+<span class="lineNum">     157 </span>                :            :  * This functions configures and enables the I2C master.
+<span class="lineNum">     158 </span>                :            :  * This function is called during I2C init function, and in case of timeout at
+<span class="lineNum">     159 </span>                :            :  * run time.
+<span class="lineNum">     160 </span>                :            :  */
+<span class="lineNum">     161 </span>                :            : int
+<span class="lineNum">     162 </span>                :<span class="lineCov">         11 : i2c_dw_init(struct dw_i2c_dev *dev)</span>
+<span class="lineNum">     163 </span>                :            : {
+<span class="lineNum">     164 </span>                :            :         u32 input_clock_khz;
+<span class="lineNum">     165 </span>                :            :         u32 hcnt, lcnt;
+<span class="lineNum">     166 </span>                :            :         u32 reg;
+<span class="lineNum">     167 </span>                :<span class="lineCov">         11 :         input_clock_khz = i2c_dw_clk_get_rate(dev);</span>
+<span class="lineNum">     168 </span>                :            : 
+<span class="lineNum">     169 </span>                :            :         /* Configure register endianess access */
+<span class="lineNum">     170 </span>                :<span class="lineCov">         11 :         reg = dw_readl(dev, DW_IC_COMP_TYPE);</span>
+<span class="lineNum">     171 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 11 times"> + </span>]:<span class="lineCov">         11 :         if (reg == ___constant_swab32(DW_IC_COMP_TYPE_VALUE)) {</span>
+<span class="lineNum">     172 </span>                :<span class="lineNoCov">          0 :                 dev-&gt;swab = 1;</span>
+<span class="lineNum">     173 </span>                :<span class="lineNoCov">          0 :                 reg = ___constant_swab32(DW_IC_COMP_TYPE_VALUE);</span>
+<span class="lineNum">     174 </span>                :            :         }
+<span class="lineNum">     175 </span>                :            : 
+<span class="lineNum">     176 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 11 times"> + </span>]:<span class="lineCov">         11 :         if (reg != DW_IC_COMP_TYPE_VALUE) {</span>
+<span class="lineNum">     177 </span>                :<span class="lineNoCov">          0 :                 dev_err(dev-&gt;dev, &quot;Unknown Synopsys component type: &quot;</span>
+<span class="lineNum">     178 </span>                :            :                         &quot;0x%08x\n&quot;, reg);
+<span class="lineNum">     179 </span>                :<span class="lineNoCov">          0 :                 return -ENODEV;</span>
+<span class="lineNum">     180 </span>                :            :         }
+<span class="lineNum">     181 </span>                :            : 
+<span class="lineNum">     182 </span>                :            :         /* Disable the adapter */
+<span class="lineNum">     183 </span>                :<span class="lineCov">         11 :         dw_writel(dev, 0, DW_IC_ENABLE);</span>
+<span class="lineNum">     184 </span>                :            : 
+<span class="lineNum">     185 </span>                :            :         /* set standard and fast speed deviders for high/low periods */
+<span class="lineNum">     186 </span>                :            : 
+<span class="lineNum">     187 </span>                :            :         /* Standard-mode */
+<span class="lineNum">     188 </span>                :<span class="lineCov">         11 :         hcnt = i2c_dw_scl_hcnt(input_clock_khz,</span>
+<span class="lineNum">     189 </span>                :            :                                 40,     /* tHD;STA = tHIGH = 4.0 us */
+<span class="lineNum">     190 </span>                :            :                                 3,      /* tf = 0.3 us */
+<span class="lineNum">     191 </span>                :            :                                 0,      /* 0: DW default, 1: Ideal */
+<span class="lineNum">     192 </span>                :            :                                 0);     /* No offset */
+<span class="lineNum">     193 </span>                :<span class="lineCov">         11 :         lcnt = i2c_dw_scl_lcnt(input_clock_khz,</span>
+<span class="lineNum">     194 </span>                :            :                                 47,     /* tLOW = 4.7 us */
+<span class="lineNum">     195 </span>                :            :                                 3,      /* tf = 0.3 us */
+<span class="lineNum">     196 </span>                :            :                                 0);     /* No offset */
+<span class="lineNum">     197 </span>                :<span class="lineCov">         11 :         dw_writel(dev, hcnt, DW_IC_SS_SCL_HCNT);</span>
+<span class="lineNum">     198 </span>                :<span class="lineCov">         11 :         dw_writel(dev, lcnt, DW_IC_SS_SCL_LCNT);</span>
+<span class="lineNum">     199 </span>                :<span class="lineCov">         11 :         dev_dbg(dev-&gt;dev, &quot;Standard-mode HCNT:LCNT = %d:%d\n&quot;, hcnt, lcnt);</span>
+<span class="lineNum">     200 </span>                :            : 
+<span class="lineNum">     201 </span>                :            :         /* Fast-mode */
+<span class="lineNum">     202 </span>                :<span class="lineCov">         11 :         hcnt = i2c_dw_scl_hcnt(input_clock_khz,</span>
+<span class="lineNum">     203 </span>                :            :                                 6,      /* tHD;STA = tHIGH = 0.6 us */
+<span class="lineNum">     204 </span>                :            :                                 3,      /* tf = 0.3 us */
+<span class="lineNum">     205 </span>                :            :                                 0,      /* 0: DW default, 1: Ideal */
+<span class="lineNum">     206 </span>                :            :                                 0);     /* No offset */
+<span class="lineNum">     207 </span>                :<span class="lineCov">         11 :         lcnt = i2c_dw_scl_lcnt(input_clock_khz,</span>
+<span class="lineNum">     208 </span>                :            :                                 13,     /* tLOW = 1.3 us */
+<span class="lineNum">     209 </span>                :            :                                 3,      /* tf = 0.3 us */
+<span class="lineNum">     210 </span>                :            :                                 0);     /* No offset */
+<span class="lineNum">     211 </span>                :<span class="lineCov">         11 :         dw_writel(dev, hcnt, DW_IC_FS_SCL_HCNT);</span>
+<span class="lineNum">     212 </span>                :<span class="lineCov">         11 :         dw_writel(dev, lcnt, DW_IC_FS_SCL_LCNT);</span>
+<span class="lineNum">     213 </span>                :<span class="lineCov">         11 :         dev_dbg(dev-&gt;dev, &quot;Fast-mode HCNT:LCNT = %d:%d\n&quot;, hcnt, lcnt);</span>
+<span class="lineNum">     214 </span>                :            : 
+<span class="lineNum">     215 </span>                :            :         /* Configure Tx/Rx FIFO threshold levels */
+<span class="lineNum">     216 </span>                :<span class="lineCov">         11 :         dw_writel(dev, dev-&gt;tx_fifo_depth - 1, DW_IC_TX_TL);</span>
+<span class="lineNum">     217 </span>                :<span class="lineCov">         11 :         dw_writel(dev, 0, DW_IC_RX_TL);</span>
+<span class="lineNum">     218 </span>                :            : 
+<span class="lineNum">     219 </span>                :            :         /* configure the i2c master */
+<span class="lineNum">     220 </span>                :<span class="lineCov">         11 :         dw_writel(dev, dev-&gt;master_cfg, DW_IC_CON);</span>
+<span class="lineNum">     221 </span>                :<span class="lineCov">         11 :         return 0;</span>
+<span class="lineNum">     222 </span>                :            : }
+<span class="lineNum">     223 </span>                :            : EXPORT_SYMBOL(i2c_dw_init);
+<span class="lineNum">     224 </span>                :            : 
+<span class="lineNum">     225 </span>                :            : /*
+<span class="lineNum">     226 </span>                :            :  * Waiting for bus not busy
+<a name="227"><span class="lineNum">     227 </span>                :            :  */</a>
+<span class="lineNum">     228 </span>                :            : int
+<span class="lineNum">     229 </span>                :<span class="lineCov">       3386 : i2c_dw_wait_bus_not_busy(struct dw_i2c_dev *dev)</span>
+<span class="lineNum">     230 </span>                :            : {
+<span class="lineNum">     231 </span>                :<span class="lineCov">       3386 :         int timeout = TIMEOUT;</span>
+<span class="lineNum">     232 </span>                :            : 
+<span class="lineNum">     233 </span>        [<span class="branchNoCov" title="Branch 1 was not taken"> - </span><span class="branchCov" title="Branch 2 was taken 3386 times"> + </span>]:<span class="lineCov">       3386 :         while (dw_readl(dev, DW_IC_STATUS) &amp; DW_IC_STATUS_ACTIVITY) {</span>
+<span class="lineNum">     234 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :                 if (timeout &lt;= 0) {</span>
+<span class="lineNum">     235 </span>                :<span class="lineNoCov">          0 :                         dev_warn(dev-&gt;dev, &quot;timeout waiting for bus ready\n&quot;);</span>
+<span class="lineNum">     236 </span>                :<span class="lineNoCov">          0 :                         return -ETIMEDOUT;</span>
+<span class="lineNum">     237 </span>                :            :                 }
+<span class="lineNum">     238 </span>                :<span class="lineNoCov">          0 :                 timeout--;</span>
+<span class="lineNum">     239 </span>                :<span class="lineNoCov">          0 :                 mdelay(1);</span>
+<span class="lineNum">     240 </span>                :            :         }
+<span class="lineNum">     241 </span>                :            : 
+<span class="lineNum">     242 </span>                :<span class="lineCov">       3386 :         return 0;</span>
+<span class="lineNum">     243 </span>                :            : }
+<a name="244"><span class="lineNum">     244 </span>                :            : </a>
+<span class="lineNum">     245 </span>                :            : void
+<span class="lineNum">     246 </span>                :<span class="lineCov">       3386 : i2c_dw_xfer_init(struct dw_i2c_dev *dev)</span>
+<span class="lineNum">     247 </span>                :            : {
+<span class="lineNum">     248 </span>                :<span class="lineCov">       3386 :         struct i2c_msg *msgs = dev-&gt;msgs;</span>
+<span class="lineNum">     249 </span>                :            :         u32 ic_con;
+<span class="lineNum">     250 </span>                :            : 
+<span class="lineNum">     251 </span>                :            :         /* Disable the adapter */
+<span class="lineNum">     252 </span>                :<span class="lineCov">       3386 :         dw_writel(dev, 0, DW_IC_ENABLE);</span>
+<span class="lineNum">     253 </span>                :            : 
+<span class="lineNum">     254 </span>                :            :         /* set the slave (target) address */
+<span class="lineNum">     255 </span>                :<span class="lineCov">       3386 :         dw_writel(dev, msgs[dev-&gt;msg_write_idx].addr, DW_IC_TAR);</span>
+<span class="lineNum">     256 </span>                :            : 
+<span class="lineNum">     257 </span>                :            :         /* if the slave address is ten bit address, enable 10BITADDR */
+<span class="lineNum">     258 </span>                :<span class="lineCov">       3386 :         ic_con = dw_readl(dev, DW_IC_CON);</span>
+<span class="lineNum">     259 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 3386 times"> + </span>]:<span class="lineCov">       3386 :         if (msgs[dev-&gt;msg_write_idx].flags &amp; I2C_M_TEN)</span>
+<span class="lineNum">     260 </span>                :<span class="lineNoCov">          0 :                 ic_con |= DW_IC_CON_10BITADDR_MASTER;</span>
+<span class="lineNum">     261 </span>                :            :         else
+<span class="lineNum">     262 </span>                :<span class="lineCov">       3386 :                 ic_con &amp;= ~DW_IC_CON_10BITADDR_MASTER;</span>
+<span class="lineNum">     263 </span>                :<span class="lineCov">       3386 :         dw_writel(dev, ic_con, DW_IC_CON);</span>
+<span class="lineNum">     264 </span>                :            : 
+<span class="lineNum">     265 </span>                :            :         /* Enable the adapter */
+<span class="lineNum">     266 </span>                :<span class="lineCov">       3386 :         dw_writel(dev, 1, DW_IC_ENABLE);</span>
+<span class="lineNum">     267 </span>                :            : 
+<span class="lineNum">     268 </span>                :<span class="lineCov">       3386 :         dw_writel(dev, dev-&gt;tx_fifo_depth - 1, DW_IC_TX_TL);</span>
+<span class="lineNum">     269 </span>                :            : 
+<span class="lineNum">     270 </span>                :            :         /* Enable interrupts */
+<span class="lineNum">     271 </span>                :<span class="lineCov">       3386 :         dw_writel(dev, DW_IC_INTR_DEFAULT_MASK, DW_IC_INTR_MASK);</span>
+<span class="lineNum">     272 </span>                :<span class="lineCov">       3386 : }</span>
+<span class="lineNum">     273 </span>                :            : 
+<span class="lineNum">     274 </span>                :            : /*
+<span class="lineNum">     275 </span>                :            :  * Initiate (and continue) low level master read/write transaction.
+<span class="lineNum">     276 </span>                :            :  * This function is only called from i2c_dw_isr, and pumping i2c_msg
+<span class="lineNum">     277 </span>                :            :  * messages into the tx buffer.  Even if the size of i2c_msg data is
+<span class="lineNum">     278 </span>                :            :  * longer than the size of the tx buffer, it handles everything.
+<a name="279"><span class="lineNum">     279 </span>                :            :  */</a>
+<span class="lineNum">     280 </span>                :            : void
+<span class="lineNum">     281 </span>                :<span class="lineCov">      20798 : i2c_dw_xfer_msg(struct dw_i2c_dev *dev)</span>
+<span class="lineNum">     282 </span>                :            : {
+<span class="lineNum">     283 </span>                :<span class="lineCov">      20798 :         struct i2c_msg *msgs = dev-&gt;msgs;</span>
+<span class="lineNum">     284 </span>                :            :         u32 intr_mask;
+<span class="lineNum">     285 </span>                :            :         int tx_limit, rx_limit;
+<span class="lineNum">     286 </span>                :<span class="lineCov">      20798 :         u32 addr = msgs[dev-&gt;msg_write_idx].addr;</span>
+<span class="lineNum">     287 </span>                :<span class="lineCov">      20798 :         u32 buf_len = dev-&gt;tx_buf_len;</span>
+<span class="lineNum">     288 </span>                :<span class="lineCov">      20798 :         u8 *buf = dev-&gt;tx_buf;;</span>
+<span class="lineNum">     289 </span>                :            : 
+<span class="lineNum">     290 </span>                :<span class="lineCov">      20798 :         intr_mask = DW_IC_INTR_DEFAULT_MASK;</span>
+<span class="lineNum">     291 </span>                :            : 
+<span class="lineNum">     292 </span>        [<span class="branchCov" title="Branch 0 was taken 10113 times"> + </span><span class="branchCov" title="Branch 1 was taken 16712 times"> + </span>]:<span class="lineCov">      26825 :         for (; dev-&gt;msg_write_idx &lt; dev-&gt;msgs_num; dev-&gt;msg_write_idx++) {</span>
+<span class="lineNum">     293 </span>                :            :                 /*
+<span class="lineNum">     294 </span>                :            :                  * if target address has changed, we need to
+<span class="lineNum">     295 </span>                :            :                  * reprogram the target address in the i2c
+<span class="lineNum">     296 </span>                :            :                  * adapter when we are done with this transfer
+<span class="lineNum">     297 </span>                :            :                  */
+<span class="lineNum">     298 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 10113 times"> + </span>]:<span class="lineCov">      10113 :                 if (msgs[dev-&gt;msg_write_idx].addr != addr) {</span>
+<span class="lineNum">     299 </span>                :<span class="lineNoCov">          0 :                         dev_err(dev-&gt;dev,</span>
+<span class="lineNum">     300 </span>                :            :                                 &quot;%s: invalid target address\n&quot;, __func__);
+<span class="lineNum">     301 </span>                :<span class="lineNoCov">          0 :                         dev-&gt;msg_err = -EINVAL;</span>
+<span class="lineNum">     302 </span>                :<span class="lineNoCov">          0 :                         break;</span>
+<span class="lineNum">     303 </span>                :            :                 }
+<span class="lineNum">     304 </span>                :            : 
+<span class="lineNum">     305 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 10113 times"> + </span>]:<span class="lineCov">      10113 :                 if (msgs[dev-&gt;msg_write_idx].len == 0) {</span>
+<span class="lineNum">     306 </span>                :<span class="lineNoCov">          0 :                         dev_err(dev-&gt;dev,</span>
+<span class="lineNum">     307 </span>                :            :                                 &quot;%s: invalid message length\n&quot;, __func__);
+<span class="lineNum">     308 </span>                :<span class="lineNoCov">          0 :                         dev-&gt;msg_err = -EINVAL;</span>
+<span class="lineNum">     309 </span>                :<span class="lineNoCov">          0 :                         break;</span>
+<span class="lineNum">     310 </span>                :            :                 }
+<span class="lineNum">     311 </span>                :            : 
+<span class="lineNum">     312 </span>        [<span class="branchCov" title="Branch 0 was taken 6027 times"> + </span><span class="branchCov" title="Branch 1 was taken 4086 times"> + </span>]:<span class="lineCov">      10113 :                 if (!(dev-&gt;status &amp; STATUS_WRITE_IN_PROGRESS)) {</span>
+<span class="lineNum">     313 </span>                :            :                         /* new i2c_msg */
+<span class="lineNum">     314 </span>                :<span class="lineCov">       6027 :                         buf = msgs[dev-&gt;msg_write_idx].buf;</span>
+<span class="lineNum">     315 </span>                :<span class="lineCov">       6027 :                         buf_len = msgs[dev-&gt;msg_write_idx].len;</span>
+<span class="lineNum">     316 </span>                :            :                 }
+<span class="lineNum">     317 </span>                :            : 
+<span class="lineNum">     318 </span>                :<span class="lineCov">      10113 :                 tx_limit = dev-&gt;tx_fifo_depth - dw_readl(dev, DW_IC_TXFLR);</span>
+<span class="lineNum">     319 </span>                :<span class="lineCov">      10113 :                 rx_limit = dev-&gt;rx_fifo_depth - dw_readl(dev, DW_IC_RXFLR);</span>
+<span class="lineNum">     320 </span>                :            : 
+<span class="lineNum">     321 </span>[<span class="branchCov" title="Branch 0 was taken 14907 times"> + </span><span class="branchCov" title="Branch 1 was taken 10113 times"> + </span>][<span class="branchCov" title="Branch 2 was taken 14907 times"> + </span><span class="branchNoCov" title="Branch 3 was not taken"> - </span>]:<span class="lineCov">      25020 :                 while (buf_len &gt; 0 &amp;&amp; tx_limit &gt; 0 &amp;&amp; rx_limit &gt; 0) {</span>
+<span class="lineNum">     322 </span>        [<span class="branchCov" title="Branch 0 was taken 2721 times"> + </span><span class="branchCov" title="Branch 1 was taken 12186 times"> + </span>]:<span class="lineCov">      14907 :                         if (msgs[dev-&gt;msg_write_idx].flags &amp; I2C_M_RD) {</span>
+<span class="lineNum">     323 </span>                :<span class="lineCov">       2721 :                                 dw_writel(dev, 0x100, DW_IC_DATA_CMD);</span>
+<span class="lineNum">     324 </span>                :<span class="lineCov">       2721 :                                 rx_limit--;</span>
+<span class="lineNum">     325 </span>                :            :                         } else
+<span class="lineNum">     326 </span>                :<span class="lineCov">      12186 :                                 dw_writel(dev, *buf++, DW_IC_DATA_CMD);</span>
+<span class="lineNum">     327 </span>                :<span class="lineCov">      14907 :                         tx_limit--; buf_len--;</span>
+<span class="lineNum">     328 </span>                :            :                 }
+<span class="lineNum">     329 </span>                :            : 
+<span class="lineNum">     330 </span>                :<span class="lineCov">      10113 :                 dev-&gt;tx_buf = buf;</span>
+<span class="lineNum">     331 </span>                :<span class="lineCov">      10113 :                 dev-&gt;tx_buf_len = buf_len;</span>
+<span class="lineNum">     332 </span>                :            : 
+<span class="lineNum">     333 </span>        [<span class="branchCov" title="Branch 0 was taken 4086 times"> + </span><span class="branchCov" title="Branch 1 was taken 6027 times"> + </span>]:<span class="lineCov">      10113 :                 if (buf_len &gt; 0) {</span>
+<span class="lineNum">     334 </span>                :            :                         /* more bytes to be written */
+<span class="lineNum">     335 </span>                :<span class="lineCov">       4086 :                         dev-&gt;status |= STATUS_WRITE_IN_PROGRESS;</span>
+<span class="lineNum">     336 </span>                :<span class="lineCov">       4086 :                         break;</span>
+<span class="lineNum">     337 </span>                :            :                 } else
+<span class="lineNum">     338 </span>                :<span class="lineCov">       6027 :                         dev-&gt;status &amp;= ~STATUS_WRITE_IN_PROGRESS;</span>
+<span class="lineNum">     339 </span>                :            :         }
+<span class="lineNum">     340 </span>                :            : 
+<span class="lineNum">     341 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 20798 times"> + </span>]:<span class="lineCov">      20798 :         if (dev-&gt;msg_err) {</span>
+<span class="lineNum">     342 </span>                :<span class="lineNoCov">          0 :                 dw_writel(dev, 0, DW_IC_INTR_MASK);</span>
+<span class="lineNum">     343 </span>        [<span class="branchCov" title="Branch 0 was taken 16712 times"> + </span><span class="branchCov" title="Branch 1 was taken 4086 times"> + </span>]:<span class="lineCov">      20798 :         } else if (dev-&gt;msg_write_idx == dev-&gt;msgs_num) {</span>
+<span class="lineNum">     344 </span>                :            :                 /*
+<span class="lineNum">     345 </span>                :            :                  * In theory, if i2c_msg index search is completed, we don't
+<span class="lineNum">     346 </span>                :            :                  * need TX_EMPTY interrupt any more. We can just disable the
+<span class="lineNum">     347 </span>                :            :                  * TX_EMPTY interrupt in the INTR_MASK, waiting for the last
+<span class="lineNum">     348 </span>                :            :                  * STOP interrupt.
+<span class="lineNum">     349 </span>                :            :                  * But it seems driver may not get the last STOP interrupt
+<span class="lineNum">     350 </span>                :            :                  * if we disable TX_EMPTY here.
+<span class="lineNum">     351 </span>                :            :                  * Instead we just modify the TX_TL to 0 to get TX_EMPTY
+<span class="lineNum">     352 </span>                :            :                  * interrupt when tx fifo is empty, this will make sure the
+<span class="lineNum">     353 </span>                :            :                  * STOP interrupt comes reliably while not getting too many
+<span class="lineNum">     354 </span>                :            :                  * TX_EMPTY interrupts.
+<span class="lineNum">     355 </span>                :            :                  */
+<span class="lineNum">     356 </span>                :<span class="lineCov">      16712 :                 dw_writel(dev, 0, DW_IC_TX_TL);</span>
+<span class="lineNum">     357 </span>                :            :         }
+<span class="lineNum">     358 </span>                :<span class="lineCov">      20798 : }</span>
+<a name="359"><span class="lineNum">     359 </span>                :            : </a>
+<span class="lineNum">     360 </span>                :            : void
+<span class="lineNum">     361 </span>                :<span class="lineCov">       2712 : i2c_dw_read(struct dw_i2c_dev *dev)</span>
+<span class="lineNum">     362 </span>                :            : {
+<span class="lineNum">     363 </span>                :<span class="lineCov">       2712 :         struct i2c_msg *msgs = dev-&gt;msgs;</span>
+<span class="lineNum">     364 </span>                :            :         int rx_valid;
+<span class="lineNum">     365 </span>                :            : 
+<span class="lineNum">     366 </span>        [<span class="branchCov" title="Branch 0 was taken 5353 times"> + </span><span class="branchCov" title="Branch 1 was taken 2645 times"> + </span>]:<span class="lineCov">       8065 :         for (; dev-&gt;msg_read_idx &lt; dev-&gt;msgs_num; dev-&gt;msg_read_idx++) {</span>
+<span class="lineNum">     367 </span>                :            :                 u32 len;
+<span class="lineNum">     368 </span>                :            :                 u8 *buf;
+<span class="lineNum">     369 </span>                :            : 
+<span class="lineNum">     370 </span>        [<span class="branchCov" title="Branch 0 was taken 2641 times"> + </span><span class="branchCov" title="Branch 1 was taken 2712 times"> + </span>]:<span class="lineCov">       5353 :                 if (!(msgs[dev-&gt;msg_read_idx].flags &amp; I2C_M_RD))</span>
+<span class="lineNum">     371 </span>                :<span class="lineCov">       2641 :                         continue;</span>
+<span class="lineNum">     372 </span>                :            : 
+<span class="lineNum">     373 </span>        [<span class="branchCov" title="Branch 0 was taken 2645 times"> + </span><span class="branchCov" title="Branch 1 was taken 67 times"> + </span>]:<span class="lineCov">       2712 :                 if (!(dev-&gt;status &amp; STATUS_READ_IN_PROGRESS)) {</span>
+<span class="lineNum">     374 </span>                :<span class="lineCov">       2645 :                         len = msgs[dev-&gt;msg_read_idx].len;</span>
+<span class="lineNum">     375 </span>                :<span class="lineCov">       2645 :                         buf = msgs[dev-&gt;msg_read_idx].buf;</span>
+<span class="lineNum">     376 </span>                :            :                 } else {
+<span class="lineNum">     377 </span>                :<span class="lineCov">         67 :                         len = dev-&gt;rx_buf_len;</span>
+<span class="lineNum">     378 </span>                :<span class="lineCov">         67 :                         buf = dev-&gt;rx_buf;</span>
+<span class="lineNum">     379 </span>                :            :                 }
+<span class="lineNum">     380 </span>                :            : 
+<span class="lineNum">     381 </span>                :<span class="lineCov">       2712 :                 rx_valid = dw_readl(dev, DW_IC_RXFLR);</span>
+<span class="lineNum">     382 </span>                :            : 
+<span class="lineNum">     383 </span>        [<span class="branchCov" title="Branch 0 was taken 2721 times"> + </span><span class="branchCov" title="Branch 1 was taken 2712 times"> + </span>]:<span class="lineCov">       5433 :                 for (; len &gt; 0 &amp;&amp; rx_valid &gt; 0; len--, rx_valid--)</span>
+<span class="lineNum">     384 </span>                :<span class="lineCov">       2721 :                         *buf++ = dw_readl(dev, DW_IC_DATA_CMD);</span>
+<span class="lineNum">     385 </span>                :            : 
+<span class="lineNum">     386 </span>        [<span class="branchCov" title="Branch 0 was taken 67 times"> + </span><span class="branchCov" title="Branch 1 was taken 2645 times"> + </span>]:<span class="lineCov">       2712 :                 if (len &gt; 0) {</span>
+<span class="lineNum">     387 </span>                :<span class="lineCov">         67 :                         dev-&gt;status |= STATUS_READ_IN_PROGRESS;</span>
+<span class="lineNum">     388 </span>                :<span class="lineCov">         67 :                         dev-&gt;rx_buf_len = len;</span>
+<span class="lineNum">     389 </span>                :<span class="lineCov">         67 :                         dev-&gt;rx_buf = buf;</span>
+<span class="lineNum">     390 </span>                :<span class="lineCov">         67 :                         return;</span>
+<span class="lineNum">     391 </span>                :            :                 } else
+<span class="lineNum">     392 </span>                :<span class="lineCov">       2645 :                         dev-&gt;status &amp;= ~STATUS_READ_IN_PROGRESS;</span>
+<span class="lineNum">     393 </span>                :            :         }
+<a name="394"><span class="lineNum">     394 </span>                :            : }</a>
+<span class="lineNum">     395 </span>                :            : 
+<span class="lineNum">     396 </span>                :<span class="lineNoCov">          0 : int i2c_dw_handle_tx_abort(struct dw_i2c_dev *dev)</span>
+<span class="lineNum">     397 </span>                :            : {
+<span class="lineNum">     398 </span>                :<span class="lineNoCov">          0 :         unsigned long abort_source = dev-&gt;abort_source;</span>
+<span class="lineNum">     399 </span>                :            :         int i;
+<span class="lineNum">     400 </span>                :            : 
+<span class="lineNum">     401 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (abort_source &amp; DW_IC_TX_ABRT_NOACK) {</span>
+<span class="lineNum">     402 </span>        [<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :                 for_each_set_bit(i, &amp;abort_source, ARRAY_SIZE(abort_sources))</span>
+<span class="lineNum">     403 </span>                :<span class="lineNoCov">          0 :                         dev_dbg(dev-&gt;dev,</span>
+<span class="lineNum">     404 </span>                :            :                                 &quot;%s: %s\n&quot;, __func__, abort_sources[i]);
+<span class="lineNum">     405 </span>                :<span class="lineNoCov">          0 :                 return -EREMOTEIO;</span>
+<span class="lineNum">     406 </span>                :            :         }
+<span class="lineNum">     407 </span>                :            : 
+<span class="lineNum">     408 </span>        [<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :         for_each_set_bit(i, &amp;abort_source, ARRAY_SIZE(abort_sources))</span>
+<span class="lineNum">     409 </span>                :<span class="lineNoCov">          0 :                 dev_err(dev-&gt;dev, &quot;%s: %s\n&quot;, __func__, abort_sources[i]);</span>
+<span class="lineNum">     410 </span>                :            : 
+<span class="lineNum">     411 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (abort_source &amp; DW_IC_TX_ARB_LOST)</span>
+<span class="lineNum">     412 </span>                :<span class="lineNoCov">          0 :                 return -EAGAIN;</span>
+<span class="lineNum">     413 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         else if (abort_source &amp; DW_IC_TX_ABRT_GCALL_READ)</span>
+<span class="lineNum">     414 </span>                :<span class="lineNoCov">          0 :                 return -EINVAL; /* wrong msgs[] data */</span>
+<span class="lineNum">     415 </span>                :            :         else
+<span class="lineNum">     416 </span>                :<span class="lineNoCov">          0 :                 return -EIO;</span>
+<span class="lineNum">     417 </span>                :            : }
+<span class="lineNum">     418 </span>                :            : 
+<span class="lineNum">     419 </span>                :            : 
+<span class="lineNum">     420 </span>                :            : /*
+<span class="lineNum">     421 </span>                :            :  * Prepare controller for a transaction and call i2c_dw_xfer_msg
+<a name="422"><span class="lineNum">     422 </span>                :            :  */</a>
+<span class="lineNum">     423 </span>                :            : int
+<span class="lineNum">     424 </span>                :<span class="lineCov">       3386 : i2c_dw_xfer(struct i2c_adapter *adap, struct i2c_msg msgs[], int num)</span>
+<span class="lineNum">     425 </span>                :            : {
+<span class="lineNum">     426 </span>                :<span class="lineCov">       3386 :         struct dw_i2c_dev *dev = i2c_get_adapdata(adap);</span>
+<span class="lineNum">     427 </span>                :            :         int ret;
+<span class="lineNum">     428 </span>                :            : 
+<span class="lineNum">     429 </span>                :<span class="lineCov">       3386 :         dev_dbg(dev-&gt;dev, &quot;%s: msgs: %d\n&quot;, __func__, num);</span>
+<span class="lineNum">     430 </span>                :            : 
+<span class="lineNum">     431 </span>                :<span class="lineCov">       3386 :         pm_runtime_get_sync(dev-&gt;dev);</span>
+<span class="lineNum">     432 </span>                :<span class="lineCov">       3386 :         mutex_lock(&amp;dev-&gt;lock);</span>
+<span class="lineNum">     433 </span>                :            : 
+<span class="lineNum">     434 </span>                :<span class="lineCov">       3386 :         INIT_COMPLETION(dev-&gt;cmd_complete);</span>
+<span class="lineNum">     435 </span>                :<span class="lineCov">       3386 :         dev-&gt;msgs = msgs;</span>
+<span class="lineNum">     436 </span>                :<span class="lineCov">       3386 :         dev-&gt;msgs_num = num;</span>
+<span class="lineNum">     437 </span>                :<span class="lineCov">       3386 :         dev-&gt;cmd_err = 0;</span>
+<span class="lineNum">     438 </span>                :<span class="lineCov">       3386 :         dev-&gt;msg_write_idx = 0;</span>
+<span class="lineNum">     439 </span>                :<span class="lineCov">       3386 :         dev-&gt;msg_read_idx = 0;</span>
+<span class="lineNum">     440 </span>                :<span class="lineCov">       3386 :         dev-&gt;msg_err = 0;</span>
+<span class="lineNum">     441 </span>                :<span class="lineCov">       3386 :         dev-&gt;status = STATUS_IDLE;</span>
+<span class="lineNum">     442 </span>                :<span class="lineCov">       3386 :         dev-&gt;abort_source = 0;</span>
+<span class="lineNum">     443 </span>                :            : 
+<span class="lineNum">     444 </span>                :<span class="lineCov">       3386 :         ret = i2c_dw_wait_bus_not_busy(dev);</span>
+<span class="lineNum">     445 </span>        [<span class="branchCov" title="Branch 0 was taken 3386 times"> + </span><span class="branchNoCov" title="Branch 1 was not taken"> - </span>]:<span class="lineCov">       3386 :         if (ret &lt; 0)</span>
+<span class="lineNum">     446 </span>                :            :                 goto done;
+<span class="lineNum">     447 </span>                :            : 
+<span class="lineNum">     448 </span>                :            :         /* start the transfers */
+<span class="lineNum">     449 </span>                :<span class="lineCov">       3386 :         i2c_dw_xfer_init(dev);</span>
+<span class="lineNum">     450 </span>                :            : 
+<span class="lineNum">     451 </span>                :            :         /* wait for tx to complete */
+<span class="lineNum">     452 </span>                :<span class="lineCov">       3386 :         ret = wait_for_completion_timeout(&amp;dev-&gt;cmd_complete, HZ);</span>
+<span class="lineNum">     453 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 3386 times"> + </span>]:<span class="lineCov">       3386 :         if (ret == 0) {</span>
+<span class="lineNum">     454 </span>                :<span class="lineNoCov">          0 :                 dev_err(dev-&gt;dev, &quot;controller timed out\n&quot;);</span>
+<span class="lineNum">     455 </span>                :<span class="lineNoCov">          0 :                 i2c_dw_init(dev);</span>
+<span class="lineNum">     456 </span>                :<span class="lineNoCov">          0 :                 ret = -ETIMEDOUT;</span>
+<span class="lineNum">     457 </span>                :<span class="lineNoCov">          0 :                 goto done;</span>
+<span class="lineNum">     458 </span>        [<span class="branchCov" title="Branch 0 was taken 3386 times"> + </span><span class="branchNoCov" title="Branch 1 was not taken"> - </span>]:<span class="lineCov">       3386 :         } else if (ret &lt; 0)</span>
+<span class="lineNum">     459 </span>                :            :                 goto done;
+<span class="lineNum">     460 </span>                :            : 
+<span class="lineNum">     461 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 3386 times"> + </span>]:<span class="lineCov">       3386 :         if (dev-&gt;msg_err) {</span>
+<span class="lineNum">     462 </span>                :<span class="lineNoCov">          0 :                 ret = dev-&gt;msg_err;</span>
+<span class="lineNum">     463 </span>                :<span class="lineNoCov">          0 :                 goto done;</span>
+<span class="lineNum">     464 </span>                :            :         }
+<span class="lineNum">     465 </span>                :            : 
+<span class="lineNum">     466 </span>                :            :         /* no error */
+<span class="lineNum">     467 </span>        [<span class="branchCov" title="Branch 0 was taken 3386 times"> + </span><span class="branchNoCov" title="Branch 1 was not taken"> - </span>]:<span class="lineCov">       3386 :         if (likely(!dev-&gt;cmd_err)) {</span>
+<span class="lineNum">     468 </span>                :            :                 /* Disable the adapter */
+<span class="lineNum">     469 </span>                :<span class="lineCov">       3386 :                 dw_writel(dev, 0, DW_IC_ENABLE);</span>
+<span class="lineNum">     470 </span>                :<span class="lineCov">       3386 :                 ret = num;</span>
+<span class="lineNum">     471 </span>                :<span class="lineCov">       3386 :                 goto done;</span>
+<span class="lineNum">     472 </span>                :            :         }
+<span class="lineNum">     473 </span>                :            : 
+<span class="lineNum">     474 </span>                :            :         /* We have an error */
+<span class="lineNum">     475 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (dev-&gt;cmd_err == DW_IC_ERR_TX_ABRT) {</span>
+<span class="lineNum">     476 </span>                :<span class="lineNoCov">          0 :                 ret = i2c_dw_handle_tx_abort(dev);</span>
+<span class="lineNum">     477 </span>                :<span class="lineNoCov">          0 :                 goto done;</span>
+<span class="lineNum">     478 </span>                :            :         }
+<span class="lineNum">     479 </span>                :<span class="lineNoCov">          0 :         ret = -EIO;</span>
+<span class="lineNum">     480 </span>                :            : 
+<span class="lineNum">     481 </span>                :            : done:
+<span class="lineNum">     482 </span>                :<span class="lineCov">       3386 :         mutex_unlock(&amp;dev-&gt;lock);</span>
+<span class="lineNum">     483 </span>                :<span class="lineCov">       3386 :         pm_runtime_put(dev-&gt;dev);</span>
+<span class="lineNum">     484 </span>                :<span class="lineCov">       3386 :         return ret;</span>
+<span class="lineNum">     485 </span>                :            : }
+<a name="486"><span class="lineNum">     486 </span>                :            : EXPORT_SYMBOL(i2c_dw_xfer);</a>
+<span class="lineNum">     487 </span>                :            : 
+<span class="lineNum">     488 </span>                :<span class="lineCov">          2 : u32 i2c_dw_func(struct i2c_adapter *adap)</span>
+<span class="lineNum">     489 </span>                :            : {
+<span class="lineNum">     490 </span>                :<span class="lineCov">          2 :         struct dw_i2c_dev *dev = i2c_get_adapdata(adap);</span>
+<span class="lineNum">     491 </span>                :<span class="lineCov">          2 :         return dev-&gt;functionality;</span>
+<span class="lineNum">     492 </span>                :            : }
+<a name="493"><span class="lineNum">     493 </span>                :            : EXPORT_SYMBOL(i2c_dw_func);</a>
+<span class="lineNum">     494 </span>                :            : 
+<span class="lineNum">     495 </span>                :<span class="lineCov">      20955 : u32 i2c_dw_read_clear_intrbits(struct dw_i2c_dev *dev)</span>
+<span class="lineNum">     496 </span>                :            : {
+<span class="lineNum">     497 </span>                :            :         u32 stat;
+<span class="lineNum">     498 </span>                :            : 
+<span class="lineNum">     499 </span>                :            :         /*
+<span class="lineNum">     500 </span>                :            :          * The IC_INTR_STAT register just indicates &quot;enabled&quot; interrupts.
+<span class="lineNum">     501 </span>                :            :          * Ths unmasked raw version of interrupt status bits are available
+<span class="lineNum">     502 </span>                :            :          * in the IC_RAW_INTR_STAT register.
+<span class="lineNum">     503 </span>                :            :          *
+<span class="lineNum">     504 </span>                :            :          * That is,
+<span class="lineNum">     505 </span>                :            :          *   stat = dw_readl(IC_INTR_STAT);
+<span class="lineNum">     506 </span>                :            :          * equals to,
+<span class="lineNum">     507 </span>                :            :          *   stat = dw_readl(IC_RAW_INTR_STAT) &amp; dw_readl(IC_INTR_MASK);
+<span class="lineNum">     508 </span>                :            :          *
+<span class="lineNum">     509 </span>                :            :          * The raw version might be useful for debugging purposes.
+<span class="lineNum">     510 </span>                :            :          */
+<span class="lineNum">     511 </span>                :<span class="lineCov">      20955 :         stat = dw_readl(dev, DW_IC_INTR_STAT);</span>
+<span class="lineNum">     512 </span>                :            : 
+<span class="lineNum">     513 </span>                :            :         /*
+<span class="lineNum">     514 </span>                :            :          * Do not use the IC_CLR_INTR register to clear interrupts, or
+<span class="lineNum">     515 </span>                :            :          * you'll miss some interrupts, triggered during the period from
+<span class="lineNum">     516 </span>                :            :          * dw_readl(IC_INTR_STAT) to dw_readl(IC_CLR_INTR).
+<span class="lineNum">     517 </span>                :            :          *
+<span class="lineNum">     518 </span>                :            :          * Instead, use the separately-prepared IC_CLR_* registers.
+<span class="lineNum">     519 </span>                :            :          */
+<span class="lineNum">     520 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 20955 times"> + </span>]:<span class="lineCov">      20955 :         if (stat &amp; DW_IC_INTR_RX_UNDER)</span>
+<span class="lineNum">     521 </span>                :<span class="lineNoCov">          0 :                 dw_readl(dev, DW_IC_CLR_RX_UNDER);</span>
+<span class="lineNum">     522 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 20955 times"> + </span>]:<span class="lineCov">      20955 :         if (stat &amp; DW_IC_INTR_RX_OVER)</span>
+<span class="lineNum">     523 </span>                :<span class="lineNoCov">          0 :                 dw_readl(dev, DW_IC_CLR_RX_OVER);</span>
+<span class="lineNum">     524 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 20955 times"> + </span>]:<span class="lineCov">      20955 :         if (stat &amp; DW_IC_INTR_TX_OVER)</span>
+<span class="lineNum">     525 </span>                :<span class="lineNoCov">          0 :                 dw_readl(dev, DW_IC_CLR_TX_OVER);</span>
+<span class="lineNum">     526 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 20955 times"> + </span>]:<span class="lineCov">      20955 :         if (stat &amp; DW_IC_INTR_RD_REQ)</span>
+<span class="lineNum">     527 </span>                :<span class="lineNoCov">          0 :                 dw_readl(dev, DW_IC_CLR_RD_REQ);</span>
+<span class="lineNum">     528 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 20955 times"> + </span>]:<span class="lineCov">      20955 :         if (stat &amp; DW_IC_INTR_TX_ABRT) {</span>
+<span class="lineNum">     529 </span>                :            :                 /*
+<span class="lineNum">     530 </span>                :            :                  * The IC_TX_ABRT_SOURCE register is cleared whenever
+<span class="lineNum">     531 </span>                :            :                  * the IC_CLR_TX_ABRT is read.  Preserve it beforehand.
+<span class="lineNum">     532 </span>                :            :                  */
+<span class="lineNum">     533 </span>                :<span class="lineNoCov">          0 :                 dev-&gt;abort_source = dw_readl(dev, DW_IC_TX_ABRT_SOURCE);</span>
+<span class="lineNum">     534 </span>                :<span class="lineNoCov">          0 :                 dw_readl(dev, DW_IC_CLR_TX_ABRT);</span>
+<span class="lineNum">     535 </span>                :            :         }
+<span class="lineNum">     536 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 20955 times"> + </span>]:<span class="lineCov">      20955 :         if (stat &amp; DW_IC_INTR_RX_DONE)</span>
+<span class="lineNum">     537 </span>                :<span class="lineNoCov">          0 :                 dw_readl(dev, DW_IC_CLR_RX_DONE);</span>
+<span class="lineNum">     538 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 20955 times"> + </span>]:<span class="lineCov">      20955 :         if (stat &amp; DW_IC_INTR_ACTIVITY)</span>
+<span class="lineNum">     539 </span>                :<span class="lineNoCov">          0 :                 dw_readl(dev, DW_IC_CLR_ACTIVITY);</span>
+<span class="lineNum">     540 </span>        [<span class="branchCov" title="Branch 0 was taken 3386 times"> + </span><span class="branchCov" title="Branch 1 was taken 17569 times"> + </span>]:<span class="lineCov">      20955 :         if (stat &amp; DW_IC_INTR_STOP_DET)</span>
+<span class="lineNum">     541 </span>                :<span class="lineCov">       3386 :                 dw_readl(dev, DW_IC_CLR_STOP_DET);</span>
+<span class="lineNum">     542 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 20955 times"> + </span>]:<span class="lineCov">      20955 :         if (stat &amp; DW_IC_INTR_START_DET)</span>
+<span class="lineNum">     543 </span>                :<span class="lineNoCov">          0 :                 dw_readl(dev, DW_IC_CLR_START_DET);</span>
+<span class="lineNum">     544 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 20955 times"> + </span>]:<span class="lineCov">      20955 :         if (stat &amp; DW_IC_INTR_GEN_CALL)</span>
+<span class="lineNum">     545 </span>                :<span class="lineNoCov">          0 :                 dw_readl(dev, DW_IC_CLR_GEN_CALL);</span>
+<span class="lineNum">     546 </span>                :            : 
+<span class="lineNum">     547 </span>                :<span class="lineCov">      20955 :         return stat;</span>
+<span class="lineNum">     548 </span>                :            : }
+<span class="lineNum">     549 </span>                :            : 
+<span class="lineNum">     550 </span>                :            : /*
+<span class="lineNum">     551 </span>                :            :  * Interrupt service routine. This gets called whenever an I2C interrupt
+<a name="552"><span class="lineNum">     552 </span>                :            :  * occurs.</a>
+<span class="lineNum">     553 </span>                :            :  */
+<span class="lineNum">     554 </span>                :<span class="lineCov">      23222 : irqreturn_t i2c_dw_isr(int this_irq, void *dev_id)</span>
+<span class="lineNum">     555 </span>                :            : {
+<span class="lineNum">     556 </span>                :<span class="lineCov">      23222 :         struct dw_i2c_dev *dev = dev_id;</span>
+<span class="lineNum">     557 </span>                :            :         u32 stat, enabled;
+<span class="lineNum">     558 </span>                :            : 
+<span class="lineNum">     559 </span>                :<span class="lineCov">      23222 :         enabled = dw_readl(dev, DW_IC_ENABLE);</span>
+<span class="lineNum">     560 </span>                :<span class="lineCov">      23222 :         stat = dw_readl(dev, DW_IC_RAW_INTR_STAT);</span>
+<span class="lineNum">     561 </span>                :<span class="lineCov">      23222 :         dev_dbg(dev-&gt;dev, &quot;%s:  %s enabled= 0x%x stat=0x%x\n&quot;, __func__,</span>
+<span class="lineNum">     562 </span>                :            :                 dev-&gt;adapter.name, enabled, stat);
+<span class="lineNum">     563 </span>  [<span class="branchCov" title="Branch 0 was taken 20955 times"> + </span><span class="branchCov" title="Branch 1 was taken 2267 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span><span class="branchCov" title="Branch 3 was taken 20955 times"> + </span>]:<span class="lineCov">      23222 :         if (!enabled || !(stat &amp; ~DW_IC_INTR_ACTIVITY))</span>
+<span class="lineNum">     564 </span>                :<span class="lineCov">       2267 :                 return IRQ_NONE;</span>
+<span class="lineNum">     565 </span>                :            : 
+<span class="lineNum">     566 </span>                :<span class="lineCov">      20955 :         stat = i2c_dw_read_clear_intrbits(dev);</span>
+<span class="lineNum">     567 </span>                :            : 
+<span class="lineNum">     568 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 20955 times"> + </span>]:<span class="lineCov">      20955 :         if (stat &amp; DW_IC_INTR_TX_ABRT) {</span>
+<span class="lineNum">     569 </span>                :<span class="lineNoCov">          0 :                 dev-&gt;cmd_err |= DW_IC_ERR_TX_ABRT;</span>
+<span class="lineNum">     570 </span>                :<span class="lineNoCov">          0 :                 dev-&gt;status = STATUS_IDLE;</span>
+<span class="lineNum">     571 </span>                :            : 
+<span class="lineNum">     572 </span>                :            :                 /*
+<span class="lineNum">     573 </span>                :            :                  * Anytime TX_ABRT is set, the contents of the tx/rx
+<span class="lineNum">     574 </span>                :            :                  * buffers are flushed.  Make sure to skip them.
+<span class="lineNum">     575 </span>                :            :                  */
+<span class="lineNum">     576 </span>                :<span class="lineNoCov">          0 :                 dw_writel(dev, 0, DW_IC_INTR_MASK);</span>
+<span class="lineNum">     577 </span>                :<span class="lineNoCov">          0 :                 goto tx_aborted;</span>
+<span class="lineNum">     578 </span>                :            :         }
+<span class="lineNum">     579 </span>                :            : 
+<span class="lineNum">     580 </span>        [<span class="branchCov" title="Branch 0 was taken 2712 times"> + </span><span class="branchCov" title="Branch 1 was taken 18243 times"> + </span>]:<span class="lineCov">      20955 :         if (stat &amp; DW_IC_INTR_RX_FULL)</span>
+<span class="lineNum">     581 </span>                :<span class="lineCov">       2712 :                 i2c_dw_read(dev);</span>
+<span class="lineNum">     582 </span>                :            : 
+<span class="lineNum">     583 </span>        [<span class="branchCov" title="Branch 0 was taken 20798 times"> + </span><span class="branchCov" title="Branch 1 was taken 157 times"> + </span>]:<span class="lineCov">      20955 :         if (stat &amp; DW_IC_INTR_TX_EMPTY)</span>
+<span class="lineNum">     584 </span>                :<span class="lineCov">      20798 :                 i2c_dw_xfer_msg(dev);</span>
+<span class="lineNum">     585 </span>                :            : 
+<span class="lineNum">     586 </span>                :            :         /*
+<span class="lineNum">     587 </span>                :            :          * No need to modify or disable the interrupt mask here.
+<span class="lineNum">     588 </span>                :            :          * i2c_dw_xfer_msg() will take care of it according to
+<span class="lineNum">     589 </span>                :            :          * the current transmit status.
+<span class="lineNum">     590 </span>                :            :          */
+<span class="lineNum">     591 </span>                :            : 
+<span class="lineNum">     592 </span>                :            : tx_aborted:
+<span class="lineNum">     593 </span>[<span class="branchCov" title="Branch 0 was taken 17569 times"> + </span><span class="branchCov" title="Branch 1 was taken 3386 times"> + </span>][<span class="branchNoCov" title="Branch 2 was not taken"> - </span><span class="branchCov" title="Branch 3 was taken 17569 times"> + </span>]:<span class="lineCov">      20955 :         if ((stat &amp; (DW_IC_INTR_TX_ABRT | DW_IC_INTR_STOP_DET)) || dev-&gt;msg_err)</span>
+<span class="lineNum">     594 </span>                :<span class="lineCov">       3386 :                 complete(&amp;dev-&gt;cmd_complete);</span>
+<span class="lineNum">     595 </span>                :            : 
+<span class="lineNum">     596 </span>                :<span class="lineCov">      23222 :         return IRQ_HANDLED;</span>
+<span class="lineNum">     597 </span>                :            : }
+<a name="598"><span class="lineNum">     598 </span>                :            : EXPORT_SYMBOL(i2c_dw_isr);</a>
+<span class="lineNum">     599 </span>                :            : 
+<span class="lineNum">     600 </span>                :<span class="lineCov">          5 : void i2c_dw_enable(struct dw_i2c_dev *dev)</span>
+<span class="lineNum">     601 </span>                :            : {
+<span class="lineNum">     602 </span>                :            :         /* Enable the adapter */
+<span class="lineNum">     603 </span>                :<span class="lineCov">          5 :         writel(1, dev-&gt;base + DW_IC_ENABLE);</span>
+<span class="lineNum">     604 </span>                :<span class="lineCov">          5 : }</span>
+<a name="605"><span class="lineNum">     605 </span>                :            : EXPORT_SYMBOL(i2c_dw_enable);</a>
+<span class="lineNum">     606 </span>                :            : 
+<span class="lineNum">     607 </span>                :<span class="lineCov">         11 : void i2c_dw_disable(struct dw_i2c_dev *i2c)</span>
+<span class="lineNum">     608 </span>                :            : {
+<span class="lineNum">     609 </span>                :            :         /* Disable controller */
+<span class="lineNum">     610 </span>                :<span class="lineCov">         11 :         writel(0, i2c-&gt;base + DW_IC_ENABLE);</span>
+<span class="lineNum">     611 </span>                :            : 
+<span class="lineNum">     612 </span>                :            :         /* Disable all interupts */
+<span class="lineNum">     613 </span>                :<span class="lineCov">         11 :         writel(0x0000, i2c-&gt;base + DW_IC_INTR_MASK);</span>
+<span class="lineNum">     614 </span>                :            : 
+<span class="lineNum">     615 </span>                :            :         /* Clear all interrupts */
+<span class="lineNum">     616 </span>                :<span class="lineCov">         11 :         readl(i2c-&gt;base + DW_IC_CLR_INTR);</span>
+<span class="lineNum">     617 </span>                :<span class="lineCov">         11 :         readl(i2c-&gt;base + DW_IC_CLR_STOP_DET);</span>
+<span class="lineNum">     618 </span>                :<span class="lineCov">         11 :         readl(i2c-&gt;base + DW_IC_CLR_START_DET);</span>
+<span class="lineNum">     619 </span>                :<span class="lineCov">         11 :         readl(i2c-&gt;base + DW_IC_CLR_ACTIVITY);</span>
+<span class="lineNum">     620 </span>                :<span class="lineCov">         11 :         readl(i2c-&gt;base + DW_IC_CLR_TX_ABRT);</span>
+<span class="lineNum">     621 </span>                :<span class="lineCov">         11 :         readl(i2c-&gt;base + DW_IC_CLR_RX_OVER);</span>
+<span class="lineNum">     622 </span>                :<span class="lineCov">         11 :         readl(i2c-&gt;base + DW_IC_CLR_RX_UNDER);</span>
+<span class="lineNum">     623 </span>                :<span class="lineCov">         11 :         readl(i2c-&gt;base + DW_IC_CLR_TX_OVER);</span>
+<span class="lineNum">     624 </span>                :<span class="lineCov">         11 :         readl(i2c-&gt;base + DW_IC_CLR_RX_DONE);</span>
+<span class="lineNum">     625 </span>                :<span class="lineCov">         11 :         readl(i2c-&gt;base + DW_IC_CLR_GEN_CALL);</span>
+<span class="lineNum">     626 </span>                :<span class="lineCov">         11 : }</span>
+<span class="lineNum">     627 </span>                :            : EXPORT_SYMBOL(i2c_dw_disable);
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.8</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

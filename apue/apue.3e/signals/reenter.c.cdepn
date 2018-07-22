@@ -1,0 +1,12 @@
+F {main} {reenter.c:16}
+C {main} {reenter.c:29} {printf}
+C {main} {reenter.c:29} {strcmp}
+C {main} {reenter.c:29} {err_sys}
+C {main} {reenter.c:29} {getpwnam}
+C {main} {reenter.c:29} {alarm}
+C {main} {reenter.c:29} {signal}
+F {my_alarm} {reenter.c:5}
+C {my_alarm} {reenter.c:29} {alarm}
+C {my_alarm} {reenter.c:29} {err_sys}
+C {my_alarm} {reenter.c:29} {getpwnam}
+C {my_alarm} {reenter.c:29} {__builtin_puts}

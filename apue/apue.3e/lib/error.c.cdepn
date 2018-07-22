@@ -1,0 +1,46 @@
+F {err_doit} {error.c:117}
+C {err_doit} {error.c:129} {fflush}
+C {err_doit} {error.c:129} {fputs}
+C {err_doit} {error.c:129} {fflush}
+C {err_doit} {error.c:129} {__builtin_memcpy}
+C {err_doit} {error.c:129} {__builtin_strlen}
+C {err_doit} {error.c:129} {snprintf}
+C {err_doit} {error.c:129} {strlen}
+C {err_doit} {error.c:129} {strlen}
+C {err_doit} {error.c:129} {strerror}
+C {err_doit} {error.c:129} {vsnprintf}
+F {err_quit} {error.c:102}
+C {err_quit} {error.c:129} {exit}
+C {err_quit} {error.c:129} {__builtin_va_end}
+C {err_quit} {error.c:129} {err_doit}
+C {err_quit} {error.c:129} {__builtin_va_start}
+F {err_msg} {error.c:88}
+C {err_msg} {error.c:129} {__builtin_va_end}
+C {err_msg} {error.c:129} {err_doit}
+C {err_msg} {error.c:129} {__builtin_va_start}
+F {err_dump} {error.c:72}
+C {err_dump} {error.c:129} {abort}
+C {err_dump} {error.c:129} {__builtin_va_end}
+C {err_dump} {error.c:129} {err_doit}
+C {err_dump} {error.c:129} {__errno_location}
+C {err_dump} {error.c:129} {__builtin_va_start}
+F {err_exit} {error.c:57}
+C {err_exit} {error.c:129} {exit}
+C {err_exit} {error.c:129} {__builtin_va_end}
+C {err_exit} {error.c:129} {err_doit}
+C {err_exit} {error.c:129} {__builtin_va_start}
+F {err_cont} {error.c:42}
+C {err_cont} {error.c:129} {__builtin_va_end}
+C {err_cont} {error.c:129} {err_doit}
+C {err_cont} {error.c:129} {__builtin_va_start}
+F {err_sys} {error.c:26}
+C {err_sys} {error.c:129} {exit}
+C {err_sys} {error.c:129} {__builtin_va_end}
+C {err_sys} {error.c:129} {err_doit}
+C {err_sys} {error.c:129} {__errno_location}
+C {err_sys} {error.c:129} {__builtin_va_start}
+F {err_ret} {error.c:12}
+C {err_ret} {error.c:129} {__builtin_va_end}
+C {err_ret} {error.c:129} {err_doit}
+C {err_ret} {error.c:129} {__errno_location}
+C {err_ret} {error.c:129} {__builtin_va_start}

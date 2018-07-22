@@ -1,0 +1,15 @@
+F {pr_mask} {prmask.c:5}
+C {pr_mask} {prmask.c:30} {__errno_location}
+C {pr_mask} {prmask.c:30} {__builtin_putchar}
+C {pr_mask} {prmask.c:30} {printf}
+C {pr_mask} {prmask.c:30} {sigismember}
+C {pr_mask} {prmask.c:30} {printf}
+C {pr_mask} {prmask.c:30} {sigismember}
+C {pr_mask} {prmask.c:30} {printf}
+C {pr_mask} {prmask.c:30} {sigismember}
+C {pr_mask} {prmask.c:30} {printf}
+C {pr_mask} {prmask.c:30} {sigismember}
+C {pr_mask} {prmask.c:30} {printf}
+C {pr_mask} {prmask.c:30} {err_ret}
+C {pr_mask} {prmask.c:30} {sigprocmask}
+C {pr_mask} {prmask.c:30} {__errno_location}

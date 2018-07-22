@@ -1,0 +1,15 @@
+F {abort} {/usr/include/stdlib.h:514}
+C {abort} {abort.c:34} {exit}
+C {abort} {abort.c:34} {kill}
+C {abort} {abort.c:34} {getpid}
+C {abort} {abort.c:34} {sigprocmask}
+C {abort} {abort.c:34} {sigaction}
+C {abort} {abort.c:34} {fflush}
+C {abort} {abort.c:34} {kill}
+C {abort} {abort.c:34} {getpid}
+C {abort} {abort.c:34} {sigprocmask}
+C {abort} {abort.c:34} {sigdelset}
+C {abort} {abort.c:34} {sigfillset}
+C {abort} {abort.c:34} {fflush}
+C {abort} {abort.c:34} {sigaction}
+C {abort} {abort.c:34} {sigaction}

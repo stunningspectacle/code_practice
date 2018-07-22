@@ -1,0 +1,9 @@
+F {sig_int} {tsleep2.c:19}
+C {sig_int} {tsleep2.c:33} {__builtin_puts}
+C {sig_int} {tsleep2.c:33} {__builtin_puts}
+F {main} {tsleep2.c:7}
+C {main} {tsleep2.c:33} {exit}
+C {main} {tsleep2.c:33} {printf}
+C {main} {tsleep2.c:33} {sleep2}
+C {main} {tsleep2.c:33} {err_sys}
+C {main} {tsleep2.c:33} {signal}

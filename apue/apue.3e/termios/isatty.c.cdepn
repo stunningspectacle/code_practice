@@ -1,0 +1,2 @@
+F {isatty} {isatty.c:4}
+C {isatty} {isatty.c:9} {tcgetattr}

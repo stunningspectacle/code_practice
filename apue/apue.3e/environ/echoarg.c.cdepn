@@ -1,0 +1,3 @@
+F {main} {echoarg.c:4}
+C {main} {echoarg.c:11} {exit}
+C {main} {echoarg.c:11} {printf}

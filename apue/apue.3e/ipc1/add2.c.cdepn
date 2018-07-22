@@ -1,0 +1,10 @@
+F {main} {add2.c:4}
+C {main} {add2.c:22} {exit}
+C {main} {add2.c:22} {read}
+C {main} {add2.c:22} {err_sys}
+C {main} {add2.c:22} {write}
+C {main} {add2.c:22} {err_sys}
+C {main} {add2.c:22} {write}
+C {main} {add2.c:22} {strlen}
+C {main} {add2.c:22} {sprintf}
+C {main} {add2.c:22} {sscanf}

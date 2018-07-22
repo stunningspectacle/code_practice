@@ -1,0 +1,8 @@
+F {main} {umask.c:7}
+C {main} {umask.c:16} {exit}
+C {main} {umask.c:16} {err_sys}
+C {main} {umask.c:16} {creat}
+C {main} {umask.c:16} {umask}
+C {main} {umask.c:16} {err_sys}
+C {main} {umask.c:16} {creat}
+C {main} {umask.c:16} {umask}

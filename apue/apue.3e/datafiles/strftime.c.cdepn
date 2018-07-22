@@ -1,0 +1,10 @@
+F {main} {strftime.c:6}
+C {main} {strftime.c:24} {exit}
+C {main} {strftime.c:24} {__builtin_puts}
+C {main} {strftime.c:24} {__builtin_puts}
+C {main} {strftime.c:24} {strftime}
+C {main} {strftime.c:24} {__builtin_puts}
+C {main} {strftime.c:24} {__builtin_puts}
+C {main} {strftime.c:24} {strftime}
+C {main} {strftime.c:24} {localtime}
+C {main} {strftime.c:24} {time}

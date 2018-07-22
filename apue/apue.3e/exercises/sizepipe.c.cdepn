@@ -1,0 +1,8 @@
+F {main} {sizepipe.c:5}
+C {main} {sizepipe.c:23} {exit}
+C {main} {sizepipe.c:23} {printf}
+C {main} {sizepipe.c:23} {printf}
+C {main} {sizepipe.c:23} {write}
+C {main} {sizepipe.c:23} {set_fl}
+C {main} {sizepipe.c:23} {err_sys}
+C {main} {sizepipe.c:23} {pipe}

@@ -1,0 +1,8 @@
+F {main} {myuclc.c:5}
+C {main} {myuclc.c:18} {exit}
+C {main} {myuclc.c:18} {getchar}
+C {main} {myuclc.c:18} {fflush}
+C {main} {myuclc.c:18} {err_sys}
+C {main} {myuclc.c:18} {putchar}
+C {main} {myuclc.c:18} {tolower}
+C {main} {myuclc.c:18} {__ctype_b_loc}

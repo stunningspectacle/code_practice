@@ -1,0 +1,15 @@
+F {loop} {loop.select.c:5}
+C {loop} {loop.select.c:59} {handle_request}
+C {loop} {loop.select.c:59} {close}
+C {loop} {loop.select.c:59} {client_del}
+C {loop} {loop.select.c:59} {log_msg}
+C {loop} {loop.select.c:59} {log_sys}
+C {loop} {loop.select.c:59} {read}
+C {loop} {loop.select.c:59} {log_msg}
+C {loop} {loop.select.c:59} {client_add}
+C {loop} {loop.select.c:59} {log_sys}
+C {loop} {loop.select.c:59} {serv_accept}
+C {loop} {loop.select.c:59} {log_sys}
+C {loop} {loop.select.c:59} {select}
+C {loop} {loop.select.c:59} {log_sys}
+C {loop} {loop.select.c:59} {serv_listen}

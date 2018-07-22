@@ -1,0 +1,10 @@
+F {recv_ufd} {recvfd2.c:31}
+C {recv_ufd} {recvfd2.c:109} {__cmsg_nxthdr}
+C {recv_ufd} {recvfd2.c:109} {err_dump}
+C {recv_ufd} {recvfd2.c:109} {err_dump}
+C {recv_ufd} {recvfd2.c:109} {err_ret}
+C {recv_ufd} {recvfd2.c:109} {err_ret}
+C {recv_ufd} {recvfd2.c:109} {recvmsg}
+C {recv_ufd} {recvfd2.c:109} {malloc}
+C {recv_ufd} {recvfd2.c:109} {err_ret}
+C {recv_ufd} {recvfd2.c:109} {setsockopt}

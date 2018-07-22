@@ -1,0 +1,5 @@
+F {main} {mycd.c:4}
+C {main} {mycd.c:10} {exit}
+C {main} {mycd.c:10} {__builtin_puts}
+C {main} {mycd.c:10} {err_sys}
+C {main} {mycd.c:10} {chdir}

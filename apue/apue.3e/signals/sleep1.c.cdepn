@@ -1,0 +1,6 @@
+F {sleep1} {sleep1.c:11}
+C {sleep1} {sleep1.c:18} {alarm}
+C {sleep1} {sleep1.c:18} {pause}
+C {sleep1} {sleep1.c:18} {alarm}
+C {sleep1} {sleep1.c:18} {signal}
+F {sig_alrm} {sleep1.c:5}

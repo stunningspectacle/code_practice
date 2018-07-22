@@ -1,0 +1,185 @@
+F {db_nextrec} {db.c:836}
+C {db_nextrec} {db.c:875} {err_dump}
+C {db_nextrec} {db.c:875} {lock_reg}
+C {db_nextrec} {db.c:875} {_db_readdat}
+C {db_nextrec} {db.c:875} {strcpy}
+C {db_nextrec} {db.c:875} {_db_readidx}
+C {db_nextrec} {db.c:875} {err_dump}
+C {db_nextrec} {db.c:875} {lock_reg}
+F {db_rewind} {db.c:813}
+C {db_rewind} {db.c:875} {err_dump}
+C {db_rewind} {db.c:875} {lseek}
+F {_db_findfree} {db.c:753}
+C {_db_findfree} {db.c:875} {err_dump}
+C {_db_findfree} {db.c:875} {lock_reg}
+C {_db_findfree} {db.c:875} {_db_writeptr}
+C {_db_findfree} {db.c:875} {strlen}
+C {_db_findfree} {db.c:875} {_db_readidx}
+C {_db_findfree} {db.c:875} {_db_readptr}
+C {_db_findfree} {db.c:875} {err_dump}
+C {_db_findfree} {db.c:875} {lock_reg}
+F {db_store} {db.c:638}
+C {db_store} {db.c:875} {err_dump}
+C {db_store} {db.c:875} {lock_reg}
+C {db_store} {db.c:875} {_db_writedat}
+C {db_store} {db.c:875} {_db_writeptr}
+C {db_store} {db.c:875} {_db_writeidx}
+C {db_store} {db.c:875} {_db_writedat}
+C {db_store} {db.c:875} {_db_readptr}
+C {db_store} {db.c:875} {_db_dodelete}
+C {db_store} {db.c:875} {_db_writeptr}
+C {db_store} {db.c:875} {_db_writeidx}
+C {db_store} {db.c:875} {_db_writedat}
+C {db_store} {db.c:875} {_db_writeptr}
+C {db_store} {db.c:875} {_db_writeidx}
+C {db_store} {db.c:875} {_db_writedat}
+C {db_store} {db.c:875} {_db_findfree}
+C {db_store} {db.c:875} {_db_readptr}
+C {db_store} {db.c:875} {__errno_location}
+C {db_store} {db.c:875} {_db_find_and_lock}
+C {db_store} {db.c:875} {err_dump}
+C {db_store} {db.c:875} {strlen}
+C {db_store} {db.c:875} {strlen}
+C {db_store} {db.c:875} {__errno_location}
+F {_db_writeptr} {db.c:619}
+C {_db_writeptr} {db.c:875} {err_dump}
+C {_db_writeptr} {db.c:875} {write}
+C {_db_writeptr} {db.c:875} {err_dump}
+C {_db_writeptr} {db.c:875} {lseek}
+C {_db_writeptr} {db.c:875} {sprintf}
+C {_db_writeptr} {db.c:875} {err_quit}
+F {_db_writeidx} {db.c:568}
+C {_db_writeidx} {db.c:875} {err_dump}
+C {_db_writeidx} {db.c:875} {lock_reg}
+C {_db_writeidx} {db.c:875} {err_dump}
+C {_db_writeidx} {db.c:875} {writev}
+C {_db_writeidx} {db.c:875} {err_dump}
+C {_db_writeidx} {db.c:875} {lseek}
+C {_db_writeidx} {db.c:875} {err_dump}
+C {_db_writeidx} {db.c:875} {lock_reg}
+C {_db_writeidx} {db.c:875} {sprintf}
+C {_db_writeidx} {db.c:875} {err_dump}
+C {_db_writeidx} {db.c:875} {strlen}
+C {_db_writeidx} {db.c:875} {sprintf}
+C {_db_writeidx} {db.c:875} {err_quit}
+F {_db_writedat} {db.c:532}
+C {_db_writedat} {db.c:875} {err_dump}
+C {_db_writedat} {db.c:875} {lock_reg}
+C {_db_writedat} {db.c:875} {err_dump}
+C {_db_writedat} {db.c:875} {writev}
+C {_db_writedat} {db.c:875} {strlen}
+C {_db_writedat} {db.c:875} {err_dump}
+C {_db_writedat} {db.c:875} {lseek}
+C {_db_writedat} {db.c:875} {err_dump}
+C {_db_writedat} {db.c:875} {lock_reg}
+F {_db_dodelete} {db.c:464}
+C {_db_dodelete} {db.c:875} {err_dump}
+C {_db_dodelete} {db.c:875} {lock_reg}
+C {_db_dodelete} {db.c:875} {_db_writeptr}
+C {_db_dodelete} {db.c:875} {_db_writeptr}
+C {_db_dodelete} {db.c:875} {_db_writeidx}
+C {_db_dodelete} {db.c:875} {_db_readptr}
+C {_db_dodelete} {db.c:875} {_db_writedat}
+C {_db_dodelete} {db.c:875} {err_dump}
+C {_db_dodelete} {db.c:875} {lock_reg}
+F {db_delete} {db.c:441}
+C {db_delete} {db.c:875} {err_dump}
+C {db_delete} {db.c:875} {lock_reg}
+C {db_delete} {db.c:875} {_db_dodelete}
+C {db_delete} {db.c:875} {_db_find_and_lock}
+F {_db_readdat} {db.c:425}
+C {_db_readdat} {db.c:875} {err_dump}
+C {_db_readdat} {db.c:875} {err_dump}
+C {_db_readdat} {db.c:875} {read}
+C {_db_readdat} {db.c:875} {err_dump}
+C {_db_readdat} {db.c:875} {lseek}
+F {_db_readidx} {db.c:344}
+C {_db_readidx} {db.c:875} {err_dump}
+C {_db_readidx} {db.c:875} {atol}
+C {_db_readidx} {db.c:875} {err_dump}
+C {_db_readidx} {db.c:875} {atol}
+C {_db_readidx} {db.c:875} {err_dump}
+C {_db_readidx} {db.c:875} {strchr}
+C {_db_readidx} {db.c:875} {err_dump}
+C {_db_readidx} {db.c:875} {strchr}
+C {_db_readidx} {db.c:875} {err_dump}
+C {_db_readidx} {db.c:875} {strchr}
+C {_db_readidx} {db.c:875} {err_dump}
+C {_db_readidx} {db.c:875} {err_dump}
+C {_db_readidx} {db.c:875} {read}
+C {_db_readidx} {db.c:875} {err_dump}
+C {_db_readidx} {db.c:875} {atoi}
+C {_db_readidx} {db.c:875} {atol}
+C {_db_readidx} {db.c:875} {err_dump}
+C {_db_readidx} {db.c:875} {readv}
+C {_db_readidx} {db.c:875} {err_dump}
+C {_db_readidx} {db.c:875} {lseek}
+F {_db_readptr} {db.c:324}
+C {_db_readptr} {db.c:875} {atol}
+C {_db_readptr} {db.c:875} {err_dump}
+C {_db_readptr} {db.c:875} {read}
+C {_db_readptr} {db.c:875} {err_dump}
+C {_db_readptr} {db.c:875} {lseek}
+F {_db_hash} {db.c:307}
+F {_db_find_and_lock} {db.c:260}
+C {_db_find_and_lock} {db.c:875} {strcmp}
+C {_db_find_and_lock} {db.c:875} {_db_readidx}
+C {_db_find_and_lock} {db.c:875} {_db_readptr}
+C {_db_find_and_lock} {db.c:875} {err_dump}
+C {_db_find_and_lock} {db.c:875} {lock_reg}
+C {_db_find_and_lock} {db.c:875} {err_dump}
+C {_db_find_and_lock} {db.c:875} {lock_reg}
+C {_db_find_and_lock} {db.c:875} {_db_hash}
+F {db_fetch} {db.c:234}
+C {db_fetch} {db.c:875} {err_dump}
+C {db_fetch} {db.c:875} {lock_reg}
+C {db_fetch} {db.c:875} {_db_readdat}
+C {db_fetch} {db.c:875} {_db_find_and_lock}
+F {_db_free} {db.c:215}
+C {_db_free} {db.c:875} {free}
+C {_db_free} {db.c:875} {free}
+C {_db_free} {db.c:875} {free}
+C {_db_free} {db.c:875} {free}
+C {_db_free} {db.c:875} {close}
+C {_db_free} {db.c:875} {close}
+F {db_close} {db.c:205}
+C {db_close} {db.c:875} {_db_free}
+F {_db_alloc} {db.c:172}
+C {_db_alloc} {db.c:875} {err_dump}
+C {_db_alloc} {db.c:875} {malloc}
+C {_db_alloc} {db.c:875} {err_dump}
+C {_db_alloc} {db.c:875} {malloc}
+C {_db_alloc} {db.c:875} {err_dump}
+C {_db_alloc} {db.c:875} {malloc}
+C {_db_alloc} {db.c:875} {err_dump}
+C {_db_alloc} {db.c:875} {calloc}
+F {db_open} {db.c:85}
+C {db_open} {db.c:875} {db_rewind}
+C {db_open} {db.c:875} {err_dump}
+C {db_open} {db.c:875} {lock_reg}
+C {db_open} {db.c:875} {err_dump}
+C {db_open} {db.c:875} {write}
+C {db_open} {db.c:875} {strlen}
+C {db_open} {db.c:875} {__builtin_memcpy}
+C {db_open} {db.c:875} {__builtin_strlen}
+C {db_open} {db.c:875} {strcat}
+C {db_open} {db.c:875} {sprintf}
+C {db_open} {db.c:875} {err_sys}
+C {db_open} {db.c:875} {fstat}
+C {db_open} {db.c:875} {err_dump}
+C {db_open} {db.c:875} {lock_reg}
+C {db_open} {db.c:875} {_db_free}
+C {db_open} {db.c:875} {open}
+C {db_open} {db.c:875} {__builtin_memcpy}
+C {db_open} {db.c:875} {open}
+C {db_open} {db.c:875} {open}
+C {db_open} {db.c:875} {__builtin_memcpy}
+C {db_open} {db.c:875} {open}
+C {db_open} {db.c:875} {__builtin_va_end}
+C {db_open} {db.c:875} {__builtin_va_start}
+C {db_open} {db.c:875} {__builtin_memcpy}
+C {db_open} {db.c:875} {__builtin_strlen}
+C {db_open} {db.c:875} {strcpy}
+C {db_open} {db.c:875} {err_dump}
+C {db_open} {db.c:875} {_db_alloc}
+C {db_open} {db.c:875} {strlen}

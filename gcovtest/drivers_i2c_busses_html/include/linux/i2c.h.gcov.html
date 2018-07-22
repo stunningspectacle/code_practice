@@ -1,0 +1,670 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+  <title>LCOV - drivers_i2c_busses.info - include/linux/i2c.h</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">include/linux</a> - i2c.h<span style="font-size: 80%;"> (source / <a href="i2c.h.func.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">drivers_i2c_busses.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2011-04-26</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="headerItem">Branches:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">           Branch data     Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>                :            : /* ------------------------------------------------------------------------- */</a>
+<span class="lineNum">       2 </span>                :            : /*                                                                           */
+<span class="lineNum">       3 </span>                :            : /* i2c.h - definitions for the i2c-bus interface                             */
+<span class="lineNum">       4 </span>                :            : /*                                                                           */
+<span class="lineNum">       5 </span>                :            : /* ------------------------------------------------------------------------- */
+<span class="lineNum">       6 </span>                :            : /*   Copyright (C) 1995-2000 Simon G. Vogl
+<span class="lineNum">       7 </span>                :            : 
+<span class="lineNum">       8 </span>                :            :     This program is free software; you can redistribute it and/or modify
+<span class="lineNum">       9 </span>                :            :     it under the terms of the GNU General Public License as published by
+<span class="lineNum">      10 </span>                :            :     the Free Software Foundation; either version 2 of the License, or
+<span class="lineNum">      11 </span>                :            :     (at your option) any later version.
+<span class="lineNum">      12 </span>                :            : 
+<span class="lineNum">      13 </span>                :            :     This program is distributed in the hope that it will be useful,
+<span class="lineNum">      14 </span>                :            :     but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      15 </span>                :            :     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      16 </span>                :            :     GNU General Public License for more details.
+<span class="lineNum">      17 </span>                :            : 
+<span class="lineNum">      18 </span>                :            :     You should have received a copy of the GNU General Public License
+<span class="lineNum">      19 </span>                :            :     along with this program; if not, write to the Free Software
+<span class="lineNum">      20 </span>                :            :     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.                */
+<span class="lineNum">      21 </span>                :            : /* ------------------------------------------------------------------------- */
+<span class="lineNum">      22 </span>                :            : 
+<span class="lineNum">      23 </span>                :            : /* With some changes from Kyösti Mälkki &lt;kmalkki@cc.hut.fi&gt; and
+<span class="lineNum">      24 </span>                :            :    Frodo Looijaard &lt;frodol@dds.nl&gt; */
+<span class="lineNum">      25 </span>                :            : 
+<span class="lineNum">      26 </span>                :            : #ifndef _LINUX_I2C_H
+<span class="lineNum">      27 </span>                :            : #define _LINUX_I2C_H
+<span class="lineNum">      28 </span>                :            : 
+<span class="lineNum">      29 </span>                :            : #include &lt;linux/types.h&gt;
+<span class="lineNum">      30 </span>                :            : #ifdef __KERNEL__
+<span class="lineNum">      31 </span>                :            : #include &lt;linux/module.h&gt;
+<span class="lineNum">      32 </span>                :            : #include &lt;linux/i2c-id.h&gt;
+<span class="lineNum">      33 </span>                :            : #include &lt;linux/mod_devicetable.h&gt;
+<span class="lineNum">      34 </span>                :            : #include &lt;linux/device.h&gt; /* for struct device */
+<span class="lineNum">      35 </span>                :            : #include &lt;linux/sched.h&gt;  /* for completion */
+<span class="lineNum">      36 </span>                :            : #include &lt;linux/mutex.h&gt;
+<span class="lineNum">      37 </span>                :            : #include &lt;linux/of.h&gt;             /* for struct device_node */
+<span class="lineNum">      38 </span>                :            : 
+<span class="lineNum">      39 </span>                :            : extern struct bus_type i2c_bus_type;
+<span class="lineNum">      40 </span>                :            : 
+<span class="lineNum">      41 </span>                :            : /* --- General options ------------------------------------------------ */
+<span class="lineNum">      42 </span>                :            : 
+<span class="lineNum">      43 </span>                :            : struct i2c_msg;
+<span class="lineNum">      44 </span>                :            : struct i2c_algorithm;
+<span class="lineNum">      45 </span>                :            : struct i2c_adapter;
+<span class="lineNum">      46 </span>                :            : struct i2c_client;
+<span class="lineNum">      47 </span>                :            : struct i2c_driver;
+<span class="lineNum">      48 </span>                :            : union i2c_smbus_data;
+<span class="lineNum">      49 </span>                :            : struct i2c_board_info;
+<span class="lineNum">      50 </span>                :            : 
+<span class="lineNum">      51 </span>                :            : #if defined(CONFIG_I2C) || defined(CONFIG_I2C_MODULE)
+<span class="lineNum">      52 </span>                :            : /*
+<span class="lineNum">      53 </span>                :            :  * The master routines are the ones normally used to transmit data to devices
+<span class="lineNum">      54 </span>                :            :  * on a bus (or read from them). Apart from two basic transfer functions to
+<span class="lineNum">      55 </span>                :            :  * transmit one message at a time, a more complex version can be used to
+<span class="lineNum">      56 </span>                :            :  * transmit an arbitrary number of messages without interruption.
+<span class="lineNum">      57 </span>                :            :  * @count must be be less than 64k since msg.len is u16.
+<span class="lineNum">      58 </span>                :            :  */
+<span class="lineNum">      59 </span>                :            : extern int i2c_master_send(struct i2c_client *client, const char *buf,
+<span class="lineNum">      60 </span>                :            :                            int count);
+<span class="lineNum">      61 </span>                :            : extern int i2c_master_recv(struct i2c_client *client, char *buf, int count);
+<span class="lineNum">      62 </span>                :            : 
+<span class="lineNum">      63 </span>                :            : /* Transfer num messages.
+<span class="lineNum">      64 </span>                :            :  */
+<span class="lineNum">      65 </span>                :            : extern int i2c_transfer(struct i2c_adapter *adap, struct i2c_msg *msgs,
+<span class="lineNum">      66 </span>                :            :                         int num);
+<span class="lineNum">      67 </span>                :            : 
+<span class="lineNum">      68 </span>                :            : /* This is the very generalized SMBus access routine. You probably do not
+<span class="lineNum">      69 </span>                :            :    want to use this, though; one of the functions below may be much easier,
+<span class="lineNum">      70 </span>                :            :    and probably just as fast.
+<span class="lineNum">      71 </span>                :            :    Note that we use i2c_adapter here, because you do not need a specific
+<span class="lineNum">      72 </span>                :            :    smbus adapter to call this function. */
+<span class="lineNum">      73 </span>                :            : extern s32 i2c_smbus_xfer(struct i2c_adapter *adapter, u16 addr,
+<span class="lineNum">      74 </span>                :            :                           unsigned short flags, char read_write, u8 command,
+<span class="lineNum">      75 </span>                :            :                           int size, union i2c_smbus_data *data);
+<span class="lineNum">      76 </span>                :            : 
+<span class="lineNum">      77 </span>                :            : /* Now follow the 'nice' access routines. These also document the calling
+<span class="lineNum">      78 </span>                :            :    conventions of i2c_smbus_xfer. */
+<span class="lineNum">      79 </span>                :            : 
+<span class="lineNum">      80 </span>                :            : extern s32 i2c_smbus_read_byte(struct i2c_client *client);
+<span class="lineNum">      81 </span>                :            : extern s32 i2c_smbus_write_byte(struct i2c_client *client, u8 value);
+<span class="lineNum">      82 </span>                :            : extern s32 i2c_smbus_read_byte_data(struct i2c_client *client, u8 command);
+<span class="lineNum">      83 </span>                :            : extern s32 i2c_smbus_write_byte_data(struct i2c_client *client,
+<span class="lineNum">      84 </span>                :            :                                      u8 command, u8 value);
+<span class="lineNum">      85 </span>                :            : extern s32 i2c_smbus_read_word_data(struct i2c_client *client, u8 command);
+<span class="lineNum">      86 </span>                :            : extern s32 i2c_smbus_write_word_data(struct i2c_client *client,
+<span class="lineNum">      87 </span>                :            :                                      u8 command, u16 value);
+<span class="lineNum">      88 </span>                :            : /* Returns the number of read bytes */
+<span class="lineNum">      89 </span>                :            : extern s32 i2c_smbus_read_block_data(struct i2c_client *client,
+<span class="lineNum">      90 </span>                :            :                                      u8 command, u8 *values);
+<span class="lineNum">      91 </span>                :            : extern s32 i2c_smbus_write_block_data(struct i2c_client *client,
+<span class="lineNum">      92 </span>                :            :                                       u8 command, u8 length, const u8 *values);
+<span class="lineNum">      93 </span>                :            : /* Returns the number of read bytes */
+<span class="lineNum">      94 </span>                :            : extern s32 i2c_smbus_read_i2c_block_data(struct i2c_client *client,
+<span class="lineNum">      95 </span>                :            :                                          u8 command, u8 length, u8 *values);
+<span class="lineNum">      96 </span>                :            : extern s32 i2c_smbus_write_i2c_block_data(struct i2c_client *client,
+<span class="lineNum">      97 </span>                :            :                                           u8 command, u8 length,
+<span class="lineNum">      98 </span>                :            :                                           const u8 *values);
+<span class="lineNum">      99 </span>                :            : #endif /* I2C */
+<span class="lineNum">     100 </span>                :            : 
+<span class="lineNum">     101 </span>                :            : /**
+<span class="lineNum">     102 </span>                :            :  * struct i2c_driver - represent an I2C device driver
+<span class="lineNum">     103 </span>                :            :  * @class: What kind of i2c device we instantiate (for detect)
+<span class="lineNum">     104 </span>                :            :  * @attach_adapter: Callback for bus addition (for legacy drivers)
+<span class="lineNum">     105 </span>                :            :  * @detach_adapter: Callback for bus removal (for legacy drivers)
+<span class="lineNum">     106 </span>                :            :  * @probe: Callback for device binding
+<span class="lineNum">     107 </span>                :            :  * @remove: Callback for device unbinding
+<span class="lineNum">     108 </span>                :            :  * @shutdown: Callback for device shutdown
+<span class="lineNum">     109 </span>                :            :  * @suspend: Callback for device suspend
+<span class="lineNum">     110 </span>                :            :  * @resume: Callback for device resume
+<span class="lineNum">     111 </span>                :            :  * @command: Callback for bus-wide signaling (optional)
+<span class="lineNum">     112 </span>                :            :  * @driver: Device driver model driver
+<span class="lineNum">     113 </span>                :            :  * @id_table: List of I2C devices supported by this driver
+<span class="lineNum">     114 </span>                :            :  * @detect: Callback for device detection
+<span class="lineNum">     115 </span>                :            :  * @address_list: The I2C addresses to probe (for detect)
+<span class="lineNum">     116 </span>                :            :  * @clients: List of detected clients we created (for i2c-core use only)
+<span class="lineNum">     117 </span>                :            :  *
+<span class="lineNum">     118 </span>                :            :  * The driver.owner field should be set to the module owner of this driver.
+<span class="lineNum">     119 </span>                :            :  * The driver.name field should be set to the name of this driver.
+<span class="lineNum">     120 </span>                :            :  *
+<span class="lineNum">     121 </span>                :            :  * For automatic device detection, both @detect and @address_data must
+<span class="lineNum">     122 </span>                :            :  * be defined. @class should also be set, otherwise only devices forced
+<span class="lineNum">     123 </span>                :            :  * with module parameters will be created. The detect function must
+<span class="lineNum">     124 </span>                :            :  * fill at least the name field of the i2c_board_info structure it is
+<span class="lineNum">     125 </span>                :            :  * handed upon successful detection, and possibly also the flags field.
+<span class="lineNum">     126 </span>                :            :  *
+<span class="lineNum">     127 </span>                :            :  * If @detect is missing, the driver will still work fine for enumerated
+<span class="lineNum">     128 </span>                :            :  * devices. Detected devices simply won't be supported. This is expected
+<span class="lineNum">     129 </span>                :            :  * for the many I2C/SMBus devices which can't be detected reliably, and
+<span class="lineNum">     130 </span>                :            :  * the ones which can always be enumerated in practice.
+<span class="lineNum">     131 </span>                :            :  *
+<span class="lineNum">     132 </span>                :            :  * The i2c_client structure which is handed to the @detect callback is
+<span class="lineNum">     133 </span>                :            :  * not a real i2c_client. It is initialized just enough so that you can
+<span class="lineNum">     134 </span>                :            :  * call i2c_smbus_read_byte_data and friends on it. Don't do anything
+<span class="lineNum">     135 </span>                :            :  * else with it. In particular, calling dev_dbg and friends on it is
+<span class="lineNum">     136 </span>                :            :  * not allowed.
+<span class="lineNum">     137 </span>                :            :  */
+<span class="lineNum">     138 </span>                :            : struct i2c_driver {
+<span class="lineNum">     139 </span>                :            :         unsigned int class;
+<span class="lineNum">     140 </span>                :            : 
+<span class="lineNum">     141 </span>                :            :         /* Notifies the driver that a new bus has appeared or is about to be
+<span class="lineNum">     142 </span>                :            :          * removed. You should avoid using this if you can, it will probably
+<span class="lineNum">     143 </span>                :            :          * be removed in a near future.
+<span class="lineNum">     144 </span>                :            :          */
+<span class="lineNum">     145 </span>                :            :         int (*attach_adapter)(struct i2c_adapter *);
+<span class="lineNum">     146 </span>                :            :         int (*detach_adapter)(struct i2c_adapter *);
+<span class="lineNum">     147 </span>                :            : 
+<span class="lineNum">     148 </span>                :            :         /* Standard driver model interfaces */
+<span class="lineNum">     149 </span>                :            :         int (*probe)(struct i2c_client *, const struct i2c_device_id *);
+<span class="lineNum">     150 </span>                :            :         int (*remove)(struct i2c_client *);
+<span class="lineNum">     151 </span>                :            : 
+<span class="lineNum">     152 </span>                :            :         /* driver model interfaces that don't relate to enumeration  */
+<span class="lineNum">     153 </span>                :            :         void (*shutdown)(struct i2c_client *);
+<span class="lineNum">     154 </span>                :            :         int (*suspend)(struct i2c_client *, pm_message_t mesg);
+<span class="lineNum">     155 </span>                :            :         int (*resume)(struct i2c_client *);
+<span class="lineNum">     156 </span>                :            : 
+<span class="lineNum">     157 </span>                :            :         /* Alert callback, for example for the SMBus alert protocol.
+<span class="lineNum">     158 </span>                :            :          * The format and meaning of the data value depends on the protocol.
+<span class="lineNum">     159 </span>                :            :          * For the SMBus alert protocol, there is a single bit of data passed
+<span class="lineNum">     160 </span>                :            :          * as the alert response's low bit (&quot;event flag&quot;).
+<span class="lineNum">     161 </span>                :            :          */
+<span class="lineNum">     162 </span>                :            :         void (*alert)(struct i2c_client *, unsigned int data);
+<span class="lineNum">     163 </span>                :            : 
+<span class="lineNum">     164 </span>                :            :         /* a ioctl like command that can be used to perform specific functions
+<span class="lineNum">     165 </span>                :            :          * with the device.
+<span class="lineNum">     166 </span>                :            :          */
+<span class="lineNum">     167 </span>                :            :         int (*command)(struct i2c_client *client, unsigned int cmd, void *arg);
+<span class="lineNum">     168 </span>                :            : 
+<span class="lineNum">     169 </span>                :            :         struct device_driver driver;
+<span class="lineNum">     170 </span>                :            :         const struct i2c_device_id *id_table;
+<span class="lineNum">     171 </span>                :            : 
+<span class="lineNum">     172 </span>                :            :         /* Device detection callback for automatic device creation */
+<span class="lineNum">     173 </span>                :            :         int (*detect)(struct i2c_client *, struct i2c_board_info *);
+<span class="lineNum">     174 </span>                :            :         const unsigned short *address_list;
+<span class="lineNum">     175 </span>                :            :         struct list_head clients;
+<span class="lineNum">     176 </span>                :            : };
+<span class="lineNum">     177 </span>                :            : #define to_i2c_driver(d) container_of(d, struct i2c_driver, driver)
+<span class="lineNum">     178 </span>                :            : 
+<span class="lineNum">     179 </span>                :            : /**
+<span class="lineNum">     180 </span>                :            :  * struct i2c_client - represent an I2C slave device
+<span class="lineNum">     181 </span>                :            :  * @flags: I2C_CLIENT_TEN indicates the device uses a ten bit chip address;
+<span class="lineNum">     182 </span>                :            :  *      I2C_CLIENT_PEC indicates it uses SMBus Packet Error Checking
+<span class="lineNum">     183 </span>                :            :  * @addr: Address used on the I2C bus connected to the parent adapter.
+<span class="lineNum">     184 </span>                :            :  * @name: Indicates the type of the device, usually a chip name that's
+<span class="lineNum">     185 </span>                :            :  *      generic enough to hide second-sourcing and compatible revisions.
+<span class="lineNum">     186 </span>                :            :  * @adapter: manages the bus segment hosting this I2C device
+<span class="lineNum">     187 </span>                :            :  * @driver: device's driver, hence pointer to access routines
+<span class="lineNum">     188 </span>                :            :  * @dev: Driver model device node for the slave.
+<span class="lineNum">     189 </span>                :            :  * @irq: indicates the IRQ generated by this device (if any)
+<span class="lineNum">     190 </span>                :            :  * @detected: member of an i2c_driver.clients list or i2c-core's
+<span class="lineNum">     191 </span>                :            :  *      userspace_devices list
+<span class="lineNum">     192 </span>                :            :  *
+<span class="lineNum">     193 </span>                :            :  * An i2c_client identifies a single device (i.e. chip) connected to an
+<span class="lineNum">     194 </span>                :            :  * i2c bus. The behaviour exposed to Linux is defined by the driver
+<span class="lineNum">     195 </span>                :            :  * managing the device.
+<span class="lineNum">     196 </span>                :            :  */
+<span class="lineNum">     197 </span>                :            : struct i2c_client {
+<span class="lineNum">     198 </span>                :            :         unsigned short flags;           /* div., see below              */
+<span class="lineNum">     199 </span>                :            :         unsigned short addr;            /* chip address - NOTE: 7bit    */
+<span class="lineNum">     200 </span>                :            :                                         /* addresses are stored in the  */
+<span class="lineNum">     201 </span>                :            :                                         /* _LOWER_ 7 bits               */
+<span class="lineNum">     202 </span>                :            :         char name[I2C_NAME_SIZE];
+<span class="lineNum">     203 </span>                :            :         struct i2c_adapter *adapter;    /* the adapter we sit on        */
+<span class="lineNum">     204 </span>                :            :         struct i2c_driver *driver;      /* and our access routines      */
+<span class="lineNum">     205 </span>                :            :         struct device dev;              /* the device structure         */
+<span class="lineNum">     206 </span>                :            :         int irq;                        /* irq issued by device         */
+<span class="lineNum">     207 </span>                :            :         struct list_head detected;
+<span class="lineNum">     208 </span>                :            : };
+<span class="lineNum">     209 </span>                :            : #define to_i2c_client(d) container_of(d, struct i2c_client, dev)
+<span class="lineNum">     210 </span>                :            : 
+<span class="lineNum">     211 </span>                :            : extern struct i2c_client *i2c_verify_client(struct device *dev);
+<span class="lineNum">     212 </span>                :            : 
+<span class="lineNum">     213 </span>                :            : static inline struct i2c_client *kobj_to_i2c_client(struct kobject *kobj)
+<span class="lineNum">     214 </span>                :            : {
+<span class="lineNum">     215 </span>                :            :         struct device * const dev = container_of(kobj, struct device, kobj);
+<span class="lineNum">     216 </span>                :            :         return to_i2c_client(dev);
+<span class="lineNum">     217 </span>                :            : }
+<span class="lineNum">     218 </span>                :            : 
+<span class="lineNum">     219 </span>                :            : static inline void *i2c_get_clientdata(const struct i2c_client *dev)
+<span class="lineNum">     220 </span>                :            : {
+<span class="lineNum">     221 </span>                :            :         return dev_get_drvdata(&amp;dev-&gt;dev);
+<span class="lineNum">     222 </span>                :            : }
+<span class="lineNum">     223 </span>                :            : 
+<span class="lineNum">     224 </span>                :            : static inline void i2c_set_clientdata(struct i2c_client *dev, void *data)
+<span class="lineNum">     225 </span>                :            : {
+<span class="lineNum">     226 </span>                :            :         dev_set_drvdata(&amp;dev-&gt;dev, data);
+<span class="lineNum">     227 </span>                :            : }
+<span class="lineNum">     228 </span>                :            : 
+<span class="lineNum">     229 </span>                :            : /**
+<span class="lineNum">     230 </span>                :            :  * struct i2c_board_info - template for device creation
+<span class="lineNum">     231 </span>                :            :  * @type: chip type, to initialize i2c_client.name
+<span class="lineNum">     232 </span>                :            :  * @flags: to initialize i2c_client.flags
+<span class="lineNum">     233 </span>                :            :  * @addr: stored in i2c_client.addr
+<span class="lineNum">     234 </span>                :            :  * @platform_data: stored in i2c_client.dev.platform_data
+<span class="lineNum">     235 </span>                :            :  * @archdata: copied into i2c_client.dev.archdata
+<span class="lineNum">     236 </span>                :            :  * @irq: stored in i2c_client.irq
+<span class="lineNum">     237 </span>                :            :  *
+<span class="lineNum">     238 </span>                :            :  * I2C doesn't actually support hardware probing, although controllers and
+<span class="lineNum">     239 </span>                :            :  * devices may be able to use I2C_SMBUS_QUICK to tell whether or not there's
+<span class="lineNum">     240 </span>                :            :  * a device at a given address.  Drivers commonly need more information than
+<span class="lineNum">     241 </span>                :            :  * that, such as chip type, configuration, associated IRQ, and so on.
+<span class="lineNum">     242 </span>                :            :  *
+<span class="lineNum">     243 </span>                :            :  * i2c_board_info is used to build tables of information listing I2C devices
+<span class="lineNum">     244 </span>                :            :  * that are present.  This information is used to grow the driver model tree.
+<span class="lineNum">     245 </span>                :            :  * For mainboards this is done statically using i2c_register_board_info();
+<span class="lineNum">     246 </span>                :            :  * bus numbers identify adapters that aren't yet available.  For add-on boards,
+<span class="lineNum">     247 </span>                :            :  * i2c_new_device() does this dynamically with the adapter already known.
+<span class="lineNum">     248 </span>                :            :  */
+<span class="lineNum">     249 </span>                :            : struct i2c_board_info {
+<span class="lineNum">     250 </span>                :            :         char            type[I2C_NAME_SIZE];
+<span class="lineNum">     251 </span>                :            :         unsigned short  flags;
+<span class="lineNum">     252 </span>                :            :         unsigned short  addr;
+<span class="lineNum">     253 </span>                :            :         void            *platform_data;
+<span class="lineNum">     254 </span>                :            :         struct dev_archdata     *archdata;
+<span class="lineNum">     255 </span>                :            : #ifdef CONFIG_OF
+<span class="lineNum">     256 </span>                :            :         struct device_node *of_node;
+<span class="lineNum">     257 </span>                :            : #endif
+<span class="lineNum">     258 </span>                :            :         int             irq;
+<span class="lineNum">     259 </span>                :            : };
+<span class="lineNum">     260 </span>                :            : 
+<span class="lineNum">     261 </span>                :            : /**
+<span class="lineNum">     262 </span>                :            :  * I2C_BOARD_INFO - macro used to list an i2c device and its address
+<span class="lineNum">     263 </span>                :            :  * @dev_type: identifies the device type
+<span class="lineNum">     264 </span>                :            :  * @dev_addr: the device's address on the bus.
+<span class="lineNum">     265 </span>                :            :  *
+<span class="lineNum">     266 </span>                :            :  * This macro initializes essential fields of a struct i2c_board_info,
+<span class="lineNum">     267 </span>                :            :  * declaring what has been provided on a particular board.  Optional
+<span class="lineNum">     268 </span>                :            :  * fields (such as associated irq, or device-specific platform_data)
+<span class="lineNum">     269 </span>                :            :  * are provided using conventional syntax.
+<span class="lineNum">     270 </span>                :            :  */
+<span class="lineNum">     271 </span>                :            : #define I2C_BOARD_INFO(dev_type, dev_addr) \
+<span class="lineNum">     272 </span>                :            :         .type = dev_type, .addr = (dev_addr)
+<span class="lineNum">     273 </span>                :            : 
+<span class="lineNum">     274 </span>                :            : 
+<span class="lineNum">     275 </span>                :            : #if defined(CONFIG_I2C) || defined(CONFIG_I2C_MODULE)
+<span class="lineNum">     276 </span>                :            : /* Add-on boards should register/unregister their devices; e.g. a board
+<span class="lineNum">     277 </span>                :            :  * with integrated I2C, a config eeprom, sensors, and a codec that's
+<span class="lineNum">     278 </span>                :            :  * used in conjunction with the primary hardware.
+<span class="lineNum">     279 </span>                :            :  */
+<span class="lineNum">     280 </span>                :            : extern struct i2c_client *
+<span class="lineNum">     281 </span>                :            : i2c_new_device(struct i2c_adapter *adap, struct i2c_board_info const *info);
+<span class="lineNum">     282 </span>                :            : 
+<span class="lineNum">     283 </span>                :            : /* If you don't know the exact address of an I2C device, use this variant
+<span class="lineNum">     284 </span>                :            :  * instead, which can probe for device presence in a list of possible
+<span class="lineNum">     285 </span>                :            :  * addresses.
+<span class="lineNum">     286 </span>                :            :  */
+<span class="lineNum">     287 </span>                :            : extern struct i2c_client *
+<span class="lineNum">     288 </span>                :            : i2c_new_probed_device(struct i2c_adapter *adap,
+<span class="lineNum">     289 </span>                :            :                       struct i2c_board_info *info,
+<span class="lineNum">     290 </span>                :            :                       unsigned short const *addr_list);
+<span class="lineNum">     291 </span>                :            : 
+<span class="lineNum">     292 </span>                :            : /* For devices that use several addresses, use i2c_new_dummy() to make
+<span class="lineNum">     293 </span>                :            :  * client handles for the extra addresses.
+<span class="lineNum">     294 </span>                :            :  */
+<span class="lineNum">     295 </span>                :            : extern struct i2c_client *
+<span class="lineNum">     296 </span>                :            : i2c_new_dummy(struct i2c_adapter *adap, u16 address);
+<span class="lineNum">     297 </span>                :            : 
+<span class="lineNum">     298 </span>                :            : extern void i2c_unregister_device(struct i2c_client *);
+<span class="lineNum">     299 </span>                :            : #endif /* I2C */
+<span class="lineNum">     300 </span>                :            : 
+<span class="lineNum">     301 </span>                :            : /* Mainboard arch_initcall() code should register all its I2C devices.
+<span class="lineNum">     302 </span>                :            :  * This is done at arch_initcall time, before declaring any i2c adapters.
+<span class="lineNum">     303 </span>                :            :  * Modules for add-on boards must use other calls.
+<span class="lineNum">     304 </span>                :            :  */
+<span class="lineNum">     305 </span>                :            : #ifdef CONFIG_I2C_BOARDINFO
+<span class="lineNum">     306 </span>                :            : extern int
+<span class="lineNum">     307 </span>                :            : i2c_register_board_info(int busnum, struct i2c_board_info const *info,
+<span class="lineNum">     308 </span>                :            :                         unsigned n);
+<span class="lineNum">     309 </span>                :            : #else
+<span class="lineNum">     310 </span>                :            : static inline int
+<span class="lineNum">     311 </span>                :            : i2c_register_board_info(int busnum, struct i2c_board_info const *info,
+<span class="lineNum">     312 </span>                :            :                         unsigned n)
+<span class="lineNum">     313 </span>                :            : {
+<span class="lineNum">     314 </span>                :            :         return 0;
+<span class="lineNum">     315 </span>                :            : }
+<span class="lineNum">     316 </span>                :            : #endif /* I2C_BOARDINFO */
+<span class="lineNum">     317 </span>                :            : 
+<span class="lineNum">     318 </span>                :            : /*
+<span class="lineNum">     319 </span>                :            :  * The following structs are for those who like to implement new bus drivers:
+<span class="lineNum">     320 </span>                :            :  * i2c_algorithm is the interface to a class of hardware solutions which can
+<span class="lineNum">     321 </span>                :            :  * be addressed using the same bus algorithms - i.e. bit-banging or the PCF8584
+<span class="lineNum">     322 </span>                :            :  * to name two of the most common.
+<span class="lineNum">     323 </span>                :            :  */
+<span class="lineNum">     324 </span>                :            : struct i2c_algorithm {
+<span class="lineNum">     325 </span>                :            :         /* If an adapter algorithm can't do I2C-level access, set master_xfer
+<span class="lineNum">     326 </span>                :            :            to NULL. If an adapter algorithm can do SMBus access, set
+<span class="lineNum">     327 </span>                :            :            smbus_xfer. If set to NULL, the SMBus protocol is simulated
+<span class="lineNum">     328 </span>                :            :            using common I2C messages */
+<span class="lineNum">     329 </span>                :            :         /* master_xfer should return the number of messages successfully
+<span class="lineNum">     330 </span>                :            :            processed, or a negative value on error */
+<span class="lineNum">     331 </span>                :            :         int (*master_xfer)(struct i2c_adapter *adap, struct i2c_msg *msgs,
+<span class="lineNum">     332 </span>                :            :                            int num);
+<span class="lineNum">     333 </span>                :            :         int (*smbus_xfer) (struct i2c_adapter *adap, u16 addr,
+<span class="lineNum">     334 </span>                :            :                            unsigned short flags, char read_write,
+<span class="lineNum">     335 </span>                :            :                            u8 command, int size, union i2c_smbus_data *data);
+<span class="lineNum">     336 </span>                :            : 
+<span class="lineNum">     337 </span>                :            :         /* To determine what the adapter supports */
+<span class="lineNum">     338 </span>                :            :         u32 (*functionality) (struct i2c_adapter *);
+<span class="lineNum">     339 </span>                :            : };
+<span class="lineNum">     340 </span>                :            : 
+<span class="lineNum">     341 </span>                :            : /*
+<span class="lineNum">     342 </span>                :            :  * i2c_adapter is the structure used to identify a physical i2c bus along
+<span class="lineNum">     343 </span>                :            :  * with the access algorithms necessary to access it.
+<span class="lineNum">     344 </span>                :            :  */
+<span class="lineNum">     345 </span>                :            : struct i2c_adapter {
+<span class="lineNum">     346 </span>                :            :         struct module *owner;
+<span class="lineNum">     347 </span>                :            :         unsigned int id;
+<span class="lineNum">     348 </span>                :            :         unsigned int class;               /* classes to allow probing for */
+<span class="lineNum">     349 </span>                :            :         const struct i2c_algorithm *algo; /* the algorithm to access the bus */
+<span class="lineNum">     350 </span>                :            :         void *algo_data;
+<span class="lineNum">     351 </span>                :            : 
+<span class="lineNum">     352 </span>                :            :         /* data fields that are valid for all devices   */
+<span class="lineNum">     353 </span>                :            :         struct rt_mutex bus_lock;
+<span class="lineNum">     354 </span>                :            : 
+<span class="lineNum">     355 </span>                :            :         int timeout;                    /* in jiffies */
+<span class="lineNum">     356 </span>                :            :         int retries;
+<span class="lineNum">     357 </span>                :            :         struct device dev;              /* the adapter device */
+<span class="lineNum">     358 </span>                :            : 
+<span class="lineNum">     359 </span>                :            :         int nr;
+<span class="lineNum">     360 </span>                :            :         char name[48];
+<span class="lineNum">     361 </span>                :            :         struct completion dev_released;
+<span class="lineNum">     362 </span>                :            : 
+<span class="lineNum">     363 </span>                :            :         struct list_head userspace_clients;
+<span class="lineNum">     364 </span>                :            : };
+<span class="lineNum">     365 </span>                :            : #define to_i2c_adapter(d) container_of(d, struct i2c_adapter, dev)
+<span class="lineNum">     366 </span>                :            : 
+<span class="lineNum">     367 </span>                :            : static inline void *i2c_get_adapdata(const struct i2c_adapter *dev)
+<span class="lineNum">     368 </span>                :            : {
+<span class="lineNum">     369 </span>                :<span class="lineCov">       3388 :         return dev_get_drvdata(&amp;dev-&gt;dev);</span>
+<span class="lineNum">     370 </span>                :            : }
+<span class="lineNum">     371 </span>                :            : 
+<span class="lineNum">     372 </span>                :            : static inline void i2c_set_adapdata(struct i2c_adapter *dev, void *data)
+<span class="lineNum">     373 </span>                :            : {
+<span class="lineNum">     374 </span>                :<span class="lineCov">          6 :         dev_set_drvdata(&amp;dev-&gt;dev, data);</span>
+<span class="lineNum">     375 </span>                :            : }
+<span class="lineNum">     376 </span>                :            : 
+<span class="lineNum">     377 </span>                :            : /**
+<span class="lineNum">     378 </span>                :            :  * i2c_lock_adapter - Prevent access to an I2C bus segment
+<span class="lineNum">     379 </span>                :            :  * @adapter: Target I2C bus segment
+<span class="lineNum">     380 </span>                :            :  */
+<span class="lineNum">     381 </span>                :            : static inline void i2c_lock_adapter(struct i2c_adapter *adapter)
+<span class="lineNum">     382 </span>                :            : {
+<span class="lineNum">     383 </span>                :            :         rt_mutex_lock(&amp;adapter-&gt;bus_lock);
+<span class="lineNum">     384 </span>                :            : }
+<span class="lineNum">     385 </span>                :            : 
+<span class="lineNum">     386 </span>                :            : /**
+<span class="lineNum">     387 </span>                :            :  * i2c_unlock_adapter - Reauthorize access to an I2C bus segment
+<span class="lineNum">     388 </span>                :            :  * @adapter: Target I2C bus segment
+<span class="lineNum">     389 </span>                :            :  */
+<span class="lineNum">     390 </span>                :            : static inline void i2c_unlock_adapter(struct i2c_adapter *adapter)
+<span class="lineNum">     391 </span>                :            : {
+<span class="lineNum">     392 </span>                :            :         rt_mutex_unlock(&amp;adapter-&gt;bus_lock);
+<span class="lineNum">     393 </span>                :            : }
+<span class="lineNum">     394 </span>                :            : 
+<span class="lineNum">     395 </span>                :            : /*flags for the client struct: */
+<span class="lineNum">     396 </span>                :            : #define I2C_CLIENT_PEC  0x04            /* Use Packet Error Checking */
+<span class="lineNum">     397 </span>                :            : #define I2C_CLIENT_TEN  0x10            /* we have a ten bit chip address */
+<span class="lineNum">     398 </span>                :            :                                         /* Must equal I2C_M_TEN below */
+<span class="lineNum">     399 </span>                :            : #define I2C_CLIENT_WAKE 0x80            /* for board_info; true iff can wake */
+<span class="lineNum">     400 </span>                :            : 
+<span class="lineNum">     401 </span>                :            : /* i2c adapter classes (bitmask) */
+<span class="lineNum">     402 </span>                :            : #define I2C_CLASS_HWMON         (1&lt;&lt;0)    /* lm_sensors, ... */
+<span class="lineNum">     403 </span>                :            : #define I2C_CLASS_TV_ANALOG     (1&lt;&lt;1)    /* bttv + friends */
+<span class="lineNum">     404 </span>                :            : #define I2C_CLASS_TV_DIGITAL    (1&lt;&lt;2)    /* dvb cards */
+<span class="lineNum">     405 </span>                :            : #define I2C_CLASS_DDC           (1&lt;&lt;3)    /* DDC bus on graphics adapters */
+<span class="lineNum">     406 </span>                :            : #define I2C_CLASS_SPD           (1&lt;&lt;7)    /* SPD EEPROMs and similar */
+<span class="lineNum">     407 </span>                :            : 
+<span class="lineNum">     408 </span>                :            : /* Internal numbers to terminate lists */
+<span class="lineNum">     409 </span>                :            : #define I2C_CLIENT_END          0xfffeU
+<span class="lineNum">     410 </span>                :            : 
+<span class="lineNum">     411 </span>                :            : /* The numbers to use to set I2C bus address */
+<span class="lineNum">     412 </span>                :            : #define ANY_I2C_BUS             0xffff
+<span class="lineNum">     413 </span>                :            : 
+<span class="lineNum">     414 </span>                :            : /* Construct an I2C_CLIENT_END-terminated array of i2c addresses */
+<span class="lineNum">     415 </span>                :            : #define I2C_ADDRS(addr, addrs...) \
+<span class="lineNum">     416 </span>                :            :         ((const unsigned short []){ addr, ## addrs, I2C_CLIENT_END })
+<span class="lineNum">     417 </span>                :            : 
+<span class="lineNum">     418 </span>                :            : 
+<span class="lineNum">     419 </span>                :            : /* ----- functions exported by i2c.o */
+<span class="lineNum">     420 </span>                :            : 
+<span class="lineNum">     421 </span>                :            : /* administration...
+<span class="lineNum">     422 </span>                :            :  */
+<span class="lineNum">     423 </span>                :            : #if defined(CONFIG_I2C) || defined(CONFIG_I2C_MODULE)
+<span class="lineNum">     424 </span>                :            : extern int i2c_add_adapter(struct i2c_adapter *);
+<span class="lineNum">     425 </span>                :            : extern int i2c_del_adapter(struct i2c_adapter *);
+<span class="lineNum">     426 </span>                :            : extern int i2c_add_numbered_adapter(struct i2c_adapter *);
+<span class="lineNum">     427 </span>                :            : 
+<span class="lineNum">     428 </span>                :            : extern int i2c_register_driver(struct module *, struct i2c_driver *);
+<span class="lineNum">     429 </span>                :            : extern void i2c_del_driver(struct i2c_driver *);
+<span class="lineNum">     430 </span>                :            : 
+<span class="lineNum">     431 </span>                :            : static inline int i2c_add_driver(struct i2c_driver *driver)
+<span class="lineNum">     432 </span>                :            : {
+<span class="lineNum">     433 </span>                :            :         return i2c_register_driver(THIS_MODULE, driver);
+<span class="lineNum">     434 </span>                :            : }
+<span class="lineNum">     435 </span>                :            : 
+<span class="lineNum">     436 </span>                :            : extern struct i2c_client *i2c_use_client(struct i2c_client *client);
+<span class="lineNum">     437 </span>                :            : extern void i2c_release_client(struct i2c_client *client);
+<span class="lineNum">     438 </span>                :            : 
+<span class="lineNum">     439 </span>                :            : /* call the i2c_client-&gt;command() of all attached clients with
+<span class="lineNum">     440 </span>                :            :  * the given arguments */
+<span class="lineNum">     441 </span>                :            : extern void i2c_clients_command(struct i2c_adapter *adap,
+<span class="lineNum">     442 </span>                :            :                                 unsigned int cmd, void *arg);
+<span class="lineNum">     443 </span>                :            : 
+<span class="lineNum">     444 </span>                :            : extern struct i2c_adapter *i2c_get_adapter(int id);
+<span class="lineNum">     445 </span>                :            : extern void i2c_put_adapter(struct i2c_adapter *adap);
+<span class="lineNum">     446 </span>                :            : 
+<span class="lineNum">     447 </span>                :            : 
+<span class="lineNum">     448 </span>                :            : /* Return the functionality mask */
+<span class="lineNum">     449 </span>                :            : static inline u32 i2c_get_functionality(struct i2c_adapter *adap)
+<span class="lineNum">     450 </span>                :            : {
+<span class="lineNum">     451 </span>                :            :         return adap-&gt;algo-&gt;functionality(adap);
+<span class="lineNum">     452 </span>                :            : }
+<span class="lineNum">     453 </span>                :            : 
+<span class="lineNum">     454 </span>                :            : /* Return 1 if adapter supports everything we need, 0 if not. */
+<span class="lineNum">     455 </span>                :            : static inline int i2c_check_functionality(struct i2c_adapter *adap, u32 func)
+<span class="lineNum">     456 </span>                :            : {
+<span class="lineNum">     457 </span>                :            :         return (func &amp; i2c_get_functionality(adap)) == func;
+<span class="lineNum">     458 </span>                :            : }
+<span class="lineNum">     459 </span>                :            : 
+<span class="lineNum">     460 </span>                :            : /* Return the adapter number for a specific adapter */
+<span class="lineNum">     461 </span>                :            : static inline int i2c_adapter_id(struct i2c_adapter *adap)
+<span class="lineNum">     462 </span>                :            : {
+<span class="lineNum">     463 </span>                :            :         return adap-&gt;nr;
+<span class="lineNum">     464 </span>                :            : }
+<span class="lineNum">     465 </span>                :            : #endif /* I2C */
+<span class="lineNum">     466 </span>                :            : #endif /* __KERNEL__ */
+<span class="lineNum">     467 </span>                :            : 
+<span class="lineNum">     468 </span>                :            : /**
+<span class="lineNum">     469 </span>                :            :  * struct i2c_msg - an I2C transaction segment beginning with START
+<span class="lineNum">     470 </span>                :            :  * @addr: Slave address, either seven or ten bits.  When this is a ten
+<span class="lineNum">     471 </span>                :            :  *      bit address, I2C_M_TEN must be set in @flags and the adapter
+<span class="lineNum">     472 </span>                :            :  *      must support I2C_FUNC_10BIT_ADDR.
+<span class="lineNum">     473 </span>                :            :  * @flags: I2C_M_RD is handled by all adapters.  No other flags may be
+<span class="lineNum">     474 </span>                :            :  *      provided unless the adapter exported the relevant I2C_FUNC_*
+<span class="lineNum">     475 </span>                :            :  *      flags through i2c_check_functionality().
+<span class="lineNum">     476 </span>                :            :  * @len: Number of data bytes in @buf being read from or written to the
+<span class="lineNum">     477 </span>                :            :  *      I2C slave address.  For read transactions where I2C_M_RECV_LEN
+<span class="lineNum">     478 </span>                :            :  *      is set, the caller guarantees that this buffer can hold up to
+<span class="lineNum">     479 </span>                :            :  *      32 bytes in addition to the initial length byte sent by the
+<span class="lineNum">     480 </span>                :            :  *      slave (plus, if used, the SMBus PEC); and this value will be
+<span class="lineNum">     481 </span>                :            :  *      incremented by the number of block data bytes received.
+<span class="lineNum">     482 </span>                :            :  * @buf: The buffer into which data is read, or from which it's written.
+<span class="lineNum">     483 </span>                :            :  *
+<span class="lineNum">     484 </span>                :            :  * An i2c_msg is the low level representation of one segment of an I2C
+<span class="lineNum">     485 </span>                :            :  * transaction.  It is visible to drivers in the @i2c_transfer() procedure,
+<span class="lineNum">     486 </span>                :            :  * to userspace from i2c-dev, and to I2C adapter drivers through the
+<span class="lineNum">     487 </span>                :            :  * @i2c_adapter.@master_xfer() method.
+<span class="lineNum">     488 </span>                :            :  *
+<span class="lineNum">     489 </span>                :            :  * Except when I2C &quot;protocol mangling&quot; is used, all I2C adapters implement
+<span class="lineNum">     490 </span>                :            :  * the standard rules for I2C transactions.  Each transaction begins with a
+<span class="lineNum">     491 </span>                :            :  * START.  That is followed by the slave address, and a bit encoding read
+<span class="lineNum">     492 </span>                :            :  * versus write.  Then follow all the data bytes, possibly including a byte
+<span class="lineNum">     493 </span>                :            :  * with SMBus PEC.  The transfer terminates with a NAK, or when all those
+<span class="lineNum">     494 </span>                :            :  * bytes have been transferred and ACKed.  If this is the last message in a
+<span class="lineNum">     495 </span>                :            :  * group, it is followed by a STOP.  Otherwise it is followed by the next
+<span class="lineNum">     496 </span>                :            :  * @i2c_msg transaction segment, beginning with a (repeated) START.
+<span class="lineNum">     497 </span>                :            :  *
+<span class="lineNum">     498 </span>                :            :  * Alternatively, when the adapter supports I2C_FUNC_PROTOCOL_MANGLING then
+<span class="lineNum">     499 </span>                :            :  * passing certain @flags may have changed those standard protocol behaviors.
+<span class="lineNum">     500 </span>                :            :  * Those flags are only for use with broken/nonconforming slaves, and with
+<span class="lineNum">     501 </span>                :            :  * adapters which are known to support the specific mangling options they
+<span class="lineNum">     502 </span>                :            :  * need (one or more of IGNORE_NAK, NO_RD_ACK, NOSTART, and REV_DIR_ADDR).
+<span class="lineNum">     503 </span>                :            :  */
+<span class="lineNum">     504 </span>                :            : struct i2c_msg {
+<span class="lineNum">     505 </span>                :            :         __u16 addr;     /* slave address                        */
+<span class="lineNum">     506 </span>                :            :         __u16 flags;
+<span class="lineNum">     507 </span>                :            : #define I2C_M_TEN               0x0010  /* this is a ten bit chip address */
+<span class="lineNum">     508 </span>                :            : #define I2C_M_RD                0x0001  /* read data, from slave to master */
+<span class="lineNum">     509 </span>                :            : #define I2C_M_NOSTART           0x4000  /* if I2C_FUNC_PROTOCOL_MANGLING */
+<span class="lineNum">     510 </span>                :            : #define I2C_M_REV_DIR_ADDR      0x2000  /* if I2C_FUNC_PROTOCOL_MANGLING */
+<span class="lineNum">     511 </span>                :            : #define I2C_M_IGNORE_NAK        0x1000  /* if I2C_FUNC_PROTOCOL_MANGLING */
+<span class="lineNum">     512 </span>                :            : #define I2C_M_NO_RD_ACK         0x0800  /* if I2C_FUNC_PROTOCOL_MANGLING */
+<span class="lineNum">     513 </span>                :            : #define I2C_M_RECV_LEN          0x0400  /* length will be first received byte */
+<span class="lineNum">     514 </span>                :            :         __u16 len;              /* msg length                           */
+<span class="lineNum">     515 </span>                :            :         __u8 *buf;              /* pointer to msg data                  */
+<span class="lineNum">     516 </span>                :            : };
+<span class="lineNum">     517 </span>                :            : 
+<span class="lineNum">     518 </span>                :            : /* To determine what functionality is present */
+<span class="lineNum">     519 </span>                :            : 
+<span class="lineNum">     520 </span>                :            : #define I2C_FUNC_I2C                    0x00000001
+<span class="lineNum">     521 </span>                :            : #define I2C_FUNC_10BIT_ADDR             0x00000002
+<span class="lineNum">     522 </span>                :            : #define I2C_FUNC_PROTOCOL_MANGLING      0x00000004 /* I2C_M_NOSTART etc. */
+<span class="lineNum">     523 </span>                :            : #define I2C_FUNC_SMBUS_PEC              0x00000008
+<span class="lineNum">     524 </span>                :            : #define I2C_FUNC_SMBUS_BLOCK_PROC_CALL  0x00008000 /* SMBus 2.0 */
+<span class="lineNum">     525 </span>                :            : #define I2C_FUNC_SMBUS_QUICK            0x00010000
+<span class="lineNum">     526 </span>                :            : #define I2C_FUNC_SMBUS_READ_BYTE        0x00020000
+<span class="lineNum">     527 </span>                :            : #define I2C_FUNC_SMBUS_WRITE_BYTE       0x00040000
+<span class="lineNum">     528 </span>                :            : #define I2C_FUNC_SMBUS_READ_BYTE_DATA   0x00080000
+<span class="lineNum">     529 </span>                :            : #define I2C_FUNC_SMBUS_WRITE_BYTE_DATA  0x00100000
+<span class="lineNum">     530 </span>                :            : #define I2C_FUNC_SMBUS_READ_WORD_DATA   0x00200000
+<span class="lineNum">     531 </span>                :            : #define I2C_FUNC_SMBUS_WRITE_WORD_DATA  0x00400000
+<span class="lineNum">     532 </span>                :            : #define I2C_FUNC_SMBUS_PROC_CALL        0x00800000
+<span class="lineNum">     533 </span>                :            : #define I2C_FUNC_SMBUS_READ_BLOCK_DATA  0x01000000
+<span class="lineNum">     534 </span>                :            : #define I2C_FUNC_SMBUS_WRITE_BLOCK_DATA 0x02000000
+<span class="lineNum">     535 </span>                :            : #define I2C_FUNC_SMBUS_READ_I2C_BLOCK   0x04000000 /* I2C-like block xfer  */
+<span class="lineNum">     536 </span>                :            : #define I2C_FUNC_SMBUS_WRITE_I2C_BLOCK  0x08000000 /* w/ 1-byte reg. addr. */
+<span class="lineNum">     537 </span>                :            : 
+<span class="lineNum">     538 </span>                :            : #define I2C_FUNC_SMBUS_BYTE             (I2C_FUNC_SMBUS_READ_BYTE | \
+<span class="lineNum">     539 </span>                :            :                                          I2C_FUNC_SMBUS_WRITE_BYTE)
+<span class="lineNum">     540 </span>                :            : #define I2C_FUNC_SMBUS_BYTE_DATA        (I2C_FUNC_SMBUS_READ_BYTE_DATA | \
+<span class="lineNum">     541 </span>                :            :                                          I2C_FUNC_SMBUS_WRITE_BYTE_DATA)
+<span class="lineNum">     542 </span>                :            : #define I2C_FUNC_SMBUS_WORD_DATA        (I2C_FUNC_SMBUS_READ_WORD_DATA | \
+<span class="lineNum">     543 </span>                :            :                                          I2C_FUNC_SMBUS_WRITE_WORD_DATA)
+<span class="lineNum">     544 </span>                :            : #define I2C_FUNC_SMBUS_BLOCK_DATA       (I2C_FUNC_SMBUS_READ_BLOCK_DATA | \
+<span class="lineNum">     545 </span>                :            :                                          I2C_FUNC_SMBUS_WRITE_BLOCK_DATA)
+<span class="lineNum">     546 </span>                :            : #define I2C_FUNC_SMBUS_I2C_BLOCK        (I2C_FUNC_SMBUS_READ_I2C_BLOCK | \
+<span class="lineNum">     547 </span>                :            :                                          I2C_FUNC_SMBUS_WRITE_I2C_BLOCK)
+<span class="lineNum">     548 </span>                :            : 
+<span class="lineNum">     549 </span>                :            : #define I2C_FUNC_SMBUS_EMUL             (I2C_FUNC_SMBUS_QUICK | \
+<span class="lineNum">     550 </span>                :            :                                          I2C_FUNC_SMBUS_BYTE | \
+<span class="lineNum">     551 </span>                :            :                                          I2C_FUNC_SMBUS_BYTE_DATA | \
+<span class="lineNum">     552 </span>                :            :                                          I2C_FUNC_SMBUS_WORD_DATA | \
+<span class="lineNum">     553 </span>                :            :                                          I2C_FUNC_SMBUS_PROC_CALL | \
+<span class="lineNum">     554 </span>                :            :                                          I2C_FUNC_SMBUS_WRITE_BLOCK_DATA | \
+<span class="lineNum">     555 </span>                :            :                                          I2C_FUNC_SMBUS_I2C_BLOCK | \
+<span class="lineNum">     556 </span>                :            :                                          I2C_FUNC_SMBUS_PEC)
+<span class="lineNum">     557 </span>                :            : 
+<span class="lineNum">     558 </span>                :            : /*
+<span class="lineNum">     559 </span>                :            :  * Data for SMBus Messages
+<span class="lineNum">     560 </span>                :            :  */
+<span class="lineNum">     561 </span>                :            : #define I2C_SMBUS_BLOCK_MAX     32      /* As specified in SMBus standard */
+<span class="lineNum">     562 </span>                :            : union i2c_smbus_data {
+<span class="lineNum">     563 </span>                :            :         __u8 byte;
+<span class="lineNum">     564 </span>                :            :         __u16 word;
+<span class="lineNum">     565 </span>                :            :         __u8 block[I2C_SMBUS_BLOCK_MAX + 2]; /* block[0] is used for length */
+<span class="lineNum">     566 </span>                :            :                                /* and one more for user-space compatibility */
+<span class="lineNum">     567 </span>                :            : };
+<span class="lineNum">     568 </span>                :            : 
+<span class="lineNum">     569 </span>                :            : /* i2c_smbus_xfer read or write markers */
+<span class="lineNum">     570 </span>                :            : #define I2C_SMBUS_READ  1
+<span class="lineNum">     571 </span>                :            : #define I2C_SMBUS_WRITE 0
+<span class="lineNum">     572 </span>                :            : 
+<span class="lineNum">     573 </span>                :            : /* SMBus transaction types (size parameter in the above functions)
+<span class="lineNum">     574 </span>                :            :    Note: these no longer correspond to the (arbitrary) PIIX4 internal codes! */
+<span class="lineNum">     575 </span>                :            : #define I2C_SMBUS_QUICK             0
+<span class="lineNum">     576 </span>                :            : #define I2C_SMBUS_BYTE              1
+<span class="lineNum">     577 </span>                :            : #define I2C_SMBUS_BYTE_DATA         2
+<span class="lineNum">     578 </span>                :            : #define I2C_SMBUS_WORD_DATA         3
+<span class="lineNum">     579 </span>                :            : #define I2C_SMBUS_PROC_CALL         4
+<span class="lineNum">     580 </span>                :            : #define I2C_SMBUS_BLOCK_DATA        5
+<span class="lineNum">     581 </span>                :            : #define I2C_SMBUS_I2C_BLOCK_BROKEN  6
+<span class="lineNum">     582 </span>                :            : #define I2C_SMBUS_BLOCK_PROC_CALL   7           /* SMBus 2.0 */
+<span class="lineNum">     583 </span>                :            : #define I2C_SMBUS_I2C_BLOCK_DATA    8
+<span class="lineNum">     584 </span>                :            : 
+<span class="lineNum">     585 </span>                :            : #endif /* _LINUX_I2C_H */
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.8</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

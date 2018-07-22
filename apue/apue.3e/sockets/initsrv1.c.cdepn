@@ -1,0 +1,7 @@
+F {initserver} {initsrv1.c:6}
+C {initserver} {initsrv1.c:27} {__errno_location}
+C {initserver} {initsrv1.c:27} {close}
+C {initserver} {initsrv1.c:27} {__errno_location}
+C {initserver} {initsrv1.c:27} {listen}
+C {initserver} {initsrv1.c:27} {bind}
+C {initserver} {initsrv1.c:27} {socket}

@@ -1,0 +1,327 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+  <title>LCOV - test.info - arch/x86/include/asm/uaccess_32.h</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">arch/x86/include/asm</a> - uaccess_32.h<span style="font-size: 80%;"> (source / <a href="uaccess_32.h.func.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">test.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2011-05-12</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="headerItem">Branches:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">           Branch data     Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>                :            : #ifndef _ASM_X86_UACCESS_32_H</a>
+<span class="lineNum">       2 </span>                :            : #define _ASM_X86_UACCESS_32_H
+<span class="lineNum">       3 </span>                :            : 
+<span class="lineNum">       4 </span>                :            : /*
+<span class="lineNum">       5 </span>                :            :  * User space memory access functions
+<span class="lineNum">       6 </span>                :            :  */
+<span class="lineNum">       7 </span>                :            : #include &lt;linux/errno.h&gt;
+<span class="lineNum">       8 </span>                :            : #include &lt;linux/thread_info.h&gt;
+<span class="lineNum">       9 </span>                :            : #include &lt;linux/prefetch.h&gt;
+<span class="lineNum">      10 </span>                :            : #include &lt;linux/string.h&gt;
+<span class="lineNum">      11 </span>                :            : #include &lt;asm/asm.h&gt;
+<span class="lineNum">      12 </span>                :            : #include &lt;asm/page.h&gt;
+<span class="lineNum">      13 </span>                :            : 
+<span class="lineNum">      14 </span>                :            : unsigned long __must_check __copy_to_user_ll
+<span class="lineNum">      15 </span>                :            :                 (void __user *to, const void *from, unsigned long n);
+<span class="lineNum">      16 </span>                :            : unsigned long __must_check __copy_from_user_ll
+<span class="lineNum">      17 </span>                :            :                 (void *to, const void __user *from, unsigned long n);
+<span class="lineNum">      18 </span>                :            : unsigned long __must_check __copy_from_user_ll_nozero
+<span class="lineNum">      19 </span>                :            :                 (void *to, const void __user *from, unsigned long n);
+<span class="lineNum">      20 </span>                :            : unsigned long __must_check __copy_from_user_ll_nocache
+<span class="lineNum">      21 </span>                :            :                 (void *to, const void __user *from, unsigned long n);
+<span class="lineNum">      22 </span>                :            : unsigned long __must_check __copy_from_user_ll_nocache_nozero
+<span class="lineNum">      23 </span>                :            :                 (void *to, const void __user *from, unsigned long n);
+<span class="lineNum">      24 </span>                :            : 
+<span class="lineNum">      25 </span>                :            : /**
+<span class="lineNum">      26 </span>                :            :  * __copy_to_user_inatomic: - Copy a block of data into user space, with less checking.
+<span class="lineNum">      27 </span>                :            :  * @to:   Destination address, in user space.
+<span class="lineNum">      28 </span>                :            :  * @from: Source address, in kernel space.
+<span class="lineNum">      29 </span>                :            :  * @n:    Number of bytes to copy.
+<span class="lineNum">      30 </span>                :            :  *
+<span class="lineNum">      31 </span>                :            :  * Context: User context only.
+<span class="lineNum">      32 </span>                :            :  *
+<span class="lineNum">      33 </span>                :            :  * Copy data from kernel space to user space.  Caller must check
+<span class="lineNum">      34 </span>                :            :  * the specified block with access_ok() before calling this function.
+<span class="lineNum">      35 </span>                :            :  * The caller should also make sure he pins the user space address
+<span class="lineNum">      36 </span>                :            :  * so that we don't result in page fault and sleep.
+<span class="lineNum">      37 </span>                :            :  *
+<span class="lineNum">      38 </span>                :            :  * Here we special-case 1, 2 and 4-byte copy_*_user invocations.  On a fault
+<span class="lineNum">      39 </span>                :            :  * we return the initial request size (1, 2 or 4), as copy_*_user should do.
+<span class="lineNum">      40 </span>                :            :  * If a store crosses a page boundary and gets a fault, the x86 will not write
+<span class="lineNum">      41 </span>                :            :  * anything, so this is accurate.
+<span class="lineNum">      42 </span>                :            :  */
+<span class="lineNum">      43 </span>                :            : 
+<span class="lineNum">      44 </span>                :            : static __always_inline unsigned long __must_check
+<span class="lineNum">      45 </span>                :            : __copy_to_user_inatomic(void __user *to, const void *from, unsigned long n)
+<span class="lineNum">      46 </span>                :            : {
+<span class="lineNum">      47 </span>                :            :         if (__builtin_constant_p(n)) {
+<span class="lineNum">      48 </span>                :            :                 unsigned long ret;
+<span class="lineNum">      49 </span>                :            : 
+<span class="lineNum">      50 </span>                :            :                 switch (n) {
+<span class="lineNum">      51 </span>                :            :                 case 1:
+<span class="lineNum">      52 </span>                :            :                         __put_user_size(*(u8 *)from, (u8 __user *)to,
+<span class="lineNum">      53 </span>                :            :                                         1, ret, 1);
+<span class="lineNum">      54 </span>                :            :                         return ret;
+<span class="lineNum">      55 </span>                :            :                 case 2:
+<span class="lineNum">      56 </span>                :            :                         __put_user_size(*(u16 *)from, (u16 __user *)to,
+<span class="lineNum">      57 </span>                :            :                                         2, ret, 2);
+<span class="lineNum">      58 </span>                :            :                         return ret;
+<span class="lineNum">      59 </span>                :            :                 case 4:
+<span class="lineNum">      60 </span>                :            :                         __put_user_size(*(u32 *)from, (u32 __user *)to,
+<span class="lineNum">      61 </span>                :            :                                         4, ret, 4);
+<span class="lineNum">      62 </span>                :            :                         return ret;
+<span class="lineNum">      63 </span>                :            :                 }
+<span class="lineNum">      64 </span>                :            :         }
+<span class="lineNum">      65 </span>                :            :         return __copy_to_user_ll(to, from, n);
+<span class="lineNum">      66 </span>                :            : }
+<span class="lineNum">      67 </span>                :            : 
+<span class="lineNum">      68 </span>                :            : /**
+<span class="lineNum">      69 </span>                :            :  * __copy_to_user: - Copy a block of data into user space, with less checking.
+<span class="lineNum">      70 </span>                :            :  * @to:   Destination address, in user space.
+<span class="lineNum">      71 </span>                :            :  * @from: Source address, in kernel space.
+<span class="lineNum">      72 </span>                :            :  * @n:    Number of bytes to copy.
+<span class="lineNum">      73 </span>                :            :  *
+<span class="lineNum">      74 </span>                :            :  * Context: User context only.  This function may sleep.
+<span class="lineNum">      75 </span>                :            :  *
+<span class="lineNum">      76 </span>                :            :  * Copy data from kernel space to user space.  Caller must check
+<span class="lineNum">      77 </span>                :            :  * the specified block with access_ok() before calling this function.
+<span class="lineNum">      78 </span>                :            :  *
+<span class="lineNum">      79 </span>                :            :  * Returns number of bytes that could not be copied.
+<span class="lineNum">      80 </span>                :            :  * On success, this will be zero.
+<span class="lineNum">      81 </span>                :            :  */
+<span class="lineNum">      82 </span>                :            : static __always_inline unsigned long __must_check
+<span class="lineNum">      83 </span>                :            : __copy_to_user(void __user *to, const void *from, unsigned long n)
+<span class="lineNum">      84 </span>                :            : {
+<span class="lineNum">      85 </span>                :            :         might_fault();
+<span class="lineNum">      86 </span>                :            :         return __copy_to_user_inatomic(to, from, n);
+<span class="lineNum">      87 </span>                :            : }
+<span class="lineNum">      88 </span>                :            : 
+<span class="lineNum">      89 </span>                :            : static __always_inline unsigned long
+<span class="lineNum">      90 </span>                :            : __copy_from_user_inatomic(void *to, const void __user *from, unsigned long n)
+<span class="lineNum">      91 </span>                :            : {
+<span class="lineNum">      92 </span>                :            :         /* Avoid zeroing the tail if the copy fails..
+<span class="lineNum">      93 </span>                :            :          * If 'n' is constant and 1, 2, or 4, we do still zero on a failure,
+<span class="lineNum">      94 </span>                :            :          * but as the zeroing behaviour is only significant when n is not
+<span class="lineNum">      95 </span>                :            :          * constant, that shouldn't be a problem.
+<span class="lineNum">      96 </span>                :            :          */
+<span class="lineNum">      97 </span>                :            :         if (__builtin_constant_p(n)) {
+<span class="lineNum">      98 </span>                :            :                 unsigned long ret;
+<span class="lineNum">      99 </span>                :            : 
+<span class="lineNum">     100 </span>                :            :                 switch (n) {
+<span class="lineNum">     101 </span>                :            :                 case 1:
+<span class="lineNum">     102 </span>                :            :                         __get_user_size(*(u8 *)to, from, 1, ret, 1);
+<span class="lineNum">     103 </span>                :            :                         return ret;
+<span class="lineNum">     104 </span>                :            :                 case 2:
+<span class="lineNum">     105 </span>                :            :                         __get_user_size(*(u16 *)to, from, 2, ret, 2);
+<span class="lineNum">     106 </span>                :            :                         return ret;
+<span class="lineNum">     107 </span>                :            :                 case 4:
+<span class="lineNum">     108 </span>                :            :                         __get_user_size(*(u32 *)to, from, 4, ret, 4);
+<span class="lineNum">     109 </span>                :            :                         return ret;
+<span class="lineNum">     110 </span>                :            :                 }
+<span class="lineNum">     111 </span>                :            :         }
+<span class="lineNum">     112 </span>                :            :         return __copy_from_user_ll_nozero(to, from, n);
+<span class="lineNum">     113 </span>                :            : }
+<span class="lineNum">     114 </span>                :            : 
+<span class="lineNum">     115 </span>                :            : /**
+<span class="lineNum">     116 </span>                :            :  * __copy_from_user: - Copy a block of data from user space, with less checking.
+<span class="lineNum">     117 </span>                :            :  * @to:   Destination address, in kernel space.
+<span class="lineNum">     118 </span>                :            :  * @from: Source address, in user space.
+<span class="lineNum">     119 </span>                :            :  * @n:    Number of bytes to copy.
+<span class="lineNum">     120 </span>                :            :  *
+<span class="lineNum">     121 </span>                :            :  * Context: User context only.  This function may sleep.
+<span class="lineNum">     122 </span>                :            :  *
+<span class="lineNum">     123 </span>                :            :  * Copy data from user space to kernel space.  Caller must check
+<span class="lineNum">     124 </span>                :            :  * the specified block with access_ok() before calling this function.
+<span class="lineNum">     125 </span>                :            :  *
+<span class="lineNum">     126 </span>                :            :  * Returns number of bytes that could not be copied.
+<span class="lineNum">     127 </span>                :            :  * On success, this will be zero.
+<span class="lineNum">     128 </span>                :            :  *
+<span class="lineNum">     129 </span>                :            :  * If some data could not be copied, this function will pad the copied
+<span class="lineNum">     130 </span>                :            :  * data to the requested size using zero bytes.
+<span class="lineNum">     131 </span>                :            :  *
+<span class="lineNum">     132 </span>                :            :  * An alternate version - __copy_from_user_inatomic() - may be called from
+<span class="lineNum">     133 </span>                :            :  * atomic context and will fail rather than sleep.  In this case the
+<span class="lineNum">     134 </span>                :            :  * uncopied bytes will *NOT* be padded with zeros.  See fs/filemap.h
+<span class="lineNum">     135 </span>                :            :  * for explanation of why this is needed.
+<span class="lineNum">     136 </span>                :            :  */
+<span class="lineNum">     137 </span>                :            : static __always_inline unsigned long
+<span class="lineNum">     138 </span>                :            : __copy_from_user(void *to, const void __user *from, unsigned long n)
+<span class="lineNum">     139 </span>                :            : {
+<span class="lineNum">     140 </span>                :            :         might_fault();
+<span class="lineNum">     141 </span>                :            :         if (__builtin_constant_p(n)) {
+<span class="lineNum">     142 </span>                :            :                 unsigned long ret;
+<span class="lineNum">     143 </span>                :            : 
+<span class="lineNum">     144 </span>                :            :                 switch (n) {
+<span class="lineNum">     145 </span>                :            :                 case 1:
+<span class="lineNum">     146 </span>                :            :                         __get_user_size(*(u8 *)to, from, 1, ret, 1);
+<span class="lineNum">     147 </span>                :            :                         return ret;
+<span class="lineNum">     148 </span>                :            :                 case 2:
+<span class="lineNum">     149 </span>                :            :                         __get_user_size(*(u16 *)to, from, 2, ret, 2);
+<span class="lineNum">     150 </span>                :            :                         return ret;
+<span class="lineNum">     151 </span>                :            :                 case 4:
+<span class="lineNum">     152 </span>                :            :                         __get_user_size(*(u32 *)to, from, 4, ret, 4);
+<span class="lineNum">     153 </span>                :            :                         return ret;
+<span class="lineNum">     154 </span>                :            :                 }
+<span class="lineNum">     155 </span>                :            :         }
+<span class="lineNum">     156 </span>                :            :         return __copy_from_user_ll(to, from, n);
+<span class="lineNum">     157 </span>                :            : }
+<span class="lineNum">     158 </span>                :            : 
+<span class="lineNum">     159 </span>                :            : static __always_inline unsigned long __copy_from_user_nocache(void *to,
+<span class="lineNum">     160 </span>                :            :                                 const void __user *from, unsigned long n)
+<span class="lineNum">     161 </span>                :            : {
+<span class="lineNum">     162 </span>                :            :         might_fault();
+<span class="lineNum">     163 </span>                :            :         if (__builtin_constant_p(n)) {
+<span class="lineNum">     164 </span>                :            :                 unsigned long ret;
+<span class="lineNum">     165 </span>                :            : 
+<span class="lineNum">     166 </span>                :            :                 switch (n) {
+<span class="lineNum">     167 </span>                :            :                 case 1:
+<span class="lineNum">     168 </span>                :            :                         __get_user_size(*(u8 *)to, from, 1, ret, 1);
+<span class="lineNum">     169 </span>                :            :                         return ret;
+<span class="lineNum">     170 </span>                :            :                 case 2:
+<span class="lineNum">     171 </span>                :            :                         __get_user_size(*(u16 *)to, from, 2, ret, 2);
+<span class="lineNum">     172 </span>                :            :                         return ret;
+<span class="lineNum">     173 </span>                :            :                 case 4:
+<span class="lineNum">     174 </span>                :            :                         __get_user_size(*(u32 *)to, from, 4, ret, 4);
+<span class="lineNum">     175 </span>                :            :                         return ret;
+<span class="lineNum">     176 </span>                :            :                 }
+<span class="lineNum">     177 </span>                :            :         }
+<span class="lineNum">     178 </span>                :            :         return __copy_from_user_ll_nocache(to, from, n);
+<span class="lineNum">     179 </span>                :            : }
+<span class="lineNum">     180 </span>                :            : 
+<span class="lineNum">     181 </span>                :            : static __always_inline unsigned long
+<span class="lineNum">     182 </span>                :            : __copy_from_user_inatomic_nocache(void *to, const void __user *from,
+<span class="lineNum">     183 </span>                :            :                                   unsigned long n)
+<span class="lineNum">     184 </span>                :            : {
+<span class="lineNum">     185 </span>                :            :        return __copy_from_user_ll_nocache_nozero(to, from, n);
+<span class="lineNum">     186 </span>                :            : }
+<span class="lineNum">     187 </span>                :            : 
+<span class="lineNum">     188 </span>                :            : unsigned long __must_check copy_to_user(void __user *to,
+<span class="lineNum">     189 </span>                :            :                                         const void *from, unsigned long n);
+<span class="lineNum">     190 </span>                :            : unsigned long __must_check _copy_from_user(void *to,
+<span class="lineNum">     191 </span>                :            :                                           const void __user *from,
+<span class="lineNum">     192 </span>                :            :                                           unsigned long n);
+<span class="lineNum">     193 </span>                :            : 
+<span class="lineNum">     194 </span>                :            : 
+<span class="lineNum">     195 </span>                :            : extern void copy_from_user_overflow(void)
+<span class="lineNum">     196 </span>                :            : #ifdef CONFIG_DEBUG_STRICT_USER_COPY_CHECKS
+<span class="lineNum">     197 </span>                :            :         __compiletime_error(&quot;copy_from_user() buffer size is not provably correct&quot;)
+<span class="lineNum">     198 </span>                :            : #else
+<span class="lineNum">     199 </span>                :            :         __compiletime_warning(&quot;copy_from_user() buffer size is not provably correct&quot;)
+<span class="lineNum">     200 </span>                :            : #endif
+<span class="lineNum">     201 </span>                :            : ;
+<span class="lineNum">     202 </span>                :            : 
+<span class="lineNum">     203 </span>                :            : static inline unsigned long __must_check copy_from_user(void *to,
+<span class="lineNum">     204 </span>                :            :                                           const void __user *from,
+<span class="lineNum">     205 </span>                :            :                                           unsigned long n)
+<span class="lineNum">     206 </span>                :            : {
+<span class="lineNum">     207 </span>                :<span class="lineNoCov">          0 :         int sz = __compiletime_object_size(to);</span>
+<span class="lineNum">     208 </span>                :            : 
+<span class="lineNum">     209 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (likely(sz == -1 || sz &gt;= n))</span>
+<span class="lineNum">     210 </span>                :<span class="lineNoCov">          0 :                 n = _copy_from_user(to, from, n);</span>
+<span class="lineNum">     211 </span>                :            :         else
+<span class="lineNum">     212 </span>                :<span class="lineNoCov">          0 :                 copy_from_user_overflow();</span>
+<span class="lineNum">     213 </span>                :            : 
+<span class="lineNum">     214 </span>                :<span class="lineNoCov">          0 :         return n;</span>
+<span class="lineNum">     215 </span>                :            : }
+<span class="lineNum">     216 </span>                :            : 
+<span class="lineNum">     217 </span>                :            : long __must_check strncpy_from_user(char *dst, const char __user *src,
+<span class="lineNum">     218 </span>                :            :                                     long count);
+<span class="lineNum">     219 </span>                :            : long __must_check __strncpy_from_user(char *dst,
+<span class="lineNum">     220 </span>                :            :                                       const char __user *src, long count);
+<span class="lineNum">     221 </span>                :            : 
+<span class="lineNum">     222 </span>                :            : /**
+<span class="lineNum">     223 </span>                :            :  * strlen_user: - Get the size of a string in user space.
+<span class="lineNum">     224 </span>                :            :  * @str: The string to measure.
+<span class="lineNum">     225 </span>                :            :  *
+<span class="lineNum">     226 </span>                :            :  * Context: User context only.  This function may sleep.
+<span class="lineNum">     227 </span>                :            :  *
+<span class="lineNum">     228 </span>                :            :  * Get the size of a NUL-terminated string in user space.
+<span class="lineNum">     229 </span>                :            :  *
+<span class="lineNum">     230 </span>                :            :  * Returns the size of the string INCLUDING the terminating NUL.
+<span class="lineNum">     231 </span>                :            :  * On exception, returns 0.
+<span class="lineNum">     232 </span>                :            :  *
+<span class="lineNum">     233 </span>                :            :  * If there is a limit on the length of a valid string, you may wish to
+<span class="lineNum">     234 </span>                :            :  * consider using strnlen_user() instead.
+<span class="lineNum">     235 </span>                :            :  */
+<span class="lineNum">     236 </span>                :            : #define strlen_user(str) strnlen_user(str, LONG_MAX)
+<span class="lineNum">     237 </span>                :            : 
+<span class="lineNum">     238 </span>                :            : long strnlen_user(const char __user *str, long n);
+<span class="lineNum">     239 </span>                :            : unsigned long __must_check clear_user(void __user *mem, unsigned long len);
+<span class="lineNum">     240 </span>                :            : unsigned long __must_check __clear_user(void __user *mem, unsigned long len);
+<span class="lineNum">     241 </span>                :            : 
+<span class="lineNum">     242 </span>                :            : #endif /* _ASM_X86_UACCESS_32_H */
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.8</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

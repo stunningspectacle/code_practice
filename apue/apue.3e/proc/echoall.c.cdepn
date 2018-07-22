@@ -1,0 +1,4 @@
+F {main} {echoall.c:4}
+C {main} {echoall.c:17} {exit}
+C {main} {echoall.c:17} {__builtin_puts}
+C {main} {echoall.c:17} {printf}

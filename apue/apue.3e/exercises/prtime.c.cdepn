@@ -1,0 +1,9 @@
+F {main} {prtime.c:5}
+C {main} {prtime.c:19} {exit}
+C {main} {prtime.c:19} {fputs}
+C {main} {prtime.c:19} {err_sys}
+C {main} {prtime.c:19} {strftime}
+C {main} {prtime.c:19} {err_sys}
+C {main} {prtime.c:19} {localtime}
+C {main} {prtime.c:19} {err_sys}
+C {main} {prtime.c:19} {time}

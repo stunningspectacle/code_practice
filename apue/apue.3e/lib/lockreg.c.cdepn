@@ -1,0 +1,2 @@
+F {lock_reg} {lockreg.c:5}
+C {lock_reg} {lockreg.c:15} {fcntl}

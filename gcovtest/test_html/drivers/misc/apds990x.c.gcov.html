@@ -1,0 +1,1392 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+  <title>LCOV - test.info - drivers/misc/apds990x.c</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">drivers/misc</a> - apds990x.c<span style="font-size: 80%;"> (source / <a href="apds990x.c.func.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">test.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">465</td>
+            <td class="headerCovTableEntryLo">0.4 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2011-05-12</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">43</td>
+            <td class="headerCovTableEntryLo">2.3 %</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="headerItem">Branches:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">191</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">           Branch data     Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>                :            : /*</a>
+<span class="lineNum">       2 </span>                :            :  * This file is part of the APDS990x sensor driver.
+<span class="lineNum">       3 </span>                :            :  * Chip is combined proximity and ambient light sensor.
+<span class="lineNum">       4 </span>                :            :  *
+<span class="lineNum">       5 </span>                :            :  * Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies).
+<span class="lineNum">       6 </span>                :            :  *
+<span class="lineNum">       7 </span>                :            :  * Contact: Samu Onkalo &lt;samu.p.onkalo@nokia.com&gt;
+<span class="lineNum">       8 </span>                :            :  *
+<span class="lineNum">       9 </span>                :            :  * This program is free software; you can redistribute it and/or
+<span class="lineNum">      10 </span>                :            :  * modify it under the terms of the GNU General Public License
+<span class="lineNum">      11 </span>                :            :  * version 2 as published by the Free Software Foundation.
+<span class="lineNum">      12 </span>                :            :  *
+<span class="lineNum">      13 </span>                :            :  * This program is distributed in the hope that it will be useful, but
+<span class="lineNum">      14 </span>                :            :  * WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      15 </span>                :            :  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+<span class="lineNum">      16 </span>                :            :  * General Public License for more details.
+<span class="lineNum">      17 </span>                :            :  *
+<span class="lineNum">      18 </span>                :            :  * You should have received a copy of the GNU General Public License
+<span class="lineNum">      19 </span>                :            :  * along with this program; if not, write to the Free Software
+<span class="lineNum">      20 </span>                :            :  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+<span class="lineNum">      21 </span>                :            :  * 02110-1301 USA
+<span class="lineNum">      22 </span>                :            :  *
+<span class="lineNum">      23 </span>                :            :  */
+<span class="lineNum">      24 </span>                :            : 
+<span class="lineNum">      25 </span>                :            : #include &lt;linux/kernel.h&gt;
+<span class="lineNum">      26 </span>                :            : #include &lt;linux/module.h&gt;
+<span class="lineNum">      27 </span>                :            : #include &lt;linux/i2c.h&gt;
+<span class="lineNum">      28 </span>                :            : #include &lt;linux/interrupt.h&gt;
+<span class="lineNum">      29 </span>                :            : #include &lt;linux/mutex.h&gt;
+<span class="lineNum">      30 </span>                :            : #include &lt;linux/regulator/consumer.h&gt;
+<span class="lineNum">      31 </span>                :            : #include &lt;linux/pm_runtime.h&gt;
+<span class="lineNum">      32 </span>                :            : #include &lt;linux/delay.h&gt;
+<span class="lineNum">      33 </span>                :            : #include &lt;linux/wait.h&gt;
+<span class="lineNum">      34 </span>                :            : #include &lt;linux/slab.h&gt;
+<span class="lineNum">      35 </span>                :            : #include &lt;linux/i2c/apds990x.h&gt;
+<span class="lineNum">      36 </span>                :            : 
+<span class="lineNum">      37 </span>                :            : /* Register map */
+<span class="lineNum">      38 </span>                :            : #define APDS990X_ENABLE  0x00 /* Enable of states and interrupts */
+<span class="lineNum">      39 </span>                :            : #define APDS990X_ATIME   0x01 /* ALS ADC time  */
+<span class="lineNum">      40 </span>                :            : #define APDS990X_PTIME   0x02 /* Proximity ADC time  */
+<span class="lineNum">      41 </span>                :            : #define APDS990X_WTIME   0x03 /* Wait time  */
+<span class="lineNum">      42 </span>                :            : #define APDS990X_AILTL   0x04 /* ALS interrupt low threshold low byte */
+<span class="lineNum">      43 </span>                :            : #define APDS990X_AILTH   0x05 /* ALS interrupt low threshold hi byte */
+<span class="lineNum">      44 </span>                :            : #define APDS990X_AIHTL   0x06 /* ALS interrupt hi threshold low byte */
+<span class="lineNum">      45 </span>                :            : #define APDS990X_AIHTH   0x07 /* ALS interrupt hi threshold hi byte */
+<span class="lineNum">      46 </span>                :            : #define APDS990X_PILTL   0x08 /* Proximity interrupt low threshold low byte */
+<span class="lineNum">      47 </span>                :            : #define APDS990X_PILTH   0x09 /* Proximity interrupt low threshold hi byte */
+<span class="lineNum">      48 </span>                :            : #define APDS990X_PIHTL   0x0a /* Proximity interrupt hi threshold low byte */
+<span class="lineNum">      49 </span>                :            : #define APDS990X_PIHTH   0x0b /* Proximity interrupt hi threshold hi byte */
+<span class="lineNum">      50 </span>                :            : #define APDS990X_PERS    0x0c /* Interrupt persistence filters */
+<span class="lineNum">      51 </span>                :            : #define APDS990X_CONFIG  0x0d /* Configuration */
+<span class="lineNum">      52 </span>                :            : #define APDS990X_PPCOUNT 0x0e /* Proximity pulse count */
+<span class="lineNum">      53 </span>                :            : #define APDS990X_CONTROL 0x0f /* Gain control register */
+<span class="lineNum">      54 </span>                :            : #define APDS990X_REV     0x11 /* Revision Number */
+<span class="lineNum">      55 </span>                :            : #define APDS990X_ID      0x12 /* Device ID */
+<span class="lineNum">      56 </span>                :            : #define APDS990X_STATUS  0x13 /* Device status */
+<span class="lineNum">      57 </span>                :            : #define APDS990X_CDATAL  0x14 /* Clear ADC low data register */
+<span class="lineNum">      58 </span>                :            : #define APDS990X_CDATAH  0x15 /* Clear ADC high data register */
+<span class="lineNum">      59 </span>                :            : #define APDS990X_IRDATAL 0x16 /* IR ADC low data register */
+<span class="lineNum">      60 </span>                :            : #define APDS990X_IRDATAH 0x17 /* IR ADC high data register */
+<span class="lineNum">      61 </span>                :            : #define APDS990X_PDATAL  0x18 /* Proximity ADC low data register */
+<span class="lineNum">      62 </span>                :            : #define APDS990X_PDATAH  0x19 /* Proximity ADC high data register */
+<span class="lineNum">      63 </span>                :            : 
+<span class="lineNum">      64 </span>                :            : /* Control */
+<span class="lineNum">      65 </span>                :            : #define APDS990X_MAX_AGAIN      3
+<span class="lineNum">      66 </span>                :            : 
+<span class="lineNum">      67 </span>                :            : /* Enable register */
+<span class="lineNum">      68 </span>                :            : #define APDS990X_EN_PIEN        (0x1 &lt;&lt; 5)
+<span class="lineNum">      69 </span>                :            : #define APDS990X_EN_AIEN        (0x1 &lt;&lt; 4)
+<span class="lineNum">      70 </span>                :            : #define APDS990X_EN_WEN         (0x1 &lt;&lt; 3)
+<span class="lineNum">      71 </span>                :            : #define APDS990X_EN_PEN         (0x1 &lt;&lt; 2)
+<span class="lineNum">      72 </span>                :            : #define APDS990X_EN_AEN         (0x1 &lt;&lt; 1)
+<span class="lineNum">      73 </span>                :            : #define APDS990X_EN_PON         (0x1 &lt;&lt; 0)
+<span class="lineNum">      74 </span>                :            : #define APDS990X_EN_DISABLE_ALL 0
+<span class="lineNum">      75 </span>                :            : 
+<span class="lineNum">      76 </span>                :            : /* Status register */
+<span class="lineNum">      77 </span>                :            : #define APDS990X_ST_PINT        (0x1 &lt;&lt; 5)
+<span class="lineNum">      78 </span>                :            : #define APDS990X_ST_AINT        (0x1 &lt;&lt; 4)
+<span class="lineNum">      79 </span>                :            : 
+<span class="lineNum">      80 </span>                :            : /* I2C access types */
+<span class="lineNum">      81 </span>                :            : #define APDS990x_CMD_TYPE_MASK  (0x03 &lt;&lt; 5)
+<span class="lineNum">      82 </span>                :            : #define APDS990x_CMD_TYPE_RB    (0x00 &lt;&lt; 5) /* Repeated byte */
+<span class="lineNum">      83 </span>                :            : #define APDS990x_CMD_TYPE_INC   (0x01 &lt;&lt; 5) /* Auto increment */
+<span class="lineNum">      84 </span>                :            : #define APDS990x_CMD_TYPE_SPE   (0x03 &lt;&lt; 5) /* Special function */
+<span class="lineNum">      85 </span>                :            : 
+<span class="lineNum">      86 </span>                :            : #define APDS990x_ADDR_SHIFT     0
+<span class="lineNum">      87 </span>                :            : #define APDS990x_CMD            0x80
+<span class="lineNum">      88 </span>                :            : 
+<span class="lineNum">      89 </span>                :            : /* Interrupt ack commands */
+<span class="lineNum">      90 </span>                :            : #define APDS990X_INT_ACK_ALS    0x6
+<span class="lineNum">      91 </span>                :            : #define APDS990X_INT_ACK_PS     0x5
+<span class="lineNum">      92 </span>                :            : #define APDS990X_INT_ACK_BOTH   0x7
+<span class="lineNum">      93 </span>                :            : 
+<span class="lineNum">      94 </span>                :            : /* ptime */
+<span class="lineNum">      95 </span>                :            : #define APDS990X_PTIME_DEFAULT  0xff /* Recommended conversion time 2.7ms*/
+<span class="lineNum">      96 </span>                :            : 
+<span class="lineNum">      97 </span>                :            : /* wtime */
+<span class="lineNum">      98 </span>                :            : #define APDS990X_WTIME_DEFAULT  0xee /* ~50ms wait time */
+<span class="lineNum">      99 </span>                :            : 
+<span class="lineNum">     100 </span>                :            : #define APDS990X_TIME_TO_ADC    1024 /* One timetick as ADC count value */
+<span class="lineNum">     101 </span>                :            : 
+<span class="lineNum">     102 </span>                :            : /* Persistence */
+<span class="lineNum">     103 </span>                :            : #define APDS990X_APERS_SHIFT    0
+<span class="lineNum">     104 </span>                :            : #define APDS990X_PPERS_SHIFT    4
+<span class="lineNum">     105 </span>                :            : 
+<span class="lineNum">     106 </span>                :            : /* Supported ID:s */
+<span class="lineNum">     107 </span>                :            : #define APDS990X_ID_0           0x0
+<span class="lineNum">     108 </span>                :            : #define APDS990X_ID_4           0x4
+<span class="lineNum">     109 </span>                :            : #define APDS990X_ID_29          0x29
+<span class="lineNum">     110 </span>                :            : 
+<span class="lineNum">     111 </span>                :            : /* pgain and pdiode settings */
+<span class="lineNum">     112 </span>                :            : #define APDS_PGAIN_1X          0x0
+<span class="lineNum">     113 </span>                :            : #define APDS_PDIODE_IR         0x2
+<span class="lineNum">     114 </span>                :            : 
+<span class="lineNum">     115 </span>                :            : #define APDS990X_LUX_OUTPUT_SCALE 10
+<span class="lineNum">     116 </span>                :            : 
+<span class="lineNum">     117 </span>                :            : /* Reverse chip factors for threshold calculation */
+<span class="lineNum">     118 </span>                :            : struct reverse_factors {
+<span class="lineNum">     119 </span>                :            :         u32 afactor;
+<span class="lineNum">     120 </span>                :            :         int cf1;
+<span class="lineNum">     121 </span>                :            :         int irf1;
+<span class="lineNum">     122 </span>                :            :         int cf2;
+<span class="lineNum">     123 </span>                :            :         int irf2;
+<span class="lineNum">     124 </span>                :            : };
+<span class="lineNum">     125 </span>                :            : 
+<span class="lineNum">     126 </span>                :            : struct apds990x_chip {
+<span class="lineNum">     127 </span>                :            :         struct apds990x_platform_data   *pdata;
+<span class="lineNum">     128 </span>                :            :         struct i2c_client               *client;
+<span class="lineNum">     129 </span>                :            :         struct mutex                    mutex; /* avoid parallel access */
+<span class="lineNum">     130 </span>                :            :         struct regulator_bulk_data      regs[2];
+<span class="lineNum">     131 </span>                :            :         wait_queue_head_t               wait;
+<span class="lineNum">     132 </span>                :            : 
+<span class="lineNum">     133 </span>                :            :         int     prox_en;
+<span class="lineNum">     134 </span>                :            :         bool    prox_continuous_mode;
+<span class="lineNum">     135 </span>                :            :         bool    lux_wait_fresh_res;
+<span class="lineNum">     136 </span>                :            : 
+<span class="lineNum">     137 </span>                :            :         /* Chip parameters */
+<span class="lineNum">     138 </span>                :            :         struct  apds990x_chip_factors   cf;
+<span class="lineNum">     139 </span>                :            :         struct  reverse_factors         rcf;
+<span class="lineNum">     140 </span>                :            :         u16     atime;          /* als integration time */
+<span class="lineNum">     141 </span>                :            :         u16     arate;          /* als reporting rate */
+<span class="lineNum">     142 </span>                :            :         u16     a_max_result;   /* Max possible ADC value with current atime */
+<span class="lineNum">     143 </span>                :            :         u8      again_meas;     /* Gain used in last measurement */
+<span class="lineNum">     144 </span>                :            :         u8      again_next;     /* Next calculated gain */
+<span class="lineNum">     145 </span>                :            :         u8      pgain;
+<span class="lineNum">     146 </span>                :            :         u8      pdiode;
+<span class="lineNum">     147 </span>                :            :         u8      pdrive;
+<span class="lineNum">     148 </span>                :            :         u8      lux_persistence;
+<span class="lineNum">     149 </span>                :            :         u8      prox_persistence;
+<span class="lineNum">     150 </span>                :            : 
+<span class="lineNum">     151 </span>                :            :         u32     lux_raw;
+<span class="lineNum">     152 </span>                :            :         u32     lux;
+<span class="lineNum">     153 </span>                :            :         u16     lux_clear;
+<span class="lineNum">     154 </span>                :            :         u16     lux_ir;
+<span class="lineNum">     155 </span>                :            :         u16     lux_calib;
+<span class="lineNum">     156 </span>                :            :         u32     lux_thres_hi;
+<span class="lineNum">     157 </span>                :            :         u32     lux_thres_lo;
+<span class="lineNum">     158 </span>                :            : 
+<span class="lineNum">     159 </span>                :            :         u32     prox_thres;
+<span class="lineNum">     160 </span>                :            :         u16     prox_data;
+<span class="lineNum">     161 </span>                :            :         u16     prox_calib;
+<span class="lineNum">     162 </span>                :            : 
+<span class="lineNum">     163 </span>                :            :         char    chipname[10];
+<span class="lineNum">     164 </span>                :            :         u8      revision;
+<span class="lineNum">     165 </span>                :            : };
+<span class="lineNum">     166 </span>                :            : 
+<span class="lineNum">     167 </span>                :            : #define APDS_CALIB_SCALER               8192
+<span class="lineNum">     168 </span>                :            : #define APDS_LUX_NEUTRAL_CALIB_VALUE    (1 * APDS_CALIB_SCALER)
+<span class="lineNum">     169 </span>                :            : #define APDS_PROX_NEUTRAL_CALIB_VALUE   (1 * APDS_CALIB_SCALER)
+<span class="lineNum">     170 </span>                :            : 
+<span class="lineNum">     171 </span>                :            : #define APDS_PROX_DEF_THRES             600
+<span class="lineNum">     172 </span>                :            : #define APDS_PROX_HYSTERESIS            50
+<span class="lineNum">     173 </span>                :            : #define APDS_LUX_DEF_THRES_HI           101
+<span class="lineNum">     174 </span>                :            : #define APDS_LUX_DEF_THRES_LO           100
+<span class="lineNum">     175 </span>                :            : #define APDS_DEFAULT_PROX_PERS          1
+<span class="lineNum">     176 </span>                :            : 
+<span class="lineNum">     177 </span>                :            : #define APDS_TIMEOUT                    2000
+<span class="lineNum">     178 </span>                :            : #define APDS_STARTUP_DELAY              25000 /* us */
+<span class="lineNum">     179 </span>                :            : #define APDS_RANGE                      65535
+<span class="lineNum">     180 </span>                :            : #define APDS_PROX_RANGE                 1023
+<span class="lineNum">     181 </span>                :            : #define APDS_LUX_GAIN_LO_LIMIT          100
+<span class="lineNum">     182 </span>                :            : #define APDS_LUX_GAIN_LO_LIMIT_STRICT   25
+<span class="lineNum">     183 </span>                :            : 
+<span class="lineNum">     184 </span>                :            : #define TIMESTEP                        87 /* 2.7ms is about 87 / 32 */
+<span class="lineNum">     185 </span>                :            : #define TIME_STEP_SCALER                32
+<span class="lineNum">     186 </span>                :            : 
+<span class="lineNum">     187 </span>                :            : #define APDS_LUX_AVERAGING_TIME         50 /* tolerates 50/60Hz ripple */
+<span class="lineNum">     188 </span>                :            : #define APDS_LUX_DEFAULT_RATE           200
+<span class="lineNum">     189 </span>                :            : 
+<span class="lineNum">     190 </span>                :            : static const u8 again[] = {1, 8, 16, 120}; /* ALS gain steps */
+<span class="lineNum">     191 </span>                :            : static const u8 ir_currents[]   = {100, 50, 25, 12}; /* IRled currents in mA */
+<span class="lineNum">     192 </span>                :            : 
+<span class="lineNum">     193 </span>                :            : /* Following two tables must match i.e 10Hz rate means 1 as persistence value */
+<span class="lineNum">     194 </span>                :            : static const u16 arates_hz[] = {10, 5, 2, 1};
+<span class="lineNum">     195 </span>                :            : static const u8 apersis[] = {1, 2, 4, 5};
+<span class="lineNum">     196 </span>                :            : 
+<span class="lineNum">     197 </span>                :            : /* Regulators */
+<span class="lineNum">     198 </span>                :            : static const char reg_vcc[] = &quot;Vdd&quot;;
+<span class="lineNum">     199 </span>                :            : static const char reg_vled[] = &quot;Vled&quot;;
+<span class="lineNum">     200 </span>                :            : 
+<a name="201"><span class="lineNum">     201 </span>                :            : static int apds990x_read_byte(struct apds990x_chip *chip, u8 reg, u8 *data)</a>
+<span class="lineNum">     202 </span>                :            : {
+<span class="lineNum">     203 </span>                :<span class="lineNoCov">          0 :         struct i2c_client *client = chip-&gt;client;</span>
+<span class="lineNum">     204 </span>                :            :         s32 ret;
+<span class="lineNum">     205 </span>                :            : 
+<span class="lineNum">     206 </span>                :<span class="lineNoCov">          0 :         reg &amp;= ~APDS990x_CMD_TYPE_MASK;</span>
+<span class="lineNum">     207 </span>                :<span class="lineNoCov">          0 :         reg |= APDS990x_CMD | APDS990x_CMD_TYPE_RB;</span>
+<span class="lineNum">     208 </span>                :            : 
+<span class="lineNum">     209 </span>                :<span class="lineNoCov">          0 :         ret = i2c_smbus_read_byte_data(client, reg);</span>
+<span class="lineNum">     210 </span>                :<span class="lineNoCov">          0 :         *data = ret;</span>
+<span class="lineNum">     211 </span>                :<span class="lineNoCov">          0 :         return (int)ret;</span>
+<span class="lineNum">     212 </span>                :            : }
+<span class="lineNum">     213 </span>                :            : 
+<span class="lineNum">     214 </span>                :            : static int apds990x_read_word(struct apds990x_chip *chip, u8 reg, u16 *data)
+<span class="lineNum">     215 </span>                :            : {
+<span class="lineNum">     216 </span>                :<span class="lineNoCov">          0 :         struct i2c_client *client = chip-&gt;client;</span>
+<span class="lineNum">     217 </span>                :            :         s32 ret;
+<span class="lineNum">     218 </span>                :            : 
+<span class="lineNum">     219 </span>                :<span class="lineNoCov">          0 :         reg &amp;= ~APDS990x_CMD_TYPE_MASK;</span>
+<span class="lineNum">     220 </span>                :<span class="lineNoCov">          0 :         reg |= APDS990x_CMD | APDS990x_CMD_TYPE_INC;</span>
+<span class="lineNum">     221 </span>                :            : 
+<span class="lineNum">     222 </span>                :<span class="lineNoCov">          0 :         ret = i2c_smbus_read_word_data(client, reg);</span>
+<span class="lineNum">     223 </span>                :<span class="lineNoCov">          0 :         *data = ret;</span>
+<span class="lineNum">     224 </span>                :<span class="lineNoCov">          0 :         return (int)ret;</span>
+<a name="225"><span class="lineNum">     225 </span>                :            : }</a>
+<span class="lineNum">     226 </span>                :            : 
+<span class="lineNum">     227 </span>                :<span class="lineNoCov">          0 : static int apds990x_write_byte(struct apds990x_chip *chip, u8 reg, u8 data)</span>
+<span class="lineNum">     228 </span>                :            : {
+<span class="lineNum">     229 </span>                :<span class="lineNoCov">          0 :         struct i2c_client *client = chip-&gt;client;</span>
+<span class="lineNum">     230 </span>                :            :         s32 ret;
+<span class="lineNum">     231 </span>                :            : 
+<span class="lineNum">     232 </span>                :<span class="lineNoCov">          0 :         reg &amp;= ~APDS990x_CMD_TYPE_MASK;</span>
+<span class="lineNum">     233 </span>                :<span class="lineNoCov">          0 :         reg |= APDS990x_CMD | APDS990x_CMD_TYPE_RB;</span>
+<span class="lineNum">     234 </span>                :            : 
+<span class="lineNum">     235 </span>                :<span class="lineNoCov">          0 :         ret = i2c_smbus_write_byte_data(client, reg, data);</span>
+<span class="lineNum">     236 </span>                :<span class="lineNoCov">          0 :         return (int)ret;</span>
+<span class="lineNum">     237 </span>                :            : }
+<span class="lineNum">     238 </span>                :            : 
+<a name="239"><span class="lineNum">     239 </span>                :            : static int apds990x_write_word(struct apds990x_chip *chip, u8 reg, u16 data)</a>
+<span class="lineNum">     240 </span>                :            : {
+<span class="lineNum">     241 </span>                :<span class="lineNoCov">          0 :         struct i2c_client *client = chip-&gt;client;</span>
+<span class="lineNum">     242 </span>                :            :         s32 ret;
+<span class="lineNum">     243 </span>                :            : 
+<span class="lineNum">     244 </span>                :<span class="lineNoCov">          0 :         reg &amp;= ~APDS990x_CMD_TYPE_MASK;</span>
+<span class="lineNum">     245 </span>                :<span class="lineNoCov">          0 :         reg |= APDS990x_CMD | APDS990x_CMD_TYPE_INC;</span>
+<span class="lineNum">     246 </span>                :            : 
+<span class="lineNum">     247 </span>                :<span class="lineNoCov">          0 :         ret = i2c_smbus_write_word_data(client, reg, data);</span>
+<span class="lineNum">     248 </span>                :<span class="lineNoCov">          0 :         return (int)ret;</span>
+<span class="lineNum">     249 </span>                :            : }
+<span class="lineNum">     250 </span>                :            : 
+<span class="lineNum">     251 </span>                :            : static int apds990x_mode_on(struct apds990x_chip *chip)
+<span class="lineNum">     252 </span>                :            : {
+<a name="253"><span class="lineNum">     253 </span>                :            :         /* ALS is mandatory, proximity optional */</a>
+<span class="lineNum">     254 </span>                :            :         u8 reg = APDS990X_EN_AIEN | APDS990X_EN_PON | APDS990X_EN_AEN |
+<span class="lineNum">     255 </span>                :<span class="lineNoCov">          0 :                 APDS990X_EN_WEN;</span>
+<span class="lineNum">     256 </span>                :            : 
+<span class="lineNum">     257 </span>[<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 4 was never executed"> # </span>:<span class="lineNoCov">          0 :         if (chip-&gt;prox_en)</span>
+<span class="lineNum">         </span>            <span class="branchNoExec" title="Block containing branch 5 was never executed"> # </span>]
+<span class="lineNum">     258 </span>                :<span class="lineNoCov">          0 :                 reg |= APDS990X_EN_PIEN | APDS990X_EN_PEN;</span>
+<span class="lineNum">     259 </span>                :            : 
+<span class="lineNum">     260 </span>                :<span class="lineNoCov">          0 :         return apds990x_write_byte(chip, APDS990X_ENABLE, reg);</span>
+<a name="261"><span class="lineNum">     261 </span>                :            : }</a>
+<span class="lineNum">     262 </span>                :            : 
+<span class="lineNum">     263 </span>                :<span class="lineNoCov">          0 : static u16 apds990x_lux_to_threshold(struct apds990x_chip *chip, u32 lux)</span>
+<span class="lineNum">     264 </span>                :            : {
+<span class="lineNum">     265 </span>                :            :         u32 thres;
+<span class="lineNum">     266 </span>                :            :         u32 cpl;
+<span class="lineNum">     267 </span>                :            :         u32 ir;
+<span class="lineNum">     268 </span>                :            : 
+<span class="lineNum">     269 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (lux == 0)</span>
+<span class="lineNum">     270 </span>                :<span class="lineNoCov">          0 :                 return 0;</span>
+<span class="lineNum">     271 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         else if (lux == APDS_RANGE)</span>
+<span class="lineNum">     272 </span>                :<span class="lineNoCov">          0 :                 return APDS_RANGE;</span>
+<span class="lineNum">     273 </span>                :            : 
+<span class="lineNum">     274 </span>                :            :         /*
+<span class="lineNum">     275 </span>                :            :          * Reported LUX value is a combination of the IR and CLEAR channel
+<span class="lineNum">     276 </span>                :            :          * values. However, interrupt threshold is only for clear channel.
+<span class="lineNum">     277 </span>                :            :          * This function approximates needed HW threshold value for a given
+<span class="lineNum">     278 </span>                :            :          * LUX value in the current lightning type.
+<span class="lineNum">     279 </span>                :            :          * IR level compared to visible light varies heavily depending on the
+<span class="lineNum">     280 </span>                :            :          * source of the light
+<span class="lineNum">     281 </span>                :            :          *
+<span class="lineNum">     282 </span>                :            :          * Calculate threshold value for the next measurement period.
+<span class="lineNum">     283 </span>                :            :          * Math: threshold = lux * cpl where
+<span class="lineNum">     284 </span>                :            :          * cpl = atime * again / (glass_attenuation * device_factor)
+<span class="lineNum">     285 </span>                :            :          * (count-per-lux)
+<span class="lineNum">     286 </span>                :            :          *
+<span class="lineNum">     287 </span>                :            :          * First remove calibration. Division by four is to avoid overflow
+<span class="lineNum">     288 </span>                :            :          */
+<span class="lineNum">     289 </span>                :<span class="lineNoCov">          0 :         lux = lux * (APDS_CALIB_SCALER / 4) / (chip-&gt;lux_calib / 4);</span>
+<span class="lineNum">     290 </span>                :            : 
+<span class="lineNum">     291 </span>                :            :         /* Multiplication by 64 is to increase accuracy */
+<span class="lineNum">     292 </span>                :<span class="lineNoCov">          0 :         cpl = ((u32)chip-&gt;atime * (u32)again[chip-&gt;again_next] *</span>
+<span class="lineNum">     293 </span>                :<span class="lineNoCov">          0 :                 APDS_PARAM_SCALE * 64) / (chip-&gt;cf.ga * chip-&gt;cf.df);</span>
+<span class="lineNum">     294 </span>                :            : 
+<span class="lineNum">     295 </span>                :<span class="lineNoCov">          0 :         thres = lux * cpl / 64;</span>
+<span class="lineNum">     296 </span>                :            :         /*
+<span class="lineNum">     297 </span>                :            :          * Convert IR light from the latest result to match with
+<span class="lineNum">     298 </span>                :            :          * new gain step. This helps to adapt with the current
+<span class="lineNum">     299 </span>                :            :          * source of light.
+<span class="lineNum">     300 </span>                :            :          */
+<span class="lineNum">     301 </span>                :<span class="lineNoCov">          0 :         ir = (u32)chip-&gt;lux_ir * (u32)again[chip-&gt;again_next] /</span>
+<span class="lineNum">     302 </span>                :<span class="lineNoCov">          0 :                 (u32)again[chip-&gt;again_meas];</span>
+<span class="lineNum">     303 </span>                :            : 
+<span class="lineNum">     304 </span>                :            :         /*
+<span class="lineNum">     305 </span>                :            :          * Compensate count with IR light impact
+<span class="lineNum">     306 </span>                :            :          * IAC1 &gt; IAC2 (see apds990x_get_lux for formulas)
+<span class="lineNum">     307 </span>                :            :          */
+<span class="lineNum">     308 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (chip-&gt;lux_clear * APDS_PARAM_SCALE &gt;=</span>
+<span class="lineNum">     309 </span>                :<span class="lineNoCov">          0 :                 chip-&gt;rcf.afactor * chip-&gt;lux_ir)</span>
+<span class="lineNum">     310 </span>                :<span class="lineNoCov">          0 :                 thres = (chip-&gt;rcf.cf1 * thres + chip-&gt;rcf.irf1 * ir) /</span>
+<span class="lineNum">     311 </span>                :            :                         APDS_PARAM_SCALE;
+<span class="lineNum">     312 </span>                :            :         else
+<span class="lineNum">     313 </span>                :<span class="lineNoCov">          0 :                 thres = (chip-&gt;rcf.cf2 * thres + chip-&gt;rcf.irf2 * ir) /</span>
+<span class="lineNum">     314 </span>                :            :                         APDS_PARAM_SCALE;
+<span class="lineNum">     315 </span>                :            : 
+<span class="lineNum">     316 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (thres &gt;= chip-&gt;a_max_result)</span>
+<span class="lineNum">     317 </span>                :<span class="lineNoCov">          0 :                 thres = chip-&gt;a_max_result - 1;</span>
+<span class="lineNum">     318 </span>                :<span class="lineNoCov">          0 :         return thres;</span>
+<span class="lineNum">     319 </span>                :            : }
+<span class="lineNum">     320 </span>                :            : 
+<span class="lineNum">     321 </span>                :            : static inline int apds990x_set_atime(struct apds990x_chip *chip, u32 time_ms)
+<span class="lineNum">     322 </span>                :            : {
+<a name="323"><span class="lineNum">     323 </span>                :            :         u8 reg_value;</a>
+<span class="lineNum">     324 </span>                :            : 
+<span class="lineNum">     325 </span>                :<span class="lineNoCov">          0 :         chip-&gt;atime = time_ms;</span>
+<span class="lineNum">     326 </span>                :            :         /* Formula is specified in the data sheet */
+<span class="lineNum">     327 </span>                :<span class="lineNoCov">          0 :         reg_value = 256 - ((time_ms * TIME_STEP_SCALER) / TIMESTEP);</span>
+<span class="lineNum">     328 </span>                :            :         /* Calculate max ADC value for given integration time */
+<span class="lineNum">     329 </span>                :<span class="lineNoCov">          0 :         chip-&gt;a_max_result = (u16)(256 - reg_value) * APDS990X_TIME_TO_ADC;</span>
+<span class="lineNum">     330 </span>                :<span class="lineNoCov">          0 :         return apds990x_write_byte(chip, APDS990X_ATIME, reg_value);</span>
+<span class="lineNum">     331 </span>                :            : }
+<span class="lineNum">     332 </span>                :            : 
+<span class="lineNum">     333 </span>                :            : /* Called always with mutex locked */
+<span class="lineNum">     334 </span>                :            : static int apds990x_refresh_pthres(struct apds990x_chip *chip, int data)
+<span class="lineNum">     335 </span>                :            : {
+<span class="lineNum">     336 </span>                :            :         int ret, lo, hi;
+<span class="lineNum">     337 </span>                :            : 
+<span class="lineNum">     338 </span>                :            :         /* If the chip is not in use, don't try to access it */
+<span class="lineNum">     339 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (pm_runtime_suspended(&amp;chip-&gt;client-&gt;dev))</span>
+<span class="lineNum">     340 </span>                :<span class="lineNoCov">          0 :                 return 0;</span>
+<span class="lineNum">     341 </span>                :            : 
+<span class="lineNum">     342 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (data &lt; chip-&gt;prox_thres) {</span>
+<span class="lineNum">     343 </span>                :<span class="lineNoCov">          0 :                 lo = 0;</span>
+<span class="lineNum">     344 </span>                :<span class="lineNoCov">          0 :                 hi = chip-&gt;prox_thres;</span>
+<span class="lineNum">     345 </span>                :            :         } else {
+<span class="lineNum">     346 </span>                :<span class="lineNoCov">          0 :                 lo = chip-&gt;prox_thres - APDS_PROX_HYSTERESIS;</span>
+<span class="lineNum">     347 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :                 if (chip-&gt;prox_continuous_mode)</span>
+<span class="lineNum">     348 </span>                :<span class="lineNoCov">          0 :                         hi = chip-&gt;prox_thres;</span>
+<span class="lineNum">     349 </span>                :            :                 else
+<span class="lineNum">     350 </span>                :<span class="lineNoCov">          0 :                         hi = APDS_RANGE;</span>
+<span class="lineNum">     351 </span>                :            :         }
+<span class="lineNum">     352 </span>                :            : 
+<span class="lineNum">     353 </span>                :<span class="lineNoCov">          0 :         ret = apds990x_write_word(chip, APDS990X_PILTL, lo);</span>
+<span class="lineNum">     354 </span>                :<span class="lineNoCov">          0 :         ret |= apds990x_write_word(chip, APDS990X_PIHTL, hi);</span>
+<span class="lineNum">     355 </span>                :<span class="lineNoCov">          0 :         return ret;</span>
+<span class="lineNum">     356 </span>                :            : }
+<span class="lineNum">     357 </span>                :            : 
+<span class="lineNum">     358 </span>                :            : /* Called always with mutex locked */
+<span class="lineNum">     359 </span>                :<span class="lineNoCov">          0 : static int apds990x_refresh_athres(struct apds990x_chip *chip)</span>
+<span class="lineNum">     360 </span>                :            : {
+<span class="lineNum">     361 </span>                :            :         int ret;
+<span class="lineNum">     362 </span>                :            :         /* If the chip is not in use, don't try to access it */
+<span class="lineNum">     363 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (pm_runtime_suspended(&amp;chip-&gt;client-&gt;dev))</span>
+<span class="lineNum">     364 </span>                :<span class="lineNoCov">          0 :                 return 0;</span>
+<span class="lineNum">     365 </span>                :            : 
+<span class="lineNum">     366 </span>                :<span class="lineNoCov">          0 :         ret = apds990x_write_word(chip, APDS990X_AILTL,</span>
+<span class="lineNum">     367 </span>                :<span class="lineNoCov">          0 :                         apds990x_lux_to_threshold(chip, chip-&gt;lux_thres_lo));</span>
+<span class="lineNum">     368 </span>                :<span class="lineNoCov">          0 :         ret |= apds990x_write_word(chip, APDS990X_AIHTL,</span>
+<span class="lineNum">     369 </span>                :<span class="lineNoCov">          0 :                         apds990x_lux_to_threshold(chip, chip-&gt;lux_thres_hi));</span>
+<span class="lineNum">     370 </span>                :            : 
+<span class="lineNum">     371 </span>                :<span class="lineNoCov">          0 :         return ret;</span>
+<span class="lineNum">     372 </span>                :            : }
+<span class="lineNum">     373 </span>                :            : 
+<span class="lineNum">     374 </span>                :            : /* Called always with mutex locked */
+<span class="lineNum">     375 </span>                :<span class="lineNoCov">          0 : static void apds990x_force_a_refresh(struct apds990x_chip *chip)</span>
+<span class="lineNum">     376 </span>                :            : {
+<span class="lineNum">     377 </span>                :            :         /* This will force ALS interrupt after the next measurement. */
+<span class="lineNum">     378 </span>                :            :         apds990x_write_word(chip, APDS990X_AILTL, APDS_LUX_DEF_THRES_LO);
+<span class="lineNum">     379 </span>                :            :         apds990x_write_word(chip, APDS990X_AIHTL, APDS_LUX_DEF_THRES_HI);
+<span class="lineNum">     380 </span>                :<span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     381 </span>                :            : 
+<span class="lineNum">     382 </span>                :            : /* Called always with mutex locked */
+<span class="lineNum">     383 </span>                :<span class="lineNoCov">          0 : static void apds990x_force_p_refresh(struct apds990x_chip *chip)</span>
+<span class="lineNum">     384 </span>                :            : {
+<span class="lineNum">     385 </span>                :            :         /* This will force proximity interrupt after the next measurement. */
+<span class="lineNum">     386 </span>                :            :         apds990x_write_word(chip, APDS990X_PILTL, APDS_PROX_DEF_THRES - 1);
+<span class="lineNum">     387 </span>                :            :         apds990x_write_word(chip, APDS990X_PIHTL, APDS_PROX_DEF_THRES);
+<span class="lineNum">     388 </span>                :<span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     389 </span>                :            : 
+<span class="lineNum">     390 </span>                :            : /* Called always with mutex locked */
+<span class="lineNum">     391 </span>                :            : static int apds990x_calc_again(struct apds990x_chip *chip)
+<span class="lineNum">     392 </span>                :            : {
+<span class="lineNum">     393 </span>                :<span class="lineNoCov">          0 :         int curr_again = chip-&gt;again_meas;</span>
+<span class="lineNum">     394 </span>                :<span class="lineNoCov">          0 :         int next_again = chip-&gt;again_meas;</span>
+<span class="lineNum">     395 </span>                :<span class="lineNoCov">          0 :         int ret = 0;</span>
+<span class="lineNum">     396 </span>                :            : 
+<span class="lineNum">     397 </span>                :            :         /* Calculate suitable als gain */
+<span class="lineNum">     398 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (chip-&gt;lux_clear == chip-&gt;a_max_result)</span>
+<span class="lineNum">     399 </span>                :<span class="lineNoCov">          0 :                 next_again -= 2; /* ALS saturated. Decrease gain by 2 steps */</span>
+<span class="lineNum">     400 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         else if (chip-&gt;lux_clear &gt; chip-&gt;a_max_result / 2)</span>
+<span class="lineNum">     401 </span>                :<span class="lineNoCov">          0 :                 next_again--;</span>
+<span class="lineNum">     402 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         else if (chip-&gt;lux_clear &lt; APDS_LUX_GAIN_LO_LIMIT_STRICT)</span>
+<span class="lineNum">     403 </span>                :<span class="lineNoCov">          0 :                 next_again += 2; /* Too dark. Increase gain by 2 steps */</span>
+<span class="lineNum">     404 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         else if (chip-&gt;lux_clear &lt; APDS_LUX_GAIN_LO_LIMIT)</span>
+<span class="lineNum">     405 </span>                :<span class="lineNoCov">          0 :                 next_again++;</span>
+<span class="lineNum">     406 </span>                :            : 
+<span class="lineNum">     407 </span>                :            :         /* Limit gain to available range */
+<span class="lineNum">     408 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (next_again &lt; 0)</span>
+<span class="lineNum">     409 </span>                :<span class="lineNoCov">          0 :                 next_again = 0;</span>
+<span class="lineNum">     410 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         else if (next_again &gt; APDS990X_MAX_AGAIN)</span>
+<span class="lineNum">     411 </span>                :<span class="lineNoCov">          0 :                 next_again = APDS990X_MAX_AGAIN;</span>
+<span class="lineNum">     412 </span>                :            : 
+<span class="lineNum">     413 </span>                :            :         /* Let's check can we trust the measured result */
+<span class="lineNum">     414 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (chip-&gt;lux_clear == chip-&gt;a_max_result)</span>
+<span class="lineNum">     415 </span>                :            :                 /* Result can be totally garbage due to saturation */
+<span class="lineNum">     416 </span>                :<span class="lineNoCov">          0 :                 ret = -ERANGE;</span>
+<span class="lineNum">     417 </span>[<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :         else if (next_again != curr_again &amp;&amp;</span>
+<span class="lineNum">     418 </span>                :<span class="lineNoCov">          0 :                 chip-&gt;lux_clear &lt; APDS_LUX_GAIN_LO_LIMIT_STRICT)</span>
+<span class="lineNum">     419 </span>                :            :                 /*
+<span class="lineNum">     420 </span>                :            :                  * Gain is changed and measurement result is very small.
+<span class="lineNum">     421 </span>                :            :                  * Result can be totally garbage due to underflow
+<span class="lineNum">     422 </span>                :            :                  */
+<span class="lineNum">     423 </span>                :<span class="lineNoCov">          0 :                 ret = -ERANGE;</span>
+<span class="lineNum">     424 </span>                :            : 
+<span class="lineNum">     425 </span>                :<span class="lineNoCov">          0 :         chip-&gt;again_next = next_again;</span>
+<span class="lineNum">     426 </span>                :<span class="lineNoCov">          0 :         apds990x_write_byte(chip, APDS990X_CONTROL,</span>
+<span class="lineNum">     427 </span>                :<span class="lineNoCov">          0 :                         (chip-&gt;pdrive &lt;&lt; 6) |</span>
+<span class="lineNum">     428 </span>                :<span class="lineNoCov">          0 :                         (chip-&gt;pdiode &lt;&lt; 4) |</span>
+<span class="lineNum">     429 </span>                :<span class="lineNoCov">          0 :                         (chip-&gt;pgain &lt;&lt; 2) |</span>
+<span class="lineNum">     430 </span>                :            :                         (chip-&gt;again_next &lt;&lt; 0));
+<span class="lineNum">     431 </span>                :            : 
+<span class="lineNum">     432 </span>                :            :         /*
+<span class="lineNum">     433 </span>                :            :          * Error means bad result -&gt; re-measurement is needed. The forced
+<span class="lineNum">     434 </span>                :            :          * refresh uses fastest possible persistence setting to get result
+<span class="lineNum">     435 </span>                :            :          * as soon as possible.
+<span class="lineNum">     436 </span>                :            :          */
+<span class="lineNum">     437 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (ret &lt; 0)</span>
+<span class="lineNum">     438 </span>                :<span class="lineNoCov">          0 :                 apds990x_force_a_refresh(chip);</span>
+<span class="lineNum">     439 </span>                :            :         else
+<span class="lineNum">     440 </span>                :<span class="lineNoCov">          0 :                 apds990x_refresh_athres(chip);</span>
+<span class="lineNum">     441 </span>                :            : 
+<span class="lineNum">     442 </span>                :<span class="lineNoCov">          0 :         return ret;</span>
+<span class="lineNum">     443 </span>                :            : }
+<span class="lineNum">     444 </span>                :            : 
+<span class="lineNum">     445 </span>                :            : /* Called always with mutex locked */
+<span class="lineNum">     446 </span>                :            : static int apds990x_get_lux(struct apds990x_chip *chip, int clear, int ir)
+<span class="lineNum">     447 </span>                :            : {
+<span class="lineNum">     448 </span>                :            :         int iac, iac1, iac2; /* IR adjusted counts */
+<span class="lineNum">     449 </span>                :            :         u32 lpc; /* Lux per count */
+<span class="lineNum">     450 </span>                :            : 
+<span class="lineNum">     451 </span>                :            :         /* Formulas:
+<span class="lineNum">     452 </span>                :            :          * iac1 = CF1 * CLEAR_CH - IRF1 * IR_CH
+<span class="lineNum">     453 </span>                :            :          * iac2 = CF2 * CLEAR_CH - IRF2 * IR_CH
+<span class="lineNum">     454 </span>                :            :          */
+<span class="lineNum">     455 </span>                :<span class="lineNoCov">          0 :         iac1 = (chip-&gt;cf.cf1 * clear - chip-&gt;cf.irf1 * ir) / APDS_PARAM_SCALE;</span>
+<span class="lineNum">     456 </span>                :<span class="lineNoCov">          0 :         iac2 = (chip-&gt;cf.cf2 * clear - chip-&gt;cf.irf2 * ir) / APDS_PARAM_SCALE;</span>
+<span class="lineNum">     457 </span>                :            : 
+<span class="lineNum">     458 </span>                :<span class="lineNoCov">          0 :         iac = max(iac1, iac2);</span>
+<span class="lineNum">     459 </span>                :<span class="lineNoCov">          0 :         iac = max(iac, 0);</span>
+<span class="lineNum">     460 </span>                :            : 
+<span class="lineNum">     461 </span>                :<span class="lineNoCov">          0 :         lpc = APDS990X_LUX_OUTPUT_SCALE * (chip-&gt;cf.df * chip-&gt;cf.ga) /</span>
+<span class="lineNum">     462 </span>                :<span class="lineNoCov">          0 :                 (u32)(again[chip-&gt;again_meas] * (u32)chip-&gt;atime);</span>
+<span class="lineNum">     463 </span>                :            : 
+<span class="lineNum">     464 </span>                :<span class="lineNoCov">          0 :         return (iac * lpc) / APDS_PARAM_SCALE;</span>
+<span class="lineNum">     465 </span>                :            : }
+<span class="lineNum">     466 </span>                :            : 
+<span class="lineNum">     467 </span>                :            : static int apds990x_ack_int(struct apds990x_chip *chip, u8 mode)
+<span class="lineNum">     468 </span>                :            : {
+<span class="lineNum">     469 </span>                :<span class="lineNoCov">          0 :         struct i2c_client *client = chip-&gt;client;</span>
+<span class="lineNum">     470 </span>                :            :         s32 ret;
+<span class="lineNum">     471 </span>                :<span class="lineNoCov">          0 :         u8 reg = APDS990x_CMD | APDS990x_CMD_TYPE_SPE;</span>
+<span class="lineNum">     472 </span>                :            : 
+<span class="lineNum">     473 </span>     [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span>]:<span class="lineNoCov">          0 :         switch (mode &amp; (APDS990X_ST_AINT | APDS990X_ST_PINT)) {</span>
+<span class="lineNum">     474 </span>                :            :         case APDS990X_ST_AINT:
+<span class="lineNum">     475 </span>                :<span class="lineNoCov">          0 :                 reg |= APDS990X_INT_ACK_ALS;</span>
+<span class="lineNum">     476 </span>                :            :                 break;
+<span class="lineNum">     477 </span>                :            :         case APDS990X_ST_PINT:
+<span class="lineNum">     478 </span>                :<span class="lineNoCov">          0 :                 reg |= APDS990X_INT_ACK_PS;</span>
+<span class="lineNum">     479 </span>                :            :                 break;
+<span class="lineNum">     480 </span>                :            :         default:
+<span class="lineNum">     481 </span>                :<span class="lineNoCov">          0 :                 reg |= APDS990X_INT_ACK_BOTH;</span>
+<span class="lineNum">     482 </span>                :            :                 break;
+<span class="lineNum">     483 </span>                :            :         }
+<span class="lineNum">     484 </span>                :            : 
+<span class="lineNum">     485 </span>                :<span class="lineNoCov">          0 :         ret = i2c_smbus_read_byte_data(client, reg);</span>
+<span class="lineNum">     486 </span>                :<span class="lineNoCov">          0 :         return (int)ret;</span>
+<span class="lineNum">     487 </span>                :            : }
+<span class="lineNum">     488 </span>                :            : 
+<span class="lineNum">     489 </span>                :<span class="lineNoCov">          0 : static irqreturn_t apds990x_irq(int irq, void *data)</span>
+<span class="lineNum">     490 </span>                :            : {
+<span class="lineNum">     491 </span>                :<span class="lineNoCov">          0 :         struct apds990x_chip *chip = data;</span>
+<span class="lineNum">     492 </span>                :            :         u8 status;
+<span class="lineNum">     493 </span>                :            : 
+<span class="lineNum">     494 </span>                :            :         apds990x_read_byte(chip, APDS990X_STATUS, &amp;status);
+<span class="lineNum">     495 </span>                :<span class="lineNoCov">          0 :         apds990x_ack_int(chip, status);</span>
+<span class="lineNum">     496 </span>                :            : 
+<span class="lineNum">     497 </span>                :<span class="lineNoCov">          0 :         mutex_lock(&amp;chip-&gt;mutex);</span>
+<span class="lineNum">     498 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (!pm_runtime_suspended(&amp;chip-&gt;client-&gt;dev)) {</span>
+<span class="lineNum">     499 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :                 if (status &amp; APDS990X_ST_AINT) {</span>
+<span class="lineNum">     500 </span>                :<span class="lineNoCov">          0 :                         apds990x_read_word(chip, APDS990X_CDATAL,</span>
+<span class="lineNum">     501 </span>                :            :                                         &amp;chip-&gt;lux_clear);
+<span class="lineNum">     502 </span>                :<span class="lineNoCov">          0 :                         apds990x_read_word(chip, APDS990X_IRDATAL,</span>
+<span class="lineNum">     503 </span>                :            :                                         &amp;chip-&gt;lux_ir);
+<span class="lineNum">     504 </span>                :            :                         /* Store used gain for calculations */
+<span class="lineNum">     505 </span>                :<span class="lineNoCov">          0 :                         chip-&gt;again_meas = chip-&gt;again_next;</span>
+<span class="lineNum">     506 </span>                :            : 
+<span class="lineNum">     507 </span>                :<span class="lineNoCov">          0 :                         chip-&gt;lux_raw = apds990x_get_lux(chip,</span>
+<span class="lineNum">     508 </span>                :<span class="lineNoCov">          0 :                                                         chip-&gt;lux_clear,</span>
+<span class="lineNum">     509 </span>                :<span class="lineNoCov">          0 :                                                         chip-&gt;lux_ir);</span>
+<span class="lineNum">     510 </span>                :            : 
+<span class="lineNum">     511 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :                         if (apds990x_calc_again(chip) == 0) {</span>
+<span class="lineNum">     512 </span>                :            :                                 /* Result is valid */
+<span class="lineNum">     513 </span>                :<span class="lineNoCov">          0 :                                 chip-&gt;lux = chip-&gt;lux_raw;</span>
+<span class="lineNum">     514 </span>                :<span class="lineNoCov">          0 :                                 chip-&gt;lux_wait_fresh_res = false;</span>
+<span class="lineNum">     515 </span>                :<span class="lineNoCov">          0 :                                 wake_up(&amp;chip-&gt;wait);</span>
+<span class="lineNum">     516 </span>                :<span class="lineNoCov">          0 :                                 sysfs_notify(&amp;chip-&gt;client-&gt;dev.kobj,</span>
+<span class="lineNum">     517 </span>                :            :                                         NULL, &quot;lux0_input&quot;);
+<span class="lineNum">     518 </span>                :            :                         }
+<span class="lineNum">     519 </span>                :            :                 }
+<span class="lineNum">     520 </span>                :            : 
+<span class="lineNum">     521 </span>[<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :                 if ((status &amp; APDS990X_ST_PINT) &amp;&amp; chip-&gt;prox_en) {</span>
+<span class="lineNum">     522 </span>                :            :                         u16 clr_ch;
+<span class="lineNum">     523 </span>                :            : 
+<span class="lineNum">     524 </span>                :            :                         apds990x_read_word(chip, APDS990X_CDATAL, &amp;clr_ch);
+<span class="lineNum">     525 </span>                :            :                         /*
+<span class="lineNum">     526 </span>                :            :                          * If ALS channel is saturated at min gain,
+<span class="lineNum">     527 </span>                :            :                          * proximity gives false posivite values.
+<span class="lineNum">     528 </span>                :            :                          * Just ignore them.
+<span class="lineNum">     529 </span>                :            :                          */
+<span class="lineNum">     530 </span>  [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :                         if (chip-&gt;again_meas == 0 &amp;&amp;</span>
+<span class="lineNum">     531 </span>                :<span class="lineNoCov">          0 :                                 clr_ch == chip-&gt;a_max_result)</span>
+<span class="lineNum">     532 </span>                :<span class="lineNoCov">          0 :                                 chip-&gt;prox_data = 0;</span>
+<span class="lineNum">     533 </span>                :            :                         else
+<span class="lineNum">     534 </span>                :<span class="lineNoCov">          0 :                                 apds990x_read_word(chip,</span>
+<span class="lineNum">     535 </span>                :            :                                                 APDS990X_PDATAL,
+<span class="lineNum">     536 </span>                :            :                                                 &amp;chip-&gt;prox_data);
+<span class="lineNum">     537 </span>                :            : 
+<span class="lineNum">     538 </span>                :<span class="lineNoCov">          0 :                         apds990x_refresh_pthres(chip, chip-&gt;prox_data);</span>
+<span class="lineNum">     539 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :                         if (chip-&gt;prox_data &lt; chip-&gt;prox_thres)</span>
+<span class="lineNum">     540 </span>                :<span class="lineNoCov">          0 :                                 chip-&gt;prox_data = 0;</span>
+<span class="lineNum">     541 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :                         else if (!chip-&gt;prox_continuous_mode)</span>
+<span class="lineNum">     542 </span>                :<span class="lineNoCov">          0 :                                 chip-&gt;prox_data = APDS_PROX_RANGE;</span>
+<span class="lineNum">     543 </span>                :<span class="lineNoCov">          0 :                         sysfs_notify(&amp;chip-&gt;client-&gt;dev.kobj,</span>
+<span class="lineNum">     544 </span>                :            :                                 NULL, &quot;prox0_raw&quot;);
+<span class="lineNum">     545 </span>                :            :                 }
+<span class="lineNum">     546 </span>                :            :         }
+<span class="lineNum">     547 </span>                :<span class="lineNoCov">          0 :         mutex_unlock(&amp;chip-&gt;mutex);</span>
+<span class="lineNum">     548 </span>                :<span class="lineNoCov">          0 :         return IRQ_HANDLED;</span>
+<span class="lineNum">     549 </span>                :            : }
+<span class="lineNum">     550 </span>                :            : 
+<span class="lineNum">     551 </span>                :<span class="lineNoCov">          0 : static int apds990x_configure(struct apds990x_chip *chip)</span>
+<span class="lineNum">     552 </span>                :            : {
+<span class="lineNum">     553 </span>                :            :         /* It is recommended to use disabled mode during these operations */
+<span class="lineNum">     554 </span>                :<span class="lineNoCov">          0 :         apds990x_write_byte(chip, APDS990X_ENABLE, APDS990X_EN_DISABLE_ALL);</span>
+<span class="lineNum">     555 </span>                :            : 
+<span class="lineNum">     556 </span>                :            :         /* conversion and wait times for different state machince states */
+<span class="lineNum">     557 </span>                :<span class="lineNoCov">          0 :         apds990x_write_byte(chip, APDS990X_PTIME, APDS990X_PTIME_DEFAULT);</span>
+<span class="lineNum">     558 </span>                :<span class="lineNoCov">          0 :         apds990x_write_byte(chip, APDS990X_WTIME, APDS990X_WTIME_DEFAULT);</span>
+<span class="lineNum">     559 </span>                :            :         apds990x_set_atime(chip, APDS_LUX_AVERAGING_TIME);
+<span class="lineNum">     560 </span>                :            : 
+<span class="lineNum">     561 </span>                :<span class="lineNoCov">          0 :         apds990x_write_byte(chip, APDS990X_CONFIG, 0);</span>
+<span class="lineNum">     562 </span>                :            : 
+<span class="lineNum">     563 </span>                :            :         /* Persistence levels */
+<span class="lineNum">     564 </span>                :<span class="lineNoCov">          0 :         apds990x_write_byte(chip, APDS990X_PERS,</span>
+<span class="lineNum">     565 </span>                :            :                         (chip-&gt;lux_persistence &lt;&lt; APDS990X_APERS_SHIFT) |
+<span class="lineNum">     566 </span>                :<span class="lineNoCov">          0 :                         (chip-&gt;prox_persistence &lt;&lt; APDS990X_PPERS_SHIFT));</span>
+<span class="lineNum">     567 </span>                :            : 
+<span class="lineNum">     568 </span>                :<span class="lineNoCov">          0 :         apds990x_write_byte(chip, APDS990X_PPCOUNT, chip-&gt;pdata-&gt;ppcount);</span>
+<span class="lineNum">     569 </span>                :            : 
+<span class="lineNum">     570 </span>                :            :         /* Start with relatively small gain */
+<span class="lineNum">     571 </span>                :<span class="lineNoCov">          0 :         chip-&gt;again_meas = 1;</span>
+<span class="lineNum">     572 </span>                :<span class="lineNoCov">          0 :         chip-&gt;again_next = 1;</span>
+<span class="lineNum">     573 </span>                :<span class="lineNoCov">          0 :         apds990x_write_byte(chip, APDS990X_CONTROL,</span>
+<span class="lineNum">     574 </span>                :<span class="lineNoCov">          0 :                         (chip-&gt;pdrive &lt;&lt; 6) |</span>
+<span class="lineNum">     575 </span>                :<span class="lineNoCov">          0 :                         (chip-&gt;pdiode &lt;&lt; 4) |</span>
+<span class="lineNum">     576 </span>                :<span class="lineNoCov">          0 :                         (chip-&gt;pgain &lt;&lt; 2) |</span>
+<span class="lineNum">     577 </span>                :            :                         (chip-&gt;again_next &lt;&lt; 0));
+<span class="lineNum">     578 </span>                :<span class="lineNoCov">          0 :         return 0;</span>
+<span class="lineNum">     579 </span>                :            : }
+<span class="lineNum">     580 </span>                :            : 
+<span class="lineNum">     581 </span>                :<span class="lineNoCov">          0 : static int apds990x_detect(struct apds990x_chip *chip)</span>
+<span class="lineNum">     582 </span>                :            : {
+<span class="lineNum">     583 </span>                :<span class="lineNoCov">          0 :         struct i2c_client *client = chip-&gt;client;</span>
+<span class="lineNum">     584 </span>                :            :         int ret;
+<span class="lineNum">     585 </span>                :            :         u8 id;
+<span class="lineNum">     586 </span>                :            : 
+<span class="lineNum">     587 </span>                :<span class="lineNoCov">          0 :         ret = apds990x_read_byte(chip, APDS990X_ID, &amp;id);</span>
+<span class="lineNum">     588 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (ret &lt; 0) {</span>
+<span class="lineNum">     589 </span>                :<span class="lineNoCov">          0 :                 dev_err(&amp;client-&gt;dev, &quot;ID read failed\n&quot;);</span>
+<span class="lineNum">     590 </span>                :<span class="lineNoCov">          0 :                 return ret;</span>
+<span class="lineNum">     591 </span>                :            :         }
+<span class="lineNum">     592 </span>                :            : 
+<span class="lineNum">     593 </span>                :<span class="lineNoCov">          0 :         ret = apds990x_read_byte(chip, APDS990X_REV, &amp;chip-&gt;revision);</span>
+<span class="lineNum">     594 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (ret &lt; 0) {</span>
+<span class="lineNum">     595 </span>                :<span class="lineNoCov">          0 :                 dev_err(&amp;client-&gt;dev, &quot;REV read failed\n&quot;);</span>
+<span class="lineNum">     596 </span>                :<span class="lineNoCov">          0 :                 return ret;</span>
+<span class="lineNum">     597 </span>                :            :         }
+<span class="lineNum">     598 </span>                :            : 
+<span class="lineNum">     599 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         switch (id) {</span>
+<span class="lineNum">     600 </span>                :            :         case APDS990X_ID_0:
+<span class="lineNum">     601 </span>                :            :         case APDS990X_ID_4:
+<span class="lineNum">     602 </span>                :            :         case APDS990X_ID_29:
+<span class="lineNum">     603 </span>                :<span class="lineNoCov">          0 :                 snprintf(chip-&gt;chipname, sizeof(chip-&gt;chipname), &quot;APDS-990x&quot;);</span>
+<span class="lineNum">     604 </span>                :<span class="lineNoCov">          0 :                 break;</span>
+<span class="lineNum">     605 </span>                :            :         default:
+<span class="lineNum">     606 </span>                :<span class="lineNoCov">          0 :                 ret = -ENODEV;</span>
+<span class="lineNum">     607 </span>                :            :                 break;
+<span class="lineNum">     608 </span>                :            :         }
+<span class="lineNum">     609 </span>                :<span class="lineNoCov">          0 :         return ret;</span>
+<span class="lineNum">     610 </span>                :            : }
+<span class="lineNum">     611 </span>                :            : 
+<span class="lineNum">     612 </span>                :<span class="lineNoCov">          0 : static int apds990x_chip_on(struct apds990x_chip *chip)</span>
+<span class="lineNum">     613 </span>                :            : {
+<span class="lineNum">     614 </span>                :            :         int err;
+<span class="lineNum">     615 </span>                :            : 
+<span class="lineNum">     616 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (chip-&gt;pdata-&gt;use_regulators) {</span>
+<span class="lineNum">     617 </span>                :<span class="lineNoCov">          0 :                 err = regulator_bulk_enable(ARRAY_SIZE(chip-&gt;regs), chip-&gt;regs);</span>
+<span class="lineNum">     618 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :                 if (err &lt; 0)</span>
+<span class="lineNum">     619 </span>                :<span class="lineNoCov">          0 :                         return err;</span>
+<span class="lineNum">     620 </span>                :            :         }
+<span class="lineNum">     621 </span>                :<span class="lineNoCov">          0 :         msleep(APDS_STARTUP_DELAY / 1000 + ((APDS_STARTUP_DELAY % 1000) ? 1 : 0));</span>
+<span class="lineNum">     622 </span>                :            : 
+<span class="lineNum">     623 </span>                :            :         /* Refresh all configs in case of regulators were off */
+<span class="lineNum">     624 </span>                :<span class="lineNoCov">          0 :         chip-&gt;prox_data = 0;</span>
+<span class="lineNum">     625 </span>                :<span class="lineNoCov">          0 :         apds990x_configure(chip);</span>
+<span class="lineNum">     626 </span>                :            :         apds990x_mode_on(chip);
+<span class="lineNum">     627 </span>                :<span class="lineNoCov">          0 :         return 0;</span>
+<span class="lineNum">     628 </span>                :            : }
+<span class="lineNum">     629 </span>                :            : 
+<a name="630"><span class="lineNum">     630 </span>                :            : static int apds990x_chip_off(struct apds990x_chip *chip)</a>
+<span class="lineNum">     631 </span>                :            : {
+<span class="lineNum">     632 </span>                :<span class="lineNoCov">          0 :         apds990x_write_byte(chip, APDS990X_ENABLE, APDS990X_EN_DISABLE_ALL);</span>
+<span class="lineNum">     633 </span>[<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 4 was never executed"> # </span>:<span class="lineNoCov">          0 :         if (chip-&gt;pdata-&gt;use_regulators)</span>
+<span class="lineNum">         </span>            <span class="branchNoExec" title="Block containing branch 5 was never executed"> # </span>]
+<span class="lineNum">     634 </span>                :<span class="lineNoCov">          0 :                 regulator_bulk_disable(ARRAY_SIZE(chip-&gt;regs), chip-&gt;regs);</span>
+<span class="lineNum">     635 </span>                :<span class="lineNoCov">          0 :         return 0;</span>
+<a name="636"><span class="lineNum">     636 </span>                :            : }</a>
+<span class="lineNum">     637 </span>                :            : 
+<span class="lineNum">     638 </span>                :<span class="lineNoCov">          0 : static ssize_t apds990x_lux_show(struct device *dev,</span>
+<span class="lineNum">     639 </span>                :            :                                  struct device_attribute *attr, char *buf)
+<span class="lineNum">     640 </span>                :            : {
+<span class="lineNum">     641 </span>                :<span class="lineNoCov">          0 :         struct apds990x_chip *chip = dev_get_drvdata(dev);</span>
+<span class="lineNum">     642 </span>                :            :         ssize_t ret;
+<span class="lineNum">     643 </span>                :            :         u32 result;
+<span class="lineNum">     644 </span>                :            :         long timeout;
+<span class="lineNum">     645 </span>                :            : 
+<span class="lineNum">     646 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (pm_runtime_suspended(dev))</span>
+<span class="lineNum">     647 </span>                :<span class="lineNoCov">          0 :                 return -EIO;</span>
+<span class="lineNum">     648 </span>                :            : 
+<span class="lineNum">     649 </span>[<span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 4 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 5 was never executed"> # </span>]:<span class="lineNoCov">          0 :         timeout = wait_event_interruptible_timeout(chip-&gt;wait,</span>
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 9 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 10 was never executed"> # </span>]
+<span class="lineNum">     650 </span>                :            :                                                 !chip-&gt;lux_wait_fresh_res,
+<span class="lineNum">     651 </span>                :            :                                                 msecs_to_jiffies(APDS_TIMEOUT));
+<span class="lineNum">     652 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (!timeout)</span>
+<span class="lineNum">     653 </span>                :<span class="lineNoCov">          0 :                 return -EIO;</span>
+<span class="lineNum">     654 </span>                :            : 
+<span class="lineNum">     655 </span>                :<span class="lineNoCov">          0 :         mutex_lock(&amp;chip-&gt;mutex);</span>
+<span class="lineNum">     656 </span>                :<span class="lineNoCov">          0 :         result = (chip-&gt;lux * chip-&gt;lux_calib) / APDS_CALIB_SCALER;</span>
+<span class="lineNum">     657 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (result &gt; (APDS_RANGE * APDS990X_LUX_OUTPUT_SCALE))</span>
+<span class="lineNum">     658 </span>                :<span class="lineNoCov">          0 :                 result = APDS_RANGE * APDS990X_LUX_OUTPUT_SCALE;</span>
+<span class="lineNum">     659 </span>                :            : 
+<span class="lineNum">     660 </span>                :<span class="lineNoCov">          0 :         ret = sprintf(buf, &quot;%d.%d\n&quot;,</span>
+<span class="lineNum">     661 </span>                :            :                 result / APDS990X_LUX_OUTPUT_SCALE,
+<span class="lineNum">     662 </span>                :            :                 result % APDS990X_LUX_OUTPUT_SCALE);
+<span class="lineNum">     663 </span>                :<span class="lineNoCov">          0 :         mutex_unlock(&amp;chip-&gt;mutex);</span>
+<span class="lineNum">     664 </span>                :<span class="lineNoCov">          0 :         return ret;</span>
+<span class="lineNum">     665 </span>                :            : }
+<span class="lineNum">     666 </span>                :            : 
+<a name="667"><span class="lineNum">     667 </span>                :            : static DEVICE_ATTR(lux0_input, S_IRUGO, apds990x_lux_show, NULL);</a>
+<span class="lineNum">     668 </span>                :            : 
+<span class="lineNum">     669 </span>                :<span class="lineNoCov">          0 : static ssize_t apds990x_lux_range_show(struct device *dev,</span>
+<span class="lineNum">     670 </span>                :            :                                  struct device_attribute *attr, char *buf)
+<span class="lineNum">     671 </span>                :            : {
+<span class="lineNum">     672 </span>                :<span class="lineNoCov">          0 :         return sprintf(buf, &quot;%u\n&quot;, APDS_RANGE);</span>
+<span class="lineNum">     673 </span>                :            : }
+<span class="lineNum">     674 </span>                :            : 
+<a name="675"><span class="lineNum">     675 </span>                :            : static DEVICE_ATTR(lux0_sensor_range, S_IRUGO, apds990x_lux_range_show, NULL);</a>
+<span class="lineNum">     676 </span>                :            : 
+<span class="lineNum">     677 </span>                :<span class="lineNoCov">          0 : static ssize_t apds990x_lux_calib_format_show(struct device *dev,</span>
+<span class="lineNum">     678 </span>                :            :                                  struct device_attribute *attr, char *buf)
+<span class="lineNum">     679 </span>                :            : {
+<span class="lineNum">     680 </span>                :<span class="lineNoCov">          0 :         return sprintf(buf, &quot;%u\n&quot;, APDS_CALIB_SCALER);</span>
+<span class="lineNum">     681 </span>                :            : }
+<span class="lineNum">     682 </span>                :            : 
+<span class="lineNum">     683 </span>                :            : static DEVICE_ATTR(lux0_calibscale_default, S_IRUGO,
+<a name="684"><span class="lineNum">     684 </span>                :            :                 apds990x_lux_calib_format_show, NULL);</a>
+<span class="lineNum">     685 </span>                :            : 
+<span class="lineNum">     686 </span>                :<span class="lineNoCov">          0 : static ssize_t apds990x_lux_calib_show(struct device *dev,</span>
+<span class="lineNum">     687 </span>                :            :                                  struct device_attribute *attr, char *buf)
+<span class="lineNum">     688 </span>                :            : {
+<span class="lineNum">     689 </span>                :<span class="lineNoCov">          0 :         struct apds990x_chip *chip = dev_get_drvdata(dev);</span>
+<span class="lineNum">     690 </span>                :            : 
+<span class="lineNum">     691 </span>                :<span class="lineNoCov">          0 :         return sprintf(buf, &quot;%u\n&quot;, chip-&gt;lux_calib);</span>
+<a name="692"><span class="lineNum">     692 </span>                :            : }</a>
+<span class="lineNum">     693 </span>                :            : 
+<span class="lineNum">     694 </span>                :<span class="lineNoCov">          0 : static ssize_t apds990x_lux_calib_store(struct device *dev,</span>
+<span class="lineNum">     695 </span>                :            :                                   struct device_attribute *attr,
+<span class="lineNum">     696 </span>                :            :                                   const char *buf, size_t len)
+<span class="lineNum">     697 </span>                :            : {
+<span class="lineNum">     698 </span>                :<span class="lineNoCov">          0 :         struct apds990x_chip *chip = dev_get_drvdata(dev);</span>
+<span class="lineNum">     699 </span>                :            :         unsigned long value;
+<span class="lineNum">     700 </span>                :            : 
+<span class="lineNum">     701 </span>        [<span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (strict_strtoul(buf, 0, &amp;value))</span>
+<span class="lineNum">     702 </span>                :<span class="lineNoCov">          0 :                 return -EINVAL;</span>
+<span class="lineNum">     703 </span>                :            : 
+<span class="lineNum">     704 </span>                :            :         if (chip-&gt;lux_calib &gt; APDS_RANGE)
+<span class="lineNum">     705 </span>                :            :                 return -EINVAL;
+<span class="lineNum">     706 </span>                :            : 
+<span class="lineNum">     707 </span>                :<span class="lineNoCov">          0 :         chip-&gt;lux_calib = value;</span>
+<span class="lineNum">     708 </span>                :            : 
+<span class="lineNum">     709 </span>                :<span class="lineNoCov">          0 :         return len;</span>
+<span class="lineNum">     710 </span>                :            : }
+<span class="lineNum">     711 </span>                :            : 
+<span class="lineNum">     712 </span>                :            : static DEVICE_ATTR(lux0_calibscale, S_IRUGO | S_IWUSR, apds990x_lux_calib_show,
+<a name="713"><span class="lineNum">     713 </span>                :            :                 apds990x_lux_calib_store);</a>
+<span class="lineNum">     714 </span>                :            : 
+<span class="lineNum">     715 </span>                :<span class="lineNoCov">          0 : static ssize_t apds990x_rate_avail(struct device *dev,</span>
+<span class="lineNum">     716 </span>                :            :                                    struct device_attribute *attr, char *buf)
+<span class="lineNum">     717 </span>                :            : {
+<span class="lineNum">     718 </span>                :            :         int i;
+<span class="lineNum">     719 </span>                :<span class="lineNoCov">          0 :         int pos = 0;</span>
+<span class="lineNum">     720 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         for (i = 0; i &lt; ARRAY_SIZE(arates_hz); i++)</span>
+<span class="lineNum">     721 </span>                :<span class="lineNoCov">          0 :                 pos += sprintf(buf + pos, &quot;%d &quot;, arates_hz[i]);</span>
+<span class="lineNum">     722 </span>                :<span class="lineNoCov">          0 :         sprintf(buf + pos - 1, &quot;\n&quot;);</span>
+<span class="lineNum">     723 </span>                :<span class="lineNoCov">          0 :         return pos;</span>
+<a name="724"><span class="lineNum">     724 </span>                :            : }</a>
+<span class="lineNum">     725 </span>                :            : 
+<span class="lineNum">     726 </span>                :<span class="lineNoCov">          0 : static ssize_t apds990x_rate_show(struct device *dev,</span>
+<span class="lineNum">     727 </span>                :            :                                    struct device_attribute *attr, char *buf)
+<span class="lineNum">     728 </span>                :            : {
+<span class="lineNum">     729 </span>                :<span class="lineNoCov">          0 :         struct apds990x_chip *chip =  dev_get_drvdata(dev);</span>
+<span class="lineNum">     730 </span>                :<span class="lineNoCov">          0 :         return sprintf(buf, &quot;%d\n&quot;, chip-&gt;arate);</span>
+<a name="731"><span class="lineNum">     731 </span>                :            : }</a>
+<span class="lineNum">     732 </span>                :            : 
+<span class="lineNum">     733 </span>                :<span class="lineNoCov">          0 : static int apds990x_set_arate(struct apds990x_chip *chip, int rate)</span>
+<span class="lineNum">     734 </span>                :            : {
+<span class="lineNum">     735 </span>                :            :         int i;
+<span class="lineNum">     736 </span>                :            : 
+<span class="lineNum">     737 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         for (i = 0; i &lt; ARRAY_SIZE(arates_hz); i++)</span>
+<span class="lineNum">     738 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :                 if (rate &gt;= arates_hz[i])</span>
+<span class="lineNum">     739 </span>                :            :                         break;
+<span class="lineNum">     740 </span>                :            : 
+<span class="lineNum">     741 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (i == ARRAY_SIZE(arates_hz))</span>
+<span class="lineNum">     742 </span>                :<span class="lineNoCov">          0 :                 return -EINVAL;</span>
+<span class="lineNum">     743 </span>                :            : 
+<span class="lineNum">     744 </span>                :            :         /* Pick up corresponding persistence value */
+<span class="lineNum">     745 </span>                :<span class="lineNoCov">          0 :         chip-&gt;lux_persistence = apersis[i];</span>
+<span class="lineNum">     746 </span>                :<span class="lineNoCov">          0 :         chip-&gt;arate = arates_hz[i];</span>
+<span class="lineNum">     747 </span>                :            : 
+<span class="lineNum">     748 </span>                :            :         /* If the chip is not in use, don't try to access it */
+<span class="lineNum">     749 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (pm_runtime_suspended(&amp;chip-&gt;client-&gt;dev))</span>
+<span class="lineNum">     750 </span>                :<span class="lineNoCov">          0 :                 return 0;</span>
+<span class="lineNum">     751 </span>                :            : 
+<span class="lineNum">     752 </span>                :            :         /* Persistence levels */
+<span class="lineNum">     753 </span>                :<span class="lineNoCov">          0 :         return apds990x_write_byte(chip, APDS990X_PERS,</span>
+<span class="lineNum">     754 </span>                :            :                         (chip-&gt;lux_persistence &lt;&lt; APDS990X_APERS_SHIFT) |
+<span class="lineNum">     755 </span>                :<span class="lineNoCov">          0 :                         (chip-&gt;prox_persistence &lt;&lt; APDS990X_PPERS_SHIFT));</span>
+<a name="756"><span class="lineNum">     756 </span>                :            : }</a>
+<span class="lineNum">     757 </span>                :            : 
+<span class="lineNum">     758 </span>                :<span class="lineNoCov">          0 : static ssize_t apds990x_rate_store(struct device *dev,</span>
+<span class="lineNum">     759 </span>                :            :                                   struct device_attribute *attr,
+<span class="lineNum">     760 </span>                :            :                                   const char *buf, size_t len)
+<span class="lineNum">     761 </span>                :            : {
+<span class="lineNum">     762 </span>                :<span class="lineNoCov">          0 :         struct apds990x_chip *chip =  dev_get_drvdata(dev);</span>
+<span class="lineNum">     763 </span>                :            :         unsigned long value;
+<span class="lineNum">     764 </span>                :            :         int ret;
+<span class="lineNum">     765 </span>                :            : 
+<span class="lineNum">     766 </span>        [<span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (strict_strtoul(buf, 0, &amp;value))</span>
+<span class="lineNum">     767 </span>                :<span class="lineNoCov">          0 :                 return -EINVAL;</span>
+<span class="lineNum">     768 </span>                :            : 
+<span class="lineNum">     769 </span>                :<span class="lineNoCov">          0 :         mutex_lock(&amp;chip-&gt;mutex);</span>
+<span class="lineNum">     770 </span>                :<span class="lineNoCov">          0 :         ret = apds990x_set_arate(chip, value);</span>
+<span class="lineNum">     771 </span>                :<span class="lineNoCov">          0 :         mutex_unlock(&amp;chip-&gt;mutex);</span>
+<span class="lineNum">     772 </span>                :            : 
+<span class="lineNum">     773 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (ret &lt; 0)</span>
+<span class="lineNum">     774 </span>                :<span class="lineNoCov">          0 :                 return ret;</span>
+<span class="lineNum">     775 </span>                :<span class="lineNoCov">          0 :         return len;</span>
+<span class="lineNum">     776 </span>                :            : }
+<span class="lineNum">     777 </span>                :            : 
+<span class="lineNum">     778 </span>                :            : static DEVICE_ATTR(lux0_rate_avail, S_IRUGO, apds990x_rate_avail, NULL);
+<span class="lineNum">     779 </span>                :            : 
+<span class="lineNum">     780 </span>                :            : static DEVICE_ATTR(lux0_rate, S_IRUGO | S_IWUSR, apds990x_rate_show,
+<a name="781"><span class="lineNum">     781 </span>                :            :                                                  apds990x_rate_store);</a>
+<span class="lineNum">     782 </span>                :            : 
+<span class="lineNum">     783 </span>                :<span class="lineNoCov">          0 : static ssize_t apds990x_prox_show(struct device *dev,</span>
+<span class="lineNum">     784 </span>                :            :                                  struct device_attribute *attr, char *buf)
+<span class="lineNum">     785 </span>                :            : {
+<span class="lineNum">     786 </span>                :            :         ssize_t ret;
+<span class="lineNum">     787 </span>                :<span class="lineNoCov">          0 :         struct apds990x_chip *chip =  dev_get_drvdata(dev);</span>
+<span class="lineNum">     788 </span>[<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (pm_runtime_suspended(dev) || !chip-&gt;prox_en)</span>
+<span class="lineNum">     789 </span>                :<span class="lineNoCov">          0 :                 return -EIO;</span>
+<span class="lineNum">     790 </span>                :            : 
+<span class="lineNum">     791 </span>                :<span class="lineNoCov">          0 :         mutex_lock(&amp;chip-&gt;mutex);</span>
+<span class="lineNum">     792 </span>                :<span class="lineNoCov">          0 :         ret = sprintf(buf, &quot;%d\n&quot;, chip-&gt;prox_data);</span>
+<span class="lineNum">     793 </span>                :<span class="lineNoCov">          0 :         mutex_unlock(&amp;chip-&gt;mutex);</span>
+<span class="lineNum">     794 </span>                :<span class="lineNoCov">          0 :         return ret;</span>
+<span class="lineNum">     795 </span>                :            : }
+<span class="lineNum">     796 </span>                :            : 
+<a name="797"><span class="lineNum">     797 </span>                :            : static DEVICE_ATTR(prox0_raw, S_IRUGO, apds990x_prox_show, NULL);</a>
+<span class="lineNum">     798 </span>                :            : 
+<span class="lineNum">     799 </span>                :<span class="lineNoCov">          0 : static ssize_t apds990x_prox_range_show(struct device *dev,</span>
+<span class="lineNum">     800 </span>                :            :                                  struct device_attribute *attr, char *buf)
+<span class="lineNum">     801 </span>                :            : {
+<span class="lineNum">     802 </span>                :<span class="lineNoCov">          0 :         return sprintf(buf, &quot;%u\n&quot;, APDS_PROX_RANGE);</span>
+<span class="lineNum">     803 </span>                :            : }
+<span class="lineNum">     804 </span>                :            : 
+<a name="805"><span class="lineNum">     805 </span>                :            : static DEVICE_ATTR(prox0_sensor_range, S_IRUGO, apds990x_prox_range_show, NULL);</a>
+<span class="lineNum">     806 </span>                :            : 
+<span class="lineNum">     807 </span>                :<span class="lineNoCov">          0 : static ssize_t apds990x_prox_enable_show(struct device *dev,</span>
+<span class="lineNum">     808 </span>                :            :                                    struct device_attribute *attr, char *buf)
+<span class="lineNum">     809 </span>                :            : {
+<span class="lineNum">     810 </span>                :<span class="lineNoCov">          0 :         struct apds990x_chip *chip =  dev_get_drvdata(dev);</span>
+<span class="lineNum">     811 </span>                :<span class="lineNoCov">          0 :         return sprintf(buf, &quot;%d\n&quot;, chip-&gt;prox_en);</span>
+<span class="lineNum">     812 </span>                :            : }
+<span class="lineNum">     813 </span>                :            : 
+<span class="lineNum">     814 </span>                :<span class="lineNoCov">          0 : static ssize_t apds990x_prox_enable_store(struct device *dev,</span>
+<span class="lineNum">     815 </span>                :            :                                   struct device_attribute *attr,
+<span class="lineNum">     816 </span>                :            :                                   const char *buf, size_t len)
+<span class="lineNum">     817 </span>                :            : {
+<span class="lineNum">     818 </span>                :<span class="lineNoCov">          0 :         struct apds990x_chip *chip =  dev_get_drvdata(dev);</span>
+<span class="lineNum">     819 </span>                :            :         unsigned long value;
+<span class="lineNum">     820 </span>                :            : 
+<span class="lineNum">     821 </span>        [<span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (strict_strtoul(buf, 0, &amp;value))</span>
+<span class="lineNum">     822 </span>                :<span class="lineNoCov">          0 :                 return -EINVAL;</span>
+<span class="lineNum">     823 </span>                :            : 
+<span class="lineNum">     824 </span>                :<span class="lineNoCov">          0 :         mutex_lock(&amp;chip-&gt;mutex);</span>
+<span class="lineNum">     825 </span>                :            : 
+<span class="lineNum">     826 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (!chip-&gt;prox_en)</span>
+<span class="lineNum">     827 </span>                :<span class="lineNoCov">          0 :                 chip-&gt;prox_data = 0;</span>
+<span class="lineNum">     828 </span>                :            : 
+<span class="lineNum">     829 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (value)</span>
+<span class="lineNum">     830 </span>                :<span class="lineNoCov">          0 :                 chip-&gt;prox_en++;</span>
+<span class="lineNum">     831 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         else if (chip-&gt;prox_en &gt; 0)</span>
+<span class="lineNum">     832 </span>                :<span class="lineNoCov">          0 :                 chip-&gt;prox_en--;</span>
+<span class="lineNum">     833 </span>                :            : 
+<span class="lineNum">     834 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (!pm_runtime_suspended(dev))</span>
+<span class="lineNum">     835 </span>                :            :                 apds990x_mode_on(chip);
+<span class="lineNum">     836 </span>                :<span class="lineNoCov">          0 :         mutex_unlock(&amp;chip-&gt;mutex);</span>
+<span class="lineNum">     837 </span>                :<span class="lineNoCov">          0 :         return len;</span>
+<span class="lineNum">     838 </span>                :            : }
+<span class="lineNum">     839 </span>                :            : 
+<span class="lineNum">     840 </span>                :            : static DEVICE_ATTR(prox0_raw_en, S_IRUGO | S_IWUSR, apds990x_prox_enable_show,
+<span class="lineNum">     841 </span>                :            :                                                    apds990x_prox_enable_store);
+<span class="lineNum">     842 </span>                :            : 
+<a name="843"><span class="lineNum">     843 </span>                :            : static const char reporting_modes[][9] = {&quot;trigger&quot;, &quot;periodic&quot;};</a>
+<span class="lineNum">     844 </span>                :            : 
+<span class="lineNum">     845 </span>                :<span class="lineNoCov">          0 : static ssize_t apds990x_prox_reporting_mode_show(struct device *dev,</span>
+<span class="lineNum">     846 </span>                :            :                                    struct device_attribute *attr, char *buf)
+<span class="lineNum">     847 </span>                :            : {
+<span class="lineNum">     848 </span>                :<span class="lineNoCov">          0 :         struct apds990x_chip *chip =  dev_get_drvdata(dev);</span>
+<span class="lineNum">     849 </span>                :<span class="lineNoCov">          0 :         return sprintf(buf, &quot;%s\n&quot;,</span>
+<span class="lineNum">     850 </span>                :<span class="lineNoCov">          0 :                 reporting_modes[!!chip-&gt;prox_continuous_mode]);</span>
+<a name="851"><span class="lineNum">     851 </span>                :            : }</a>
+<span class="lineNum">     852 </span>                :            : 
+<span class="lineNum">     853 </span>                :<span class="lineNoCov">          0 : static ssize_t apds990x_prox_reporting_mode_store(struct device *dev,</span>
+<span class="lineNum">     854 </span>                :            :                                   struct device_attribute *attr,
+<span class="lineNum">     855 </span>                :            :                                   const char *buf, size_t len)
+<span class="lineNum">     856 </span>                :            : {
+<span class="lineNum">     857 </span>                :<span class="lineNoCov">          0 :         struct apds990x_chip *chip =  dev_get_drvdata(dev);</span>
+<span class="lineNum">     858 </span>                :            : 
+<span class="lineNum">     859 </span>        [<span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (sysfs_streq(buf, reporting_modes[0]))</span>
+<span class="lineNum">     860 </span>                :<span class="lineNoCov">          0 :                 chip-&gt;prox_continuous_mode = 0;</span>
+<span class="lineNum">     861 </span>        [<span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span>]:<span class="lineNoCov">          0 :         else if (sysfs_streq(buf, reporting_modes[1]))</span>
+<span class="lineNum">     862 </span>                :<span class="lineNoCov">          0 :                 chip-&gt;prox_continuous_mode = 1;</span>
+<span class="lineNum">     863 </span>                :            :         else
+<span class="lineNum">     864 </span>                :<span class="lineNoCov">          0 :                 return -EINVAL;</span>
+<span class="lineNum">     865 </span>                :<span class="lineNoCov">          0 :         return len;</span>
+<span class="lineNum">     866 </span>                :            : }
+<span class="lineNum">     867 </span>                :            : 
+<span class="lineNum">     868 </span>                :            : static DEVICE_ATTR(prox0_reporting_mode, S_IRUGO | S_IWUSR,
+<span class="lineNum">     869 </span>                :            :                 apds990x_prox_reporting_mode_show,
+<a name="870"><span class="lineNum">     870 </span>                :            :                 apds990x_prox_reporting_mode_store);</a>
+<span class="lineNum">     871 </span>                :            : 
+<span class="lineNum">     872 </span>                :<span class="lineNoCov">          0 : static ssize_t apds990x_prox_reporting_avail_show(struct device *dev,</span>
+<span class="lineNum">     873 </span>                :            :                                    struct device_attribute *attr, char *buf)
+<span class="lineNum">     874 </span>                :            : {
+<span class="lineNum">     875 </span>                :<span class="lineNoCov">          0 :         return sprintf(buf, &quot;%s %s\n&quot;, reporting_modes[0], reporting_modes[1]);</span>
+<span class="lineNum">     876 </span>                :            : }
+<span class="lineNum">     877 </span>                :            : 
+<span class="lineNum">     878 </span>                :            : static DEVICE_ATTR(prox0_reporting_mode_avail, S_IRUGO | S_IWUSR,
+<span class="lineNum">     879 </span>                :            :                 apds990x_prox_reporting_avail_show, NULL);
+<a name="880"><span class="lineNum">     880 </span>                :            : </a>
+<span class="lineNum">     881 </span>                :            : 
+<span class="lineNum">     882 </span>                :<span class="lineNoCov">          0 : static ssize_t apds990x_lux_thresh_above_show(struct device *dev,</span>
+<span class="lineNum">     883 </span>                :            :                                    struct device_attribute *attr, char *buf)
+<span class="lineNum">     884 </span>                :            : {
+<span class="lineNum">     885 </span>                :<span class="lineNoCov">          0 :         struct apds990x_chip *chip =  dev_get_drvdata(dev);</span>
+<span class="lineNum">     886 </span>                :<span class="lineNoCov">          0 :         return sprintf(buf, &quot;%d\n&quot;, chip-&gt;lux_thres_hi);</span>
+<a name="887"><span class="lineNum">     887 </span>                :            : }</a>
+<span class="lineNum">     888 </span>                :            : 
+<span class="lineNum">     889 </span>                :<span class="lineNoCov">          0 : static ssize_t apds990x_lux_thresh_below_show(struct device *dev,</span>
+<span class="lineNum">     890 </span>                :            :                                    struct device_attribute *attr, char *buf)
+<span class="lineNum">     891 </span>                :            : {
+<span class="lineNum">     892 </span>                :<span class="lineNoCov">          0 :         struct apds990x_chip *chip =  dev_get_drvdata(dev);</span>
+<span class="lineNum">     893 </span>                :<span class="lineNoCov">          0 :         return sprintf(buf, &quot;%d\n&quot;, chip-&gt;lux_thres_lo);</span>
+<a name="894"><span class="lineNum">     894 </span>                :            : }</a>
+<span class="lineNum">     895 </span>                :            : 
+<span class="lineNum">     896 </span>                :<span class="lineNoCov">          0 : static ssize_t apds990x_set_lux_thresh(struct apds990x_chip *chip, u32 *target,</span>
+<span class="lineNum">     897 </span>                :            :                                 const char *buf)
+<span class="lineNum">     898 </span>                :            : {
+<span class="lineNum">     899 </span>                :<span class="lineNoCov">          0 :         int ret = 0;</span>
+<span class="lineNum">     900 </span>                :            :         unsigned long thresh;
+<span class="lineNum">     901 </span>                :            : 
+<span class="lineNum">     902 </span>        [<span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (strict_strtoul(buf, 0, &amp;thresh))</span>
+<span class="lineNum">     903 </span>                :<span class="lineNoCov">          0 :                 return -EINVAL;</span>
+<span class="lineNum">     904 </span>                :            : 
+<span class="lineNum">     905 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (thresh &gt; APDS_RANGE)</span>
+<span class="lineNum">     906 </span>                :<span class="lineNoCov">          0 :                 return -EINVAL;</span>
+<span class="lineNum">     907 </span>                :            : 
+<span class="lineNum">     908 </span>                :<span class="lineNoCov">          0 :         mutex_lock(&amp;chip-&gt;mutex);</span>
+<span class="lineNum">     909 </span>                :<span class="lineNoCov">          0 :         *target = thresh;</span>
+<span class="lineNum">     910 </span>                :            :         /*
+<span class="lineNum">     911 </span>                :            :          * Don't update values in HW if we are still waiting for
+<span class="lineNum">     912 </span>                :            :          * first interrupt to come after device handle open call.
+<span class="lineNum">     913 </span>                :            :          */
+<span class="lineNum">     914 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (!chip-&gt;lux_wait_fresh_res)</span>
+<span class="lineNum">     915 </span>                :<span class="lineNoCov">          0 :                 apds990x_refresh_athres(chip);</span>
+<span class="lineNum">     916 </span>                :<span class="lineNoCov">          0 :         mutex_unlock(&amp;chip-&gt;mutex);</span>
+<span class="lineNum">     917 </span>                :<span class="lineNoCov">          0 :         return ret;</span>
+<span class="lineNum">     918 </span>                :            : 
+<a name="919"><span class="lineNum">     919 </span>                :            : }</a>
+<span class="lineNum">     920 </span>                :            : 
+<span class="lineNum">     921 </span>                :<span class="lineNoCov">          0 : static ssize_t apds990x_lux_thresh_above_store(struct device *dev,</span>
+<span class="lineNum">     922 </span>                :            :                                   struct device_attribute *attr,
+<span class="lineNum">     923 </span>                :            :                                   const char *buf, size_t len)
+<span class="lineNum">     924 </span>                :            : {
+<span class="lineNum">     925 </span>                :<span class="lineNoCov">          0 :         struct apds990x_chip *chip =  dev_get_drvdata(dev);</span>
+<span class="lineNum">     926 </span>                :<span class="lineNoCov">          0 :         int ret = apds990x_set_lux_thresh(chip, &amp;chip-&gt;lux_thres_hi, buf);</span>
+<span class="lineNum">     927 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (ret &lt; 0)</span>
+<span class="lineNum">     928 </span>                :<span class="lineNoCov">          0 :                 return ret;</span>
+<span class="lineNum">     929 </span>                :<span class="lineNoCov">          0 :         return len;</span>
+<a name="930"><span class="lineNum">     930 </span>                :            : }</a>
+<span class="lineNum">     931 </span>                :            : 
+<span class="lineNum">     932 </span>                :<span class="lineNoCov">          0 : static ssize_t apds990x_lux_thresh_below_store(struct device *dev,</span>
+<span class="lineNum">     933 </span>                :            :                                   struct device_attribute *attr,
+<span class="lineNum">     934 </span>                :            :                                   const char *buf, size_t len)
+<span class="lineNum">     935 </span>                :            : {
+<span class="lineNum">     936 </span>                :<span class="lineNoCov">          0 :         struct apds990x_chip *chip =  dev_get_drvdata(dev);</span>
+<span class="lineNum">     937 </span>                :<span class="lineNoCov">          0 :         int ret = apds990x_set_lux_thresh(chip, &amp;chip-&gt;lux_thres_lo, buf);</span>
+<span class="lineNum">     938 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (ret &lt; 0)</span>
+<span class="lineNum">     939 </span>                :<span class="lineNoCov">          0 :                 return ret;</span>
+<span class="lineNum">     940 </span>                :<span class="lineNoCov">          0 :         return len;</span>
+<span class="lineNum">     941 </span>                :            : }
+<span class="lineNum">     942 </span>                :            : 
+<span class="lineNum">     943 </span>                :            : static DEVICE_ATTR(lux0_thresh_above_value, S_IRUGO | S_IWUSR,
+<span class="lineNum">     944 </span>                :            :                 apds990x_lux_thresh_above_show,
+<span class="lineNum">     945 </span>                :            :                 apds990x_lux_thresh_above_store);
+<span class="lineNum">     946 </span>                :            : 
+<span class="lineNum">     947 </span>                :            : static DEVICE_ATTR(lux0_thresh_below_value, S_IRUGO | S_IWUSR,
+<span class="lineNum">     948 </span>                :            :                 apds990x_lux_thresh_below_show,
+<a name="949"><span class="lineNum">     949 </span>                :            :                 apds990x_lux_thresh_below_store);</a>
+<span class="lineNum">     950 </span>                :            : 
+<span class="lineNum">     951 </span>                :<span class="lineNoCov">          0 : static ssize_t apds990x_prox_threshold_show(struct device *dev,</span>
+<span class="lineNum">     952 </span>                :            :                                    struct device_attribute *attr, char *buf)
+<span class="lineNum">     953 </span>                :            : {
+<span class="lineNum">     954 </span>                :<span class="lineNoCov">          0 :         struct apds990x_chip *chip =  dev_get_drvdata(dev);</span>
+<span class="lineNum">     955 </span>                :<span class="lineNoCov">          0 :         return sprintf(buf, &quot;%d\n&quot;, chip-&gt;prox_thres);</span>
+<a name="956"><span class="lineNum">     956 </span>                :            : }</a>
+<span class="lineNum">     957 </span>                :            : 
+<span class="lineNum">     958 </span>                :<span class="lineNoCov">          0 : static ssize_t apds990x_prox_threshold_store(struct device *dev,</span>
+<span class="lineNum">     959 </span>                :            :                                   struct device_attribute *attr,
+<span class="lineNum">     960 </span>                :            :                                   const char *buf, size_t len)
+<span class="lineNum">     961 </span>                :            : {
+<span class="lineNum">     962 </span>                :<span class="lineNoCov">          0 :         struct apds990x_chip *chip =  dev_get_drvdata(dev);</span>
+<span class="lineNum">     963 </span>                :            :         unsigned long value;
+<span class="lineNum">     964 </span>                :            : 
+<span class="lineNum">     965 </span>        [<span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (strict_strtoul(buf, 0, &amp;value))</span>
+<span class="lineNum">     966 </span>                :<span class="lineNoCov">          0 :                 return -EINVAL;</span>
+<span class="lineNum">     967 </span>                :            : 
+<span class="lineNum">     968 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if ((value &gt; APDS_RANGE) || (value == 0) ||</span>
+<span class="lineNum">     969 </span>                :            :                 (value &lt; APDS_PROX_HYSTERESIS))
+<span class="lineNum">     970 </span>                :<span class="lineNoCov">          0 :                 return -EINVAL;</span>
+<span class="lineNum">     971 </span>                :            : 
+<span class="lineNum">     972 </span>                :<span class="lineNoCov">          0 :         mutex_lock(&amp;chip-&gt;mutex);</span>
+<span class="lineNum">     973 </span>                :<span class="lineNoCov">          0 :         chip-&gt;prox_thres = value;</span>
+<span class="lineNum">     974 </span>                :            : 
+<span class="lineNum">     975 </span>                :<span class="lineNoCov">          0 :         apds990x_force_p_refresh(chip);</span>
+<span class="lineNum">     976 </span>                :<span class="lineNoCov">          0 :         mutex_unlock(&amp;chip-&gt;mutex);</span>
+<span class="lineNum">     977 </span>                :<span class="lineNoCov">          0 :         return len;</span>
+<span class="lineNum">     978 </span>                :            : }
+<span class="lineNum">     979 </span>                :            : 
+<span class="lineNum">     980 </span>                :            : static DEVICE_ATTR(prox0_thresh_above_value, S_IRUGO | S_IWUSR,
+<span class="lineNum">     981 </span>                :            :                 apds990x_prox_threshold_show,
+<a name="982"><span class="lineNum">     982 </span>                :            :                 apds990x_prox_threshold_store);</a>
+<span class="lineNum">     983 </span>                :            : 
+<span class="lineNum">     984 </span>                :<span class="lineNoCov">          0 : static ssize_t apds990x_power_state_show(struct device *dev,</span>
+<span class="lineNum">     985 </span>                :            :                                    struct device_attribute *attr, char *buf)
+<span class="lineNum">     986 </span>                :            : {
+<span class="lineNum">     987 </span>                :<span class="lineNoCov">          0 :         return sprintf(buf, &quot;%d\n&quot;, !pm_runtime_suspended(dev));</span>
+<span class="lineNum">     988 </span>                :            :         return 0;
+<a name="989"><span class="lineNum">     989 </span>                :            : }</a>
+<span class="lineNum">     990 </span>                :            : 
+<span class="lineNum">     991 </span>                :<span class="lineNoCov">          0 : static ssize_t apds990x_power_state_store(struct device *dev,</span>
+<span class="lineNum">     992 </span>                :            :                                   struct device_attribute *attr,
+<span class="lineNum">     993 </span>                :            :                                   const char *buf, size_t len)
+<span class="lineNum">     994 </span>                :            : {
+<span class="lineNum">     995 </span>                :<span class="lineNoCov">          0 :         struct apds990x_chip *chip =  dev_get_drvdata(dev);</span>
+<span class="lineNum">     996 </span>                :            :         unsigned long value;
+<span class="lineNum">     997 </span>                :            : 
+<span class="lineNum">     998 </span>        [<span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (strict_strtoul(buf, 0, &amp;value))</span>
+<span class="lineNum">     999 </span>                :<span class="lineNoCov">          0 :                 return -EINVAL;</span>
+<span class="lineNum">    1000 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (value) {</span>
+<span class="lineNum">    1001 </span>                :            :                 pm_runtime_get_sync(dev);
+<span class="lineNum">    1002 </span>                :<span class="lineNoCov">          0 :                 mutex_lock(&amp;chip-&gt;mutex);</span>
+<span class="lineNum">    1003 </span>                :<span class="lineNoCov">          0 :                 chip-&gt;lux_wait_fresh_res = true;</span>
+<span class="lineNum">    1004 </span>                :<span class="lineNoCov">          0 :                 apds990x_force_a_refresh(chip);</span>
+<span class="lineNum">    1005 </span>                :<span class="lineNoCov">          0 :                 apds990x_force_p_refresh(chip);</span>
+<span class="lineNum">    1006 </span>                :<span class="lineNoCov">          0 :                 mutex_unlock(&amp;chip-&gt;mutex);</span>
+<span class="lineNum">    1007 </span>                :            :         } else {
+<span class="lineNum">    1008 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :                 if (!pm_runtime_suspended(dev))</span>
+<span class="lineNum">    1009 </span>                :            :                         pm_runtime_put(dev);
+<span class="lineNum">    1010 </span>                :            :         }
+<span class="lineNum">    1011 </span>                :<span class="lineNoCov">          0 :         return len;</span>
+<span class="lineNum">    1012 </span>                :            : }
+<span class="lineNum">    1013 </span>                :            : 
+<span class="lineNum">    1014 </span>                :            : static DEVICE_ATTR(power_state, S_IRUGO | S_IWUSR,
+<span class="lineNum">    1015 </span>                :            :                 apds990x_power_state_show,
+<a name="1016"><span class="lineNum">    1016 </span>                :            :                 apds990x_power_state_store);</a>
+<span class="lineNum">    1017 </span>                :            : 
+<span class="lineNum">    1018 </span>                :<span class="lineNoCov">          0 : static ssize_t apds990x_chip_id_show(struct device *dev,</span>
+<span class="lineNum">    1019 </span>                :            :                                    struct device_attribute *attr, char *buf)
+<span class="lineNum">    1020 </span>                :            : {
+<span class="lineNum">    1021 </span>                :<span class="lineNoCov">          0 :         struct apds990x_chip *chip =  dev_get_drvdata(dev);</span>
+<span class="lineNum">    1022 </span>                :<span class="lineNoCov">          0 :         return sprintf(buf, &quot;%s %d\n&quot;, chip-&gt;chipname, chip-&gt;revision);</span>
+<span class="lineNum">    1023 </span>                :            : }
+<span class="lineNum">    1024 </span>                :            : 
+<span class="lineNum">    1025 </span>                :            : static DEVICE_ATTR(chip_id, S_IRUGO, apds990x_chip_id_show, NULL);
+<span class="lineNum">    1026 </span>                :            : 
+<span class="lineNum">    1027 </span>                :            : static struct attribute *sysfs_attrs_ctrl[] = {
+<span class="lineNum">    1028 </span>                :            :         &amp;dev_attr_lux0_calibscale.attr,
+<span class="lineNum">    1029 </span>                :            :         &amp;dev_attr_lux0_calibscale_default.attr,
+<span class="lineNum">    1030 </span>                :            :         &amp;dev_attr_lux0_input.attr,
+<span class="lineNum">    1031 </span>                :            :         &amp;dev_attr_lux0_sensor_range.attr,
+<span class="lineNum">    1032 </span>                :            :         &amp;dev_attr_lux0_rate.attr,
+<span class="lineNum">    1033 </span>                :            :         &amp;dev_attr_lux0_rate_avail.attr,
+<span class="lineNum">    1034 </span>                :            :         &amp;dev_attr_lux0_thresh_above_value.attr,
+<span class="lineNum">    1035 </span>                :            :         &amp;dev_attr_lux0_thresh_below_value.attr,
+<span class="lineNum">    1036 </span>                :            :         &amp;dev_attr_prox0_raw_en.attr,
+<span class="lineNum">    1037 </span>                :            :         &amp;dev_attr_prox0_raw.attr,
+<span class="lineNum">    1038 </span>                :            :         &amp;dev_attr_prox0_sensor_range.attr,
+<span class="lineNum">    1039 </span>                :            :         &amp;dev_attr_prox0_thresh_above_value.attr,
+<span class="lineNum">    1040 </span>                :            :         &amp;dev_attr_prox0_reporting_mode.attr,
+<span class="lineNum">    1041 </span>                :            :         &amp;dev_attr_prox0_reporting_mode_avail.attr,
+<span class="lineNum">    1042 </span>                :            :         &amp;dev_attr_chip_id.attr,
+<span class="lineNum">    1043 </span>                :            :         &amp;dev_attr_power_state.attr,
+<span class="lineNum">    1044 </span>                :            :         NULL
+<span class="lineNum">    1045 </span>                :            : };
+<span class="lineNum">    1046 </span>                :            : 
+<span class="lineNum">    1047 </span>                :            : static struct attribute_group apds990x_attribute_group[] = {
+<span class="lineNum">    1048 </span>                :            :         {.attrs = sysfs_attrs_ctrl },
+<span class="lineNum">    1049 </span>                :            : };
+<span class="lineNum">    1050 </span>                :            : 
+<span class="lineNum">    1051 </span>                :<span class="lineNoCov">          0 : static int __devinit apds990x_probe(struct i2c_client *client,</span>
+<span class="lineNum">    1052 </span>                :            :                                 const struct i2c_device_id *id)
+<span class="lineNum">    1053 </span>                :            : {
+<span class="lineNum">    1054 </span>                :            :         struct apds990x_chip *chip;
+<span class="lineNum">    1055 </span>                :            :         int err;
+<span class="lineNum">    1056 </span>                :            : 
+<span class="lineNum">    1057 </span>                :<span class="lineNoCov">          0 :         chip = kzalloc(sizeof *chip, GFP_KERNEL);</span>
+<span class="lineNum">    1058 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (!chip)</span>
+<span class="lineNum">    1059 </span>                :<span class="lineNoCov">          0 :                 return -ENOMEM;</span>
+<span class="lineNum">    1060 </span>                :            : 
+<span class="lineNum">    1061 </span>                :            :         i2c_set_clientdata(client, chip);
+<span class="lineNum">    1062 </span>                :<span class="lineNoCov">          0 :         chip-&gt;client  = client;</span>
+<span class="lineNum">    1063 </span>                :            : 
+<span class="lineNum">    1064 </span>                :<span class="lineNoCov">          0 :         init_waitqueue_head(&amp;chip-&gt;wait);</span>
+<span class="lineNum">    1065 </span>                :<span class="lineNoCov">          0 :         mutex_init(&amp;chip-&gt;mutex);</span>
+<span class="lineNum">    1066 </span>                :<span class="lineNoCov">          0 :         chip-&gt;pdata  = client-&gt;dev.platform_data;</span>
+<span class="lineNum">    1067 </span>                :            : 
+<span class="lineNum">    1068 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (chip-&gt;pdata == NULL) {</span>
+<span class="lineNum">    1069 </span>                :<span class="lineNoCov">          0 :                 dev_err(&amp;client-&gt;dev, &quot;platform data is mandatory\n&quot;);</span>
+<span class="lineNum">    1070 </span>                :<span class="lineNoCov">          0 :                 err = -EINVAL;</span>
+<span class="lineNum">    1071 </span>                :<span class="lineNoCov">          0 :                 goto fail1;</span>
+<span class="lineNum">    1072 </span>                :            :         }
+<span class="lineNum">    1073 </span>                :            : 
+<span class="lineNum">    1074 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (chip-&gt;pdata-&gt;cf.ga == 0) {</span>
+<span class="lineNum">    1075 </span>                :            :                 /* set uncovered sensor default parameters */
+<span class="lineNum">    1076 </span>                :<span class="lineNoCov">          0 :                 chip-&gt;cf.ga = 1966; /* 0.48 * APDS_PARAM_SCALE */</span>
+<span class="lineNum">    1077 </span>                :<span class="lineNoCov">          0 :                 chip-&gt;cf.cf1 = 4096; /* 1.00 * APDS_PARAM_SCALE */</span>
+<span class="lineNum">    1078 </span>                :<span class="lineNoCov">          0 :                 chip-&gt;cf.irf1 = 9134; /* 2.23 * APDS_PARAM_SCALE */</span>
+<span class="lineNum">    1079 </span>                :<span class="lineNoCov">          0 :                 chip-&gt;cf.cf2 = 2867; /* 0.70 * APDS_PARAM_SCALE */</span>
+<span class="lineNum">    1080 </span>                :<span class="lineNoCov">          0 :                 chip-&gt;cf.irf2 = 5816; /* 1.42 * APDS_PARAM_SCALE */</span>
+<span class="lineNum">    1081 </span>                :<span class="lineNoCov">          0 :                 chip-&gt;cf.df = 52;</span>
+<span class="lineNum">    1082 </span>                :            :         } else {
+<span class="lineNum">    1083 </span>                :<span class="lineNoCov">          0 :                 chip-&gt;cf = chip-&gt;pdata-&gt;cf;</span>
+<span class="lineNum">    1084 </span>                :            :         }
+<span class="lineNum">    1085 </span>                :            : 
+<span class="lineNum">    1086 </span>                :            :         /* precalculate inverse chip factors for threshold control */
+<span class="lineNum">    1087 </span>                :<span class="lineNoCov">          0 :         chip-&gt;rcf.afactor =</span>
+<span class="lineNum">    1088 </span>                :<span class="lineNoCov">          0 :                 (chip-&gt;cf.irf1 - chip-&gt;cf.irf2) * APDS_PARAM_SCALE /</span>
+<span class="lineNum">    1089 </span>                :<span class="lineNoCov">          0 :                 (chip-&gt;cf.cf1 - chip-&gt;cf.cf2);</span>
+<span class="lineNum">    1090 </span>                :<span class="lineNoCov">          0 :         chip-&gt;rcf.cf1 = APDS_PARAM_SCALE * APDS_PARAM_SCALE /</span>
+<span class="lineNum">    1091 </span>                :            :                 chip-&gt;cf.cf1;
+<span class="lineNum">    1092 </span>                :<span class="lineNoCov">          0 :         chip-&gt;rcf.irf1 = chip-&gt;cf.irf1 * APDS_PARAM_SCALE /</span>
+<span class="lineNum">    1093 </span>                :            :                 chip-&gt;cf.cf1;
+<span class="lineNum">    1094 </span>                :<span class="lineNoCov">          0 :         chip-&gt;rcf.cf2 = APDS_PARAM_SCALE * APDS_PARAM_SCALE /</span>
+<span class="lineNum">    1095 </span>                :            :                 chip-&gt;cf.cf2;
+<span class="lineNum">    1096 </span>                :<span class="lineNoCov">          0 :         chip-&gt;rcf.irf2 = chip-&gt;cf.irf2 * APDS_PARAM_SCALE /</span>
+<span class="lineNum">    1097 </span>                :            :                 chip-&gt;cf.cf2;
+<span class="lineNum">    1098 </span>                :            : 
+<span class="lineNum">    1099 </span>                :            :         /* Set something to start with */
+<span class="lineNum">    1100 </span>                :<span class="lineNoCov">          0 :         chip-&gt;lux_thres_hi = APDS_LUX_DEF_THRES_HI;</span>
+<span class="lineNum">    1101 </span>                :<span class="lineNoCov">          0 :         chip-&gt;lux_thres_lo = APDS_LUX_DEF_THRES_LO;</span>
+<span class="lineNum">    1102 </span>                :<span class="lineNoCov">          0 :         chip-&gt;lux_calib = APDS_LUX_NEUTRAL_CALIB_VALUE;</span>
+<span class="lineNum">    1103 </span>                :            : 
+<span class="lineNum">    1104 </span>                :<span class="lineNoCov">          0 :         chip-&gt;prox_thres = APDS_PROX_DEF_THRES;</span>
+<span class="lineNum">    1105 </span>                :<span class="lineNoCov">          0 :         chip-&gt;pdrive = chip-&gt;pdata-&gt;pdrive;</span>
+<span class="lineNum">    1106 </span>                :<span class="lineNoCov">          0 :         chip-&gt;pdiode = APDS_PDIODE_IR;</span>
+<span class="lineNum">    1107 </span>                :<span class="lineNoCov">          0 :         chip-&gt;pgain = APDS_PGAIN_1X;</span>
+<span class="lineNum">    1108 </span>                :<span class="lineNoCov">          0 :         chip-&gt;prox_calib = APDS_PROX_NEUTRAL_CALIB_VALUE;</span>
+<span class="lineNum">    1109 </span>                :<span class="lineNoCov">          0 :         chip-&gt;prox_persistence = APDS_DEFAULT_PROX_PERS;</span>
+<span class="lineNum">    1110 </span>                :<span class="lineNoCov">          0 :         chip-&gt;prox_continuous_mode = false;</span>
+<span class="lineNum">    1111 </span>                :            : 
+<span class="lineNum">    1112 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (chip-&gt;pdata-&gt;use_regulators) {</span>
+<span class="lineNum">    1113 </span>                :<span class="lineNoCov">          0 :                 chip-&gt;regs[0].supply = reg_vcc;</span>
+<span class="lineNum">    1114 </span>                :<span class="lineNoCov">          0 :                 chip-&gt;regs[1].supply = reg_vled;</span>
+<span class="lineNum">    1115 </span>                :            : 
+<span class="lineNum">    1116 </span>                :<span class="lineNoCov">          0 :                 err = regulator_bulk_get(&amp;client-&gt;dev,</span>
+<span class="lineNum">    1117 </span>                :            :                                  ARRAY_SIZE(chip-&gt;regs), chip-&gt;regs);
+<span class="lineNum">    1118 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :                 if (err &lt; 0) {</span>
+<span class="lineNum">    1119 </span>                :<span class="lineNoCov">          0 :                         dev_err(&amp;client-&gt;dev, &quot;Cannot get regulators\n&quot;);</span>
+<span class="lineNum">    1120 </span>                :<span class="lineNoCov">          0 :                         goto fail1;</span>
+<span class="lineNum">    1121 </span>                :            :                 }
+<span class="lineNum">    1122 </span>                :            : 
+<span class="lineNum">    1123 </span>                :<span class="lineNoCov">          0 :                 err = regulator_bulk_enable(ARRAY_SIZE(chip-&gt;regs), chip-&gt;regs);</span>
+<span class="lineNum">    1124 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :                 if (err &lt; 0) {</span>
+<span class="lineNum">    1125 </span>                :<span class="lineNoCov">          0 :                         dev_err(&amp;client-&gt;dev, &quot;Cannot enable regulators\n&quot;);</span>
+<span class="lineNum">    1126 </span>                :<span class="lineNoCov">          0 :                         goto fail2;</span>
+<span class="lineNum">    1127 </span>                :            :                 }
+<span class="lineNum">    1128 </span>                :            :         }
+<span class="lineNum">    1129 </span>                :            : 
+<span class="lineNum">    1130 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (chip-&gt;pdata-&gt;setup_resources) {</span>
+<span class="lineNum">    1131 </span>                :<span class="lineNoCov">          0 :                 err = chip-&gt;pdata-&gt;setup_resources();</span>
+<span class="lineNum">    1132 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :                 if (err) {</span>
+<span class="lineNum">    1133 </span>                :<span class="lineNoCov">          0 :                         err = -EINVAL;</span>
+<span class="lineNum">    1134 </span>                :<span class="lineNoCov">          0 :                         goto fail3;</span>
+<span class="lineNum">    1135 </span>                :            :                 }
+<span class="lineNum">    1136 </span>                :            :         }
+<span class="lineNum">    1137 </span>                :            : 
+<span class="lineNum">    1138 </span>                :<span class="lineNoCov">          0 :         msleep(APDS_STARTUP_DELAY / 1000 + ((APDS_STARTUP_DELAY % 1000) ? 1 : 0));</span>
+<span class="lineNum">    1139 </span>                :            : 
+<span class="lineNum">    1140 </span>                :<span class="lineNoCov">          0 :         err = apds990x_detect(chip);</span>
+<span class="lineNum">    1141 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (err &lt; 0) {</span>
+<span class="lineNum">    1142 </span>                :<span class="lineNoCov">          0 :                 dev_err(&amp;client-&gt;dev, &quot;APDS990X not found\n&quot;);</span>
+<span class="lineNum">    1143 </span>                :<span class="lineNoCov">          0 :                 goto fail3;</span>
+<span class="lineNum">    1144 </span>                :            :         }
+<span class="lineNum">    1145 </span>                :            : 
+<span class="lineNum">    1146 </span>                :<span class="lineNoCov">          0 :         pm_runtime_set_active(&amp;client-&gt;dev);</span>
+<span class="lineNum">    1147 </span>                :            : 
+<span class="lineNum">    1148 </span>                :<span class="lineNoCov">          0 :         apds990x_configure(chip);</span>
+<span class="lineNum">    1149 </span>                :<span class="lineNoCov">          0 :         apds990x_set_arate(chip, APDS_LUX_DEFAULT_RATE);</span>
+<span class="lineNum">    1150 </span>                :            :         apds990x_mode_on(chip);
+<span class="lineNum">    1151 </span>                :            : 
+<span class="lineNum">    1152 </span>                :<span class="lineNoCov">          0 :         pm_runtime_enable(&amp;client-&gt;dev);</span>
+<span class="lineNum">    1153 </span>                :            : 
+<span class="lineNum">    1154 </span>                :<span class="lineNoCov">          0 :         err = sysfs_create_group(&amp;chip-&gt;client-&gt;dev.kobj,</span>
+<span class="lineNum">    1155 </span>                :            :                                 apds990x_attribute_group);
+<span class="lineNum">    1156 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (err &lt; 0) {</span>
+<span class="lineNum">    1157 </span>                :<span class="lineNoCov">          0 :                 dev_err(&amp;chip-&gt;client-&gt;dev, &quot;Sysfs registration failed\n&quot;);</span>
+<span class="lineNum">    1158 </span>                :<span class="lineNoCov">          0 :                 goto fail4;</span>
+<span class="lineNum">    1159 </span>                :            :         }
+<span class="lineNum">    1160 </span>                :            : 
+<span class="lineNum">    1161 </span>                :<span class="lineNoCov">          0 :         err = request_threaded_irq(client-&gt;irq, NULL,</span>
+<span class="lineNum">    1162 </span>                :            :                                 apds990x_irq,
+<span class="lineNum">    1163 </span>                :            :                                 IRQF_TRIGGER_FALLING | IRQF_TRIGGER_LOW |
+<span class="lineNum">    1164 </span>                :            :                                 IRQF_ONESHOT,
+<span class="lineNum">    1165 </span>                :            :                                 &quot;apds990x&quot;, chip);
+<span class="lineNum">    1166 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (err) {</span>
+<span class="lineNum">    1167 </span>                :<span class="lineNoCov">          0 :                 dev_err(&amp;client-&gt;dev, &quot;could not get IRQ %d\n&quot;,</span>
+<span class="lineNum">    1168 </span>                :            :                         client-&gt;irq);
+<span class="lineNum">    1169 </span>                :<span class="lineNoCov">          0 :                 goto fail5;</span>
+<span class="lineNum">    1170 </span>                :            :         }
+<span class="lineNum">    1171 </span>                :<span class="lineNoCov">          0 :         return err;</span>
+<span class="lineNum">    1172 </span>                :            : fail5:
+<span class="lineNum">    1173 </span>                :<span class="lineNoCov">          0 :         sysfs_remove_group(&amp;chip-&gt;client-&gt;dev.kobj,</span>
+<span class="lineNum">    1174 </span>                :            :                         &amp;apds990x_attribute_group[0]);
+<span class="lineNum">    1175 </span>                :            : fail4:
+<span class="lineNum">    1176 </span>[<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (chip-&gt;pdata &amp;&amp; chip-&gt;pdata-&gt;release_resources)</span>
+<span class="lineNum">    1177 </span>                :<span class="lineNoCov">          0 :                 chip-&gt;pdata-&gt;release_resources();</span>
+<span class="lineNum">    1178 </span>                :            : fail3:
+<span class="lineNum">    1179 </span>[<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (chip-&gt;pdata &amp;&amp; chip-&gt;pdata-&gt;use_regulators)</span>
+<span class="lineNum">    1180 </span>                :<span class="lineNoCov">          0 :                 regulator_bulk_disable(ARRAY_SIZE(chip-&gt;regs), chip-&gt;regs);</span>
+<span class="lineNum">    1181 </span>                :            : fail2:
+<span class="lineNum">    1182 </span>[<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (chip-&gt;pdata &amp;&amp; chip-&gt;pdata-&gt;use_regulators)</span>
+<span class="lineNum">    1183 </span>                :<span class="lineNoCov">          0 :                 regulator_bulk_free(ARRAY_SIZE(chip-&gt;regs), chip-&gt;regs);</span>
+<span class="lineNum">    1184 </span>                :            : fail1:
+<span class="lineNum">    1185 </span>                :<span class="lineNoCov">          0 :         kfree(chip);</span>
+<span class="lineNum">    1186 </span>                :<span class="lineNoCov">          0 :         return err;</span>
+<span class="lineNum">    1187 </span>                :            : }
+<span class="lineNum">    1188 </span>                :            : 
+<span class="lineNum">    1189 </span>                :<span class="lineNoCov">          0 : static int __devexit apds990x_remove(struct i2c_client *client)</span>
+<span class="lineNum">    1190 </span>                :            : {
+<span class="lineNum">    1191 </span>                :<span class="lineNoCov">          0 :         struct apds990x_chip *chip = i2c_get_clientdata(client);</span>
+<span class="lineNum">    1192 </span>                :            : 
+<span class="lineNum">    1193 </span>                :<span class="lineNoCov">          0 :         free_irq(client-&gt;irq, chip);</span>
+<span class="lineNum">    1194 </span>                :<span class="lineNoCov">          0 :         sysfs_remove_group(&amp;chip-&gt;client-&gt;dev.kobj,</span>
+<span class="lineNum">    1195 </span>                :            :                         apds990x_attribute_group);
+<span class="lineNum">    1196 </span>                :            : 
+<span class="lineNum">    1197 </span>  [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (chip-&gt;pdata &amp;&amp; chip-&gt;pdata-&gt;release_resources)</span>
+<span class="lineNum">    1198 </span>                :<span class="lineNoCov">          0 :                 chip-&gt;pdata-&gt;release_resources();</span>
+<span class="lineNum">    1199 </span>                :            : 
+<span class="lineNum">    1200 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (!pm_runtime_suspended(&amp;client-&gt;dev))</span>
+<span class="lineNum">    1201 </span>                :            :                 apds990x_chip_off(chip);
+<span class="lineNum">    1202 </span>                :            : 
+<span class="lineNum">    1203 </span>                :<span class="lineNoCov">          0 :         pm_runtime_disable(&amp;client-&gt;dev);</span>
+<span class="lineNum">    1204 </span>                :<span class="lineNoCov">          0 :         pm_runtime_set_suspended(&amp;client-&gt;dev);</span>
+<span class="lineNum">    1205 </span>                :            : 
+<span class="lineNum">    1206 </span>  [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (chip-&gt;pdata &amp;&amp; chip-&gt;pdata-&gt;use_regulators)</span>
+<span class="lineNum">    1207 </span>                :<span class="lineNoCov">          0 :                 regulator_bulk_free(ARRAY_SIZE(chip-&gt;regs), chip-&gt;regs);</span>
+<span class="lineNum">    1208 </span>                :            : 
+<span class="lineNum">    1209 </span>                :<span class="lineNoCov">          0 :         kfree(chip);</span>
+<span class="lineNum">    1210 </span>                :<span class="lineNoCov">          0 :         return 0;</span>
+<span class="lineNum">    1211 </span>                :            : }
+<span class="lineNum">    1212 </span>                :            : 
+<span class="lineNum">    1213 </span>                :            : #ifdef CONFIG_PM
+<span class="lineNum">    1214 </span>                :<span class="lineNoCov">          0 : static int apds990x_suspend(struct device *dev)</span>
+<span class="lineNum">    1215 </span>                :            : {
+<span class="lineNum">    1216 </span>                :<span class="lineNoCov">          0 :         struct i2c_client *client = container_of(dev, struct i2c_client, dev);</span>
+<span class="lineNum">    1217 </span>                :<span class="lineNoCov">          0 :         struct apds990x_chip *chip = i2c_get_clientdata(client);</span>
+<span class="lineNum">    1218 </span>                :            : 
+<span class="lineNum">    1219 </span>                :            :         apds990x_chip_off(chip);
+<span class="lineNum">    1220 </span>                :<span class="lineNoCov">          0 :         return 0;</span>
+<a name="1221"><span class="lineNum">    1221 </span>                :            : }</a>
+<span class="lineNum">    1222 </span>                :            : 
+<span class="lineNum">    1223 </span>                :<span class="lineNoCov">          0 : static int apds990x_resume(struct device *dev)</span>
+<span class="lineNum">    1224 </span>                :            : {
+<span class="lineNum">    1225 </span>                :<span class="lineNoCov">          0 :         struct i2c_client *client = container_of(dev, struct i2c_client, dev);</span>
+<span class="lineNum">    1226 </span>                :<span class="lineNoCov">          0 :         struct apds990x_chip *chip = i2c_get_clientdata(client);</span>
+<span class="lineNum">    1227 </span>                :            : 
+<span class="lineNum">    1228 </span>                :            :         /*
+<span class="lineNum">    1229 </span>                :            :          * If we were enabled at suspend time, it is expected
+<span class="lineNum">    1230 </span>                :            :          * everything works nice and smoothly. Chip_on is enough
+<span class="lineNum">    1231 </span>                :            :          */
+<span class="lineNum">    1232 </span>                :<span class="lineNoCov">          0 :         apds990x_chip_on(chip);</span>
+<span class="lineNum">    1233 </span>                :            : 
+<span class="lineNum">    1234 </span>                :<span class="lineNoCov">          0 :         return 0;</span>
+<span class="lineNum">    1235 </span>                :            : }
+<span class="lineNum">    1236 </span>                :            : #else
+<span class="lineNum">    1237 </span>                :            : #define apds990x_suspend  NULL
+<span class="lineNum">    1238 </span>                :            : #define apds990x_resume   NULL
+<span class="lineNum">    1239 </span>                :            : #define apds990x_shutdown NULL
+<span class="lineNum">    1240 </span>                :            : #endif
+<span class="lineNum">    1241 </span>                :            : 
+<span class="lineNum">    1242 </span>                :            : #ifdef CONFIG_PM_RUNTIME
+<span class="lineNum">    1243 </span>                :<span class="lineNoCov">          0 : static int apds990x_runtime_suspend(struct device *dev)</span>
+<span class="lineNum">    1244 </span>                :            : {
+<span class="lineNum">    1245 </span>                :<span class="lineNoCov">          0 :         struct i2c_client *client = container_of(dev, struct i2c_client, dev);</span>
+<span class="lineNum">    1246 </span>                :<span class="lineNoCov">          0 :         struct apds990x_chip *chip = i2c_get_clientdata(client);</span>
+<span class="lineNum">    1247 </span>                :            : 
+<span class="lineNum">    1248 </span>                :            :         apds990x_chip_off(chip);
+<span class="lineNum">    1249 </span>                :<span class="lineNoCov">          0 :         return 0;</span>
+<a name="1250"><span class="lineNum">    1250 </span>                :            : }</a>
+<span class="lineNum">    1251 </span>                :            : 
+<span class="lineNum">    1252 </span>                :<span class="lineNoCov">          0 : static int apds990x_runtime_resume(struct device *dev)</span>
+<span class="lineNum">    1253 </span>                :            : {
+<span class="lineNum">    1254 </span>                :<span class="lineNoCov">          0 :         struct i2c_client *client = container_of(dev, struct i2c_client, dev);</span>
+<span class="lineNum">    1255 </span>                :<span class="lineNoCov">          0 :         struct apds990x_chip *chip = i2c_get_clientdata(client);</span>
+<span class="lineNum">    1256 </span>                :            : 
+<span class="lineNum">    1257 </span>                :<span class="lineNoCov">          0 :         apds990x_chip_on(chip);</span>
+<span class="lineNum">    1258 </span>                :<span class="lineNoCov">          0 :         return 0;</span>
+<span class="lineNum">    1259 </span>                :            : }
+<span class="lineNum">    1260 </span>                :            : 
+<span class="lineNum">    1261 </span>                :            : #endif
+<span class="lineNum">    1262 </span>                :            : 
+<span class="lineNum">    1263 </span>                :            : static const struct i2c_device_id apds990x_id[] = {
+<span class="lineNum">    1264 </span>                :            :         {&quot;apds990x&quot;, 0 },
+<span class="lineNum">    1265 </span>                :            :         {&quot;qpdst900&quot;, 0 },
+<span class="lineNum">    1266 </span>                :            :         {}
+<span class="lineNum">    1267 </span>                :            : };
+<span class="lineNum">    1268 </span>                :            : 
+<span class="lineNum">    1269 </span>                :            : MODULE_DEVICE_TABLE(i2c, apds990x_id);
+<span class="lineNum">    1270 </span>                :            : 
+<span class="lineNum">    1271 </span>                :            : static const struct dev_pm_ops apds990x_pm_ops = {
+<span class="lineNum">    1272 </span>                :            :         SET_SYSTEM_SLEEP_PM_OPS(apds990x_suspend, apds990x_resume)
+<span class="lineNum">    1273 </span>                :            :         SET_RUNTIME_PM_OPS(apds990x_runtime_suspend,
+<span class="lineNum">    1274 </span>                :            :                         apds990x_runtime_resume,
+<span class="lineNum">    1275 </span>                :            :                         NULL)
+<span class="lineNum">    1276 </span>                :            : };
+<span class="lineNum">    1277 </span>                :            : 
+<span class="lineNum">    1278 </span>                :            : static struct i2c_driver apds990x_driver = {
+<span class="lineNum">    1279 </span>                :            :         .driver  = {
+<span class="lineNum">    1280 </span>                :            :                 .name   = &quot;apds990x&quot;,
+<span class="lineNum">    1281 </span>                :            :                 .owner  = THIS_MODULE,
+<span class="lineNum">    1282 </span>                :            :                 .pm     = &amp;apds990x_pm_ops,
+<span class="lineNum">    1283 </span>                :            :         },
+<span class="lineNum">    1284 </span>                :            :         .probe    = apds990x_probe,
+<span class="lineNum">    1285 </span>                :            :         .remove   = __devexit_p(apds990x_remove),
+<span class="lineNum">    1286 </span>                :            :         .id_table = apds990x_id,
+<a name="1287"><span class="lineNum">    1287 </span>                :            : };</a>
+<span class="lineNum">    1288 </span>                :            : 
+<span class="lineNum">    1289 </span>                :<span class="lineCov">          1 : static int __init apds990x_init(void)</span>
+<span class="lineNum">    1290 </span>                :            : {
+<span class="lineNum">    1291 </span>                :<span class="lineCov">          1 :         return i2c_add_driver(&amp;apds990x_driver);</span>
+<a name="1292"><span class="lineNum">    1292 </span>                :            : }</a>
+<span class="lineNum">    1293 </span>                :            : 
+<span class="lineNum">    1294 </span>                :<span class="lineNoCov">          0 : static void __exit apds990x_exit(void)</span>
+<span class="lineNum">    1295 </span>                :            : {
+<span class="lineNum">    1296 </span>                :<span class="lineNoCov">          0 :         i2c_del_driver(&amp;apds990x_driver);</span>
+<span class="lineNum">    1297 </span>                :<span class="lineNoCov">          0 : }</span>
+<span class="lineNum">    1298 </span>                :            : 
+<span class="lineNum">    1299 </span>                :            : MODULE_DESCRIPTION(&quot;APDS990X combined ALS and proximity sensor&quot;);
+<span class="lineNum">    1300 </span>                :            : MODULE_AUTHOR(&quot;Samu Onkalo, Nokia Corporation&quot;);
+<span class="lineNum">    1301 </span>                :            : MODULE_LICENSE(&quot;GPL v2&quot;);
+<span class="lineNum">    1302 </span>                :            : 
+<span class="lineNum">    1303 </span>                :            : module_init(apds990x_init);
+<span class="lineNum">    1304 </span>                :            : module_exit(apds990x_exit);
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.8</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

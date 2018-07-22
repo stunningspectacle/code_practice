@@ -1,0 +1,4 @@
+F {send_err} {senderr.c:9}
+C {send_err} {senderr.c:24} {send_fd}
+C {send_err} {senderr.c:24} {writen}
+C {send_err} {senderr.c:24} {strlen}

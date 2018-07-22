@@ -1,0 +1,5 @@
+F {open_max} {openmax.c:17}
+C {open_max} {openmax.c:29} {err_sys}
+C {open_max} {openmax.c:29} {__errno_location}
+C {open_max} {openmax.c:29} {sysconf}
+C {open_max} {openmax.c:29} {__errno_location}

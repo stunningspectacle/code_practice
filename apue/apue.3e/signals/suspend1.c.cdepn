@@ -1,0 +1,20 @@
+F {sig_int} {suspend1.c:53}
+C {sig_int} {suspend1.c:56} {pr_mask}
+F {main} {suspend1.c:6}
+C {main} {suspend1.c:56} {exit}
+C {main} {suspend1.c:56} {pr_mask}
+C {main} {suspend1.c:56} {err_sys}
+C {main} {suspend1.c:56} {sigprocmask}
+C {main} {suspend1.c:56} {pr_mask}
+C {main} {suspend1.c:56} {err_sys}
+C {main} {suspend1.c:56} {sigsuspend}
+C {main} {suspend1.c:56} {pr_mask}
+C {main} {suspend1.c:56} {err_sys}
+C {main} {suspend1.c:56} {sigprocmask}
+C {main} {suspend1.c:56} {sigaddset}
+C {main} {suspend1.c:56} {sigemptyset}
+C {main} {suspend1.c:56} {sigaddset}
+C {main} {suspend1.c:56} {sigemptyset}
+C {main} {suspend1.c:56} {err_sys}
+C {main} {suspend1.c:56} {signal}
+C {main} {suspend1.c:56} {pr_mask}

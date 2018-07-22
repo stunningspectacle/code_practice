@@ -1,0 +1,271 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+  <title>LCOV - test.info - drivers/misc/uid_stat.c</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">drivers/misc</a> - uid_stat.c<span style="font-size: 80%;"> (source / <a href="uid_stat.c.func.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">test.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntry">74</td>
+            <td class="headerCovTableEntryLo">5.4 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2011-05-12</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntryLo">14.3 %</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="headerItem">Branches:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">18</td>
+            <td class="headerCovTableEntryLo">5.6 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">           Branch data     Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>                :            : /* drivers/misc/uid_stat.c</a>
+<span class="lineNum">       2 </span>                :            :  *
+<span class="lineNum">       3 </span>                :            :  * Copyright (C) 2008 - 2009 Google, Inc.
+<span class="lineNum">       4 </span>                :            :  *
+<span class="lineNum">       5 </span>                :            :  * This software is licensed under the terms of the GNU General Public
+<span class="lineNum">       6 </span>                :            :  * License version 2, as published by the Free Software Foundation, and
+<span class="lineNum">       7 </span>                :            :  * may be copied, distributed, and modified under those terms.
+<span class="lineNum">       8 </span>                :            :  *
+<span class="lineNum">       9 </span>                :            :  * This program is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>                :            :  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>                :            :  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>                :            :  * GNU General Public License for more details.
+<span class="lineNum">      13 </span>                :            :  *
+<span class="lineNum">      14 </span>                :            :  */
+<span class="lineNum">      15 </span>                :            : 
+<span class="lineNum">      16 </span>                :            : #include &lt;asm/atomic.h&gt;
+<span class="lineNum">      17 </span>                :            : 
+<span class="lineNum">      18 </span>                :            : #include &lt;linux/err.h&gt;
+<span class="lineNum">      19 </span>                :            : #include &lt;linux/init.h&gt;
+<span class="lineNum">      20 </span>                :            : #include &lt;linux/kernel.h&gt;
+<span class="lineNum">      21 </span>                :            : #include &lt;linux/list.h&gt;
+<span class="lineNum">      22 </span>                :            : #include &lt;linux/proc_fs.h&gt;
+<span class="lineNum">      23 </span>                :            : #include &lt;linux/slab.h&gt;
+<span class="lineNum">      24 </span>                :            : #include &lt;linux/spinlock.h&gt;
+<span class="lineNum">      25 </span>                :            : #include &lt;linux/stat.h&gt;
+<span class="lineNum">      26 </span>                :            : #include &lt;linux/uid_stat.h&gt;
+<span class="lineNum">      27 </span>                :            : #include &lt;net/activity_stats.h&gt;
+<span class="lineNum">      28 </span>                :            : 
+<span class="lineNum">      29 </span>                :            : static DEFINE_SPINLOCK(uid_lock);
+<span class="lineNum">      30 </span>                :            : static LIST_HEAD(uid_list);
+<span class="lineNum">      31 </span>                :            : static struct proc_dir_entry *parent;
+<span class="lineNum">      32 </span>                :            : 
+<span class="lineNum">      33 </span>                :            : struct uid_stat {
+<span class="lineNum">      34 </span>                :            :         struct list_head link;
+<span class="lineNum">      35 </span>                :            :         uid_t uid;
+<span class="lineNum">      36 </span>                :            :         atomic_t tcp_rcv;
+<span class="lineNum">      37 </span>                :            :         atomic_t tcp_snd;
+<span class="lineNum">      38 </span>                :            :         atomic_t tcp_rcv_pkt;
+<span class="lineNum">      39 </span>                :            :         atomic_t tcp_snd_pkt;
+<span class="lineNum">      40 </span>                :            :         atomic_t udp_rcv;
+<span class="lineNum">      41 </span>                :            :         atomic_t udp_snd;
+<span class="lineNum">      42 </span>                :            :         atomic_t udp_rcv_pkt;
+<span class="lineNum">      43 </span>                :            :         atomic_t udp_snd_pkt;
+<a name="44"><span class="lineNum">      44 </span>                :            : };</a>
+<span class="lineNum">      45 </span>                :            : 
+<span class="lineNum">      46 </span>                :<span class="lineNoCov">          0 : static int read_proc_entry(char *page, char **start, off_t off,</span>
+<span class="lineNum">      47 </span>                :            :                         int count, int *eof, void *data)
+<span class="lineNum">      48 </span>                :            : {
+<span class="lineNum">      49 </span>                :            :         int len;
+<span class="lineNum">      50 </span>                :            :         unsigned int value;
+<span class="lineNum">      51 </span>                :<span class="lineNoCov">          0 :         char *p = page;</span>
+<span class="lineNum">      52 </span>                :<span class="lineNoCov">          0 :         atomic_t *uid_entry = (atomic_t *) data;</span>
+<span class="lineNum">      53 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (!data)</span>
+<span class="lineNum">      54 </span>                :<span class="lineNoCov">          0 :                 return 0;</span>
+<span class="lineNum">      55 </span>                :            : 
+<span class="lineNum">      56 </span>                :<span class="lineNoCov">          0 :         value = (unsigned int) (atomic_read(uid_entry) + INT_MIN);</span>
+<span class="lineNum">      57 </span>                :<span class="lineNoCov">          0 :         p += sprintf(p, &quot;%u\n&quot;, value);</span>
+<span class="lineNum">      58 </span>                :<span class="lineNoCov">          0 :         len = (p - page) - off;</span>
+<span class="lineNum">      59 </span>                :<span class="lineNoCov">          0 :         *eof = (len &lt;= count) ? 1 : 0;</span>
+<span class="lineNum">      60 </span>                :<span class="lineNoCov">          0 :         *start = page + off;</span>
+<span class="lineNum">      61 </span>                :<span class="lineNoCov">          0 :         return len;</span>
+<span class="lineNum">      62 </span>                :            : }
+<a name="63"><span class="lineNum">      63 </span>                :            : </a>
+<span class="lineNum">      64 </span>                :            : /* Find or create a new entry for tracking the specified uid. */
+<span class="lineNum">      65 </span>                :<span class="lineNoCov">          0 : static struct uid_stat *get_uid_stat(uid_t uid) {</span>
+<span class="lineNum">      66 </span>                :            :         unsigned long flags;
+<span class="lineNum">      67 </span>                :            :         struct uid_stat *uid_entry;
+<span class="lineNum">      68 </span>                :            :         struct uid_stat *new_uid;
+<span class="lineNum">      69 </span>                :            :         struct proc_dir_entry *proc_entry;
+<span class="lineNum">      70 </span>                :            :         char uid_s[32];
+<span class="lineNum">      71 </span>                :            : 
+<span class="lineNum">      72 </span>                :<span class="lineNoCov">          0 :         spin_lock_irqsave(&amp;uid_lock, flags);</span>
+<span class="lineNum">      73 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         list_for_each_entry(uid_entry, &amp;uid_list, link) {</span>
+<span class="lineNum">      74 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :                 if (uid_entry-&gt;uid == uid) {</span>
+<span class="lineNum">      75 </span>                :            :                         spin_unlock_irqrestore(&amp;uid_lock, flags);
+<span class="lineNum">      76 </span>                :<span class="lineNoCov">          0 :                         return uid_entry;</span>
+<span class="lineNum">      77 </span>                :            :                 }
+<span class="lineNum">      78 </span>                :            :         }
+<span class="lineNum">      79 </span>                :            :         spin_unlock_irqrestore(&amp;uid_lock, flags);
+<span class="lineNum">      80 </span>                :            : 
+<span class="lineNum">      81 </span>                :            :         /* Create a new entry for tracking the specified uid. */
+<span class="lineNum">      82 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if ((new_uid = kmalloc(sizeof(struct uid_stat), GFP_KERNEL)) == NULL)</span>
+<span class="lineNum">      83 </span>                :<span class="lineNoCov">          0 :                 return NULL;</span>
+<span class="lineNum">      84 </span>                :            : 
+<span class="lineNum">      85 </span>                :<span class="lineNoCov">          0 :         new_uid-&gt;uid = uid;</span>
+<span class="lineNum">      86 </span>                :            :         /* Counters start at INT_MIN, so we can track 4GB of network traffic. */
+<span class="lineNum">      87 </span>                :<span class="lineNoCov">          0 :         atomic_set(&amp;new_uid-&gt;tcp_rcv, INT_MIN);</span>
+<span class="lineNum">      88 </span>                :<span class="lineNoCov">          0 :         atomic_set(&amp;new_uid-&gt;tcp_snd, INT_MIN);</span>
+<span class="lineNum">      89 </span>                :<span class="lineNoCov">          0 :         atomic_set(&amp;new_uid-&gt;tcp_snd_pkt, INT_MIN);</span>
+<span class="lineNum">      90 </span>                :<span class="lineNoCov">          0 :         atomic_set(&amp;new_uid-&gt;tcp_rcv_pkt, INT_MIN);</span>
+<span class="lineNum">      91 </span>                :<span class="lineNoCov">          0 :         atomic_set(&amp;new_uid-&gt;udp_rcv, INT_MIN);</span>
+<span class="lineNum">      92 </span>                :<span class="lineNoCov">          0 :         atomic_set(&amp;new_uid-&gt;udp_snd, INT_MIN);</span>
+<span class="lineNum">      93 </span>                :<span class="lineNoCov">          0 :         atomic_set(&amp;new_uid-&gt;udp_snd_pkt, INT_MIN);</span>
+<span class="lineNum">      94 </span>                :<span class="lineNoCov">          0 :         atomic_set(&amp;new_uid-&gt;udp_rcv_pkt, INT_MIN);</span>
+<span class="lineNum">      95 </span>                :            : 
+<span class="lineNum">      96 </span>                :            :         /* Append the newly created uid stat struct to the list. */
+<span class="lineNum">      97 </span>                :<span class="lineNoCov">          0 :         spin_lock_irqsave(&amp;uid_lock, flags);</span>
+<span class="lineNum">      98 </span>                :<span class="lineNoCov">          0 :         list_add_tail(&amp;new_uid-&gt;link, &amp;uid_list);</span>
+<span class="lineNum">      99 </span>                :            :         spin_unlock_irqrestore(&amp;uid_lock, flags);
+<span class="lineNum">     100 </span>                :            : 
+<span class="lineNum">     101 </span>                :<span class="lineNoCov">          0 :         sprintf(uid_s, &quot;%d&quot;, uid);</span>
+<span class="lineNum">     102 </span>                :<span class="lineNoCov">          0 :         proc_entry = proc_mkdir(uid_s, parent);</span>
+<span class="lineNum">     103 </span>                :            : 
+<span class="lineNum">     104 </span>                :            :         /* Keep reference to uid_stat so we know what uid to read stats from. */
+<span class="lineNum">     105 </span>                :            :         create_proc_read_entry(&quot;tcp_snd&quot;, S_IRUGO, proc_entry, read_proc_entry,
+<span class="lineNum">     106 </span>                :<span class="lineNoCov">          0 :                         (void *) &amp;new_uid-&gt;tcp_snd);</span>
+<span class="lineNum">     107 </span>                :            : 
+<span class="lineNum">     108 </span>                :            :         create_proc_read_entry(&quot;tcp_rcv&quot;, S_IRUGO, proc_entry, read_proc_entry,
+<span class="lineNum">     109 </span>                :<span class="lineNoCov">          0 :                         (void *) &amp;new_uid-&gt;tcp_rcv);</span>
+<span class="lineNum">     110 </span>                :            : 
+<span class="lineNum">     111 </span>                :            :         create_proc_read_entry(&quot;tcp_snd_pkt&quot;, S_IRUGO, proc_entry, read_proc_entry,
+<span class="lineNum">     112 </span>                :<span class="lineNoCov">          0 :                         (void *) &amp;new_uid-&gt;tcp_snd_pkt);</span>
+<span class="lineNum">     113 </span>                :            : 
+<span class="lineNum">     114 </span>                :            :         create_proc_read_entry(&quot;tcp_rcv_pkt&quot;, S_IRUGO, proc_entry, read_proc_entry,
+<span class="lineNum">     115 </span>                :<span class="lineNoCov">          0 :                         (void *) &amp;new_uid-&gt;tcp_rcv_pkt);</span>
+<span class="lineNum">     116 </span>                :            : 
+<span class="lineNum">     117 </span>                :            :         create_proc_read_entry(&quot;udp_snd&quot;, S_IRUGO, proc_entry, read_proc_entry,
+<span class="lineNum">     118 </span>                :<span class="lineNoCov">          0 :                         (void *) &amp;new_uid-&gt;udp_snd);</span>
+<span class="lineNum">     119 </span>                :            : 
+<span class="lineNum">     120 </span>                :            :         create_proc_read_entry(&quot;udp_rcv&quot;, S_IRUGO, proc_entry, read_proc_entry,
+<span class="lineNum">     121 </span>                :<span class="lineNoCov">          0 :                         (void *) &amp;new_uid-&gt;udp_rcv);</span>
+<span class="lineNum">     122 </span>                :            : 
+<span class="lineNum">     123 </span>                :            :         create_proc_read_entry(&quot;udp_snd_pkt&quot;, S_IRUGO, proc_entry, read_proc_entry,
+<span class="lineNum">     124 </span>                :<span class="lineNoCov">          0 :                         (void *) &amp;new_uid-&gt;udp_snd_pkt);</span>
+<span class="lineNum">     125 </span>                :            : 
+<span class="lineNum">     126 </span>                :            :         create_proc_read_entry(&quot;udp_rcv_pkt&quot;, S_IRUGO, proc_entry, read_proc_entry,
+<span class="lineNum">     127 </span>                :<span class="lineNoCov">          0 :                         (void *) &amp;new_uid-&gt;udp_rcv_pkt);</span>
+<span class="lineNum">     128 </span>                :            : 
+<span class="lineNum">     129 </span>                :<span class="lineNoCov">          0 :         return new_uid;</span>
+<a name="130"><span class="lineNum">     130 </span>                :            : }</a>
+<span class="lineNum">     131 </span>                :            : 
+<span class="lineNum">     132 </span>                :<span class="lineNoCov">          0 : int uid_stat_tcp_snd(uid_t uid, int size) {</span>
+<span class="lineNum">     133 </span>                :            :         struct uid_stat *entry;
+<span class="lineNum">     134 </span>                :<span class="lineNoCov">          0 :         activity_stats_update();</span>
+<span class="lineNum">     135 </span>        [<span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if ((entry = get_uid_stat(uid)) == NULL) {</span>
+<span class="lineNum">     136 </span>                :<span class="lineNoCov">          0 :                 return -1;</span>
+<span class="lineNum">     137 </span>                :            :         }
+<span class="lineNum">     138 </span>                :<span class="lineNoCov">          0 :         atomic_add(size, &amp;entry-&gt;tcp_snd);</span>
+<span class="lineNum">     139 </span>                :<span class="lineNoCov">          0 :         atomic_inc(&amp;entry-&gt;tcp_snd_pkt);</span>
+<span class="lineNum">     140 </span>                :<span class="lineNoCov">          0 :         return 0;</span>
+<a name="141"><span class="lineNum">     141 </span>                :            : }</a>
+<span class="lineNum">     142 </span>                :            : 
+<span class="lineNum">     143 </span>                :<span class="lineNoCov">          0 : int uid_stat_tcp_rcv(uid_t uid, int size) {</span>
+<span class="lineNum">     144 </span>                :            :         struct uid_stat *entry;
+<span class="lineNum">     145 </span>                :<span class="lineNoCov">          0 :         activity_stats_update();</span>
+<span class="lineNum">     146 </span>        [<span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if ((entry = get_uid_stat(uid)) == NULL) {</span>
+<span class="lineNum">     147 </span>                :<span class="lineNoCov">          0 :                 return -1;</span>
+<span class="lineNum">     148 </span>                :            :         }
+<span class="lineNum">     149 </span>                :<span class="lineNoCov">          0 :         atomic_add(size, &amp;entry-&gt;tcp_rcv);</span>
+<span class="lineNum">     150 </span>                :<span class="lineNoCov">          0 :         atomic_inc(&amp;entry-&gt;tcp_rcv_pkt);</span>
+<span class="lineNum">     151 </span>                :<span class="lineNoCov">          0 :         return 0;</span>
+<a name="152"><span class="lineNum">     152 </span>                :            : }</a>
+<span class="lineNum">     153 </span>                :            : 
+<span class="lineNum">     154 </span>                :<span class="lineNoCov">          0 : int uid_stat_udp_snd(uid_t uid, int size) {</span>
+<span class="lineNum">     155 </span>                :            :         struct uid_stat *entry;
+<span class="lineNum">     156 </span>                :<span class="lineNoCov">          0 :         activity_stats_update();</span>
+<span class="lineNum">     157 </span>        [<span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if ((entry = get_uid_stat(uid)) == NULL) {</span>
+<span class="lineNum">     158 </span>                :<span class="lineNoCov">          0 :                 return -1;</span>
+<span class="lineNum">     159 </span>                :            :         }
+<span class="lineNum">     160 </span>                :<span class="lineNoCov">          0 :         atomic_add(size, &amp;entry-&gt;udp_snd);</span>
+<span class="lineNum">     161 </span>                :<span class="lineNoCov">          0 :         atomic_inc(&amp;entry-&gt;udp_snd_pkt);</span>
+<span class="lineNum">     162 </span>                :<span class="lineNoCov">          0 :         return 0;</span>
+<a name="163"><span class="lineNum">     163 </span>                :            : }</a>
+<span class="lineNum">     164 </span>                :            : 
+<span class="lineNum">     165 </span>                :<span class="lineNoCov">          0 : int uid_stat_udp_rcv(uid_t uid, int size) {</span>
+<span class="lineNum">     166 </span>                :            :         struct uid_stat *entry;
+<span class="lineNum">     167 </span>                :<span class="lineNoCov">          0 :         activity_stats_update();</span>
+<span class="lineNum">     168 </span>        [<span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if ((entry = get_uid_stat(uid)) == NULL) {</span>
+<span class="lineNum">     169 </span>                :<span class="lineNoCov">          0 :                 return -1;</span>
+<span class="lineNum">     170 </span>                :            :         }
+<span class="lineNum">     171 </span>                :<span class="lineNoCov">          0 :         atomic_add(size, &amp;entry-&gt;udp_rcv);</span>
+<span class="lineNum">     172 </span>                :<span class="lineNoCov">          0 :         atomic_inc(&amp;entry-&gt;udp_rcv_pkt);</span>
+<span class="lineNum">     173 </span>                :<span class="lineNoCov">          0 :         return 0;</span>
+<a name="174"><span class="lineNum">     174 </span>                :            : }</a>
+<span class="lineNum">     175 </span>                :            : 
+<span class="lineNum">     176 </span>                :<span class="lineCov">          1 : static int __init uid_stat_init(void)</span>
+<span class="lineNum">     177 </span>                :            : {
+<span class="lineNum">     178 </span>                :<span class="lineCov">          1 :         parent = proc_mkdir(&quot;uid_stat&quot;, NULL);</span>
+<span class="lineNum">     179 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 1 time"> + </span>]:<span class="lineCov">          1 :         if (!parent) {</span>
+<span class="lineNum">     180 </span>                :<span class="lineNoCov">          0 :                 pr_err(&quot;uid_stat: failed to create proc entry\n&quot;);</span>
+<span class="lineNum">     181 </span>                :<span class="lineNoCov">          0 :                 return -1;</span>
+<span class="lineNum">     182 </span>                :            :         }
+<span class="lineNum">     183 </span>                :<span class="lineCov">          1 :         return 0;</span>
+<span class="lineNum">     184 </span>                :            : }
+<span class="lineNum">     185 </span>                :            : 
+<span class="lineNum">     186 </span>                :            : __initcall(uid_stat_init);
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.8</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

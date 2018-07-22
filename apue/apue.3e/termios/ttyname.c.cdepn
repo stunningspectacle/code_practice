@@ -1,0 +1,30 @@
+F {ttyname} {/usr/include/unistd.h:793}
+C {ttyname} {ttyname.c:132} {cleanup}
+C {ttyname} {ttyname.c:132} {searchdir}
+C {ttyname} {ttyname.c:132} {searchdir}
+C {ttyname} {ttyname.c:132} {fstat}
+C {ttyname} {ttyname.c:132} {isatty}
+F {searchdir} {ttyname.c:69}
+C {searchdir} {ttyname.c:132} {closedir}
+C {searchdir} {ttyname.c:132} {readdir}
+C {searchdir} {ttyname.c:132} {closedir}
+C {searchdir} {ttyname.c:132} {add}
+C {searchdir} {ttyname.c:132} {stat}
+C {searchdir} {ttyname.c:132} {strcmp}
+C {searchdir} {ttyname.c:132} {strcmp}
+C {searchdir} {ttyname.c:132} {strcmp}
+C {searchdir} {ttyname.c:132} {strncpy}
+C {searchdir} {ttyname.c:132} {strlen}
+C {searchdir} {ttyname.c:132} {__builtin_memcpy}
+C {searchdir} {ttyname.c:132} {__builtin_strlen}
+C {searchdir} {ttyname.c:132} {opendir}
+C {searchdir} {ttyname.c:132} {strcpy}
+F {cleanup} {ttyname.c:53}
+C {cleanup} {ttyname.c:132} {free}
+C {cleanup} {ttyname.c:132} {free}
+F {add} {ttyname.c:19}
+C {add} {ttyname.c:132} {free}
+C {add} {ttyname.c:132} {strdup}
+C {add} {ttyname.c:132} {malloc}
+C {add} {ttyname.c:132} {strcmp}
+C {add} {ttyname.c:132} {strlen}

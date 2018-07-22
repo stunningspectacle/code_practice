@@ -1,0 +1,8 @@
+F {initserver} {initsrv2.c:6}
+C {initserver} {initsrv2.c:29} {__errno_location}
+C {initserver} {initsrv2.c:29} {close}
+C {initserver} {initsrv2.c:29} {__errno_location}
+C {initserver} {initsrv2.c:29} {listen}
+C {initserver} {initsrv2.c:29} {bind}
+C {initserver} {initsrv2.c:29} {setsockopt}
+C {initserver} {initsrv2.c:29} {socket}

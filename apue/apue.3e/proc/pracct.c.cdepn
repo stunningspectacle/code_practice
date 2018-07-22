@@ -1,0 +1,12 @@
+F {main} {pracct.c:40}
+C {main} {pracct.c:68} {exit}
+C {main} {pracct.c:68} {err_sys}
+C {main} {pracct.c:68} {ferror}
+C {main} {pracct.c:68} {fread}
+C {main} {pracct.c:68} {printf}
+C {main} {pracct.c:68} {compt2ulong}
+C {main} {pracct.c:68} {compt2ulong}
+C {main} {pracct.c:68} {err_sys}
+C {main} {pracct.c:68} {fopen}
+C {main} {pracct.c:68} {err_quit}
+F {compt2ulong} {pracct.c:26}

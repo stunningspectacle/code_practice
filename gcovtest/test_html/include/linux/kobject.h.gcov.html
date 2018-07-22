@@ -1,0 +1,352 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+  <title>LCOV - test.info - include/linux/kobject.h</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">include/linux</a> - kobject.h<span style="font-size: 80%;"> (source / <a href="kobject.h.func.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">test.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2011-05-12</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="headerItem">Branches:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">           Branch data     Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>                :            : /*</a>
+<span class="lineNum">       2 </span>                :            :  * kobject.h - generic kernel object infrastructure.
+<span class="lineNum">       3 </span>                :            :  *
+<span class="lineNum">       4 </span>                :            :  * Copyright (c) 2002-2003 Patrick Mochel
+<span class="lineNum">       5 </span>                :            :  * Copyright (c) 2002-2003 Open Source Development Labs
+<span class="lineNum">       6 </span>                :            :  * Copyright (c) 2006-2008 Greg Kroah-Hartman &lt;greg@kroah.com&gt;
+<span class="lineNum">       7 </span>                :            :  * Copyright (c) 2006-2008 Novell Inc.
+<span class="lineNum">       8 </span>                :            :  *
+<span class="lineNum">       9 </span>                :            :  * This file is released under the GPLv2.
+<span class="lineNum">      10 </span>                :            :  *
+<span class="lineNum">      11 </span>                :            :  * Please read Documentation/kobject.txt before using the kobject
+<span class="lineNum">      12 </span>                :            :  * interface, ESPECIALLY the parts about reference counts and object
+<span class="lineNum">      13 </span>                :            :  * destructors.
+<span class="lineNum">      14 </span>                :            :  */
+<span class="lineNum">      15 </span>                :            : 
+<span class="lineNum">      16 </span>                :            : #ifndef _KOBJECT_H_
+<span class="lineNum">      17 </span>                :            : #define _KOBJECT_H_
+<span class="lineNum">      18 </span>                :            : 
+<span class="lineNum">      19 </span>                :            : #include &lt;linux/types.h&gt;
+<span class="lineNum">      20 </span>                :            : #include &lt;linux/list.h&gt;
+<span class="lineNum">      21 </span>                :            : #include &lt;linux/sysfs.h&gt;
+<span class="lineNum">      22 </span>                :            : #include &lt;linux/compiler.h&gt;
+<span class="lineNum">      23 </span>                :            : #include &lt;linux/spinlock.h&gt;
+<span class="lineNum">      24 </span>                :            : #include &lt;linux/kref.h&gt;
+<span class="lineNum">      25 </span>                :            : #include &lt;linux/kernel.h&gt;
+<span class="lineNum">      26 </span>                :            : #include &lt;linux/wait.h&gt;
+<span class="lineNum">      27 </span>                :            : #include &lt;asm/atomic.h&gt;
+<span class="lineNum">      28 </span>                :            : 
+<span class="lineNum">      29 </span>                :            : #define UEVENT_HELPER_PATH_LEN          256
+<span class="lineNum">      30 </span>                :            : #define UEVENT_NUM_ENVP                 32      /* number of env pointers */
+<span class="lineNum">      31 </span>                :            : #define UEVENT_BUFFER_SIZE              2048    /* buffer for the variables */
+<span class="lineNum">      32 </span>                :            : 
+<span class="lineNum">      33 </span>                :            : /* path to the userspace helper executed on an event */
+<span class="lineNum">      34 </span>                :            : extern char uevent_helper[];
+<span class="lineNum">      35 </span>                :            : 
+<span class="lineNum">      36 </span>                :            : /* counter to tag the uevent, read only except for the kobject core */
+<span class="lineNum">      37 </span>                :            : extern u64 uevent_seqnum;
+<span class="lineNum">      38 </span>                :            : 
+<span class="lineNum">      39 </span>                :            : /*
+<span class="lineNum">      40 </span>                :            :  * The actions here must match the index to the string array
+<span class="lineNum">      41 </span>                :            :  * in lib/kobject_uevent.c
+<span class="lineNum">      42 </span>                :            :  *
+<span class="lineNum">      43 </span>                :            :  * Do not add new actions here without checking with the driver-core
+<span class="lineNum">      44 </span>                :            :  * maintainers. Action strings are not meant to express subsystem
+<span class="lineNum">      45 </span>                :            :  * or device specific properties. In most cases you want to send a
+<span class="lineNum">      46 </span>                :            :  * kobject_uevent_env(kobj, KOBJ_CHANGE, env) with additional event
+<span class="lineNum">      47 </span>                :            :  * specific variables added to the event environment.
+<span class="lineNum">      48 </span>                :            :  */
+<span class="lineNum">      49 </span>                :            : enum kobject_action {
+<span class="lineNum">      50 </span>                :            :         KOBJ_ADD,
+<span class="lineNum">      51 </span>                :            :         KOBJ_REMOVE,
+<span class="lineNum">      52 </span>                :            :         KOBJ_CHANGE,
+<span class="lineNum">      53 </span>                :            :         KOBJ_MOVE,
+<span class="lineNum">      54 </span>                :            :         KOBJ_ONLINE,
+<span class="lineNum">      55 </span>                :            :         KOBJ_OFFLINE,
+<span class="lineNum">      56 </span>                :            :         KOBJ_MAX
+<span class="lineNum">      57 </span>                :            : };
+<span class="lineNum">      58 </span>                :            : 
+<span class="lineNum">      59 </span>                :            : struct kobject {
+<span class="lineNum">      60 </span>                :            :         const char              *name;
+<span class="lineNum">      61 </span>                :            :         struct list_head        entry;
+<span class="lineNum">      62 </span>                :            :         struct kobject          *parent;
+<span class="lineNum">      63 </span>                :            :         struct kset             *kset;
+<span class="lineNum">      64 </span>                :            :         struct kobj_type        *ktype;
+<span class="lineNum">      65 </span>                :            :         struct sysfs_dirent     *sd;
+<span class="lineNum">      66 </span>                :            :         struct kref             kref;
+<span class="lineNum">      67 </span>                :            :         unsigned int state_initialized:1;
+<span class="lineNum">      68 </span>                :            :         unsigned int state_in_sysfs:1;
+<span class="lineNum">      69 </span>                :            :         unsigned int state_add_uevent_sent:1;
+<span class="lineNum">      70 </span>                :            :         unsigned int state_remove_uevent_sent:1;
+<span class="lineNum">      71 </span>                :            :         unsigned int uevent_suppress:1;
+<span class="lineNum">      72 </span>                :            : };
+<span class="lineNum">      73 </span>                :            : 
+<span class="lineNum">      74 </span>                :            : extern int kobject_set_name(struct kobject *kobj, const char *name, ...)
+<span class="lineNum">      75 </span>                :            :                             __attribute__((format(printf, 2, 3)));
+<span class="lineNum">      76 </span>                :            : extern int kobject_set_name_vargs(struct kobject *kobj, const char *fmt,
+<span class="lineNum">      77 </span>                :            :                                   va_list vargs);
+<span class="lineNum">      78 </span>                :            : 
+<span class="lineNum">      79 </span>                :            : static inline const char *kobject_name(const struct kobject *kobj)
+<span class="lineNum">      80 </span>                :            : {
+<span class="lineNum">      81 </span>                :<span class="lineCov">          2 :         return kobj-&gt;name;</span>
+<span class="lineNum">      82 </span>                :            : }
+<span class="lineNum">      83 </span>                :            : 
+<span class="lineNum">      84 </span>                :            : extern void kobject_init(struct kobject *kobj, struct kobj_type *ktype);
+<span class="lineNum">      85 </span>                :            : extern int __must_check kobject_add(struct kobject *kobj,
+<span class="lineNum">      86 </span>                :            :                                     struct kobject *parent,
+<span class="lineNum">      87 </span>                :            :                                     const char *fmt, ...);
+<span class="lineNum">      88 </span>                :            : extern int __must_check kobject_init_and_add(struct kobject *kobj,
+<span class="lineNum">      89 </span>                :            :                                              struct kobj_type *ktype,
+<span class="lineNum">      90 </span>                :            :                                              struct kobject *parent,
+<span class="lineNum">      91 </span>                :            :                                              const char *fmt, ...);
+<span class="lineNum">      92 </span>                :            : 
+<span class="lineNum">      93 </span>                :            : extern void kobject_del(struct kobject *kobj);
+<span class="lineNum">      94 </span>                :            : 
+<span class="lineNum">      95 </span>                :            : extern struct kobject * __must_check kobject_create(void);
+<span class="lineNum">      96 </span>                :            : extern struct kobject * __must_check kobject_create_and_add(const char *name,
+<span class="lineNum">      97 </span>                :            :                                                 struct kobject *parent);
+<span class="lineNum">      98 </span>                :            : 
+<span class="lineNum">      99 </span>                :            : extern int __must_check kobject_rename(struct kobject *, const char *new_name);
+<span class="lineNum">     100 </span>                :            : extern int __must_check kobject_move(struct kobject *, struct kobject *);
+<span class="lineNum">     101 </span>                :            : 
+<span class="lineNum">     102 </span>                :            : extern struct kobject *kobject_get(struct kobject *kobj);
+<span class="lineNum">     103 </span>                :            : extern void kobject_put(struct kobject *kobj);
+<span class="lineNum">     104 </span>                :            : 
+<span class="lineNum">     105 </span>                :            : extern char *kobject_get_path(struct kobject *kobj, gfp_t flag);
+<span class="lineNum">     106 </span>                :            : 
+<span class="lineNum">     107 </span>                :            : struct kobj_type {
+<span class="lineNum">     108 </span>                :            :         void (*release)(struct kobject *kobj);
+<span class="lineNum">     109 </span>                :            :         const struct sysfs_ops *sysfs_ops;
+<span class="lineNum">     110 </span>                :            :         struct attribute **default_attrs;
+<span class="lineNum">     111 </span>                :            :         const struct kobj_ns_type_operations *(*child_ns_type)(struct kobject *kobj);
+<span class="lineNum">     112 </span>                :            :         const void *(*namespace)(struct kobject *kobj);
+<span class="lineNum">     113 </span>                :            : };
+<span class="lineNum">     114 </span>                :            : 
+<span class="lineNum">     115 </span>                :            : struct kobj_uevent_env {
+<span class="lineNum">     116 </span>                :            :         char *envp[UEVENT_NUM_ENVP];
+<span class="lineNum">     117 </span>                :            :         int envp_idx;
+<span class="lineNum">     118 </span>                :            :         char buf[UEVENT_BUFFER_SIZE];
+<span class="lineNum">     119 </span>                :            :         int buflen;
+<span class="lineNum">     120 </span>                :            : };
+<span class="lineNum">     121 </span>                :            : 
+<span class="lineNum">     122 </span>                :            : struct kset_uevent_ops {
+<span class="lineNum">     123 </span>                :            :         int (* const filter)(struct kset *kset, struct kobject *kobj);
+<span class="lineNum">     124 </span>                :            :         const char *(* const name)(struct kset *kset, struct kobject *kobj);
+<span class="lineNum">     125 </span>                :            :         int (* const uevent)(struct kset *kset, struct kobject *kobj,
+<span class="lineNum">     126 </span>                :            :                       struct kobj_uevent_env *env);
+<span class="lineNum">     127 </span>                :            : };
+<span class="lineNum">     128 </span>                :            : 
+<span class="lineNum">     129 </span>                :            : struct kobj_attribute {
+<span class="lineNum">     130 </span>                :            :         struct attribute attr;
+<span class="lineNum">     131 </span>                :            :         ssize_t (*show)(struct kobject *kobj, struct kobj_attribute *attr,
+<span class="lineNum">     132 </span>                :            :                         char *buf);
+<span class="lineNum">     133 </span>                :            :         ssize_t (*store)(struct kobject *kobj, struct kobj_attribute *attr,
+<span class="lineNum">     134 </span>                :            :                          const char *buf, size_t count);
+<span class="lineNum">     135 </span>                :            : };
+<span class="lineNum">     136 </span>                :            : 
+<span class="lineNum">     137 </span>                :            : extern const struct sysfs_ops kobj_sysfs_ops;
+<span class="lineNum">     138 </span>                :            : 
+<span class="lineNum">     139 </span>                :            : /*
+<span class="lineNum">     140 </span>                :            :  * Namespace types which are used to tag kobjects and sysfs entries.
+<span class="lineNum">     141 </span>                :            :  * Network namespace will likely be the first.
+<span class="lineNum">     142 </span>                :            :  */
+<span class="lineNum">     143 </span>                :            : enum kobj_ns_type {
+<span class="lineNum">     144 </span>                :            :         KOBJ_NS_TYPE_NONE = 0,
+<span class="lineNum">     145 </span>                :            :         KOBJ_NS_TYPE_NET,
+<span class="lineNum">     146 </span>                :            :         KOBJ_NS_TYPES
+<span class="lineNum">     147 </span>                :            : };
+<span class="lineNum">     148 </span>                :            : 
+<span class="lineNum">     149 </span>                :            : struct sock;
+<span class="lineNum">     150 </span>                :            : 
+<span class="lineNum">     151 </span>                :            : /*
+<span class="lineNum">     152 </span>                :            :  * Callbacks so sysfs can determine namespaces
+<span class="lineNum">     153 </span>                :            :  *   @current_ns: return calling task's namespace
+<span class="lineNum">     154 </span>                :            :  *   @netlink_ns: return namespace to which a sock belongs (right?)
+<span class="lineNum">     155 </span>                :            :  *   @initial_ns: return the initial namespace (i.e. init_net_ns)
+<span class="lineNum">     156 </span>                :            :  */
+<span class="lineNum">     157 </span>                :            : struct kobj_ns_type_operations {
+<span class="lineNum">     158 </span>                :            :         enum kobj_ns_type type;
+<span class="lineNum">     159 </span>                :            :         const void *(*current_ns)(void);
+<span class="lineNum">     160 </span>                :            :         const void *(*netlink_ns)(struct sock *sk);
+<span class="lineNum">     161 </span>                :            :         const void *(*initial_ns)(void);
+<span class="lineNum">     162 </span>                :            : };
+<span class="lineNum">     163 </span>                :            : 
+<span class="lineNum">     164 </span>                :            : int kobj_ns_type_register(const struct kobj_ns_type_operations *ops);
+<span class="lineNum">     165 </span>                :            : int kobj_ns_type_registered(enum kobj_ns_type type);
+<span class="lineNum">     166 </span>                :            : const struct kobj_ns_type_operations *kobj_child_ns_ops(struct kobject *parent);
+<span class="lineNum">     167 </span>                :            : const struct kobj_ns_type_operations *kobj_ns_ops(struct kobject *kobj);
+<span class="lineNum">     168 </span>                :            : 
+<span class="lineNum">     169 </span>                :            : const void *kobj_ns_current(enum kobj_ns_type type);
+<span class="lineNum">     170 </span>                :            : const void *kobj_ns_netlink(enum kobj_ns_type type, struct sock *sk);
+<span class="lineNum">     171 </span>                :            : const void *kobj_ns_initial(enum kobj_ns_type type);
+<span class="lineNum">     172 </span>                :            : void kobj_ns_exit(enum kobj_ns_type type, const void *ns);
+<span class="lineNum">     173 </span>                :            : 
+<span class="lineNum">     174 </span>                :            : 
+<span class="lineNum">     175 </span>                :            : /**
+<span class="lineNum">     176 </span>                :            :  * struct kset - a set of kobjects of a specific type, belonging to a specific subsystem.
+<span class="lineNum">     177 </span>                :            :  *
+<span class="lineNum">     178 </span>                :            :  * A kset defines a group of kobjects.  They can be individually
+<span class="lineNum">     179 </span>                :            :  * different &quot;types&quot; but overall these kobjects all want to be grouped
+<span class="lineNum">     180 </span>                :            :  * together and operated on in the same manner.  ksets are used to
+<span class="lineNum">     181 </span>                :            :  * define the attribute callbacks and other common events that happen to
+<span class="lineNum">     182 </span>                :            :  * a kobject.
+<span class="lineNum">     183 </span>                :            :  *
+<span class="lineNum">     184 </span>                :            :  * @list: the list of all kobjects for this kset
+<span class="lineNum">     185 </span>                :            :  * @list_lock: a lock for iterating over the kobjects
+<span class="lineNum">     186 </span>                :            :  * @kobj: the embedded kobject for this kset (recursion, isn't it fun...)
+<span class="lineNum">     187 </span>                :            :  * @uevent_ops: the set of uevent operations for this kset.  These are
+<span class="lineNum">     188 </span>                :            :  * called whenever a kobject has something happen to it so that the kset
+<span class="lineNum">     189 </span>                :            :  * can add new environment variables, or filter out the uevents if so
+<span class="lineNum">     190 </span>                :            :  * desired.
+<span class="lineNum">     191 </span>                :            :  */
+<span class="lineNum">     192 </span>                :            : struct kset {
+<span class="lineNum">     193 </span>                :            :         struct list_head list;
+<span class="lineNum">     194 </span>                :            :         spinlock_t list_lock;
+<span class="lineNum">     195 </span>                :            :         struct kobject kobj;
+<span class="lineNum">     196 </span>                :            :         const struct kset_uevent_ops *uevent_ops;
+<span class="lineNum">     197 </span>                :            : };
+<span class="lineNum">     198 </span>                :            : 
+<span class="lineNum">     199 </span>                :            : extern void kset_init(struct kset *kset);
+<span class="lineNum">     200 </span>                :            : extern int __must_check kset_register(struct kset *kset);
+<span class="lineNum">     201 </span>                :            : extern void kset_unregister(struct kset *kset);
+<span class="lineNum">     202 </span>                :            : extern struct kset * __must_check kset_create_and_add(const char *name,
+<span class="lineNum">     203 </span>                :            :                                                 const struct kset_uevent_ops *u,
+<span class="lineNum">     204 </span>                :            :                                                 struct kobject *parent_kobj);
+<span class="lineNum">     205 </span>                :            : 
+<span class="lineNum">     206 </span>                :            : static inline struct kset *to_kset(struct kobject *kobj)
+<span class="lineNum">     207 </span>                :            : {
+<span class="lineNum">     208 </span>                :            :         return kobj ? container_of(kobj, struct kset, kobj) : NULL;
+<span class="lineNum">     209 </span>                :            : }
+<span class="lineNum">     210 </span>                :            : 
+<span class="lineNum">     211 </span>                :            : static inline struct kset *kset_get(struct kset *k)
+<span class="lineNum">     212 </span>                :            : {
+<span class="lineNum">     213 </span>                :            :         return k ? to_kset(kobject_get(&amp;k-&gt;kobj)) : NULL;
+<span class="lineNum">     214 </span>                :            : }
+<span class="lineNum">     215 </span>                :            : 
+<span class="lineNum">     216 </span>                :            : static inline void kset_put(struct kset *k)
+<span class="lineNum">     217 </span>                :            : {
+<span class="lineNum">     218 </span>                :            :         kobject_put(&amp;k-&gt;kobj);
+<span class="lineNum">     219 </span>                :            : }
+<span class="lineNum">     220 </span>                :            : 
+<span class="lineNum">     221 </span>                :            : static inline struct kobj_type *get_ktype(struct kobject *kobj)
+<span class="lineNum">     222 </span>                :            : {
+<span class="lineNum">     223 </span>                :            :         return kobj-&gt;ktype;
+<span class="lineNum">     224 </span>                :            : }
+<span class="lineNum">     225 </span>                :            : 
+<span class="lineNum">     226 </span>                :            : extern struct kobject *kset_find_obj(struct kset *, const char *);
+<span class="lineNum">     227 </span>                :            : 
+<span class="lineNum">     228 </span>                :            : /* The global /sys/kernel/ kobject for people to chain off of */
+<span class="lineNum">     229 </span>                :            : extern struct kobject *kernel_kobj;
+<span class="lineNum">     230 </span>                :            : /* The global /sys/kernel/mm/ kobject for people to chain off of */
+<span class="lineNum">     231 </span>                :            : extern struct kobject *mm_kobj;
+<span class="lineNum">     232 </span>                :            : /* The global /sys/hypervisor/ kobject for people to chain off of */
+<span class="lineNum">     233 </span>                :            : extern struct kobject *hypervisor_kobj;
+<span class="lineNum">     234 </span>                :            : /* The global /sys/power/ kobject for people to chain off of */
+<span class="lineNum">     235 </span>                :            : extern struct kobject *power_kobj;
+<span class="lineNum">     236 </span>                :            : /* The global /sys/firmware/ kobject for people to chain off of */
+<span class="lineNum">     237 </span>                :            : extern struct kobject *firmware_kobj;
+<span class="lineNum">     238 </span>                :            : 
+<span class="lineNum">     239 </span>                :            : #if defined(CONFIG_HOTPLUG)
+<span class="lineNum">     240 </span>                :            : int kobject_uevent(struct kobject *kobj, enum kobject_action action);
+<span class="lineNum">     241 </span>                :            : int kobject_uevent_env(struct kobject *kobj, enum kobject_action action,
+<span class="lineNum">     242 </span>                :            :                         char *envp[]);
+<span class="lineNum">     243 </span>                :            : 
+<span class="lineNum">     244 </span>                :            : int add_uevent_var(struct kobj_uevent_env *env, const char *format, ...)
+<span class="lineNum">     245 </span>                :            :         __attribute__((format (printf, 2, 3)));
+<span class="lineNum">     246 </span>                :            : 
+<span class="lineNum">     247 </span>                :            : int kobject_action_type(const char *buf, size_t count,
+<span class="lineNum">     248 </span>                :            :                         enum kobject_action *type);
+<span class="lineNum">     249 </span>                :            : #else
+<span class="lineNum">     250 </span>                :            : static inline int kobject_uevent(struct kobject *kobj,
+<span class="lineNum">     251 </span>                :            :                                  enum kobject_action action)
+<span class="lineNum">     252 </span>                :            : { return 0; }
+<span class="lineNum">     253 </span>                :            : static inline int kobject_uevent_env(struct kobject *kobj,
+<span class="lineNum">     254 </span>                :            :                                       enum kobject_action action,
+<span class="lineNum">     255 </span>                :            :                                       char *envp[])
+<span class="lineNum">     256 </span>                :            : { return 0; }
+<span class="lineNum">     257 </span>                :            : 
+<span class="lineNum">     258 </span>                :            : static inline int add_uevent_var(struct kobj_uevent_env *env,
+<span class="lineNum">     259 </span>                :            :                                  const char *format, ...)
+<span class="lineNum">     260 </span>                :            : { return 0; }
+<span class="lineNum">     261 </span>                :            : 
+<span class="lineNum">     262 </span>                :            : static inline int kobject_action_type(const char *buf, size_t count,
+<span class="lineNum">     263 </span>                :            :                                       enum kobject_action *type)
+<span class="lineNum">     264 </span>                :            : { return -EINVAL; }
+<span class="lineNum">     265 </span>                :            : #endif
+<span class="lineNum">     266 </span>                :            : 
+<span class="lineNum">     267 </span>                :            : #endif /* _KOBJECT_H_ */
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.8</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

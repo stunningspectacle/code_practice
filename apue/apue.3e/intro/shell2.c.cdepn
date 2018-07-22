@@ -1,0 +1,18 @@
+F {sig_int} {shell2.c:38}
+C {sig_int} {shell2.c:41} {printf}
+F {main} {shell2.c:7}
+C {main} {shell2.c:41} {exit}
+C {main} {shell2.c:41} {fgets}
+C {main} {shell2.c:41} {printf}
+C {main} {shell2.c:41} {err_sys}
+C {main} {shell2.c:41} {waitpid}
+C {main} {shell2.c:41} {exit}
+C {main} {shell2.c:41} {err_ret}
+C {main} {shell2.c:41} {execlp}
+C {main} {shell2.c:41} {err_sys}
+C {main} {shell2.c:41} {fork}
+C {main} {shell2.c:41} {strlen}
+C {main} {shell2.c:41} {strlen}
+C {main} {shell2.c:41} {printf}
+C {main} {shell2.c:41} {err_sys}
+C {main} {shell2.c:41} {signal}

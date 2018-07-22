@@ -1,0 +1,22 @@
+F {main} {deadlock.c:13}
+C {main} {deadlock.c:41} {exit}
+C {main} {deadlock.c:41} {lockabyte}
+C {main} {deadlock.c:41} {WAIT_CHILD}
+C {main} {deadlock.c:41} {TELL_CHILD}
+C {main} {deadlock.c:41} {lockabyte}
+C {main} {deadlock.c:41} {lockabyte}
+C {main} {deadlock.c:41} {WAIT_PARENT}
+C {main} {deadlock.c:41} {TELL_PARENT}
+C {main} {deadlock.c:41} {getppid}
+C {main} {deadlock.c:41} {lockabyte}
+C {main} {deadlock.c:41} {err_sys}
+C {main} {deadlock.c:41} {fork}
+C {main} {deadlock.c:41} {TELL_WAIT}
+C {main} {deadlock.c:41} {err_sys}
+C {main} {deadlock.c:41} {write}
+C {main} {deadlock.c:41} {err_sys}
+C {main} {deadlock.c:41} {creat}
+F {lockabyte} {deadlock.c:5}
+C {lockabyte} {deadlock.c:41} {printf}
+C {lockabyte} {deadlock.c:41} {err_sys}
+C {lockabyte} {deadlock.c:41} {lock_reg}

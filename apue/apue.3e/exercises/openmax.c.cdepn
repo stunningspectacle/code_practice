@@ -1,0 +1,4 @@
+F {open_max} {openmax.c:8}
+C {open_max} {openmax.c:23} {err_sys}
+C {open_max} {openmax.c:23} {getrlimit}
+C {open_max} {openmax.c:23} {sysconf}

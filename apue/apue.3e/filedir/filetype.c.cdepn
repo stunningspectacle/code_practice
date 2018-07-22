@@ -1,0 +1,6 @@
+F {main} {filetype.c:4}
+C {main} {filetype.c:35} {exit}
+C {main} {filetype.c:35} {__builtin_puts}
+C {main} {filetype.c:35} {err_ret}
+C {main} {filetype.c:35} {lstat}
+C {main} {filetype.c:35} {printf}

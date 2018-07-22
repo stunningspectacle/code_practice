@@ -1,0 +1,8 @@
+F {main} {ls1.c:5}
+C {main} {ls1.c:20} {exit}
+C {main} {ls1.c:20} {closedir}
+C {main} {ls1.c:20} {readdir}
+C {main} {ls1.c:20} {__builtin_puts}
+C {main} {ls1.c:20} {err_sys}
+C {main} {ls1.c:20} {opendir}
+C {main} {ls1.c:20} {err_quit}

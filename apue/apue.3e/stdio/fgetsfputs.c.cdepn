@@ -1,0 +1,7 @@
+F {main} {fgetsfputs.c:4}
+C {main} {fgetsfputs.c:16} {exit}
+C {main} {fgetsfputs.c:16} {err_sys}
+C {main} {fgetsfputs.c:16} {ferror}
+C {main} {fgetsfputs.c:16} {fgets}
+C {main} {fgetsfputs.c:16} {err_sys}
+C {main} {fgetsfputs.c:16} {fputs}

@@ -1,0 +1,16 @@
+F {sig_cld} {child.c:25}
+C {sig_cld} {child.c:39} {printf}
+C {sig_cld} {child.c:39} {perror}
+C {sig_cld} {child.c:39} {wait}
+C {sig_cld} {child.c:39} {perror}
+C {sig_cld} {child.c:39} {signal}
+C {sig_cld} {child.c:39} {__builtin_puts}
+F {main} {child.c:7}
+C {main} {child.c:39} {exit}
+C {main} {child.c:39} {pause}
+C {main} {child.c:39} {_exit}
+C {main} {child.c:39} {sleep}
+C {main} {child.c:39} {perror}
+C {main} {child.c:39} {fork}
+C {main} {child.c:39} {perror}
+C {main} {child.c:39} {signal}

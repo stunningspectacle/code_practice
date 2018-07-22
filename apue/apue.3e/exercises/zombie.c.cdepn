@@ -1,0 +1,7 @@
+F {main} {zombie.c:10}
+C {main} {zombie.c:24} {exit}
+C {main} {zombie.c:24} {system}
+C {main} {zombie.c:24} {sleep}
+C {main} {zombie.c:24} {exit}
+C {main} {zombie.c:24} {err_sys}
+C {main} {zombie.c:24} {fork}

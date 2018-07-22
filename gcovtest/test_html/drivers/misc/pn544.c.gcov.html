@@ -1,0 +1,468 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+  <title>LCOV - test.info - drivers/misc/pn544.c</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">drivers/misc</a> - pn544.c<span style="font-size: 80%;"> (source / <a href="pn544.c.func.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">test.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntry">152</td>
+            <td class="headerCovTableEntryLo">2.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2011-05-12</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntryLo">10.0 %</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="headerItem">Branches:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">88</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">           Branch data     Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>                :            : /*</a>
+<span class="lineNum">       2 </span>                :            :  * Copyright (C) 2010 Trusted Logic S.A.
+<span class="lineNum">       3 </span>                :            :  *
+<span class="lineNum">       4 </span>                :            :  * This program is free software; you can redistribute it and/or modify
+<span class="lineNum">       5 </span>                :            :  * it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>                :            :  * the Free Software Foundation; either version 2 of the License, or
+<span class="lineNum">       7 </span>                :            :  * (at your option) any later version.
+<span class="lineNum">       8 </span>                :            :  *
+<span class="lineNum">       9 </span>                :            :  * This program is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>                :            :  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>                :            :  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>                :            :  * GNU General Public License for more details.
+<span class="lineNum">      13 </span>                :            :  *
+<span class="lineNum">      14 </span>                :            :  * You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>                :            :  * along with this program; if not, write to the Free Software
+<span class="lineNum">      16 </span>                :            :  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+<span class="lineNum">      17 </span>                :            :  *
+<span class="lineNum">      18 </span>                :            :  */
+<span class="lineNum">      19 </span>                :            : 
+<span class="lineNum">      20 </span>                :            : #include &lt;linux/kernel.h&gt;
+<span class="lineNum">      21 </span>                :            : #include &lt;linux/module.h&gt;
+<span class="lineNum">      22 </span>                :            : #include &lt;linux/fs.h&gt;
+<span class="lineNum">      23 </span>                :            : #include &lt;linux/slab.h&gt;
+<span class="lineNum">      24 </span>                :            : #include &lt;linux/init.h&gt;
+<span class="lineNum">      25 </span>                :            : #include &lt;linux/list.h&gt;
+<span class="lineNum">      26 </span>                :            : #include &lt;linux/i2c.h&gt;
+<span class="lineNum">      27 </span>                :            : #include &lt;linux/irq.h&gt;
+<span class="lineNum">      28 </span>                :            : #include &lt;linux/jiffies.h&gt;
+<span class="lineNum">      29 </span>                :            : #include &lt;linux/uaccess.h&gt;
+<span class="lineNum">      30 </span>                :            : #include &lt;linux/delay.h&gt;
+<span class="lineNum">      31 </span>                :            : #include &lt;linux/interrupt.h&gt;
+<span class="lineNum">      32 </span>                :            : #include &lt;linux/io.h&gt;
+<span class="lineNum">      33 </span>                :            : #include &lt;linux/platform_device.h&gt;
+<span class="lineNum">      34 </span>                :            : #include &lt;linux/gpio.h&gt;
+<span class="lineNum">      35 </span>                :            : #include &lt;linux/miscdevice.h&gt;
+<span class="lineNum">      36 </span>                :            : #include &lt;linux/spinlock.h&gt;
+<span class="lineNum">      37 </span>                :            : #include &lt;linux/pn544.h&gt;
+<span class="lineNum">      38 </span>                :            : 
+<span class="lineNum">      39 </span>                :            : #define MAX_BUFFER_SIZE 512
+<span class="lineNum">      40 </span>                :            : 
+<span class="lineNum">      41 </span>                :            : struct pn544_dev        {
+<span class="lineNum">      42 </span>                :            :         wait_queue_head_t       read_wq;
+<span class="lineNum">      43 </span>                :            :         struct mutex            read_mutex;
+<span class="lineNum">      44 </span>                :            :         struct i2c_client       *client;
+<span class="lineNum">      45 </span>                :            :         struct miscdevice       pn544_device;
+<span class="lineNum">      46 </span>                :            :         unsigned int            ven_gpio;
+<span class="lineNum">      47 </span>                :            :         unsigned int            firm_gpio;
+<span class="lineNum">      48 </span>                :            :         unsigned int            irq_gpio;
+<span class="lineNum">      49 </span>                :            :         bool                            irq_enabled;
+<span class="lineNum">      50 </span>                :            :         spinlock_t                      irq_enabled_lock;
+<a name="51"><span class="lineNum">      51 </span>                :            : };</a>
+<span class="lineNum">      52 </span>                :            : 
+<span class="lineNum">      53 </span>                :<span class="lineNoCov">          0 : static void pn544_disable_irq(struct pn544_dev *pn544_dev)</span>
+<span class="lineNum">      54 </span>                :            : {
+<span class="lineNum">      55 </span>                :            :         unsigned long flags;
+<span class="lineNum">      56 </span>                :            : 
+<span class="lineNum">      57 </span>                :<span class="lineNoCov">          0 :         spin_lock_irqsave(&amp;pn544_dev-&gt;irq_enabled_lock, flags);</span>
+<span class="lineNum">      58 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (pn544_dev-&gt;irq_enabled) {</span>
+<span class="lineNum">      59 </span>                :<span class="lineNoCov">          0 :                 disable_irq_nosync(pn544_dev-&gt;client-&gt;irq);</span>
+<span class="lineNum">      60 </span>                :<span class="lineNoCov">          0 :                 pn544_dev-&gt;irq_enabled = false;</span>
+<span class="lineNum">      61 </span>                :            :         }
+<span class="lineNum">      62 </span>                :<span class="lineNoCov">          0 :         spin_unlock_irqrestore(&amp;pn544_dev-&gt;irq_enabled_lock, flags);</span>
+<a name="63"><span class="lineNum">      63 </span>                :<span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">      64 </span>                :            : 
+<span class="lineNum">      65 </span>                :<span class="lineNoCov">          0 : static irqreturn_t pn544_dev_irq_handler(int irq, void *dev_id)</span>
+<span class="lineNum">      66 </span>                :            : {
+<span class="lineNum">      67 </span>                :<span class="lineNoCov">          0 :         struct pn544_dev *pn544_dev = dev_id;</span>
+<span class="lineNum">      68 </span>                :            : 
+<span class="lineNum">      69 </span>[<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :         pr_debug(&quot;%s : IRQ ENTER\n&quot;, __func__);</span>
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Block containing branch 4 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 5 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">      70 </span>                :            : 
+<span class="lineNum">      71 </span>                :<span class="lineNoCov">          0 :         pn544_disable_irq(pn544_dev);</span>
+<span class="lineNum">      72 </span>                :            : 
+<span class="lineNum">      73 </span>                :            :         /* Wake up waiting readers */
+<span class="lineNum">      74 </span>                :<span class="lineNoCov">          0 :         wake_up(&amp;pn544_dev-&gt;read_wq);</span>
+<span class="lineNum">      75 </span>                :            : 
+<span class="lineNum">      76 </span>                :<span class="lineNoCov">          0 :         return IRQ_HANDLED;</span>
+<a name="77"><span class="lineNum">      77 </span>                :            : }</a>
+<span class="lineNum">      78 </span>                :            : 
+<span class="lineNum">      79 </span>                :<span class="lineNoCov">          0 : static ssize_t pn544_dev_read(struct file *filp, char __user *buf,</span>
+<span class="lineNum">      80 </span>                :            :                 size_t count, loff_t *offset)
+<span class="lineNum">      81 </span>                :            : {
+<span class="lineNum">      82 </span>                :<span class="lineNoCov">          0 :         struct pn544_dev *pn544_dev = filp-&gt;private_data;</span>
+<span class="lineNum">      83 </span>                :            :         char tmp[MAX_BUFFER_SIZE];
+<span class="lineNum">      84 </span>                :            :         int ret;
+<span class="lineNum">      85 </span>                :            : 
+<span class="lineNum">      86 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (count &gt; MAX_BUFFER_SIZE)</span>
+<span class="lineNum">      87 </span>                :<span class="lineNoCov">          0 :                 count = MAX_BUFFER_SIZE;</span>
+<span class="lineNum">      88 </span>                :            : 
+<span class="lineNum">      89 </span>                :            :         /*pr_debug(&quot;%s : reading %zu bytes.\n&quot;, __func__, count);*/
+<span class="lineNum">      90 </span>                :            : 
+<span class="lineNum">      91 </span>                :<span class="lineNoCov">          0 :         mutex_lock(&amp;pn544_dev-&gt;read_mutex);</span>
+<span class="lineNum">      92 </span>                :            : 
+<span class="lineNum">      93 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (!gpio_get_value(pn544_dev-&gt;irq_gpio)) {</span>
+<span class="lineNum">      94 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :                 if (filp-&gt;f_flags &amp; O_NONBLOCK) {</span>
+<span class="lineNum">      95 </span>                :<span class="lineNoCov">          0 :                         ret = -EAGAIN;</span>
+<span class="lineNum">      96 </span>                :<span class="lineNoCov">          0 :                         goto fail;</span>
+<span class="lineNum">      97 </span>                :            :                 }
+<span class="lineNum">      98 </span>                :            : 
+<span class="lineNum">      99 </span>                :<span class="lineNoCov">          0 :                 pn544_dev-&gt;irq_enabled = true;</span>
+<span class="lineNum">     100 </span>                :<span class="lineNoCov">          0 :                 enable_irq(pn544_dev-&gt;client-&gt;irq);</span>
+<span class="lineNum">     101 </span>                :            : 
+<span class="lineNum">     102 </span>[<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 4 was never executed"> # </span>]:<span class="lineNoCov">          0 :                 ret = wait_event_interruptible(pn544_dev-&gt;read_wq,</span>
+<span class="lineNum">         </span>        [<span class="branchNoExec" title="Block containing branch 5 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span>]
+<span class="lineNum">     103 </span>                :            :                                 gpio_get_value(pn544_dev-&gt;irq_gpio));
+<span class="lineNum">     104 </span>                :<span class="lineNoCov">          0 :                 pn544_disable_irq(pn544_dev);</span>
+<span class="lineNum">     105 </span>                :            : 
+<span class="lineNum">     106 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :                 if (ret) {</span>
+<span class="lineNum">     107 </span>                :<span class="lineNoCov">          0 :                         pr_err(&quot;%s : wait_event_interruptible: %d&quot;,</span>
+<span class="lineNum">     108 </span>                :            :                                         __func__, ret);
+<span class="lineNum">     109 </span>                :<span class="lineNoCov">          0 :                         goto fail;</span>
+<span class="lineNum">     110 </span>                :            :                 }
+<span class="lineNum">     111 </span>                :            :         }
+<span class="lineNum">     112 </span>                :            : 
+<span class="lineNum">     113 </span>                :            :         /* Read data */
+<span class="lineNum">     114 </span>                :<span class="lineNoCov">          0 :         ret = i2c_master_recv(pn544_dev-&gt;client, tmp, count);</span>
+<span class="lineNum">     115 </span>                :<span class="lineNoCov">          0 :         mutex_unlock(&amp;pn544_dev-&gt;read_mutex);</span>
+<span class="lineNum">     116 </span>                :            : 
+<span class="lineNum">     117 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (ret &lt; 0) {</span>
+<span class="lineNum">     118 </span>                :<span class="lineNoCov">          0 :                 pr_err(&quot;%s: i2c_master_recv returned %d\n&quot;, __func__, ret);</span>
+<span class="lineNum">     119 </span>                :<span class="lineNoCov">          0 :                 return ret;</span>
+<span class="lineNum">     120 </span>                :            :         }
+<span class="lineNum">     121 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (ret &gt; count) {</span>
+<span class="lineNum">     122 </span>                :<span class="lineNoCov">          0 :                 pr_err(&quot;%s: received too many bytes from i2c (%d)\n&quot;,</span>
+<span class="lineNum">     123 </span>                :            :                         __func__, ret);
+<span class="lineNum">     124 </span>                :<span class="lineNoCov">          0 :                 return -EIO;</span>
+<span class="lineNum">     125 </span>                :            :         }
+<span class="lineNum">     126 </span>        [<span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (copy_to_user(buf, tmp, ret)) {</span>
+<span class="lineNum">     127 </span>                :<span class="lineNoCov">          0 :                 pr_warning(&quot;%s : failed to copy to user space\n&quot;, __func__);</span>
+<span class="lineNum">     128 </span>                :<span class="lineNoCov">          0 :                 return -EFAULT;</span>
+<span class="lineNum">     129 </span>                :            :         }
+<span class="lineNum">     130 </span>                :            : 
+<span class="lineNum">     131 </span>[<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :         pr_debug(&quot;%s : Bytes read = %d: &quot;, __func__, ret);</span>
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Block containing branch 4 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 5 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">     132 </span>                :<span class="lineNoCov">          0 :         return ret;</span>
+<span class="lineNum">     133 </span>                :            : 
+<span class="lineNum">     134 </span>                :            : fail:
+<span class="lineNum">     135 </span>                :<span class="lineNoCov">          0 :         mutex_unlock(&amp;pn544_dev-&gt;read_mutex);</span>
+<span class="lineNum">     136 </span>                :<span class="lineNoCov">          0 :         pr_err(&quot;%s : Error in function read\n&quot;, __func__);</span>
+<span class="lineNum">     137 </span>                :<span class="lineNoCov">          0 :         return ret;</span>
+<a name="138"><span class="lineNum">     138 </span>                :            : }</a>
+<span class="lineNum">     139 </span>                :            : 
+<span class="lineNum">     140 </span>                :<span class="lineNoCov">          0 : static ssize_t pn544_dev_write(struct file *filp, const char __user *buf,</span>
+<span class="lineNum">     141 </span>                :            :                 size_t count, loff_t *offset)
+<span class="lineNum">     142 </span>                :            : {
+<span class="lineNum">     143 </span>                :            :         struct pn544_dev  *pn544_dev;
+<span class="lineNum">     144 </span>                :            :         char tmp[MAX_BUFFER_SIZE];
+<span class="lineNum">     145 </span>                :            :         int ret;
+<span class="lineNum">     146 </span>                :            : 
+<span class="lineNum">     147 </span>                :<span class="lineNoCov">          0 :         pn544_dev = filp-&gt;private_data;</span>
+<span class="lineNum">     148 </span>                :            : 
+<span class="lineNum">     149 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (count &gt; MAX_BUFFER_SIZE)</span>
+<span class="lineNum">     150 </span>                :<span class="lineNoCov">          0 :                 count = MAX_BUFFER_SIZE;</span>
+<span class="lineNum">     151 </span>                :            : 
+<span class="lineNum">     152 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (copy_from_user(tmp, buf, count)) {</span>
+<span class="lineNum">     153 </span>                :<span class="lineNoCov">          0 :                 pr_err(&quot;%s : failed to copy from user space\n&quot;, __func__);</span>
+<span class="lineNum">     154 </span>                :<span class="lineNoCov">          0 :                 return -EFAULT;</span>
+<span class="lineNum">     155 </span>                :            :         }
+<span class="lineNum">     156 </span>                :            : 
+<span class="lineNum">     157 </span>[<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :         pr_debug(&quot;%s : writing %zu bytes.\n&quot;, __func__, count);</span>
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Block containing branch 4 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 5 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">     158 </span>                :            :         /* Write data */
+<span class="lineNum">     159 </span>                :<span class="lineNoCov">          0 :         ret = i2c_master_send(pn544_dev-&gt;client, tmp, count);</span>
+<span class="lineNum">     160 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (ret != count) {</span>
+<span class="lineNum">     161 </span>                :<span class="lineNoCov">          0 :                 pr_err(&quot;%s : i2c_master_send returned %d\n&quot;, __func__, ret);</span>
+<span class="lineNum">     162 </span>                :<span class="lineNoCov">          0 :                 ret = -EIO;</span>
+<span class="lineNum">     163 </span>                :            :         }
+<span class="lineNum">     164 </span>                :            : 
+<span class="lineNum">     165 </span>                :<span class="lineNoCov">          0 :         return ret;</span>
+<a name="166"><span class="lineNum">     166 </span>                :            : }</a>
+<span class="lineNum">     167 </span>                :            : 
+<span class="lineNum">     168 </span>                :<span class="lineNoCov">          0 : static int pn544_dev_open(struct inode *inode, struct file *filp)</span>
+<span class="lineNum">     169 </span>                :            : {
+<span class="lineNum">     170 </span>                :<span class="lineNoCov">          0 :         struct pn544_dev *pn544_dev = container_of(filp-&gt;private_data,</span>
+<span class="lineNum">     171 </span>                :            :                                                 struct pn544_dev,
+<span class="lineNum">     172 </span>                :            :                                                 pn544_device);
+<span class="lineNum">     173 </span>                :            : 
+<span class="lineNum">     174 </span>                :<span class="lineNoCov">          0 :         filp-&gt;private_data = pn544_dev;</span>
+<span class="lineNum">     175 </span>                :            : 
+<span class="lineNum">     176 </span>[<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :         pr_debug(&quot;%s : %d,%d\n&quot;, __func__, imajor(inode), iminor(inode));</span>
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Block containing branch 4 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 5 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">     177 </span>                :            : 
+<span class="lineNum">     178 </span>                :<span class="lineNoCov">          0 :         return 0;</span>
+<a name="179"><span class="lineNum">     179 </span>                :            : }</a>
+<span class="lineNum">     180 </span>                :            : 
+<span class="lineNum">     181 </span>                :<span class="lineNoCov">          0 : static int pn544_dev_ioctl(struct inode *inode, struct file *filp,</span>
+<span class="lineNum">     182 </span>                :            :                 unsigned int cmd, unsigned long arg)
+<span class="lineNum">     183 </span>                :            : {
+<span class="lineNum">     184 </span>                :<span class="lineNoCov">          0 :         struct pn544_dev *pn544_dev = filp-&gt;private_data;</span>
+<span class="lineNum">     185 </span>                :            : 
+<span class="lineNum">     186 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         switch (cmd) {</span>
+<span class="lineNum">     187 </span>                :            :         case PN544_SET_PWR:
+<span class="lineNum">     188 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :                 if (arg == 2) {</span>
+<span class="lineNum">     189 </span>                :            :                         /* power on with firmware download (requires hw reset)
+<span class="lineNum">     190 </span>                :            :                          */
+<span class="lineNum">     191 </span>                :<span class="lineNoCov">          0 :                         pr_info(&quot;%s power on with firmware\n&quot;, __func__);</span>
+<span class="lineNum">     192 </span>                :<span class="lineNoCov">          0 :                         gpio_set_value(pn544_dev-&gt;ven_gpio, 1);</span>
+<span class="lineNum">     193 </span>                :<span class="lineNoCov">          0 :                         gpio_set_value(pn544_dev-&gt;firm_gpio, 1);</span>
+<span class="lineNum">     194 </span>                :<span class="lineNoCov">          0 :                         msleep(10);</span>
+<span class="lineNum">     195 </span>                :<span class="lineNoCov">          0 :                         gpio_set_value(pn544_dev-&gt;ven_gpio, 0);</span>
+<span class="lineNum">     196 </span>                :<span class="lineNoCov">          0 :                         msleep(10);</span>
+<span class="lineNum">     197 </span>                :<span class="lineNoCov">          0 :                         gpio_set_value(pn544_dev-&gt;ven_gpio, 1);</span>
+<span class="lineNum">     198 </span>                :<span class="lineNoCov">          0 :                         msleep(10);</span>
+<span class="lineNum">     199 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :                 } else if (arg == 1) {</span>
+<span class="lineNum">     200 </span>                :            :                         /* power on */
+<span class="lineNum">     201 </span>                :<span class="lineNoCov">          0 :                         pr_info(&quot;%s power on\n&quot;, __func__);</span>
+<span class="lineNum">     202 </span>                :<span class="lineNoCov">          0 :                         gpio_set_value(pn544_dev-&gt;firm_gpio, 0);</span>
+<span class="lineNum">     203 </span>                :<span class="lineNoCov">          0 :                         gpio_set_value(pn544_dev-&gt;ven_gpio, 1);</span>
+<span class="lineNum">     204 </span>                :<span class="lineNoCov">          0 :                         msleep(10);</span>
+<span class="lineNum">     205 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :                 } else  if (arg == 0) {</span>
+<span class="lineNum">     206 </span>                :            :                         /* power off */
+<span class="lineNum">     207 </span>                :<span class="lineNoCov">          0 :                         pr_info(&quot;%s power off\n&quot;, __func__);</span>
+<span class="lineNum">     208 </span>                :<span class="lineNoCov">          0 :                         gpio_set_value(pn544_dev-&gt;firm_gpio, 0);</span>
+<span class="lineNum">     209 </span>                :<span class="lineNoCov">          0 :                         gpio_set_value(pn544_dev-&gt;ven_gpio, 0);</span>
+<span class="lineNum">     210 </span>                :<span class="lineNoCov">          0 :                         msleep(10);</span>
+<span class="lineNum">     211 </span>                :            :                 } else {
+<span class="lineNum">     212 </span>                :<span class="lineNoCov">          0 :                         pr_err(&quot;%s bad arg %u\n&quot;, __func__, arg);</span>
+<span class="lineNum">     213 </span>                :<span class="lineNoCov">          0 :                         return -EINVAL;</span>
+<span class="lineNum">     214 </span>                :            :                 }
+<span class="lineNum">     215 </span>                :            :                 break;
+<span class="lineNum">     216 </span>                :            :         default:
+<span class="lineNum">     217 </span>                :<span class="lineNoCov">          0 :                 pr_err(&quot;%s bad ioctl %u\n&quot;, __func__, cmd);</span>
+<span class="lineNum">     218 </span>                :<span class="lineNoCov">          0 :                 return -EINVAL;</span>
+<span class="lineNum">     219 </span>                :            :         }
+<span class="lineNum">     220 </span>                :            : 
+<span class="lineNum">     221 </span>                :<span class="lineNoCov">          0 :         return 0;</span>
+<span class="lineNum">     222 </span>                :            : }
+<span class="lineNum">     223 </span>                :            : 
+<span class="lineNum">     224 </span>                :            : static const struct file_operations pn544_dev_fops = {
+<span class="lineNum">     225 </span>                :            :         .owner  = THIS_MODULE,
+<span class="lineNum">     226 </span>                :            :         .llseek = no_llseek,
+<span class="lineNum">     227 </span>                :            :         .read   = pn544_dev_read,
+<span class="lineNum">     228 </span>                :            :         .write  = pn544_dev_write,
+<span class="lineNum">     229 </span>                :            :         .open   = pn544_dev_open,
+<span class="lineNum">     230 </span>                :            :         .ioctl  = pn544_dev_ioctl,
+<a name="231"><span class="lineNum">     231 </span>                :            : };</a>
+<span class="lineNum">     232 </span>                :            : 
+<span class="lineNum">     233 </span>                :<span class="lineNoCov">          0 : static int pn544_probe(struct i2c_client *client,</span>
+<span class="lineNum">     234 </span>                :            :                 const struct i2c_device_id *id)
+<span class="lineNum">     235 </span>                :            : {
+<span class="lineNum">     236 </span>                :            :         int ret;
+<span class="lineNum">     237 </span>                :            :         struct pn544_i2c_platform_data *platform_data;
+<span class="lineNum">     238 </span>                :            :         struct pn544_dev *pn544_dev;
+<span class="lineNum">     239 </span>                :            : 
+<span class="lineNum">     240 </span>[<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 2 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 3 was never executed"> # </span>]:<span class="lineNoCov">          0 :         pr_debug(&quot;%s : entering probe\n&quot;, __func__);</span>
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Block containing branch 4 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 5 was never executed"> # </span>][<span class="branchNoExec" title="Block containing branch 6 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 7 was never executed"> # </span>]
+<span class="lineNum">     241 </span>                :            : 
+<span class="lineNum">     242 </span>                :<span class="lineNoCov">          0 :         platform_data = client-&gt;dev.platform_data;</span>
+<span class="lineNum">     243 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (platform_data == NULL) {</span>
+<span class="lineNum">     244 </span>                :<span class="lineNoCov">          0 :                 pr_err(&quot;%s : nfc probe fail\n&quot;, __func__);</span>
+<span class="lineNum">     245 </span>                :<span class="lineNoCov">          0 :                 return  -ENODEV;</span>
+<span class="lineNum">     246 </span>                :            :         }
+<span class="lineNum">     247 </span>                :            : 
+<span class="lineNum">     248 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (!i2c_check_functionality(client-&gt;adapter, I2C_FUNC_I2C)) {</span>
+<span class="lineNum">     249 </span>                :<span class="lineNoCov">          0 :                 pr_err(&quot;%s : need I2C_FUNC_I2C\n&quot;, __func__);</span>
+<span class="lineNum">     250 </span>                :<span class="lineNoCov">          0 :                 return  -ENODEV;</span>
+<span class="lineNum">     251 </span>                :            :         }
+<span class="lineNum">     252 </span>                :            : /*
+<span class="lineNum">     253 </span>                :            :         ret = gpio_request(platform_data-&gt;irq_gpio, &quot;NFC-intr&quot;);
+<span class="lineNum">     254 </span>                :            :         if (ret)
+<span class="lineNum">     255 </span>                :            :                 return  -ENODEV;
+<span class="lineNum">     256 </span>                :            :         ret = gpio_request(platform_data-&gt;ven_gpio, &quot;NFC-enable&quot;);
+<span class="lineNum">     257 </span>                :            :         if (ret)
+<span class="lineNum">     258 </span>                :            :                 goto err_ven;
+<span class="lineNum">     259 </span>                :            :         ret = gpio_request(platform_data-&gt;firm_gpio, &quot;NFC-reset&quot;);
+<span class="lineNum">     260 </span>                :            :         if (ret)
+<span class="lineNum">     261 </span>                :            :                 goto err_firm;
+<span class="lineNum">     262 </span>                :            : */
+<span class="lineNum">     263 </span>                :<span class="lineNoCov">          0 :         pn544_dev = kzalloc(sizeof(*pn544_dev), GFP_KERNEL);</span>
+<span class="lineNum">     264 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (pn544_dev == NULL) {</span>
+<span class="lineNum">     265 </span>                :<span class="lineNoCov">          0 :                 dev_err(&amp;client-&gt;dev,</span>
+<span class="lineNum">     266 </span>                :            :                                 &quot;failed to allocate memory for module data\n&quot;);
+<span class="lineNum">     267 </span>                :<span class="lineNoCov">          0 :                 ret = -ENOMEM;</span>
+<span class="lineNum">     268 </span>                :<span class="lineNoCov">          0 :                 goto err_exit;</span>
+<span class="lineNum">     269 </span>                :            :         }
+<span class="lineNum">     270 </span>                :            : 
+<span class="lineNum">     271 </span>                :            : 
+<span class="lineNum">     272 </span>                :<span class="lineNoCov">          0 :         ret = platform_data-&gt;request_resources(client);</span>
+<span class="lineNum">     273 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (ret)</span>
+<span class="lineNum">     274 </span>                :            :                 goto err_exit;
+<span class="lineNum">     275 </span>                :            : 
+<span class="lineNum">     276 </span>                :<span class="lineNoCov">          0 :         pn544_dev-&gt;irq_gpio = platform_data-&gt;irq_gpio;</span>
+<span class="lineNum">     277 </span>                :<span class="lineNoCov">          0 :         pn544_dev-&gt;ven_gpio  = platform_data-&gt;ven_gpio;</span>
+<span class="lineNum">     278 </span>                :<span class="lineNoCov">          0 :         pn544_dev-&gt;firm_gpio  = platform_data-&gt;firm_gpio;</span>
+<span class="lineNum">     279 </span>                :<span class="lineNoCov">          0 :         pn544_dev-&gt;client   = client;</span>
+<span class="lineNum">     280 </span>                :            : 
+<span class="lineNum">     281 </span>                :            :         /* init mutex and queues */
+<span class="lineNum">     282 </span>                :<span class="lineNoCov">          0 :         init_waitqueue_head(&amp;pn544_dev-&gt;read_wq);</span>
+<span class="lineNum">     283 </span>                :<span class="lineNoCov">          0 :         mutex_init(&amp;pn544_dev-&gt;read_mutex);</span>
+<span class="lineNum">     284 </span>                :<span class="lineNoCov">          0 :         spin_lock_init(&amp;pn544_dev-&gt;irq_enabled_lock);</span>
+<span class="lineNum">     285 </span>                :            : 
+<span class="lineNum">     286 </span>                :<span class="lineNoCov">          0 :         pn544_dev-&gt;pn544_device.minor = MISC_DYNAMIC_MINOR;</span>
+<span class="lineNum">     287 </span>                :<span class="lineNoCov">          0 :         pn544_dev-&gt;pn544_device.name = &quot;pn544&quot;;</span>
+<span class="lineNum">     288 </span>                :<span class="lineNoCov">          0 :         pn544_dev-&gt;pn544_device.fops = &amp;pn544_dev_fops;</span>
+<span class="lineNum">     289 </span>                :            : 
+<span class="lineNum">     290 </span>                :<span class="lineNoCov">          0 :         ret = misc_register(&amp;pn544_dev-&gt;pn544_device);</span>
+<span class="lineNum">     291 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (ret) {</span>
+<span class="lineNum">     292 </span>                :<span class="lineNoCov">          0 :                 pr_err(&quot;%s : misc_register failed\n&quot;, __FILE__);</span>
+<span class="lineNum">     293 </span>                :<span class="lineNoCov">          0 :                 goto err_misc_register;</span>
+<span class="lineNum">     294 </span>                :            :         }
+<span class="lineNum">     295 </span>                :            : 
+<span class="lineNum">     296 </span>                :            :         /* request irq.  the irq is set whenever the chip has data available
+<span class="lineNum">     297 </span>                :            :          * for reading.  it is cleared when all data has been read.
+<span class="lineNum">     298 </span>                :            :          */
+<span class="lineNum">     299 </span>                :<span class="lineNoCov">          0 :         pr_info(&quot;%s : requesting IRQ %d\n&quot;, __func__, client-&gt;irq);</span>
+<span class="lineNum">     300 </span>                :<span class="lineNoCov">          0 :         pn544_dev-&gt;irq_enabled = true;</span>
+<span class="lineNum">     301 </span>                :<span class="lineNoCov">          0 :         ret = request_irq(client-&gt;irq, pn544_dev_irq_handler,</span>
+<span class="lineNum">     302 </span>                :            :                           IRQF_TRIGGER_RISING, client-&gt;name, pn544_dev);
+<span class="lineNum">     303 </span>        [<span class="branchNoExec" title="Block containing branch 0 was never executed"> # </span><span class="branchNoExec" title="Block containing branch 1 was never executed"> # </span>]:<span class="lineNoCov">          0 :         if (ret) {</span>
+<span class="lineNum">     304 </span>                :<span class="lineNoCov">          0 :                 dev_err(&amp;client-&gt;dev, &quot;request_irq failed\n&quot;);</span>
+<span class="lineNum">     305 </span>                :<span class="lineNoCov">          0 :                 goto err_request_irq_failed;</span>
+<span class="lineNum">     306 </span>                :            :         }
+<span class="lineNum">     307 </span>                :<span class="lineNoCov">          0 :         pn544_disable_irq(pn544_dev);</span>
+<span class="lineNum">     308 </span>                :            :         i2c_set_clientdata(client, pn544_dev);
+<span class="lineNum">     309 </span>                :            : 
+<span class="lineNum">     310 </span>                :<span class="lineNoCov">          0 :         return 0;</span>
+<span class="lineNum">     311 </span>                :            : 
+<span class="lineNum">     312 </span>                :            : err_request_irq_failed:
+<span class="lineNum">     313 </span>                :<span class="lineNoCov">          0 :         misc_deregister(&amp;pn544_dev-&gt;pn544_device);</span>
+<span class="lineNum">     314 </span>                :            : err_misc_register:
+<span class="lineNum">     315 </span>                :<span class="lineNoCov">          0 :         mutex_destroy(&amp;pn544_dev-&gt;read_mutex);</span>
+<span class="lineNum">     316 </span>                :<span class="lineNoCov">          0 :         kfree(pn544_dev);</span>
+<span class="lineNum">     317 </span>                :            : err_exit:
+<span class="lineNum">     318 </span>                :<span class="lineNoCov">          0 :         gpio_free(platform_data-&gt;firm_gpio);</span>
+<span class="lineNum">     319 </span>                :            : err_firm:
+<span class="lineNum">     320 </span>                :<span class="lineNoCov">          0 :         gpio_free(platform_data-&gt;ven_gpio);</span>
+<span class="lineNum">     321 </span>                :            : err_ven:
+<span class="lineNum">     322 </span>                :<span class="lineNoCov">          0 :         gpio_free(platform_data-&gt;irq_gpio);</span>
+<span class="lineNum">     323 </span>                :<span class="lineNoCov">          0 :         return ret;</span>
+<a name="324"><span class="lineNum">     324 </span>                :            : }</a>
+<span class="lineNum">     325 </span>                :            : 
+<span class="lineNum">     326 </span>                :<span class="lineNoCov">          0 : static int pn544_remove(struct i2c_client *client)</span>
+<span class="lineNum">     327 </span>                :            : {
+<span class="lineNum">     328 </span>                :            :         struct pn544_dev *pn544_dev;
+<span class="lineNum">     329 </span>                :            : 
+<span class="lineNum">     330 </span>                :<span class="lineNoCov">          0 :         pn544_dev = i2c_get_clientdata(client);</span>
+<span class="lineNum">     331 </span>                :<span class="lineNoCov">          0 :         free_irq(client-&gt;irq, pn544_dev);</span>
+<span class="lineNum">     332 </span>                :<span class="lineNoCov">          0 :         misc_deregister(&amp;pn544_dev-&gt;pn544_device);</span>
+<span class="lineNum">     333 </span>                :<span class="lineNoCov">          0 :         mutex_destroy(&amp;pn544_dev-&gt;read_mutex);</span>
+<span class="lineNum">     334 </span>                :<span class="lineNoCov">          0 :         gpio_free(pn544_dev-&gt;irq_gpio);</span>
+<span class="lineNum">     335 </span>                :<span class="lineNoCov">          0 :         gpio_free(pn544_dev-&gt;ven_gpio);</span>
+<span class="lineNum">     336 </span>                :<span class="lineNoCov">          0 :         gpio_free(pn544_dev-&gt;firm_gpio);</span>
+<span class="lineNum">     337 </span>                :<span class="lineNoCov">          0 :         kfree(pn544_dev);</span>
+<span class="lineNum">     338 </span>                :            : 
+<span class="lineNum">     339 </span>                :<span class="lineNoCov">          0 :         return 0;</span>
+<span class="lineNum">     340 </span>                :            : }
+<span class="lineNum">     341 </span>                :            : 
+<span class="lineNum">     342 </span>                :            : static const struct i2c_device_id pn544_id[] = {
+<span class="lineNum">     343 </span>                :            :         { &quot;pn544&quot;, 0 },
+<span class="lineNum">     344 </span>                :            :         { }
+<span class="lineNum">     345 </span>                :            : };
+<span class="lineNum">     346 </span>                :            : 
+<span class="lineNum">     347 </span>                :            : static struct i2c_driver pn544_driver = {
+<span class="lineNum">     348 </span>                :            :         .id_table       = pn544_id,
+<span class="lineNum">     349 </span>                :            :         .probe          = pn544_probe,
+<span class="lineNum">     350 </span>                :            :         .remove         = pn544_remove,
+<span class="lineNum">     351 </span>                :            :         .driver         = {
+<span class="lineNum">     352 </span>                :            :                 .owner  = THIS_MODULE,
+<span class="lineNum">     353 </span>                :            :                 .name   = &quot;pn544&quot;,
+<span class="lineNum">     354 </span>                :            :         },
+<span class="lineNum">     355 </span>                :            : };
+<span class="lineNum">     356 </span>                :            : 
+<span class="lineNum">     357 </span>                :            : /*
+<span class="lineNum">     358 </span>                :            :  * module load/unload record keeping
+<a name="359"><span class="lineNum">     359 </span>                :            :  */</a>
+<span class="lineNum">     360 </span>                :            : 
+<span class="lineNum">     361 </span>                :<span class="lineCov">          1 : static int __init pn544_dev_init(void)</span>
+<span class="lineNum">     362 </span>                :            : {
+<span class="lineNum">     363 </span>                :<span class="lineCov">          1 :         pr_info(&quot;Loading pn544 driver\n&quot;);</span>
+<span class="lineNum">     364 </span>                :<span class="lineCov">          1 :         return i2c_add_driver(&amp;pn544_driver);</span>
+<span class="lineNum">     365 </span>                :            : }
+<a name="366"><span class="lineNum">     366 </span>                :            : module_init(pn544_dev_init);</a>
+<span class="lineNum">     367 </span>                :            : 
+<span class="lineNum">     368 </span>                :<span class="lineNoCov">          0 : static void __exit pn544_dev_exit(void)</span>
+<span class="lineNum">     369 </span>                :            : {
+<span class="lineNum">     370 </span>                :<span class="lineNoCov">          0 :         pr_info(&quot;Unloading pn544 driver\n&quot;);</span>
+<span class="lineNum">     371 </span>                :<span class="lineNoCov">          0 :         i2c_del_driver(&amp;pn544_driver);</span>
+<span class="lineNum">     372 </span>                :<span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     373 </span>                :            : module_exit(pn544_dev_exit);
+<span class="lineNum">     374 </span>                :            : 
+<span class="lineNum">     375 </span>                :            : MODULE_AUTHOR(&quot;Sylvain Fonteneau&quot;);
+<span class="lineNum">     376 </span>                :            : MODULE_DESCRIPTION(&quot;NFC PN544 driver&quot;);
+<span class="lineNum">     377 </span>                :            : MODULE_LICENSE(&quot;GPL&quot;);
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.8</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

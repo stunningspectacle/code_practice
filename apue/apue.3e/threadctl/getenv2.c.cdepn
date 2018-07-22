@@ -1,0 +1,15 @@
+F {getenv_r} {getenv2.c:24}
+C {getenv_r} {getenv2.c:46} {pthread_mutex_unlock}
+C {getenv_r} {getenv2.c:46} {pthread_mutex_unlock}
+C {getenv_r} {getenv2.c:46} {strcpy}
+C {getenv_r} {getenv2.c:46} {pthread_mutex_unlock}
+C {getenv_r} {getenv2.c:46} {strlen}
+C {getenv_r} {getenv2.c:46} {strncmp}
+C {getenv_r} {getenv2.c:46} {pthread_mutex_lock}
+C {getenv_r} {getenv2.c:46} {strlen}
+C {getenv_r} {getenv2.c:46} {pthread_once}
+F {thread_init} {getenv2.c:13}
+C {thread_init} {getenv2.c:46} {pthread_mutexattr_destroy}
+C {thread_init} {getenv2.c:46} {pthread_mutex_init}
+C {thread_init} {getenv2.c:46} {pthread_mutexattr_settype}
+C {thread_init} {getenv2.c:46} {pthread_mutexattr_init}

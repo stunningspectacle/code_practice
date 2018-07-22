@@ -1,0 +1,19 @@
+F {sig_alrm} {mask.c:55}
+C {sig_alrm} {mask.c:58} {pr_mask}
+F {sig_usr1} {mask.c:33}
+C {sig_usr1} {mask.c:58} {siglongjmp}
+C {sig_usr1} {mask.c:58} {pr_mask}
+C {sig_usr1} {mask.c:58} {time}
+C {sig_usr1} {mask.c:58} {time}
+C {sig_usr1} {mask.c:58} {alarm}
+C {sig_usr1} {mask.c:58} {pr_mask}
+F {main} {mask.c:11}
+C {main} {mask.c:58} {pause}
+C {main} {mask.c:58} {exit}
+C {main} {mask.c:58} {pr_mask}
+C {main} {mask.c:58} {__sigsetjmp}
+C {main} {mask.c:58} {pr_mask}
+C {main} {mask.c:58} {err_sys}
+C {main} {mask.c:58} {signal}
+C {main} {mask.c:58} {err_sys}
+C {main} {mask.c:58} {signal}

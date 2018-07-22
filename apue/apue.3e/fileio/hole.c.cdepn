@@ -1,0 +1,10 @@
+F {main} {hole.c:8}
+C {main} {hole.c:28} {exit}
+C {main} {hole.c:28} {err_sys}
+C {main} {hole.c:28} {write}
+C {main} {hole.c:28} {err_sys}
+C {main} {hole.c:28} {lseek}
+C {main} {hole.c:28} {err_sys}
+C {main} {hole.c:28} {write}
+C {main} {hole.c:28} {err_sys}
+C {main} {hole.c:28} {creat}

@@ -1,0 +1,14 @@
+F {main} {shell1.c:5}
+C {main} {shell1.c:30} {exit}
+C {main} {shell1.c:30} {fgets}
+C {main} {shell1.c:30} {printf}
+C {main} {shell1.c:30} {err_sys}
+C {main} {shell1.c:30} {waitpid}
+C {main} {shell1.c:30} {exit}
+C {main} {shell1.c:30} {err_ret}
+C {main} {shell1.c:30} {execlp}
+C {main} {shell1.c:30} {err_sys}
+C {main} {shell1.c:30} {fork}
+C {main} {shell1.c:30} {strlen}
+C {main} {shell1.c:30} {strlen}
+C {main} {shell1.c:30} {printf}

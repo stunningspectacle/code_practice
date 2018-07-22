@@ -1,0 +1,42 @@
+F {main} {cleanup.c:39}
+C {main} {cleanup.c:60} {exit}
+C {main} {cleanup.c:60} {printf}
+C {main} {cleanup.c:60} {err_exit}
+C {main} {cleanup.c:60} {pthread_join}
+C {main} {cleanup.c:60} {printf}
+C {main} {cleanup.c:60} {err_exit}
+C {main} {cleanup.c:60} {pthread_join}
+C {main} {cleanup.c:60} {err_exit}
+C {main} {cleanup.c:60} {pthread_create}
+C {main} {cleanup.c:60} {err_exit}
+C {main} {cleanup.c:60} {pthread_create}
+F {thr_fn2} {cleanup.c:25}
+C {thr_fn2} {cleanup.c:60} {pthread_exit}
+C {thr_fn2} {cleanup.c:60} {__pthread_unregister_cancel}
+C {thr_fn2} {cleanup.c:60} {__pthread_unregister_cancel}
+C {thr_fn2} {cleanup.c:60} {pthread_exit}
+C {thr_fn2} {cleanup.c:60} {__builtin_puts}
+C {thr_fn2} {cleanup.c:60} {__pthread_register_cancel}
+C {thr_fn2} {cleanup.c:60} {__pthread_unwind_next}
+C {thr_fn2} {cleanup.c:60} {__builtin_expect}
+C {thr_fn2} {cleanup.c:60} {__sigsetjmp}
+C {thr_fn2} {cleanup.c:60} {__pthread_register_cancel}
+C {thr_fn2} {cleanup.c:60} {__pthread_unwind_next}
+C {thr_fn2} {cleanup.c:60} {__builtin_expect}
+C {thr_fn2} {cleanup.c:60} {__sigsetjmp}
+C {thr_fn2} {cleanup.c:60} {__builtin_puts}
+F {thr_fn1} {cleanup.c:11}
+C {thr_fn1} {cleanup.c:60} {__pthread_unregister_cancel}
+C {thr_fn1} {cleanup.c:60} {__pthread_unregister_cancel}
+C {thr_fn1} {cleanup.c:60} {__builtin_puts}
+C {thr_fn1} {cleanup.c:60} {__pthread_register_cancel}
+C {thr_fn1} {cleanup.c:60} {__pthread_unwind_next}
+C {thr_fn1} {cleanup.c:60} {__builtin_expect}
+C {thr_fn1} {cleanup.c:60} {__sigsetjmp}
+C {thr_fn1} {cleanup.c:60} {__pthread_register_cancel}
+C {thr_fn1} {cleanup.c:60} {__pthread_unwind_next}
+C {thr_fn1} {cleanup.c:60} {__builtin_expect}
+C {thr_fn1} {cleanup.c:60} {__sigsetjmp}
+C {thr_fn1} {cleanup.c:60} {__builtin_puts}
+F {cleanup} {cleanup.c:5}
+C {cleanup} {cleanup.c:60} {printf}

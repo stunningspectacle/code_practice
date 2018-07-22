@@ -1,0 +1,4 @@
+F {sleep} {/usr/include/unistd.h:445}
+C {sleep} {sleep.c:24} {time}
+C {sleep} {sleep.c:24} {select}
+C {sleep} {sleep.c:24} {time}

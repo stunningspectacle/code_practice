@@ -1,0 +1,11 @@
+F {main} {main.c:7}
+C {main} {main.c:32} {exit}
+C {main} {main.c:32} {fgets}
+C {main} {main.c:32} {close}
+C {main} {main.c:32} {err_sys}
+C {main} {main.c:32} {read}
+C {main} {main.c:32} {err_sys}
+C {main} {main.c:32} {write}
+C {main} {main.c:32} {csopen}
+C {main} {main.c:32} {strlen}
+C {main} {main.c:32} {strlen}

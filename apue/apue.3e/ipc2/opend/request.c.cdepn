@@ -1,0 +1,17 @@
+F {handle_request} {request.c:5}
+C {handle_request} {request.c:38} {close}
+C {handle_request} {request.c:38} {log_msg}
+C {handle_request} {request.c:38} {log_sys}
+C {handle_request} {request.c:38} {send_fd}
+C {handle_request} {request.c:38} {log_msg}
+C {handle_request} {request.c:38} {send_err}
+C {handle_request} {request.c:38} {snprintf}
+C {handle_request} {request.c:38} {strerror}
+C {handle_request} {request.c:38} {__errno_location}
+C {handle_request} {request.c:38} {open}
+C {handle_request} {request.c:38} {log_msg}
+C {handle_request} {request.c:38} {send_err}
+C {handle_request} {request.c:38} {buf_args}
+C {handle_request} {request.c:38} {log_msg}
+C {handle_request} {request.c:38} {send_err}
+C {handle_request} {request.c:38} {snprintf}

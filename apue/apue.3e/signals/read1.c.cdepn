@@ -1,0 +1,10 @@
+F {sig_alrm} {read1.c:24}
+F {main} {read1.c:6}
+C {main} {read1.c:27} {exit}
+C {main} {read1.c:27} {write}
+C {main} {read1.c:27} {alarm}
+C {main} {read1.c:27} {err_sys}
+C {main} {read1.c:27} {read}
+C {main} {read1.c:27} {alarm}
+C {main} {read1.c:27} {err_sys}
+C {main} {read1.c:27} {signal}

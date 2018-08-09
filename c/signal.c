@@ -11,6 +11,7 @@ void sig_handler(int signum)
 void main()
 {
 	printf("pid = %d\n", getpid());
+
 	//printf("tid = %d\n", gettid());
 
 	signal(SIGTERM, sig_handler);

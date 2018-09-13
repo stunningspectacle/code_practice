@@ -6,6 +6,7 @@
 #include <malloc.h>
 
 extern char **environ;
+typedef unsigned short uint16_t;
 
 #define DEBUG(fmt, args...) printf(fmt, ##args)
 #define ASSERT_EQ(a, b) \
@@ -148,12 +149,19 @@ int my_test_div_zero() {
 
 }
 
+void test_uint() {
+	uint16_t a = 100;
+	uint16_t c = 90;
+	int delta;
+
+	uint16_t b;
+
+	delta = c - a;
+	b = a + delta;
+	printf("%u, %d\n", b, delta);
+}
+
 void main(int argc, char *argv[])
 {
-	int i;
-
-	for (i = 0; i < argc; i++) {
-		printf("%s\n", argv[i]);
-	}
-
+	test_uint();
 }

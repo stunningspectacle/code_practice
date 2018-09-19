@@ -1,0 +1,27 @@
+diff --git a/drivers/arch/x86/platform/src/sf_3g_soc/platform_cnf.c b/drivers/arch/x86/platform/src/sf_3g_soc/platform_cnf.c
+index 0162347..22e6484 100644
+--- a/drivers/arch/x86/platform/src/sf_3g_soc/platform_cnf.c
++++ b/drivers/arch/x86/platform/src/sf_3g_soc/platform_cnf.c
+@@ -69,6 +69,10 @@ static void platform_clear_irq(void)
+ void platform_setup_before_system_start(void)
+ {
+   // Invalidate I&D cache
++#if defined(DISPLAY_DRIVER_SUPPORT)
++  /* Turn off display to void flickering during system bootup */
++  platform_set_power(PLATFORM_POWER_BACKLIGHT, FALSE);
++#endif
+   platform_clear_irq();
+   mmu_bootcore_paging_disable();
+   platform_invalidate_caches();
+@@ -306,10 +310,7 @@ BOOL platform_set_power(enum PLATFORM_POWER user, U32 value)
+       return FALSE;
+     break;
+   case PLATFORM_POWER_BACKLIGHT:
+-    if(value)
+-    {
+-      pmu_bootcore_enable_backlight();
+-    }
++    pmu_bootcore_enable_backlight(value);
+     break;
+   default:
+     return FALSE;

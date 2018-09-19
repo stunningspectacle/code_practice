@@ -1,0 +1,23 @@
+From 0312343ec02896d6d1cfcbbacd017aa8e2311881 Mon Sep 17 00:00:00 2001
+From: Jing Xiang <jing.xiang@intel.com>
+Date: Mon, 21 Mar 2016 18:56:38 +0800
+Subject: [PATCH 2/2] 3gx: fix build issue after rebase
+
+Change-Id: I5594625f08bb97c191e2136c8bb10143da8150fd
+Signed-off-by: Jing Xiang <jing.xiang@intel.com>
+---
+ guest/lib/sofia3gx | 1 +
+ 1 file changed, 1 insertion(+)
+ create mode 120000 guest/lib/sofia3gx
+
+diff --git a/guest/lib/sofia3gx b/guest/lib/sofia3gx
+new file mode 120000
+index 0000000..00d525b
+--- /dev/null
++++ b/guest/lib/sofia3gx
+@@ -0,0 +1 @@
++sofia3gr
+\ No newline at end of file
+-- 
+1.9.1
+

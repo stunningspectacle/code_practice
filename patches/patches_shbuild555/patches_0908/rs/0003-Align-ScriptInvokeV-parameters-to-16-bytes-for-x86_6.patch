@@ -1,0 +1,58 @@
+From 0419a9bb7c7d30adab9b8f3770ed7cdbf7c435b7 Mon Sep 17 00:00:00 2001
+From: Yong Chen <yong.a.chen@intel.com>
+Date: Fri, 12 Dec 2014 13:25:18 +0800
+Subject: [PATCH 3/3] Align ScriptInvokeV parameters to 16 bytes for x86_64
+
+Google Link: https://android-review.googlesource.com/#/c/119132
+Tracked-On: https://jira01.devtools.intel.com/browse/GMINL-6051
+Change-Id: I0c9aea220b12f364c0a1a90232fbaa40ad90aeec
+Signed-off-by: Yong Chen <yong.a.chen@intel.com>
+Reviewed-on: https://android.intel.com:443/332756
+---
+ cpu_ref/rsCpuScript.cpp |   24 ++++++++++++++++++++++--
+ 1 file changed, 22 insertions(+), 2 deletions(-)
+
+diff --git a/cpu_ref/rsCpuScript.cpp b/cpu_ref/rsCpuScript.cpp
+index e8b3fb6..abd0c95 100644
+--- a/cpu_ref/rsCpuScript.cpp
++++ b/cpu_ref/rsCpuScript.cpp
+@@ -1120,14 +1120,34 @@ void RsdCpuScriptImpl::invokeFreeChildren() {
+ void RsdCpuScriptImpl::invokeFunction(uint32_t slot, const void *params,
+                                       size_t paramLength) {
+     //ALOGE("invoke %p %p %i %p %i", dc, script, slot, params, paramLength);
++    void * ap = NULL;
++
++#if defined(__x86_64__)
++    // The invoked function could have input parameter of vector type for example float4 which
++    // requires void* params to be 16 bytes aligned when using SSE instructions for x86_64 platform.
++    // So try to align void* params before passing them into RS exported function.
++
++    if ((uint8_t)(uint64_t)params & 0x0F) {
++        if ((ap = (void*)memalign(16, paramLength)) != nullptr) {
++            memcpy(ap, params, paramLength);
++        } else {
++            ALOGE("x86_64: invokeFunction memalign error, still use params which is not 16 bytes aligned.");
++        }
++    }
++#endif
+ 
+     RsdCpuScriptImpl * oldTLS = mCtx->setTLS(this);
+     reinterpret_cast<void (*)(const void *, uint32_t)>(
+ #ifndef RS_COMPATIBILITY_LIB
+-        mExecutable->getExportFuncAddrs()[slot])(params, paramLength);
++        mExecutable->getExportFuncAddrs()[slot])(ap ? (const void *)ap : params, paramLength);
+ #else
+-        mInvokeFunctions[slot])(params, paramLength);
++        mInvokeFunctions[slot])(ap ? (const void *)ap : params, paramLength);
++#endif
++
++#if defined(__x86_64__)
++    if (ap) free(ap);
+ #endif
++
+     mCtx->setTLS(oldTLS);
+ }
+ 
+-- 
+1.7.9.5
+

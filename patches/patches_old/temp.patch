@@ -1,0 +1,30 @@
+diff --git a/libc/bionic/pthread_create.cpp b/libc/bionic/pthread_create.cpp
+index dbdb180..6b1a7a2 100644
+--- a/libc/bionic/pthread_create.cpp
++++ b/libc/bionic/pthread_create.cpp
+@@ -32,6 +32,7 @@
+ #include <string.h>
+ #include <sys/mman.h>
+ #include <unistd.h>
++#include <stdlib.h>
+ 
+ #include "pthread_internal.h"
+ 
+@@ -122,9 +123,16 @@ static void* __create_thread_mapped_space(size_t mmap_size, size_t stack_guard_s
+   // Create a new private anonymous map.
+   int prot = PROT_READ | PROT_WRITE;
+   int flags = MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE;
++  char cmd[256];
++  static int i = 0;
++
+   void* space = mmap(NULL, mmap_size, prot, flags, -1, 0);
+   if (space == MAP_FAILED) {
+-    __libc_format_log(ANDROID_LOG_WARN,
++      
++      sprintf(cmd, "dumpsys meminfo -a -d > /data/meminfo%d.log", i++);
++      system(cmd);
++
++      __libc_format_log(ANDROID_LOG_WARN,
+                       "libc",
+                       "pthread_create failed: couldn't allocate %zu-bytes mapped space: %s",
+                       mmap_size, strerror(errno));

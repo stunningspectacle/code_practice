@@ -1,0 +1,41 @@
+diff --git a/Sf3gr_mrd_n1/Sf3gr_mrd_n1_sec.diffconfig b/Sf3gr_mrd_n1/Sf3gr_mrd_n1_sec.diffconfig
+index 0440758..460604f 100644
+--- a/Sf3gr_mrd_n1/Sf3gr_mrd_n1_sec.diffconfig
++++ b/Sf3gr_mrd_n1/Sf3gr_mrd_n1_sec.diffconfig
+@@ -3,9 +3,9 @@ CONFIG_CMA_EXPLICIT_USE=y
+ CONFIG_INV_MPU_IIO=n
+ CONFIG_TOUCHSCREEN_FT5X0X=n
+ CONFIG_TOUCHSCREEN_GT915=n
+-CONFIG_TOUCHSCREEN_HIMAX=y
+-CONFIG_TOUCHSCREEN_HIMAX_DEBUG=y
+-CONFIG_TOUCHSCREEN_FT3X27=y
++CONFIG_TOUCHSCREEN_HIMAX=n
++CONFIG_TOUCHSCREEN_HIMAX_DEBUG=n
++CONFIG_TOUCHSCREEN_FT3X27=n
+ CONFIG_TOUCHSCREEN_VTL_CT36X=n
+ CONFIG_INPUT_APDS990X=n
+ CONFIG_POWER_SUPPLY_CHARGER=n
+diff --git a/Sf3gr_mrd_n1/r2_Sf3gr_mrd_n1.mk b/Sf3gr_mrd_n1/r2_Sf3gr_mrd_n1.mk
+index e279c4c..e61fa10 100644
+--- a/Sf3gr_mrd_n1/r2_Sf3gr_mrd_n1.mk
++++ b/Sf3gr_mrd_n1/r2_Sf3gr_mrd_n1.mk
+@@ -24,15 +24,12 @@ PRODUCT_COPY_FILES += \
+ endif
+ 
+ PRODUCT_COPY_FILES += \
+-    $(LOCAL_PATH)/vkp.kl:system/usr/keylayout/goodix-ts.kl
++      device/intel/common/touch/goodix_ts.idc:system/usr/idc/goodix_ts.idc \
++      frameworks/native/data/etc/android.hardware.touchscreen.multitouch.jazzhand.xml:system/etc/permissions/android.hardware.touchscreen.multitouch.jazzhand.xml
++PRODUCT_PACKAGES += gt9157.fw
++PRODUCT_PACKAGES += gt9271.fw
+ 
+ PRODUCT_COPY_FILES += \
+-    $(LOCAL_PATH)/vkp.kcm:system/usr/keychars/goodix-ts.kcm
+-
+-PRODUCT_COPY_FILES += \
+-    $(LOCAL_PATH)/touch/himax/himax-touchscreen.kl:system/usr/keylayout/himax-touchscreen.kl \
+-    $(LOCAL_PATH)/touch/himax/himax-touchscreen.idc:system/usr/idc/himax-touchscreen.idc \
+-    $(LOCAL_PATH)/focal-touchscreen.idc:system/usr/idc/focal-touchscreen.idc \
+     $(LOCAL_PATH)/handheld_core_hardware.xml:system/etc/permissions/handheld_core_hardware.xml
+ 
+ DEVICE_PACKAGE_OVERLAYS := $(LOCAL_PATH)/overlay

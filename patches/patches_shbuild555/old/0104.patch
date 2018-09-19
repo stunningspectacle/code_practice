@@ -1,0 +1,56 @@
+diff --git a/arch/x86/boot/dts/SF_3GR-mrd6-p2.dts b/arch/x86/boot/dts/SF_3GR-mrd6-p2.dts
+index 4c2e054..4d10880 100644
+--- a/arch/x86/boot/dts/SF_3GR-mrd6-p2.dts
++++ b/arch/x86/boot/dts/SF_3GR-mrd6-p2.dts
+@@ -128,7 +128,7 @@
+ 	fb {
+ 		compatible = "rockchip,fb";
+ 		rockchip,disp-mode = <NO_DUAL>;
+-		rockchip,loader-logo-on = <1>;
++		rockchip,loader-logo-on = <0>;
+ 		rockchip,ion-drv = "rockchip";
+ 	};
+ #ifdef SOFIA3GR_CATALOG_MRD6_DISPLAY
+diff --git a/drivers/video/rockchip/rockchip_screen.c b/drivers/video/rockchip/rockchip_screen.c
+index 3006f1b..9542d5e 100644
+--- a/drivers/video/rockchip/rockchip_screen.c
++++ b/drivers/video/rockchip/rockchip_screen.c
+@@ -480,6 +480,8 @@ static int rockchip_screen_probe(struct platform_device *pdev)
+ 	sfa_screen->power_on = rockchip_screen_power_on;
+ 	sfa_screen->power_off = rockchip_screen_power_off;
+ 
++	sfa_screen->swap_rb = 1;
++
+ #ifdef CONFIG_PLATFORM_DEVICE_PM
+ 	if (sfa_screen->pm_platdata) {
+ 		ret = device_state_pm_set_class(&pdev->dev,
+diff --git a/drivers/video/rockchip/vop/rockchip_vop.c b/drivers/video/rockchip/vop/rockchip_vop.c
+index c476180..8c62548 100644
+--- a/drivers/video/rockchip/vop/rockchip_vop.c
++++ b/drivers/video/rockchip/vop/rockchip_vop.c
+@@ -1027,6 +1027,7 @@ static int rockchip_vop_load_screen(struct rockchip_vop_driver *dev_drv,
+ 
+ 	mask = M_BG_COLOR | M_DSP_BG_SWAP | M_DSP_RB_SWAP |
+ 	    M_DSP_RG_SWAP | M_BLANK_EN | M_BLACK_EN;
++	dev_warn(vop_dev->dev, "xxxxxxxxx swap_rb=%d\n", screen->swap_rb);
+ 	val = V_BG_COLOR(0x000000) | V_DSP_BG_SWAP(screen->swap_gb) |
+ 	    V_DSP_RB_SWAP(screen->swap_rb) |
+ 	    V_DSP_RG_SWAP(screen->swap_rg) | V_BLANK_EN(0) | V_BLACK_EN(0);
+diff --git a/drivers/video/xgold/dsi/dsi_display.c b/drivers/video/xgold/dsi/dsi_display.c
+index 4c4a36f..cfa0615 100644
+--- a/drivers/video/xgold/dsi/dsi_display.c
++++ b/drivers/video/xgold/dsi/dsi_display.c
+@@ -545,6 +545,13 @@ static void dsi_send_msglist(struct dsi_display *display,
+ 			     struct display_msg *msgs)
+ {
+ 	struct display_msg *msg;
++	int count = 0;
++
++	list_for_each_entry(msg, &msgs->list, list) {
++		/* mdelay(1); */
++		count++;
++	}
++	pr_err("xxxxxxxxx%s: count = %d\n", __func__, count);
+ 
+ 	list_for_each_entry(msg, &msgs->list, list) {
+ 		/* mdelay(1); */

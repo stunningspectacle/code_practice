@@ -1,0 +1,111 @@
+diff --git a/framework/opengl/gluPixelTransfer.cpp b/framework/opengl/gluPixelTransfer.cpp
+index 1f48a5a..aae6517 100644
+--- a/framework/opengl/gluPixelTransfer.cpp
++++ b/framework/opengl/gluPixelTransfer.cpp
+@@ -61,6 +61,21 @@ void readPixels (const RenderContext& context, int x, int y, const tcu::PixelBuf
+ 	gl.readPixels(x, y, width, height, format.format, format.dataType, dst.getDataPtr());
+ }
+ 
++void readPixels_my(const RenderContext& context, int x, int y, const tcu::PixelBufferAccess& dst, int width, int height)
++{
++	const glw::Functions& gl = context.getFunctions();
++
++	TCU_CHECK_INTERNAL(dst.getDepth() == 1);
++	TCU_CHECK_INTERNAL(dst.getRowPitch() == dst.getFormat().getPixelSize()*dst.getWidth());
++
++	//int				width		= dst.getWidth();
++	//int				height		= dst.getHeight();
++	TransferFormat	format		= getTransferFormat(dst.getFormat());
++
++	gl.pixelStorei(GL_PACK_ALIGNMENT, getTransferAlignment(dst.getFormat()));
++	gl.readPixels(x, y, width, height, format.format, format.dataType, dst.getDataPtr());
++}
++
+ /*--------------------------------------------------------------------*//*!
+  * \brief Upload pixels from pixel buffer access.
+  * \note Stride must be default stride for format.
+diff --git a/framework/opengl/gluPixelTransfer.hpp b/framework/opengl/gluPixelTransfer.hpp
+index 8175e21..f90891d 100644
+--- a/framework/opengl/gluPixelTransfer.hpp
++++ b/framework/opengl/gluPixelTransfer.hpp
+@@ -40,6 +40,7 @@ namespace glu
+ class RenderContext;
+ 
+ void	readPixels		(const RenderContext& context, int x, int y, const tcu::PixelBufferAccess& dst);
++void	readPixels_my		(const RenderContext& context, int x, int y, const tcu::PixelBufferAccess& dst, int width, int height);
+ void	texImage2D		(const RenderContext& context, deUint32 target, int level, deUint32 internalFormat, const tcu::ConstPixelBufferAccess& src);
+ void	texImage3D		(const RenderContext& context, deUint32 target, int level, deUint32 internalFormat, const tcu::ConstPixelBufferAccess& src);
+ void	texSubImage2D	(const RenderContext& context, deUint32 target, int level, int x, int y, const tcu::ConstPixelBufferAccess& src);
+diff --git a/modules/gles2/functional/es2fTextureWrapTests.cpp b/modules/gles2/functional/es2fTextureWrapTests.cpp
+index 40ad350..147fcaf 100644
+--- a/modules/gles2/functional/es2fTextureWrapTests.cpp
++++ b/modules/gles2/functional/es2fTextureWrapTests.cpp
+@@ -29,7 +29,9 @@
+ #include "gluPixelTransfer.hpp"
+ #include "tcuTestLog.hpp"
+ #include "tcuTextureUtil.hpp"
++#include "tcuImageIO.hpp"
+ 
++#include "glw.h"
+ #include "glwEnums.hpp"
+ #include "glwFunctions.hpp"
+ 
+@@ -172,6 +174,17 @@ TextureWrapCase::IterateResult TextureWrapCase::iterate (void)
+ 												+ (isCompressedTex ? tcu::RGBA(7,7,7,7) : tcu::RGBA(3,3,3,3));
+ 
+ 	// Bind to unit 0.
++
++        /*
++	gl.bindTexture(GL_TEXTURE_2D, 100);
++        gl.texImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 600, 1024, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
++
++        gl.bindFramebuffer(GL_FRAMEBUFFER, 1);
++        gl.framebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 100, 0);
++        gl.finish();
++	GLU_EXPECT_NO_ERROR(gl.getError(), "xxxxxxxxxxxx Set texturing state");
++        */
++
+ 	gl.activeTexture(GL_TEXTURE0);
+ 	gl.bindTexture(GL_TEXTURE_2D, m_texture->getGLTexture());
+ 
+@@ -194,8 +207,9 @@ TextureWrapCase::IterateResult TextureWrapCase::iterate (void)
+ 		computeQuadTexCoord2D(texCoord, tcu::Vec2(-1.5f, -3.0f), tcu::Vec2(1.5f, 2.5f));
+ 
+ 		m_renderer.renderQuad(0, &texCoord[0], refParams);
+-		glu::readPixels(m_renderCtx, viewport.x, viewport.y, renderedFrame.getAccess());
+-
++                GLU_EXPECT_NO_ERROR(gl.getError(), "xxxxxxxxxxxx Set texturing state");
++		//glu::readPixels(m_renderCtx, viewport.x, viewport.y, renderedFrame.getAccess());
++		glu::readPixels_my(m_renderCtx, viewport.x, viewport.y, renderedFrame.getAccess(), 128, 256);
+ 		sampleTexture(SurfaceAccess(referenceFrame, m_renderCtx.getRenderTarget().getPixelFormat(), 0, 0, leftWidth, viewport.height),
+ 					  m_texture->getRefTexture(), &texCoord[0], refParams);
+ 	}
+@@ -207,6 +221,7 @@ TextureWrapCase::IterateResult TextureWrapCase::iterate (void)
+ 		computeQuadTexCoord2D(texCoord, tcu::Vec2(-0.5f, 0.75f), tcu::Vec2(0.25f, 1.25f));
+ 
+ 		m_renderer.renderQuad(0, &texCoord[0], refParams);
++                GLU_EXPECT_NO_ERROR(gl.getError(), "xxxxxxxxxxxx Set texturing state");
+ 		glu::readPixels(m_renderCtx, viewport.x, viewport.y, renderedFrame.getAccess());
+ 
+ 		sampleTexture(SurfaceAccess(referenceFrame, m_renderCtx.getRenderTarget().getPixelFormat(), leftWidth, 0, rightWidth, viewport.height),
+@@ -217,7 +232,19 @@ TextureWrapCase::IterateResult TextureWrapCase::iterate (void)
+ 	bool isOk = compareImages(log, referenceFrame, renderedFrame, threshold);
+ 
+ 	m_testCtx.setTestResult(isOk ? QP_TEST_RESULT_PASS	: QP_TEST_RESULT_FAIL,
+-							isOk ? "Pass"				: "Image comparison failed");
++							isOk ? "Pass xxx9"				: "Image comparison failed xxx9");
++#if 1
++        static int count = 0;
++        char ref_buf[64];
++        char ren_buf[64];
++        if (!isOk) {
++            count++;
++            snprintf(ref_buf, 64, "%s%d.png", "/sdcard/deqp1/refer", count);
++            snprintf(ren_buf, 64, "%s%d.png", "/sdcard/deqp1/render", count);
++            tcu::ImageIO::savePNG(referenceFrame.getAccess(), ref_buf);
++            tcu::ImageIO::savePNG(renderedFrame.getAccess(), ren_buf);
++        }
++#endif
+ 
+ 	return STOP;
+ }

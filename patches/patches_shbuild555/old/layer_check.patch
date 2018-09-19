@@ -1,0 +1,66 @@
+From 2bbf5d894d971b41b97eb45d4455ab313224c869 Mon Sep 17 00:00:00 2001
+From: Lei Zhang <lei.zhang@intel.com>
+Date: Wed, 10 Dec 2014 12:24:57 +0800
+Subject: [PATCH] hwc: add layer count and pointer check
+
+BZ: 393
+
+This patch adds layer count and pointer check to avoid tombstone.
+
+Change-Id: I5d019237d943891a9dabb092ec906920eef71568
+Signed-off-by: Lei Zhang <lei.zhang@intel.com>
+---
+ libhwcomposer/hwcomposer.cpp |   22 ++++++++++++++++++----
+ 1 file changed, 18 insertions(+), 4 deletions(-)
+
+diff --git a/libhwcomposer/hwcomposer.cpp b/libhwcomposer/hwcomposer.cpp
+index 6b447e0..cd4bc8d 100644
+--- a/libhwcomposer/hwcomposer.cpp
++++ b/libhwcomposer/hwcomposer.cpp
+@@ -718,17 +718,31 @@ public:
+                     && display->hwLayers[i].compositionType != HWC_OVERLAY) {
+                 display->hwLayers[i].compositionType = HWC_FRAMEBUFFER;
+ 
+-                conf.fbLayers[conf.fb_count] = &display->hwLayers[i];
+-                conf.fb_count++;
++                if (conf.fb_count < HWC_MAX_LAYER_NUM) {
++                    conf.fbLayers[conf.fb_count] = &display->hwLayers[i];
++                    conf.fb_count++;
++                }
+             }
+         }
+     }
+ 
+-    void setupSmartComposition() {
++    void setupSmartComposition(hwc_display_contents_1_t* display) {
+          int compositionType = HWC_OVERLAY;
+ 
++         // If all layers to be HWC_FRAMEBUFFER, bypass smart composition
++         if (conf.fb_count >= (display->numHwLayers - 1)) {
++             ALOGD("fb layer count=%d, layer list count=%d!\n",
++                                         conf.fb_count, display->numHwLayers);
++             return;
++         }
++
+          // setup smart composition only there's no update on all FB layers
+          for (size_t i = 0; i < conf.fb_count; i++) {
++             if (!conf.fbLayers[i]) {
++                 ALOGE("invalid fb layer[%d]!\n", i);
++                 return;
++             }
++
+              buffer_handle_t lastHandle = conf.fbLastHandle[i];
+              buffer_handle_t currentHandle = conf.fbLayers[i]->handle;
+ 
+@@ -965,7 +979,7 @@ static int hwc_prepare(hwc_composer_device_1_t *dev,
+         ctxt->dcc_updater.configure(displays[0]);
+         ctxt->dcc_updater.apply(displays[0]);
+     } else {
+-        ctxt->dcc_updater.setupSmartComposition();
++        ctxt->dcc_updater.setupSmartComposition(displays[0]);
+     }
+ 
+     return 0;
+-- 
+1.7.9.5
+

@@ -1,0 +1,30 @@
+diff --git a/tests/tests/graphics/src/android/graphics/cts/ColorMatrixColorFilterTest.java b/tests/tests/graphics/src/android/graphics/cts/ColorMatrixColorFilterTest.java
+index fdef54c..4096a34 100644
+--- a/tests/tests/graphics/src/android/graphics/cts/ColorMatrixColorFilterTest.java
++++ b/tests/tests/graphics/src/android/graphics/cts/ColorMatrixColorFilterTest.java
+@@ -16,6 +16,7 @@
+ package android.graphics.cts;
+ 
+ 
++import android.util.Log;
+ import android.graphics.Bitmap;
+ import android.graphics.Canvas;
+ import android.graphics.Color;
+@@ -89,6 +90,17 @@ public class ColorMatrixColorFilterTest extends TestCase {
+     }
+ 
+     private void assertColor(int expected, int actual) {
++	Log.e("xxxxxxxxxxxx", "expected RGBA:" +
++			Color.red(expected) + ", " +
++			Color.green(expected) + ", " +
++			Color.blue(expected) + ", " +
++			Color.alpha(expected) + ", " +
++			"actual RGBA:" +
++			Color.red(actual) + ", " +
++			Color.green(actual) + ", " +
++			Color.blue(actual) + ", " +
++			Color.alpha(actual));
++
+         assertEquals(Color.red(expected), Color.red(actual), TOLERANCE);
+         assertEquals(Color.green(expected), Color.green(actual), TOLERANCE);
+         assertEquals(Color.blue(expected), Color.blue(actual), TOLERANCE);

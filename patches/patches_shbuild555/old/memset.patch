@@ -1,0 +1,106 @@
+From 13c7ccb5b5606890eab405770b940c826e3a1553 Mon Sep 17 00:00:00 2001
+From: Zhang Di <di.zhang@intel.com>
+Date: Wed, 14 Oct 2015 13:22:21 +0800
+Subject: [PATCH] [REVERTME]workaround for memset issue
+
+only for sofia3gr
+
+UTP-Id: SMS06708465
+Reviewed-on: https://opticm6.rds.intel.com/r/76983
+Tested-by: TCloud Jenkins
+Reviewed-by: YongTong Chua <yongtong.chua@intel.com>
+Tested-by: YongTong Chua <yongtong.chua@intel.com>
+Reviewed-by: UTP Service
+
+Change-Id: I7751d5204416239e1f7de4b1feb0aa1d0d982a5f
+Tracked-On: https://jira01.devtools.intel.com/browse/GMINL-19686
+Signed-off-by: Fino Xiangfu Meng <fino.xiangfu.meng@intel.com>
+Signed-off-by: Qi Zhang <qi1.zhang@intel.com>
+Signed-off-by: Zhang Di <di.zhang@intel.com>
+Reviewed-on: https://android.intel.com:443/423688
+---
+ libc/arch-x86/silvermont/silvermont.mk |    9 ++++++-
+ libc/bionic/memset.c                   |   44 ++++++++++++++++++++++++++++++++
+ 2 files changed, 52 insertions(+), 1 deletion(-)
+ create mode 100644 libc/bionic/memset.c
+
+diff --git a/libc/arch-x86/silvermont/silvermont.mk b/libc/arch-x86/silvermont/silvermont.mk
+index 176bee3..f301346 100644
+--- a/libc/arch-x86/silvermont/silvermont.mk
++++ b/libc/arch-x86/silvermont/silvermont.mk
+@@ -3,7 +3,6 @@ libc_bionic_src_files_x86 += \
+     arch-x86/silvermont/string/sse2-bzero-slm.S \
+     arch-x86/silvermont/string/sse2-memcpy-slm.S \
+     arch-x86/silvermont/string/sse2-memmove-slm.S \
+-    arch-x86/silvermont/string/sse2-memset-slm.S \
+     arch-x86/silvermont/string/sse2-stpcpy-slm.S \
+     arch-x86/silvermont/string/sse2-stpncpy-slm.S \
+     arch-x86/silvermont/string/sse2-strcpy-slm.S \
+@@ -12,6 +11,14 @@ libc_bionic_src_files_x86 += \
+     arch-x86/silvermont/string/sse4-memcmp-slm.S \
+     arch-x86/silvermont/string/sse4-wmemcmp-slm.S
+ 
++ifeq ($(TARGET_PRODUCT),r2_Sf3gr_sr_garnet)
++libc_bionic_src_files_x86 += \
++    bionic/memset.c
++else
++libc_bionic_src_files_x86 += \
++    arch-x86/silvermont/string/sse2-memset-slm.S
++endif
++
+ libc_bionic_src_files_x86 += \
+     arch-x86/atom/string/sse2-memchr-atom.S \
+     arch-x86/atom/string/sse2-memrchr-atom.S \
+diff --git a/libc/bionic/memset.c b/libc/bionic/memset.c
+new file mode 100644
+index 0000000..41dafb2
+--- /dev/null
++++ b/libc/bionic/memset.c
+@@ -0,0 +1,44 @@
++/*
++ * Copyright (C) 2008 The Android Open Source Project
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *  * Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ *  * Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in
++ *    the documentation and/or other materials provided with the
++ *    distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
++ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
++ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
++ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
++ * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
++ * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
++ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
++ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
++ * SUCH DAMAGE.
++ */
++#include <string.h>
++#include <stdint.h>
++
++void*  memset(void*  dst, int c, size_t n)
++{
++    char*  q   = dst;
++    char*  end = q + n;
++
++    for (;;) {
++        if (q >= end) break; *q++ = (char) c;
++        if (q >= end) break; *q++ = (char) c;
++        if (q >= end) break; *q++ = (char) c;
++        if (q >= end) break; *q++ = (char) c;
++    }
++
++  return dst;
++}
+-- 
+1.7.9.5
+

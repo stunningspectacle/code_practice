@@ -1,0 +1,69 @@
+diff --git a/libgralloc/gralloc.cpp b/libgralloc/gralloc.cpp
+index c0ffc22..c3edb60 100644
+--- a/libgralloc/gralloc.cpp
++++ b/libgralloc/gralloc.cpp
+@@ -230,6 +230,7 @@ int gralloc_alloc_hwbuffer(alloc_device_t* dev, size_t size, int usage, buffer_h
+        unsigned int phys=0;
+        int fd;
+        int ret;
++       int flag = usage & ION_FLAG_CACHED;
+ 
+        if(!dev){
+                ALOGE("%s:dev param is null",__FUNCTION__);
+@@ -243,7 +244,7 @@ int gralloc_alloc_hwbuffer(alloc_device_t* dev, size_t size, int usage, buffer_h
+ 
+        /* Keeping page size rounding */
+        size = roundUpToPageSize(size);
+-       ion_hnd = ion_alloc_buffer(m->ion_client, size, 0, ION_HEAP_TYPE_DMA_MASK, 0,
++       ion_hnd = ion_alloc_buffer(m->ion_client, size, 0, ION_HEAP_TYPE_DMA_MASK, flag,
+                        &fd, &phys);
+ 
+        if(usage&GRALLOC_USAGE_HW_MASK) {
+@@ -299,7 +300,6 @@ static int gralloc_alloc(alloc_device_t* dev,
+        int bpp = 0;
+        int err;
+        char* s;
+-
+        if (HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED == format) {
+                if (GRALLOC_USAGE_HW_VIDEO_ENCODER & usage) {
+                        format = HAL_PIXEL_FORMAT_YCbCr_420_SP;
+@@ -360,6 +360,7 @@ static int gralloc_alloc(alloc_device_t* dev,
+                c_size = c_stride * h/2;
+                size = y_size + (c_size * 2);
+                stride = bpr;
++               usage |= ION_FLAG_CACHED;
+                break;
+ 
+        /* YCbCr 4:2:0 Semi Planar: 2 Planes Co-sited*/
+diff --git a/libgralloc/mapper.cpp b/libgralloc/mapper.cpp
+index 81987d8..01a14b5 100644
+--- a/libgralloc/mapper.cpp
++++ b/libgralloc/mapper.cpp
+@@ -240,6 +240,22 @@ int gralloc_unlock(gralloc_module_t const* module, buffer_handle_t handle)
+ {
+     // we're done with a software buffer. nothing to do in this
+     // implementation. typically this is used to flush the data cache.
++       private_handle_t* hnd = (private_handle_t*)handle;
++
++       int retval = 0;
++
++       pthread_mutex_lock(&s_map_lock);
++       if (hnd->fmt == HAL_PIXEL_FORMAT_YV12){
++           retval = ion_cache_flush(getIonFd(module), hnd->ion_hdl);
++           if (ret)
++               ALOGE("fei error cache flush of handle %d\n", hnd->fd);
++        }
++       
++        pthread_mutex_unlock(&s_map_lock);
++        return retval;
++
+ #if 0
+     private_handle_t* hnd = (private_handle_t*)handle;
+     ion_sync_fd(getIonFd(module), hnd->fd);
+@@ -247,6 +263,6 @@ int gralloc_unlock(gralloc_module_t const* module, buffer_handle_t handle)
+     if (private_handle_t::validate(handle) < 0)
+         return -EINVAL;
+ #endif
+-    return 0;
++    //return 0;
+ }

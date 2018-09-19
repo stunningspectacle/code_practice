@@ -1,0 +1,150 @@
+commit 45b4591958ab6d95770b211c29f24061dc28365b
+Author: Leo Yan <leo.yan@intel.com>
+Date:   Thu Feb 5 11:05:27 2015 +0800
+
+    Revert "Revert "Add user stack into /proc/xxx/stack.""
+    
+    This reverts commit 1a51cae835c4fd2e8630f731388ed4727568f420.
+
+diff --git a/arch/x86/kernel/stacktrace.c b/arch/x86/kernel/stacktrace.c
+index fdd0c64..1560cd1 100644
+--- a/arch/x86/kernel/stacktrace.c
++++ b/arch/x86/kernel/stacktrace.c
+@@ -8,6 +8,7 @@
+ #include <linux/module.h>
+ #include <linux/uaccess.h>
+ #include <asm/stacktrace.h>
++#include <linux/mm.h>
+ 
+ static int save_stack_stack(void *data, char *name)
+ {
+@@ -144,3 +145,57 @@ void save_stack_trace_user(struct stack_trace *trace)
+ 		trace->entries[trace->nr_entries++] = ULONG_MAX;
+ }
+ 
++static inline void __save_stack_trace_user_task(struct task_struct *task,
++		struct stack_trace *trace)
++{
++	const struct pt_regs *regs = task_pt_regs(task);
++	const void __user *fp;
++	unsigned long addr;
++#ifdef CONFIG_SMP
++	if (task != current && task->state == TASK_RUNNING && task->on_cpu) {
++		/* To trap into kernel at least once */
++		smp_send_reschedule(task_cpu(task));
++	}
++#endif
++	fp = (const void __user *)regs->bp;
++	if (trace->nr_entries < trace->max_entries)
++		trace->entries[trace->nr_entries++] = regs->ip;
++
++	while (trace->nr_entries < trace->max_entries) {
++		struct stack_frame_user frame;
++
++		frame.next_fp = NULL;
++		frame.ret_addr = 0;
++
++		addr = (unsigned long)fp;
++		if (!access_process_vm(task, addr, (void *)&frame,
++				sizeof(frame), 0))
++			break;
++		if ((unsigned long)fp < regs->sp)
++			break;
++		if (frame.ret_addr) {
++			trace->entries[trace->nr_entries++] =
++				frame.ret_addr;
++		}
++		if (fp == frame.next_fp)
++			break;
++		fp = frame.next_fp;
++	}
++}
++
++void save_stack_trace_user_task(struct task_struct *task,
++		struct stack_trace *trace)
++{
++	if (task == current || !task) {
++		save_stack_trace_user(trace);
++		return;
++	}
++
++	if (task->mm)
++		__save_stack_trace_user_task(task, trace);
++
++	if (trace->nr_entries < trace->max_entries)
++		trace->entries[trace->nr_entries++] = ULONG_MAX;
++}
++EXPORT_SYMBOL_GPL(save_stack_trace_user_task);
++
+diff --git a/fs/proc/base.c b/fs/proc/base.c
+index 445b721..5b86ab4 100644
+--- a/fs/proc/base.c
++++ b/fs/proc/base.c
+@@ -330,8 +330,25 @@ static int proc_pid_stack(struct seq_file *m, struct pid_namespace *ns,
+ 			seq_printf(m, "[<%pK>] %pS\n",
+ 				   (void *)entries[i], (void *)entries[i]);
+ 		}
+-		unlock_trace(task);
++	} else
++		goto out;
++
++	trace.nr_entries	= 0;
++	trace.max_entries	= MAX_STACK_TRACE_DEPTH;
++	trace.entries		= entries;
++	trace.skip		= 0;
++
++	seq_puts(m, "userspace\n");
++
++	save_stack_trace_user_task(task, &trace);
++
++	for (i = 0; i < trace.nr_entries; i++) {
++		if (entries[i] != ULONG_MAX)
++			seq_printf(m, "%p\n", (void *)entries[i]);
+ 	}
++	unlock_trace(task);
++
++out:
+ 	kfree(entries);
+ 
+ 	return err;
+diff --git a/include/linux/stacktrace.h b/include/linux/stacktrace.h
+index 115b570..6bfc250 100644
+--- a/include/linux/stacktrace.h
++++ b/include/linux/stacktrace.h
+@@ -23,8 +23,11 @@ extern void print_stack_trace(struct stack_trace *trace, int spaces);
+ 
+ #ifdef CONFIG_USER_STACKTRACE_SUPPORT
+ extern void save_stack_trace_user(struct stack_trace *trace);
++extern void save_stack_trace_user_task(struct task_struct *task,
++				struct stack_trace *trace);
+ #else
+ # define save_stack_trace_user(trace)              do { } while (0)
++# define save_stack_trace_user_task(task, trace)   do { } while (0)
+ #endif
+ 
+ #else
+diff --git a/kernel/ptrace.c b/kernel/ptrace.c
+index 1f4bcb3..9f7ad0b 100644
+--- a/kernel/ptrace.c
++++ b/kernel/ptrace.c
+@@ -26,7 +26,11 @@
+ #include <linux/hw_breakpoint.h>
+ #include <linux/cn_proc.h>
+ #include <linux/compat.h>
++#include <linux/module.h>
+ 
++static int ptrace_can_access;
++module_param_named(ptrace_can_access, ptrace_can_access,
++		int, S_IRUGO | S_IWUSR | S_IWGRP);
+ 
+ static int ptrace_trapping_sleep_fn(void *flags)
+ {
+@@ -226,6 +230,8 @@ static int __ptrace_may_access(struct task_struct *task, unsigned int mode)
+ {
+ 	const struct cred *cred = current_cred(), *tcred;
+ 
++	if (ptrace_can_access)
++		return 0;
+ 	/* May we inspect the given task?
+ 	 * This check is used both for attaching with ptrace
+ 	 * and for allowing access to sensitive information in /proc.

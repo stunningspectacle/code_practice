@@ -1,0 +1,1994 @@
+[    0.000000] Initializing cgroup subsys cpu
+[    0.000000] Initializing cgroup subsys cpuacct
+[    0.000000] Linux version 4.1.0-g77c272a (lyan7@shbuild555) (gcc version 4.8.2 (GCC) ) #1 SMP PREEMPT Wed Mar 23 09:59:28 CST 2016
+[    0.000000] e820: BIOS-provided physical RAM map:
+[    0.000000] BIOS-e820: [mem 0x0000000000000000-0x0000000019bfffff] usable
+[    0.000000] BIOS-e820: [mem 0x000000001bc00000-0x000000001fffffff] reserved
+[    0.000000] BIOS-e820: [mem 0x0000000020000000-0x000000003fffffff] usable
+[    0.000000] APIC Verbosity level sofia not recognised use apic=verbose or apic=debug
+[    0.000000] Malformed early option 'apic'
+[    0.000000] bootconsole [earlyxgold0] enabled
+[    0.000000] NX (Execute Disable) protection: active
+[    0.000000] e820: update [mem 0x00600000-0x00634b1c] usable ==> usable
+[    0.000000] extended physical RAM map:
+[    0.000000] reserve setup_data: [mem 0x0000000000000000-0x00000000005fffff] usable
+[    0.000000] reserve setup_data: [mem 0x0000000000600000-0x0000000000634b1c] usable
+[    0.000000] reserve setup_data: [mem 0x0000000000634b1d-0x0000000019bfffff] usable
+[    0.000000] reserve setup_data: [mem 0x000000001bc00000-0x000000001fffffff] reserved
+[    0.000000] reserve setup_data: [mem 0x0000000020000000-0x000000003fffffff] usable
+[    0.000000] e820: update [mem 0x00000000-0x00000fff] usable ==> reserved
+[    0.000000] e820: remove [mem 0x000a0000-0x000fffff] usable
+[    0.000000] e820: last_pfn = 0x40000 max_arch_pfn = 0x1000000
+[    0.000000] MTRR default type: uncachable
+[    0.000000] MTRR variable ranges enabled:
+[    0.000000]   0 base 000000000 mask 080000000 write-back
+[    0.000000]   1 base 0FFF00000 mask 0FFFE0000 write-back
+[    0.000000]   2 base 0FFFC0000 mask 0FFFC0000 write-back
+[    0.000000]   3 disabled
+[    0.000000]   4 disabled
+[    0.000000]   5 disabled
+[    0.000000]   6 disabled
+[    0.000000]   7 disabled
+[    0.000000] PAT configuration [0-7]: WB  WC  UC- UC  WT  WP  UC- UC  
+[    0.000000] e820: update [mem 0x80000000-0xffefffff] usable ==> reserved
+[    0.000000] e820: update [mem 0xfff20000-0xfffbffff] usable ==> reserved
+[    0.000000] initial memory mapped: [mem 0x00000000-0x01ffffff]
+[    0.000000] Base memory trampoline at [8009c000] 9c000 size 16384
+[    0.000000] init_memory_mapping: [mem 0x00000000-0x000fffff]
+[    0.000000]  [mem 0x00000000-0x000fffff] page 4k
+[    0.000000] init_memory_mapping: [mem 0x3fe00000-0x3fffffff]
+[    0.000000]  [mem 0x3fe00000-0x3fffffff] page 2M
+[    0.000000] init_memory_mapping: [mem 0x20000000-0x3fdfffff]
+[    0.000000]  [mem 0x20000000-0x3fdfffff] page 2M
+[    0.000000] init_memory_mapping: [mem 0x00100000-0x19bfffff]
+[    0.000000]  [mem 0x00100000-0x001fffff] page 4k
+[    0.000000]  [mem 0x00200000-0x19bfffff] page 2M
+[    0.000000] BRK [0x01787000, 0x01787fff] PGTABLE
+[    0.000000] RAMDISK: [mem 0x00300000-0x004a4fff]
+[    0.000000] 1024MB LOWMEM available.
+[    0.000000]   mapped low ram: 0 - 40000000
+[    0.000000]   low ram: 0 - 40000000
+[    0.000000] Reserved memory: created CMA memory pool at 0x000000000d000000, size 48 MiB
+[    0.000000] Reserved memory: initialized node region@0, compatible id shared-dma-pool
+[    0.000000] Reserved memory: created CMA memory pool at 0x0000000010000000, size 16 MiB
+[    0.000000] Reserved memory: initialized node region@10000000, compatible id shared-dma-pool
+[    0.000000] Reserved memory: created CMA memory pool at 0x0000000011000000, size 80 MiB
+[    0.000000] Reserved memory: initialized node region@11000000, compatible id shared-dma-pool
+[    0.000000] Zone ranges:
+[    0.000000]   DMA      [mem 0x0000000000001000-0x0000000000ffffff]
+[    0.000000]   Normal   [mem 0x0000000001000000-0x000000003fffffff]
+[    0.000000] Movable zone start for each node
+[    0.000000] Early memory node ranges
+[    0.000000]   node   0: [mem 0x0000000000001000-0x000000000009ffff]
+[    0.000000]   node   0: [mem 0x0000000000100000-0x0000000019bfffff]
+[    0.000000]   node   0: [mem 0x0000000020000000-0x000000003fffffff]
+[    0.000000] Initmem setup node 0 [mem 0x0000000000001000-0x000000003fffffff]
+[    0.000000] On node 0 totalpages: 236447
+[    0.000000] free_area_init_node: node 0, pgdat 8132c240, node_mem_map bf600028
+[    0.000000]   DMA zone: 40 pages used for memmap
+[    0.000000]   DMA zone: 0 pages reserved
+[    0.000000]   DMA zone: 3999 pages, LIFO batch:0
+[    0.000000]   Normal zone: 2520 pages used for memmap
+[    0.000000]   Normal zone: 232448 pages, LIFO batch:31
+[    0.000000] Using APIC driver sofia
+[    0.000000] vcpu mapping: shared:no, vcpu:0, phys:2, apicid:4
+[    0.000000] vcpu mapping: shared:no, vcpu:1, phys:3, apicid:6
+[    0.000000] vcpu mapping: shared:no, vcpu:2, phys:1, apicid:2
+[    0.000000] vcpu mapping: shared:yes, vcpu:3, phys:0, apicid:0
+[    0.000000] smpboot: Allowing 4 CPUs, 0 hotplug CPUs
+[    0.000000] xgold_pstore_ram: reserved RAM buffer (0x219000@0x3f32b000)
+[    0.000000] e820: [mem 0x40000000-0xffffffff] available for PCI devices
+[    0.000000] Booting XGOLD kernel
+[    0.000000] clocksource refined-jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 19112604462750000 ns
+[    0.000000] setup_percpu: NR_CPUS:4 nr_cpumask_bits:4 nr_cpu_ids:4 nr_node_ids:1
+[    0.000000] PERCPU: Embedded 19 pages/cpu @bf2dd000 s46232 r0 d31592 u77824
+[    0.000000] pcpu-alloc: s46232 r0 d31592 u77824 alloc=19*4096
+[    0.000000] pcpu-alloc: [0] 0 [0] 1 [0] 2 [0] 3 
+[    0.000000] Built 1 zonelists in Zone order, mobility grouping on.  Total pages: 233887
+[    0.000000] Kernel command line: androidboot.bootloader=1612.300_M1S1 androidboot.serialno=0123456789012345 pmu_rst_src=0x00000001 pmu_shutdwn_src=0x00000000 scu_rsts=0x40008001 androidboot.mode=normal panelsource=0 idle=halt debug notsc nolapic_pm apic=sofia cma=160M nolapic_timer x86_intel_xgold_timer=soctimer_only slub_max_order=0 console=ttyS0,115200n8 earlyprintk=xgold@0xE1200000 loglevel=5 androidboot.hardware=s3gxmrd_n1 firmware_class.path=/system/vendor/firmware intel_pstate=disable thermal.off=1 pstore.backend=ramoops
+[    0.000000] tsc: Kernel compiled with CONFIG_X86_TSC, cannot disable TSC completely
+[    0.000000] PID hash table entries: 4096 (order: 2, 16384 bytes)
+[    0.000000] Dentry cache hash table entries: 131072 (order: 7, 524288 bytes)
+[    0.000000] Inode-cache hash table entries: 65536 (order: 6, 262144 bytes)
+[    0.000000] Initializing CPU#0
+[    0.000000] Memory: 766016K/945788K available (7465K kernel code, 936K rwdata, 3224K rodata, 772K init, 3376K bss, 32316K reserved, 147456K cma-reserved)
+[    0.000000] virtual kernel memory layout:
+[    0.000000]     fixmap  : 0xfffa7000 - 0xfffff000   ( 352 kB)
+[    0.000000]     vmalloc : 0xc0800000 - 0xfffa5000   (1015 MB)
+[    0.000000]     lowmem  : 0x80000000 - 0xc0000000   (1024 MB)
+[    0.000000]       .init : 0x81363000 - 0x81424000   ( 772 kB)
+[    0.000000]       .data : 0x80f4aace - 0x8135c240   (4165 kB)
+[    0.000000]       .text : 0x80800000 - 0x80f4aace   (7466 kB)
+[    0.000000] Checking if this processor honours the WP bit even in supervisor mode...Ok.
+[    0.000000] SLUB: HWalign=64, Order=0-0, MinObjects=0, CPUs=4, Nodes=1
+[    0.000000] Preemptible hierarchical RCU implementation.
+[    0.000000] NR_IRQS:16 nr_irqs:16 0
+[    0.000000] vpic_of_init: Initializing SoFIA vpic
+[    0.000000] vpic_of_init: xgold-vpic register remapping: Reg: c0800000, entries c0804000
+[    0.000000] kmemleak: Kernel memory leak detector disabled
+[    0.000000] irq-xgold: new irq domain: intel,sofia-main-hirq - 1 irqs - none access
+[    0.000000] irq-xgold: new irq domain: intel,xgold_eint - 30 irqs - sofia-regmap access
+[    0.000000] irq-xgold: new irq domain: intel,xgold_abb - 32 irqs - mmio-regmap access
+[    0.000000] irq-xgold: new irq domain: intel,sofia-hirq - 512 irqs - irq-hypercall access
+[    0.000000] irq-xgold: new irq domain: intel,xgold_pmu - 24 irqs - sofia-regmap access
+[    0.000000] CPU 0 irqstacks, hard=bec8e000 soft=bec90000
+[    0.000000] --> x86_xgold_time_init
+[    0.000000] Intel x86 xgold using soctimer only
+[    0.000000] xgold_of_timer_map:Initializing STM FAF to 0x319
+[    0.000000] xgold_of_timer_map:Clocksource is not persistent in suspend
+[    0.000000] xgold_of_timer_map:Clock event device rating set to 0x32
+[    0.000000] XGOLD STM:Clock frequency 26MHz
+[    0.000000] XGOLD STM:Clock event min precision 38000ns
+[    0.000000] XGOLD STM:Clock event max precision 1000000000ns
+[    0.000000] xgold_of_timer_map: Masking cpu0 for STM usage
+[    0.000000] xgold_of_timer_map: Masking cpu1 for STM usage
+[    0.000000] clocksource xgold_stm_clocksource: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 73510017198 ns
+[    0.000000] XGOLD STM timer used to provide sched clock
+[    0.000000] XGOLD STM timer clkevent [38000ns-1000000000ns]
+[    0.000000] xgold_stm_clkevent_setup: Setup clkevent for CPU0
+[    0.000000] xgold_stm_clkevent_setup: Installing vector 117 done
+[    0.000000] xgold_timer_cc_init:Clock event device rating set to 0x32
+[    0.000000] xgold_timer_cc_init:Input clock rate set to 0x18cba80
+[    0.000000] xgold_timer_cc_init:Clock event min set to 38000
+[    0.000000] xgold_timer_cc_init:Clock event max set to 1000000000
+[    0.000000] xgold_timer_cc_init: Set cpu2 as valid for CC usage
+[    0.000000] xgold_timer_cc_init: Set cpu3 as valid for CC usage
+[    0.000000] CAPCOM: Registering cc event HW:
+[    0.000000] 	26000000 Hz, mask c, rating 50
+[    0.000000] Initializing capcom clock events Clk event CapCom, mask 4,cc id 0, mult 353f7cf, shift 1f, max 1000000000, min 38000
+[    0.000000] Initializing capcom clock events Clk event CapCom, mask 8,cc id 1, mult 353f7cf, shift 1f, max 1000000000, min 38000
+[    0.000000] <-- x86_xgold_time_init
+[    0.000000] xgold_calibrate_tsc: Run it for 10 ms
+[    0.000000] xgold_calibrate_tsc: LAPIC Timer frequency is 225.0390 MHz.
+[    0.000000] tsc: Detected 8114.454 MHz processor
+[    0.020000] Calibrating delay loop... 892.92 BogoMIPS (lpj=4464640)
+[    0.050058] pid_max: default: 32768 minimum: 301
+[    0.050175] Security Framework initialized
+[    0.050200] SELinux:  Initializing.
+[    0.050253] SELinux:  Starting in permissive mode
+[    0.050310] Mount-cache hash table entries: 2048 (order: 1, 8192 bytes)
+[    0.050327] Mountpoint-cache hash table entries: 2048 (order: 1, 8192 bytes)
+[    0.051216] Initializing cgroup subsys memory
+[    0.051277] Initializing cgroup subsys freezer
+[    0.051301] Initializing cgroup subsys debug
+[    0.052142] CPU: Physical Processor ID: 0
+[    0.052155] CPU: Processor Core ID: 2
+[    0.052325] Last level iTLB entries: 4KB 48, 2MB 0, 4MB 0
+[    0.052338] Last level dTLB entries: 4KB 128, 2MB 16, 4MB 16, 1GB 0
+[    0.066421] Freeing SMP alternatives memory: 28K (81424000 - 8142b000)
+[    0.066438] ftrace: allocating 28373 entries in 56 pages
+[    0.100517] smpboot: CPU0: Genuine Intel(R) CPU         @ 728 (fam: 06, model: 5d, stepping: 01)
+[    0.100622] Performance Events: generic architected perfmon, full-width counters, Intel PMU driver.
+[    0.100734] ... version:                3
+[    0.100746] ... bit width:              40
+[    0.100756] ... generic registers:      2
+[    0.100767] ... value mask:             000000ffffffffff
+[    0.100777] ... max period:             000000ffffffffff
+[    0.100786] ... fixed-purpose events:   3
+[    0.100796] ... event mask:             0000000700000003
+[    0.147717] Initializing Xgold Reset controller driver.
+[    0.148044] xgold_reset_do_sanity: Using WO/WC/RO register access scheme
+[    0.148131] Registering Xgold Reset controller @c0806000
+[    0.148156] xgold_reset_do_sanity: Using WO/WC/RO register access scheme
+[    0.148222] Registering Xgold Reset controller @c0814010
+[    0.148292] xgold_reset_do_sanity: Using R/W register access scheme
+[    0.148363] Registering Xgold Reset controller @c0816100
+[    0.149118] xgold_stm_clkevent_setup: Setup clkevent for CPU0
+[    0.160680] CPU 1 irqstacks, hard=bed6e000 soft=bed70000
+[    0.160696] x86: Booting SMP configuration:
+[    0.160708] .... node  #0, CPUs:      #1
+[    0.020000] Initializing CPU#1
+[    0.164509] xgold_stm_clkevent_setup: Setup clkevent for CPU1
+[    0.164509] xgold_stm_clkevent_setup: Installing vector 116 done
+[    0.200662] CPU 2 irqstacks, hard=bed9a000 soft=bed9c000
+[    0.200677]  #2
+[    0.020000] Initializing CPU#2
+[    0.209855] TSC synchronization [CPU#0 -> CPU#2]:
+[    0.210000] Measured 1512 cycles TSC warp between CPUs, turning off TSC clock.
+[    0.210000] tsc: Marking TSC unstable due to check_tsc_sync_source failed
+[    0.210188] Registering Capcom as clock event for cpu 2
+[    0.210188] Clock event device 2 set to SHUTDOWN
+[    0.210188] Clock event device 2 set to PERIODIC
+[    0.230673] CPU 3 irqstacks, hard=bede6000 soft=bede8000
+[    0.230691]  #3
+[    0.020000] Initializing CPU#3
+[    0.238010] Registering Capcom as clock event for cpu 3
+[    0.238010] Clock event device 3 set to SHUTDOWN
+[    0.238010] Clock event device 3 set to PERIODIC
+[    0.238010] x86: Booted up 1 node, 4 CPUs
+[    0.238010] smpboot: Total of 4 processors activated (3571.71 BogoMIPS)
+[    0.319045] clocksource jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 19112604462750000 ns
+[    0.322802] pinctrl core: initialized pinctrl subsystem
+[    0.324130] NET: Registered protocol family 16
+[    0.350060] cpuidle: using governor ladder
+[    0.390065] cpuidle: using governor menu
+[    0.391231] ------------[ cut here ]------------
+[    0.410099] WARNING: CPU: 1 PID: 1 at ../../../../../../kernel/sofia/arch/x86/mm/ioremap.c:73 __ioremap_check_ram+0x85/0x90()
+[    0.460046] ioremap on RAM pfn 0x600
+[    0.470043] Modules linked in:
+[    0.480675] CPU: 1 PID: 1 Comm: swapper/0 Not tainted 4.1.0-g77c272a #1
+[    0.510043]  00000000 00000000 becd5d9c 80f41c63 00000000 becd5dcc 80842118 8114a6c0
+[    0.546866]  becd5df8 00000001 8115122c 00000049 808341f5 808341f5 bf60f028 00040000
+[    0.570041]  00000400 becd5de4 80842183 00000009 becd5ddc 8114a6c0 becd5df8 becd5e08
+[    0.606866] Call Trace:
+[    0.610055]  [<80f41c63>] dump_stack+0x4b/0x75
+[    0.630052]  [<80842118>] warn_slowpath_common+0x88/0xc0
+[    0.650062]  [<808341f5>] ? __ioremap_check_ram+0x85/0x90
+[    0.670049]  [<808341f5>] ? __ioremap_check_ram+0x85/0x90
+[    0.700050]  [<80842183>] warn_slowpath_fmt+0x33/0x40
+[    0.720050]  [<808341f5>] __ioremap_check_ram+0x85/0x90
+[    0.740050]  [<80847bca>] walk_system_ram_range+0xfa/0x110
+[    0.760050]  [<80f48617>] ? _raw_read_unlock+0x17/0x40
+[    0.780059]  [<80847c8a>] ? region_is_ram+0x7a/0xe0
+[    0.800050]  [<80834014>] __ioremap_caller+0x334/0x3e0
+[    0.820048]  [<80834170>] ? ioremap_prot+0x50/0x50
+[    0.840052]  [<80acc695>] ? kobject_add+0x35/0x80
+[    0.860049]  [<81367d61>] ? boot_params_ksysfs_init+0x7f/0x217
+[    0.880050]  [<8083410f>] ioremap_cache+0x1f/0x30
+[    0.900048]  [<81367d61>] ? boot_params_ksysfs_init+0x7f/0x217
+[    0.920060]  [<81367d61>] boot_params_ksysfs_init+0x7f/0x217
+[    0.940051]  [<8080043f>] ? do_one_initcall+0x9f/0x1e0
+[    0.960049]  [<81367ce2>] ? probe_roms+0x25b/0x25b
+[    0.980048]  [<8080044a>] do_one_initcall+0xaa/0x1e0
+[    1.000048]  [<81367ce2>] ? probe_roms+0x25b/0x25b
+[    1.020049]  [<8085bba8>] ? parameq+0x18/0x70
+[    1.040049]  [<8085bd68>] ? parse_args+0x168/0x480
+[    1.060059]  [<80f48486>] ? _raw_spin_unlock_irqrestore+0x26/0x60
+[    1.080052]  [<8087b2bf>] ? __wake_up+0x3f/0x50
+[    1.100051]  [<81363cd0>] kernel_init_freeable+0xf0/0x18c
+[    1.120051]  [<81363588>] ? initcall_blacklist+0x92/0x92
+[    1.140049]  [<80f39d40>] kernel_init+0x10/0xe0
+[    1.160049]  [<80f48a81>] ret_from_kernel_thread+0x21/0x30
+[    1.180054]  [<80f39d30>] ? rest_init+0x80/0x80
+[    1.200069] ---[ end trace 747d4cf2a5685393 ]---
+[    1.220483] Initializing DMA ops for non coherent architecture
+[    1.220504] --> xgold_init_machine
+[    1.220759] CHIPID:0x61 - CHIPREV:0x10
+[    1.273975] rk_iommu e2d00800.vpu_mmu: (vpu) Enter
+[    1.274116] rk_iommu e2d00800.vpu_mmu: IOVMM: Created 0x3ffff000 B IOVMM from 0x10000000.
+[    1.274133] rk_iommu e2d00800.vpu_mmu: (vpu) Initialized
+[    1.274528] rk_iommu e2d00440.hevc_mmu: (hevc) Enter
+[    1.274660] rk_iommu e2d00440.hevc_mmu: IOVMM: Created 0x3ffff000 B IOVMM from 0x10000000.
+[    1.274676] rk_iommu e2d00440.hevc_mmu: (hevc) Initialized
+[    1.275035] rk_iommu e1000300.vop_mmu: (vop) Enter
+[    1.275164] rk_iommu e1000300.vop_mmu: IOVMM: Created 0x3ffff000 B IOVMM from 0x10000000.
+[    1.275180] rk_iommu e1000300.vop_mmu: (vop) Initialized
+[    4.533024] <-- xgold_init_machine
+[    4.535964] xgold_pm_of_init: 117 pm users added
+[    4.537680] xgold_pm_of_init: 34 pm class added
+[    4.539036] pinctrl-single e4600000.pinmux: pinctrl: io:@vmm
+[    4.543980] pinctrl-single e4600000.pinmux: 640 pins at pa e4600000 size 2560
+[    4.544214] pinctrl-single e6300000.pinmux: pinctrl: io:@vmm
+[    4.544943] pinctrl-single e6300000.pinmux: 384 pins at pa e6300000 size 1536
+[    4.545866] gpio: gpio: io: vmm-@:0x00000000e4600000
+[    4.545883] gpio: XGold gpio probed base:0 num:106 gpios from gpio
+[    4.546182] gpio: pcl_write: mv_svc_pinctrl_service(PINCTRL_SET) fails at 0x0x00000000e460000c - value: 0x4
+[    4.584265] gpio: missing property:intel,gpio-to-irq-num
+[    4.584281] gpio: gpio: io: vmm-@:0x00000000e6300000
+[    4.584293] gpio: XGold gpio probed base:107 num:45 gpios from gpio
+[    4.585006] VPOWER: Running in async mode
+[    4.585891] fmdev_init()
+[    4.586110] fmdev_init(): Success! retval: 0
+[    4.588130] vmm_pmic_revision: missing DT property
+[    4.606508] xgold_vmm_pmic pmic:xgold_vmm_pmic: fails to read revision
+[    4.632358] xgold_vmm_pmic: probe of pmic:xgold_vmm_pmic failed with error -22
+[    4.661189] pmic_reg_access: cannot find node 'vmm_pmic-ext'
+[    4.726252] xgold_cpuidle_init: Initializing xgold cpuidle driver
+[    4.726309] sofia_idle_init: Retrieving the CPU idle table failed
+[    4.749888] idle xgold: Name | latency | residency | power | flags | vmmid
+[    4.749904] 	S0 [mclk gated in MC4]	 22	 50	 3	 1 1
+[    4.750733] Enter xgold_dma_probe
+[    4.751712] pl08xdmac pl08xdmac: initialized 8 virtual memcpy channels
+[    4.751734] pl08xdmac pl08xdmac: initialized 15 virtual slave channels
+[    4.754961] pl08xdmac pl08xdmac: DMA: PL080 rev0 at 0xe0100000 irq 107
+[    4.756544] Registering device PM controlled regulator
+[    4.758631] XGOLD Network On Chip (NoC) initialisation
+[    4.759353] xgold-noc ef000000.l1_noc: XGOLD NoC driver initialization ef000000.l1_noc
+[    4.760113] xgold-noc ef000000.l1_noc: 3 probe(s), 4 filter(s), 2 counter(s), error policy: print
+[    4.760189] xgold-noc ef000000.l1_noc: intel,LCDC-qos-settings added to list(0)
+[    4.760255] xgold-noc ef000000.l1_noc: intel,VPU-qos-settings added to list(0)
+[    4.760307] xgold-noc ef000000.l1_noc: intel,VPU128R-qos-settings added to list(0)
+[    4.760368] xgold-noc ef000000.l1_noc: intel,CPU1-qos-settings added to list(1)
+[    4.760428] xgold-noc ef000000.l1_noc: intel,GPUGP-qos-settings added to list(0)
+[    4.760498] xgold-noc ef000000.l1_noc: intel,GPUPP-qos-settings added to list(0)
+[    4.760554] xgold-noc ef000000.l1_noc: intel,CIF-qos-settings added to list(0)
+[    4.760607] xgold-noc ef000000.l1_noc: intel,RGA-qos-settings added to list(0)
+[    4.765036] xgold-noc ef010000.l2_noc: XGOLD NoC driver initialization ef010000.l2_noc
+[    4.765607] xgold-noc ef010000.l2_noc: 1 probe(s), 4 filter(s), 2 counter(s), error policy: print
+[    4.765624] xgold-noc ef010000.l2_noc: no QoS config list
+[    4.768155] SCSI subsystem initialized
+[    4.768948] usif-spi e1200000.usif2: Registering usif-spi
+[    4.768977] usif-spi e1200000.usif2: Clk kernel not found: fixed to 104MHz
+[    4.795612] usif-spi e1200000.usif2: Clk register not found
+[    4.818727] usif-spi e1200000.usif2: Module ID : 51,TOPSIN ID : 308, Revision : 95
+[    4.818915] usif-spi e1200000.usif2: master is unqueued, this is deprecated
+[    4.819434] usbcore: registered new interface driver usbfs
+[    4.819526] usbcore: registered new interface driver hub
+[    4.819828] usbcore: registered new device driver usb
+[    4.822653] intel-usb2phy e4800900.phy: power budget set to 500 mA
+[    4.826496] I2C: Enterring xgold_i2c_core_probe
+[    4.830131] I2C: Enterring xgold_i2c_core_probe
+[    4.833510] I2C: Enterring xgold_i2c_core_probe
+[    4.836153] Linux video capture interface: v2.00
+[    4.837805] rk_ion heap cma-heap base:0x030000000d000000 length:0x50331648 type 4
+[    4.837863] rk_ion heap secured-rga-heap base:0x0100000010000000 length:0x16777216 type 4
+[    4.837912] rk_ion heap secured-heap base:0x0500000011000000 length:0x83886080 type 4
+[    4.838624] rk_ion VPU uses secured-heap size 83886080
+[    4.839897] Advanced Linux Sound Architecture Driver Initialized.
+[    4.842331] Switched to clocksource xgold_stm_clocksource
+[    4.850031] Clock event device 3 set to ONESHOT
+[    4.851952] Clock event device 2 set to ONESHOT
+[    4.926587] loader-logo-on:1
+[    4.926611] create rockchip ion client
+[    4.926664] rockchip-fb rockchip-fb: rockchip framebuffer driver probe
+[    4.928260] rockchip-screen screen: rockchip screen probe success
+[    4.929449] graphics fb0: rockchip framebuffer registered:fb0
+[    4.930581] graphics fb1: rockchip framebuffer registered:fb1
+[    4.930893] graphics fb2: rockchip framebuffer registered:fb2
+[    4.931555] rockchip-vop vop0: vop0: dclk:0>>fps:60 pixclock 23567
+[    4.931574] rockchip-vop vop0: wakeup from standby!
+[    4.931586] ion_alloc iommu enbled
+[    4.931685] xgold-noc ef010000.l2_noc: Error interrupt -0 0x80030008 -1 0x00004100 -3 0x00240000 -5 0x00000100 -7 0x0000001c
+[    4.931796] xgold-noc ef010000.l2_noc: Error interrupt -0 0x80030008 -1 0x00004100 -3 0x00240000 -5 0x00000100 -7 0x0000001c
+[    4.931899] xgold-noc ef010000.l2_noc: Error interrupt -0 0x80030008 -1 0x00004100 -3 0x00240000 -5 0x00000100 -7 0x0000001c
+[    4.931980] xgold-noc ef010000.l2_noc: Error interrupt -0 0x80030008 -1 0x00004100 -3 0x00240000 -5 0x00000100 -7 0x0000001c
+[    4.932051] xgold-noc ef010000.l2_noc: Error interrupt -0 0x80030008 -1 0x00004100 -3 0x00240000 -5 0x00000100 -7 0x0000001c
+[    4.932161] xgold-noc ef010000.l2_noc: Error interrupt -0 0x80030008 -1 0x00004100 -3 0x00240000 -5 0x00000100 -7 0x0000001c
+[    4.932178] xgold-noc ef010000.l2_noc: Error interrupt -0 0x80030008 -1 0x00004100 -3 0x00240000 -5 0x00000100 -7 0x0000001c
+[    4.932272] xgold-noc ef010000.l2_noc: Error interrupt -0 0x80030008 -1 0x00004100 -3 0x00240000 -5 0x00000100 -7 0x0000001c
+[    4.932354] xgold-noc ef010000.l2_noc: Error interrupt -0 0x80030008 -1 0x00004100 -3 0x00240000 -5 0x00000100 -7 0x0000001c
+[    4.932542] xgold-noc ef010000.l2_noc: Error interrupt -0 0x80030008 -1 0x00004100 -3 0x00240000 -5 0x00000100 -7 0x0000001c
+[    4.949798] graphics fb0: fb0:phy:10000000>>vir:c1d01000>>len:0x800000
+[    4.949822] graphics fb0: copy fb data 600 x 1024  from  addr:0x20000000 to addr:0x10000000
+[    4.996236] rk_iommu e1000300.vop_mmu: Attached IOMMU with pgtable 0x3eff5000
+[    4.996256] rockchip-vop vop0: vop0 probe ok, iommu enabled
+[    5.000120] NET: Registered protocol family 2
+[    5.001189] TCP established hash table entries: 8192 (order: 3, 32768 bytes)
+[    5.001281] TCP bind hash table entries: 8192 (order: 5, 163840 bytes)
+[    5.001443] TCP: Hash tables configured (established 8192 bind 8192)
+[    5.001539] UDP hash table entries: 512 (order: 2, 24576 bytes)
+[    5.001582] UDP-Lite hash table entries: 512 (order: 2, 24576 bytes)
+[    5.001844] NET: Registered protocol family 1
+[    5.002223] Trying to unpack rootfs image as initramfs...
+[    5.125255] Freeing initrd memory: 1684K (80300000 - 804a5000)
+[    5.140754] console [pstore-1] enabled
+[    5.140824] pstore: Registered ramoops as persistent store backend
+[    5.140839] ramoops: attached 0x219000@0x3f32b000, ecc: 0/0
+[    5.143389] futex hash table entries: 1024 (order: 4, 65536 bytes)
+[    5.143449] Initialise system trusted keyring
+[    5.143528] audit: initializing netlink subsys (disabled)
+[    5.143605] audit: type=2000 audit(1458710194.870:1): initialized
+[    5.161258] fuse init (API version 7.23)
+[    5.162424] SELinux:  Registering netfilter hooks
+[    5.176490] alg: No test for stdrng (krng)
+[    5.176619] Key type asymmetric registered
+[    5.176642] Asymmetric key parser 'x509' registered
+[    5.176944] Block layer SCSI generic (bsg) driver version 0.4 loaded (major 251)
+[    5.176966] io scheduler noop registered
+[    5.177211] io scheduler cfq registered (default)
+[    5.179183] irq-xgold: new irq wake table: wake_irq - sofia-regmap access
+[    5.180177] irq-xgold: new irq wake table: abb_wake_irq - sofia-regmap access
+[    5.181744] rga: create rockchip ion client for RGA
+[    5.189286] rga e2500000.rga: init SecureVM rga
+[    5.189354] rga e2500000.rga: vbpipe open is postponed
+[    5.189613] rga: Driver loaded successfully
+[    5.190055] mvpipe enumerate instance name at
+[    5.190722] mvpipe enumerate instance name at2
+[    5.191350] mvpipe enumerate instance name atc
+[    5.191975] mvpipe enumerate instance name at2c
+[    5.192680] mvpipe enumerate instance name at-dbg
+[    5.193304] mvpipe enumerate instance name echo
+[    5.193931] mvpipe enumerate instance name secmd
+[    5.194563] mvpipe enumerate instance name sedat0
+[    5.195183] mvpipe enumerate instance name oec_dat
+[    5.195839] mvpipe enumerate instance name rga
+[    5.196491] mvpipe enumerate instance name vpu
+[    5.197140] mvpipe enumerate instance name vpu_ion
+[    5.197790] mvpipe enumerate instance name vpu_power
+[    5.198742] mvpipe enumerate instance name vpu_pp
+[    5.199401] mvpipe enumerate instance name GTI
+[    5.200025] mvpipe enumerate instance name veth_ctrl
+[    5.200940] vnvm xgold:nvm: part_name[0] = /dev/block/platform/soc0/e0000000.noc/by-name/ImcPartID022
+[    5.200961] vnvm xgold:nvm: part_name[1] = /dev/block/platform/soc0/e0000000.noc/by-name/ImcPartID023
+[    5.200979] vnvm xgold:nvm: part_name[2] = /dev/block/platform/soc0/e0000000.noc/by-name/ImcPartID024
+[    5.201395] vnvm xgold:nvm: device id (179,3) name /dev/block/platform/soc0/e0000000.noc/by-name/ImcPartID022
+[    5.201412] vnvm xgold:nvm: device id (179,3) name /dev/block/platform/soc0/e0000000.noc/by-name/ImcPartID023
+[    5.201427] vnvm xgold:nvm: device id (179,3) name /dev/block/platform/soc0/e0000000.noc/by-name/ImcPartID024
+[    5.203603] vdump: init
+[    5.204779] mveth: virtual Ethernet device driver 1.0.
+[    5.205531] mveth enumerate instance name veth0
+[    5.206764] mveth enumerate instance name veth1
+[    5.207255] virtual Ethernet device driver initialized
+[    5.209254] vmodem vmodem: VMODEM: nvm partition parse successful
+[    5.210165] VSYSPROF-BE: Initialized.
+[    5.210377] TEE_RPC REGISTERED major : 232
+[    5.211391] vsec: server_index 1
+[    5.211919] IDI AG6x0 client init
+[    5.212017] Registering IDI driver
+[    5.215853] idi idi-0: : Rev: 4   Mod ID: 130   TS Rev: 777
+[    5.215872] idi idi-0: : Software check: 16 channels
+[    5.215886] idi idi-0: : SRB Multiple Source: 0x0000000c
+[    5.215899] idi idi-0: : SRB Error Config: 0x0000000c
+[    5.217981] AG6x0 idi_client-0: AGold using secure access
+[    5.221690] : Miss PM info
+[    5.222583] idi-error idierror-0: imc_idi_error_probe: probe return 0
+[    5.224261] ttyBT btif-0: No kernel clock available
+[    5.224343] ttyBT btif-0: No BTIP 78M clock available
+[    5.224454] ttyBT btif-0: No BTIP 104M clock available
+[    5.224588] ttyBT btif-0: No BTIP 32kHz clock available
+[    5.224673] ttyBT btif-0: No BTIP VCXO request available
+[    5.224827] ttyBT btif-0: No BTIP PWM ON request available
+[    5.224921] ttyBT btif-0: No BTIP RF ON request available
+[    5.225211] BTIF device PM registration success
+[    5.225435] btif-0: ttyBT0 at MMIO 0xe7200000 (irq = 0, base_baud = 0) is a XGOLD/BTIF
+[    5.231861] XGOLD USIF serial driver
+[    5.232838] serial-usif-xgold e1100000.usif1: default 50ms fci poll
+[    5.232860] serial-usif-xgold e1100000.usif1: runtime_pm_enabled is disable
+[    5.232876] serial-usif-xgold e1100000.usif1: runtime_pm_debug is disable
+[    5.232892] serial-usif-xgold e1100000.usif1: rpm_suspend_delay set to 5000
+[    5.232908] serial-usif-xgold e1100000.usif1: auto_suspend_enable is disable
+[    5.233316] e1100000.usif1: ttyS0 at MMIO 0xe1100000 (irq = 35, base_baud = 6500000) is a XGOLD_USIF
+[    5.233648] console [ttyS0] enabled
+[    5.233662] bootconsole [earlyxgold0] disabled
+[    5.235044] tadi_driver_probe: trace port:[mem 0x80000000-0x80ffffff] - ioremap:c3400000
+[    5.235061] tadi_driver_probe: Register tdcons console
+[    5.235405] Mali Platform: mali_platform_init()
+[    5.236147] Mali Platform: mali_platform_device_init()
+[    5.236319] mali-utgard e2e00000.gpu: QoS port GPUPP added to list
+[    5.236339] mali-utgard e2e00000.gpu: QoS port GPUGP added to list
+[    5.236351] Mali Platform: ultra_high_perf is enabled
+[    5.237152] Mali Platform: fb   region @0x08000000 length = 0x08000000 (128MB)
+[    5.237170] Mali Platform: rsvd region @0x00000000 length = 0x00000000 (0MB)
+[    5.237181] Mali Platform: os   region length = 0x20000000 (512MB)
+[    5.237194] Mali Platform: dvfs is enabled
+[    5.237206] Mali Platform: dvfs_clock_config from DT:
+[    5.237220] Mali Platform: {208, 1000}
+[    5.237233] Mali Platform: {312, 2000}
+[    5.237245] Mali Platform: {416, 3000}
+[    5.237258] Mali Platform: {600, 4000}
+[    5.240818] Mali: Mali device driver loaded
+[    5.242470] Unable to detect cache hierarcy from DT for CPU 0
+[    5.250880] brd: module loaded
+[    5.258649] loop: module loaded
+[    5.259362] zram: Created 1 device(s)
+[    5.260094] xgold Vibrator init
+[    5.260685] vibra-xgold e6501400.vibrator: AGold vibrator using secure access
+[    5.261031] vibra-xgold e6501400.vibrator: Vibrator driver probed
+[    5.264439] pmic Vibrator init
+[    5.265515] vvpu e2000000.ahb_per:vvpu: probing ...
+[    5.265584] vvpu e2000000.ahb_per:vvpu: init unit VPU/mvpipe/0x00000000
+[    5.265646] vvpu e2000000.ahb_per:vvpu: VPU open postponed
+[    5.265686] vvpu dbg unit: created node VPU
+[    5.265703] vvpu e2000000.ahb_per:vvpu: successfully initialized 1 of 1 mvpipes
+[    5.265895] vvpu e2000000.ahb_per:vvpu: probing succesful
+[    5.266132] vvpu: registered platform driver
+[    5.266589] vcodec e2d00000.vpu_combo: probe device.
+[    5.266755] ->state: high_perf
+[    5.266955] e2d00000.vpu_combo: power on.
+[    5.268786] e2d00000.vpu_combo: power off...
+[    5.268799] ->state: disable
+[    5.268941] e2d00000.vpu_combo: power off.
+[    5.268959] vcodec e2d00000.vpu_combo: init success.
+[    5.270001] tun: Universal TUN/TAP device driver, 1.6
+[    5.270017] tun: (C) 1999-2004 Max Krasnyansky <maxk@qualcomm.com>
+[    5.270189] PPP generic driver version 2.4.2
+[    5.270384] PPP BSD Compression module registered
+[    5.270402] PPP Deflate Compression module registered
+[    5.270430] PPP MPPE Compression module registered
+[    5.270453] NET: Registered protocol family 24
+[    5.569155] e2100000.usb supply vusb_d not found, using dummy regulator
+[    5.573011] e2100000.usb supply vusb_a not found, using dummy regulator
+[    5.613135] dwc2 e2100000.usb: EPs: 16, dedicated fifos, 4672 entries in SPRAM
+[    6.168336] dwc2 e2100000.usb: DWC OTG Controller
+[    6.168386] dwc2 e2100000.usb: new USB bus registered, assigned bus number 1
+[    6.168443] dwc2 e2100000.usb: irq 121, io mem 0x00000000
+[    6.721242] hub 1-0:1.0: USB hub found
+[    6.721305] hub 1-0:1.0: 1 port detected
+[    6.724144] usbcore: registered new interface driver usb-storage
+[    6.724937] mousedev: PS/2 mouse device common for all mice
+[    6.725717] xgold_keypad_init
+[    6.726961] input: kpd-xgold as /devices/soc0/e0000000.noc/ef010000.l2_noc/e4000000.ahb_per/e4200000.keypad/input/input0
+[    6.727301] kpd-xgold e4200000.keypad: keypad probed
+[    6.729958] input: xgold-on-button as /devices/soc0/e0000000.noc/ef010000.l2_noc/e6100000.idi_per/e6600000.agold/e6600000.agold:on_button/input/input1
+[    6.730505] [Focal][Touch] ftxxxx_ts_init : ftxxxx_ts_init !
+[    6.730653] himax852xes_init_async: platform didnt support
+[    6.734188] [Focal][Touch] FTxxxx prob process Start !
+[    6.967055] input: focal-touchscreen as /devices/virtual/input/input2
+[    7.174130] [Focal][Touch] ftxxxx_create_sysfs Start !
+[    7.194154] [Focal][Touch] HidI2c_To_StdI2c : Change to STDI2cValue,REG1 = 0xeb,REG2 = 0xaa,REG3 = 0x8, iRet=1
+[    7.201316] [Focal][Touch] HidI2c_To_StdI2c : HidI2c_To_StdI2c successful. 
+[    7.208222] [Focal][Touch] ftxxxx_create_sysfs End !
+[    7.214624] ft3x27 3-0038: [Focal][Touch] ftxxxx_create_apk_debug_channel: Create proc entry success! 
+[    7.215001] [Focal][Touch] Firmware version = 0x6
+[    7.218111] [Focal][Touch] report rate is 100Hz.
+[    7.222653] [Focal][Touch] touch threshold is 140.
+[    7.227453] [Focal][Touch] VENDOR ID = 0x79
+[    7.231112] [Focal][Touch][INFO] client name = ft3x27 irq = 419
+[    7.237045] [Focal][Touch] X-RES = 600, Y-RES = 1024, RST gpio = 63, gpio irq = 54, client irq = 419
+[    7.246123] [Focal][Touch][INFO] Into fts_ctpm_auto_upgrade
+[    7.251949] [Focal][Touch] uc_tp_fm_ver: 0x06
+[    7.255944] [Focal][Touch] uc_host_fm_ver: 0x06
+[    7.260896] [Focal][Touch] ftxxxx_ts_init : Successfully added driver ft3x27
+[    7.267430] ltr559: ltr559 sysfs driver init
+[    7.267509] l3gd20_gyr: gyroscope sysfs driver init
+[    7.267637] lsm303dlhc_acc accelerometer driver init
+[    7.267709] lsm303dlhc_mag magnetometer driver init
+[    7.267779] lsm303c_acc accelerometer driver: init
+[    7.267850] lsm303c_mag driver: init
+[    7.267983] ecompass driver: init
+[    7.268271] input: ecompass_data as /devices/virtual/input/input3
+[    7.269603] xgold_rtc e1000000.ahb_per:rtc: rtc accesses are synchronous
+[    7.269757] xgold_rtc e1000000.ahb_per:rtc: map rtc alarm irq index 262
+[    7.270231] xgold_rtc e1000000.ahb_per:rtc: rtc core: registered e1000000.ahb_per:rt as rtc0
+[    7.270246] rtc: RTC virtualized driver probed
+[    7.270539] i2c /dev entries driver
+[    7.271423] gc0310 1-0021: probing...
+[    7.271448] gc0310.pltfrm_camera_module_get_data WARN: cannot not get flash-driver property of node camera-module
+[    7.279128] SOC GPIO 48 := 1
+[    7.279242] SOC GPIO 55 := 1
+[    7.279397] SOC GPIO 48 := 1
+[    7.279506] SOC GPIO 55 := 1
+[    7.329223] gc0310 1-0021: probing successful
+[    7.329684] ov5670 1-0010: probing...
+[    7.329721] ov5670.pltfrm_camera_module_get_data WARN: cannot not get flash-driver property of node camera-module
+[    7.381611] ov5670.ov5670_check_camera_id: 
+[    7.381840] ov5670.pltfrm_camera_module_read_reg(659) ERR: i2c read from offset 0x0000300b failed with error -121
+[    7.389470] ov5670.pltfrm_camera_module_read_reg(659) ERR: i2c read from offset 0x0000300c failed with error -121
+[    7.399456] ov5670.ov5670_check_camera_id(1157) ERR: register read failed, camera module powered off?
+[    7.408609] ov5670.ov5670_check_camera_id(1184) ERR: failed with error (-121)
+[    7.415667] ov5670.ov_camera_module_s_power(576) ERR: camera check ID failed, powering off sensor
+[    7.424748] ov5670.ov_camera_module_s_power(670) ERR: failed with error -121
+[    7.431438] ov5670 1-0010: probing failed with error (-121)
+[    7.436845] ov5670: probe of 1-0010 failed with error -121
+[    7.443094] hm2051.pltfrm_camera_module_get_data WARN: cannot not get flash-driver property of node camera-module
+[    7.710010] spcu_thermal e4700000.spcu_thermal0: Thermal zone device registered, type=coretemp0
+[    7.710910] spcu_thermal e4700000.spcu_thermal1: Thermal zone device registered, type=coretemp1
+[    7.711769] spcu_thermal e4700000.spcu_thermal3: Thermal zone device registered, type=coretemp3
+[    7.712610] spcu_thermal e4700000.spcu_thermal4: Thermal zone device registered, type=coretemp4
+[    7.713456] spcu_thermal e4700000.spcu_thermal5: Thermal zone device registered, type=coretemp5
+[    7.714177] device-mapper: uevent: version 1.0.3
+[    7.714630] device-mapper: ioctl: 4.31.0-ioctl (2015-3-12) initialised: dm-devel@redhat.com
+[    7.720507] limit start frequency to min: 416000, max:900000
+[    7.720703] sdhci: Secure Digital Host Controller Interface driver
+[    7.720715] sdhci: Copyright(c) Pierre Ossman
+[    7.720732] sdhci-pltfm: SDHCI platform and OF driver helper
+[    7.721904] xgold-sdhci e2800000.emmc: sdhci: io: linux-@:c4a00000
+[    7.722569] sdhci: e2800000.emmc, rpm = 1
+[    7.724129] xgold-sdhci e2800000.emmc: No vmmc regulator found
+[    7.724149] xgold-sdhci e2800000.emmc: No vqmmc regulator found
+[    7.767224] mmc0: SDHCI controller on e2800000.emmc [e2800000.emmc] using ADMA
+[    7.768608] xgold-sdhci e1400000.sd: sdhci: io: linux-@:c4e00000
+[    7.769796] xgold-sdhci e1400000.sd: Got CD GPIO
+[    7.769933] sdhci: e1400000.sd, rpm = 1
+[    7.816900] mmc1: SDHCI controller on e1400000.sd [e1400000.sd] using ADMA
+[    7.818730] leds-agold620 e6501800.agold620-backlight: AGOLD620 backlight driver probed
+[    7.850076] usbcore: registered new interface driver usbhid
+[    7.850095] usbhid: USB HID core driver
+[    7.850339] ashmem: initialized
+[    7.851019] mmc0: MAN_BKOPS_EN bit is not set
+[    7.852749] ag620_meas meas-0: Initializing MEAS AG620 HAL
+[    7.853119] ag620_meas: meas_ag620_probe: agold_chip_rev=0x0021
+[    7.853254] ag620_meas meas-0: meas_ag620_probe: getting handlers for dev pm states...
+[    7.857434] intel_adc: Registering AGOLD 620 MEAS HAL, 10 channels available.
+[    7.857451] intel_adc: 	chan=0, id=21
+[    7.857464] intel_adc: 	chan=1, id=8
+[    7.857475] intel_adc: 	chan=2, id=17
+[    7.857486] intel_adc: 	chan=3, id=22
+[    7.857496] intel_adc: 	chan=4, id=23
+[    7.857507] intel_adc: 	chan=5, id=24
+[    7.857518] intel_adc: 	chan=6, id=0
+[    7.857528] intel_adc: 	chan=7, id=1
+[    7.857539] intel_adc: 	chan=8, id=2
+[    7.857549] intel_adc: 	chan=9, id=12
+[    7.857560] intel_adc: All HALs were registered, probing the abstraction layer...
+[    7.857576] ag620_meas meas-0: Probing the ADC
+[    7.861199] intel_adc_sensors: platform_name = ag620
+[    7.869884] mmc0: new DDR MMC card at address 0001
+[    7.870043] oct: oct resource: [mem 0xe4d00000-0xe4dfffff] - ioremap: c5200000
+[    7.870043] 
+[    7.871009] mmcblk0: mmc0:0001 Q31SMB 14.5 GiB 
+[    7.871613] mmcblk0boot0: mmc0:0001 Q31SMB partition 1 4.00 MiB
+[    7.871936] mmcblk0boot1: mmc0:0001 Q31SMB partition 2 4.00 MiB
+[    7.872379] mmcblk0rpmb: mmc0:0001 Q31SMB partition 3 4.00 MiB
+[    7.873026] oct: platform driver registration ok
+[    7.873756] usbcore: registered new interface driver snd-usb-audio
+[    7.877824] dsp_audio_drv_probe: ioremap for [mem 0xe3600000-0xe3603fff] returned c0938000
+[    7.877891] dsp_audio_drv_probe: ioremap for [mem 0xe3604000-0xe3803fff] returned c5400000
+[    7.878671] snd: dsp: read dsp-supply property failed
+[    7.879025] GPT:Primary header thinks Alt. header is not at the end of the disk.
+[    7.879033] GPT:30523391 != 30535679
+[    7.879037] GPT:Alternate GPT header not at the end of the disk.
+[    7.879041] GPT:30523391 != 30535679
+[    7.879045] GPT: Use GNU Parted to correct GPT errors.
+[    7.879145]  mmcblk0: p1 p2 p3 p4 p5 p6 p7 p8 p9 p10 p11 p12 p13 p14 p15 p16 p17 p18 p19
+[    7.884545] rpmb_rpc: rpmb partition created
+[    7.898368] [sec_rpc] rpc_dispatch_ibfs->rpc_op_ibfs_open: Failed /dev/block/platform/soc0/e0000000.noc/by-name/ImcPartID010
+[    7.917832] dsp_clock_init set state return 0
+[    7.920805] DSP initialization done 0
+[    7.922034] XGOLD_MACHINE sound: ASoC: CPU DAI (null) not registered
+[    7.925629] snd: mac: xgold_mc_probe: unable to register sound card err -517
+[    7.933943] snd: voice: xgold_voice_probe :
+[    7.937982] xgold_bt_sco btauif-0: No 48k clock available
+[    7.942179] BTAUIF device PM registration success
+[    7.948353] oprofile: using NMI interrupt.
+[    7.948450] u32 classifier
+[    7.948461]     Actions configured
+[    7.948488] Netfilter messages via NETLINK v0.30.
+[    7.948606] nf_conntrack version 0.5.0 (14299 buckets, 57196 max)
+[    7.949418] ctnetlink v0.93: registering with nfnetlink.
+[    7.950336] xt_time: kernel timezone is -0000
+[    7.950365] ip_set: protocol 6
+[    7.950884] ip_tables: (C) 2000-2006 Netfilter Core Team
+[    7.951119] arp_tables: (C) 2002 David S. Miller
+[    7.951211] Initializing XFRM netlink socket
+[    7.952291] NET: Registered protocol family 10
+[    7.954411] mip6: Mobile IPv6
+[    7.954464] ip6_tables: (C) 2000-2006 Netfilter Core Team
+[    7.954946] sit: IPv6 over IPv4 tunneling driver
+[    7.955857] NET: Registered protocol family 17
+[    7.955909] NET: Registered protocol family 15
+[    7.956005] l2tp_core: L2TP core driver, V2.0
+[    7.956039] l2tp_ppp: PPPoL2TP kernel driver, V2.0
+[    7.957158] Using IPI No-Shortcut mode
+[    7.958092] Loading compiled-in X.509 certificates
+[    7.971606] Loaded X.509 cert 'Build time autogenerated kernel key: e8fe865a081e79be87fcf85091c63da32104bae0'
+[    7.971653] registered taskstats version 1
+[    7.973175] snd: plf: dsp_audio_builtin_usecase_of_parse: Unable to find property intel,XGold-usecase
+[    7.981854] XGOLD_MACHINE sound: control 2:0:0:DSP Audio send cmd:0 is already present
+[    7.987448] Speech Probe e3000000.ahb_per:speech_probe: ASoC: Failed to add DSP Audio send cmd: -16
+[    7.996450] snd: plf: dsp_audio_builtin_usecase_of_parse: Unable to find property intel,XGold-usecase
+[    8.007896] XGOLD_MACHINE sound: snd-soc-dummy-dai <-> e3000000.ahb_per:pcm_music mapping ok
+[    8.008193] XGOLD_MACHINE sound: ag620_afe <-> e3000000.ahb_per:pcm_voice mapping ok
+[    8.010244] XGOLD_MACHINE sound: snd-soc-dummy-dai <-> e3000000.ahb_per:pcm_music mapping ok
+[    8.012233] XGOLD_MACHINE sound: snd-soc-dummy-dai <-> e3000000.ahb_per:pcm_music mapping ok
+[    8.012616] XGOLD_MACHINE sound: snd-soc-dummy-dai <-> e3000000.ahb_per:speech_probe mapping ok
+[    8.013669] XGOLD_MACHINE sound: snd-soc-dummy-dai <-> e3000000.ahb_per:pcm_music mapping ok
+[    8.014286] XGOLD_MACHINE sound: ag620_afe <-> e3000000.ahb_per:pcm_music mapping ok
+[    8.014438] XGOLD_MACHINE sound: ag620_afe <-> e3000000.ahb_per:speech_probe mapping ok
+[    8.017630] input: xgold_afe-audio Headset as /devices/platform/sound/sound/card0/input4
+[    8.018923] snd: jack: could not get default pinstate
+[    8.021160] snd: jack: could not get sleep pinstate
+[    8.026084] snd: jack: could not get inactive pinstate
+[    8.033256] file system registered
+[    8.035588] Number of LUNs=8
+[    8.035611] Mass Storage Function, version: 2009/09/11
+[    8.035627] LUN: removable file: (no medium)
+[    8.036147] android_usb gadget: android_usb ready
+[    8.039318] dwc2 e2100000.usb: bound driver android_usb
+[    8.040213] xgold_rtc e1000000.ahb_per:rtc: setting system clock to 2016-03-23 05:16:39 UTC (1458710199)
+[    8.041270] I2C: Enterring xgold_i2c_core_probe
+[    8.042145] sn700002_probe (sn700002_probe) client->addr= 55
+[    8.043141] sn700002_probe sn700002_probe: 1 batteries
+[    8.043216] sn700002_probe  - 0: cell_type 1
+[    8.043228] sn700002_probe  - 0: num_op 1069
+[    8.043271] update_from_normal_mode (update_from_normal_mode) enter
+[    8.046356] sn700002_probe - sn700002-battery driver registered done ====
+[    8.047033] CIF ISP2.0 xgold_v4l2_drv_probe: probing...
+[    8.047310] CIF ISP2.0 cif_isp20_img_src_to_img_src(79) ERR: failed with error -14
+[    8.052079] CIF ISP2.0 cif_isp20_img_srcs_init: device hm2051 attached to CIF CSI-0
+[    8.052112] CIF ISP2.0 cif_isp20_img_src_to_img_src(79) ERR: failed with error -14
+[    8.059801] CIF ISP2.0 cif_isp20_img_srcs_init: device gc0310 attached to CIF CSI-1
+[    8.060186] CIF ISP2.0 cif_isp20_pltfrm_read_csi_dphy_calib WARN: can't find 'intel,csi-dphy-calib'
+[    8.068967] CIF ISP2.0 cif_isp20_v4l2_register_video_device: video device video0.0 (CIF ISP20 SP) successfully registered
+[    8.070109] CIF ISP2.0 cif_isp20_v4l2_register_video_device: video device video2.2 (CIF ISP20 MP) successfully registered
+[    8.070337] CIF ISP2.0 cif_isp20_v4l2_register_video_device: video device video3.3 (CIF ISP20 DMA) successfully registered
+[    8.070739] idi_bus_match:brown_out-0-ag6x0_brown_out: Using peripheral type for registration process is deprecated
+[    8.079154] idi_bus_match:brown_out-0-ag6x0_brown_out: Please idi device id and driver id table
+[    8.087785] ag6x0_brown_out: brown_out_drv_probe: Getting PM state handlers: OK
+[    8.088126] smb345_charger: smb345_idi_probe
+[    8.088901] smb345_charger: smb345_i2c_probe
+[    8.089268] smb345_charger: Getting PM state handlers: OK
+[    8.092366] sn700002_battery_external_power_changed [sn700002_battery_external_power_changed] NO_CABLE
+[    8.092818] sn700002_battery_external_power_changed [sn700002_battery_external_power_changed] NO_CABLE
+[    8.097059] ag620_meas: AGOLD TEMP_ALERT_REG 0x00000040 at boot
+[    8.097080] ag620_meas: AGOLD thermal protection disabled at 307250 mK,
+[    8.097092] ag620_meas: TEMP_ALERT_REG 0x00000050
+[    8.103641] ag620_thermal: PMICTEMP_SENSOR
+[    8.106335] sd_ldo: disabling
+[    8.106367] ALSA device list:
+[    8.106381]   #0: xgold_afe-audio
+[    8.114617] Freeing unused kernel memory: 772K (81363000 - 81424000)
+[    8.115107] Write protecting the kernel text: 7468k
+[    8.115372] Write protecting the kernel read-only data: 3228k
+[    8.115383] NX-protecting the kernel data: 6868k
+[    8.120277] init: init started!
+[    8.128914] SELinux: 2048 avtab hash slots, 6722 rules.
+[    8.134052] SELinux: 2048 avtab hash slots, 6722 rules.
+[    8.134084] SELinux:  1 users, 2 roles, 684 types, 0 bools, 1 sens, 1024 cats
+[    8.134105] SELinux:  87 classes, 6722 rules
+[    8.136399] SELinux:  Permission audit_read in class capability2 not defined in policy.
+[    8.136446] SELinux: the above unknown classes and permissions will be denied
+[    8.136485] SELinux:  Completing initialization.
+[    8.136495] SELinux:  Setting up existing superblocks.
+[    8.143208] smb345_charger: smb345_chgint_cb_work_func: vbus changed: 1
+[    8.201100] audit: type=1403 audit(1458710199.650:2): policy loaded auid=4294967295 ses=4294967295
+[    8.201904] audit: type=1404 audit(1458710199.660:3): enforcing=1 old_enforcing=0 auid=4294967295 ses=4294967295
+[    8.251401] init: (Initializing SELinux enforcing took 0.13s.)
+[    8.268076] init: init second stage started!
+[    8.281079] smb345_charger: do_charger(), ma = 100, type = 1, connect = 0
+[    8.285526] smb345_charger: smb345_enable_charging(), enable = 1 for type=1, ma=100
+[    8.310471] battery_status_poll battery driver not ready
+[    8.413256] init: waitpid failed: No child processes
+[    8.415760] init: (Loading properties from /default.prop took 0.00s.)
+[    8.418445] init: (Parsing /init.environ.rc took 0.00s.)
+[    8.419228] init: (Parsing /init.usb.rc took 0.00s.)
+[    8.421294] init: (Parsing /init.logs.rc took 0.00s.)
+[    8.421457] init: (Parsing /init.crashlogd.rc took 0.00s.)
+[    8.421631] init: (Parsing /init.coredump.rc took 0.00s.)
+[    8.421782] init: (Parsing /init.debug-charging.rc took 0.00s.)
+[    8.421926] init: (Parsing /init.kernel.rc took 0.00s.)
+[    8.422066] init: (Parsing /init.log-watch.rc took 0.00s.)
+[    8.422108] init: (Parsing /init.s3gxmrd_n1.rc took 0.00s.)
+[    8.422729] init: (Parsing /init.usb.configfs.rc took 0.00s.)
+[    8.422883] init: (Parsing /init.zygote32.rc took 0.00s.)
+[    8.423044] init: (Parsing /init.trace.rc took 0.00s.)
+[    8.423085] init: (Parsing /init.rc took 0.01s.)
+[    8.423594] init: Starting service 'ueventd'...
+[    8.425728] init: write_file: Unable to open '/proc/sys/kernel/panic_on_stackoverflow': No such file or directory
+[    8.425787] init: Waiting for /dev/.coldboot_done...
+[    8.427362] ueventd: ueventd started!
+[    9.181427] ueventd: Coldboot took 0.75s.
+[    9.181819] init: Waiting for /dev/.coldboot_done took 0.77s.
+[    9.181931] init: /dev/hw_random not found
+[    9.183297] init: could not open /dev/keychord: No such file or directory
+[    9.208030] init: write_file: Unable to open '/proc/sys/kernel/hung_task_timeout_secs': No such file or directory
+[    9.208104] init: write_file: Unable to open '/proc/cpu/alignment': No such file or directory
+[    9.208440] init: write_file: Unable to open '/proc/sys/kernel/sched_compat_yield': No such file or directory
+[    9.211107] init: write_file: Unable to write to '/dev/cpuctl/cpu.shares': Invalid argument
+[    9.212590] audit: type=1400 audit(1458710200.680:4): avc:  denied  { module_request } for  pid=1 comm="init" kmod="fs-cpuset" scontext=u:r:init:s0 tcontext=u:r:kernel:s0 tclass=system permissive=0
+[    9.216391] init: write_file: Unable to open '/proc/sys/abi/swp': No such file or directory
+[    9.218724] init: /dev/hw_random not found
+[    9.232967] EXT4-fs (mmcblk0p17): mounted filesystem with ordered data mode. Opts: (null)
+[    9.233157] fs_mgr: __mount(source=/dev/block/by-name/ImcPartID068,target=/system,type=ext4)=0
+[    9.242563] EXT4-fs (mmcblk0p18): mounted filesystem with ordered data mode. Opts: errors=panic
+[    9.242705] fs_mgr: __mount(source=/dev/block/by-name/ImcPartID069,target=/data,type=ext4)=0
+[    9.243771] EXT4-fs (mmcblk0p16): Ignoring removed nomblk_io_submit option
+[    9.256048] EXT4-fs (mmcblk0p16): mounted filesystem with ordered data mode. Opts: nomblk_io_submit,errors=remount-ro
+[    9.256213] fs_mgr: check_fs(): mount(/dev/block/by-name/ImcPartID070,/cache,ext4)=0: Success
+[    9.298451] battery_status_poll battery driver not ready
+[    9.310936] fs_mgr: check_fs(): unmount(/cache) succeeded
+[    9.313932] fs_mgr: Running /system/bin/e2fsck on /dev/block/by-name/ImcPartID070
+[    9.432445] audit: type=1400 audit(1458710200.900:5): avc:  denied  { dac_override } for  pid=135 comm="e2fsck" capability=1  scontext=u:r:fsck:s0 tcontext=u:r:fsck:s0 tclass=capability permissive=0
+[    9.432496] audit: type=1400 audit(1458710200.900:6): avc:  denied  { dac_read_search } for  pid=135 comm="e2fsck" capability=2  scontext=u:r:fsck:s0 tcontext=u:r:fsck:s0 tclass=capability permissive=0
+[    9.432670] audit: type=1400 audit(1458710200.900:7): avc:  denied  { dac_override } for  pid=135 comm="e2fsck" capability=1  scontext=u:r:fsck:s0 tcontext=u:r:fsck:s0 tclass=capability permissive=0
+[    9.434355] e2fsck: e2fsck 1.42.9 (28-Dec-2013)
+[    9.434355] 
+[    9.434428] e2fsck: /system/bin/e2fsck: Permission denied while trying to open /dev/block/by-name/ImcPartID070
+[    9.434428] 
+[    9.434462] e2fsck: You must have r/w access to the filesystem or be root
+[    9.434462] 
+[    9.434505] e2fsck: e2fsck terminated by exit(8)
+[    9.434505] 
+[    9.443144] EXT4-fs (mmcblk0p16): mounted filesystem with ordered data mode. Opts: errors=panic
+[    9.443288] fs_mgr: __mount(source=/dev/block/by-name/ImcPartID070,target=/cache,type=ext4)=0
+[   10.286630] battery_status_poll battery driver not ready
+[   10.790464] rk_ion /dev/mvpipe-vpu_ion link 0xbcf79800 established
+[   11.068331] bq27621_asus_battery_dev_read_write_fw_cfg_version_lite: [M] old_DV = 6
+[   11.127826] bq27621_asus_battery_dev_read_gauge_id: [M] gauge_id = 3489
+[   11.127862] update_from_normal_mode (update_from_normal_mode) current_cell_type 1, fw_cfg_version 6, 
+[   11.127888] update_from_normal_mode latest_cfg_version 6, fw_gauge_id 3489, latest_fw_gauge_id 3489
+[   11.127912] update_from_normal_mode No need to flash battery cell data
+[   11.127932] update_from_normal_mode data flash version and gauge id are equal
+[   17.775579] [sec_rpc] rpc_dispatcher_cmd: RPC cmd 5 failed with result 1
+[   21.322434] random: nonblocking pool is initialized
+[   28.980011] fs_mgr: __mount(source=/dev/block/by-name/ImcPartID130,target=/oem,type=ext4)=-1
+[   28.980230] fs_mgr: Failed to mount an un-encryptable or wiped partition on/dev/block/by-name/ImcPartID130 at /oem options: context=u:object_r:oemfs:s0 error: No such file or directory
+[   28.994357] init: fs_mgr_mount_all returned an error
+[   29.000042] init: fs_mgr_mount_all returned unexpected error 255
+[   29.009434] init: write_file: Unable to open '/proc/sys/kernel/hung_task_timeout_secs': No such file or directory
+[   29.012659] init: Starting service 'logd'...
+[   29.033768] init: (Loading properties from /oem/oem.prop took 0.00s.)
+[   29.033868] init: (Loading properties from /oem/oem.prop took 0.00s.)
+[   29.033957] init: (Loading properties from /oem/oem.prop took 0.00s.)
+[   29.034046] init: (Loading properties from /oem/oem.prop took 0.00s.)
+[   29.034133] init: (Loading properties from /oem/oem.prop took 0.00s.)
+[   29.034221] init: (Loading properties from /oem/oem.prop took 0.00s.)
+[   29.043083] init: (Loading properties from /system/build.prop took 0.01s.)
+[   29.043250] init: (Loading properties from /vendor/build.prop took 0.00s.)
+[   29.043355] init: (Loading properties from /factory/factory.prop took 0.00s.)
+[   29.051205] init: Starting service 'vold'...
+[   29.055772] init: Not bootcharting.
+[   29.073990] logd.auditd: start
+[   29.074088] logd.klogd: 26096066846
+[   29.146329] init: Starting service 'exec 0 (/system/bin/tzdatacheck)'...
+[   29.165305] init: Service 'exec 0 (/system/bin/tzdatacheck)' (pid 161) exited with status 0
+[   29.165949] init: write_file: Unable to open '/sys/module/lowmemorykiller/parameters/minfree_force': Permission denied
+[   29.172075] zram0: detected capacity change from 0 to 419430400
+[   29.193929] Adding 409596k swap on /dev/block/zram0.  Priority:-1 extents:1 across:409596k SS
+[   29.204106] init: (Loading properties from /data/local.prop took 0.00s.)
+[   29.204555] init: Starting service 'logd-reinit'...
+[   29.205857] init: Starting service 'hald'...
+[   29.227162] logd.daemon: reinit
+[   29.244175]  HAL: libhal_log_set_level: log level set to 3
+[   29.322946] init: Service 'logd-reinit' (pid 163) exited with status 0
+[   29.324505] init: property_set("ro.sf.lcd_density", "160") failed
+[   29.387949] init: Starting service 'healthd'...
+[   29.389283] init: Starting service 'lmkd'...
+[   29.390847] init: Starting service 'servicemanager'...
+[   29.392178] init: Starting service 'surfaceflinger'...
+[   29.392821]  HAL: write_string_to_file: Cannot write auto to /sys//devices/soc0/e0000000.noc/ef010000.l2_noc/e2000000.ahb_per/e2100000.usb/usb1/1-0:1.0/power/control: Permission denied
+[   29.393394] init: Starting service 'rpcServer'...
+[   29.398568] init: Starting service 'setup_fs_nvm'...
+[   29.399174] init: Starting service 'watchdog'...
+[   29.403357] binder: 177:177 transaction failed 29189, size 0-0
+[   29.405225] watchdogd: watchdogd started (interval 60, margin 10)!
+[   29.405295] watchdogd: watchdogd: Failed to open /dev/watchdog: No such file or directory
+[   29.415441] init: Starting service 'earlylogs'...
+[   29.416400] init: Service 'watchdog' (pid 185) exited with status 1
+[   29.417820] cpufreq_interactive_input_connect: connect to focal-touchscreen
+[   29.436430] init: write_file: Unable to open '/sys/devices/pci0000:00/0000:00:14.0/power/control': No such file or directory
+[   29.436615] android_usb: already disabled
+[   29.445026] android_usb: enabling function ffs
+[   29.445043] android_usb: wait ffs to be ready
+[   29.452724]  HAL: libhal_bind_mount: Could not mount /system/vendor/wifi/a620 into /system/rt/wifi
+[   29.460390]  HAL: libhal_binding_add: Could not bind mount - No such file or directory
+[   29.475306]  HAL: libhal_fuse_add_file: Could not get realpath for '/system/etc/hald/fuse/default/wpa_supplicant_overlay_no_tdls.conf': No such file or directory
+[   29.488118]  HAL: libhal_install_fuse: Could not map wpa_supplicant_overlay_no_tdls.conf to wpa_supplicant_overlay.conf
+[   29.498292]  HAL: libhal_fuse_add_file: Could not get realpath for '/system/etc/hald/fuse/modprobe.d/iwl_3gr.conf': No such file or directory
+[   29.510395]  HAL: libhal_install_fuse: Could not map iwl_3gr.conf to iwl.conf
+[   29.558268] idi_bus_match:gnss-0-ttyGNSS: Using peripheral type for registration process is deprecated
+[   29.565058] idi_bus_match:gnss-0-ttyGNSS: Please idi device id and driver id table
+[   29.583628] ttyGNSS gnss-0: missing usif reset controller
+[   29.586614] ttyGNSS gnss-0: default 50ms fci poll
+[   29.586639] ttyGNSS gnss-0: runtime_pm_enabled is disable
+[   29.586658] ttyGNSS gnss-0: runtime_pm_debug is disable
+[   29.586676] ttyGNSS gnss-0: rpm_suspend_delay set to 5000
+[   29.586692] ttyGNSS gnss-0: auto_suspend_enable is disable
+[   29.586709] ttyGNSS gnss-0: Data path property set to IDI
+[   29.597469] gnss-0: ttyGNSS0 at MMIO 0xe7700000 (irq = 296, base_baud = 6500000) is a XGOLD_USIF
+[   29.602634] init: Service 'setup_fs_nvm' (pid 184) exited with status 0
+[   29.602990] init: Service 'earlylogs' (pid 186) exited with status 0
+[   29.604400] init: SELinux: Could not get canonical path /sys/class/powercap restorecon: No such file or directory.
+[   29.613376] init: write_file: Unable to write to '/proc/sys/vm/swappiness': Invalid argument
+[   29.613544] init: write_file: Unable to write to '/sys/fs/cgroup/memory/sw/memory.swappiness': Invalid argument
+[   29.615966] init: Starting service 'console'...
+[   29.635467] init: Starting service 'rpc-daemon'...
+[   29.643103] EXT4-fs: Warning: mounting with data=journal disables delayed allocation and O_DIRECT support!
+[   29.676218] EXT4-fs (mmcblk0p5): mounted filesystem with journalled data mode. Opts: data=journal
+[   29.684448] init: Starting service 'nvm_uagent'...
+[   29.685340] android_usb: already disabled
+[   29.687278] android_usb: enabling function mtp
+[   29.687295] android_usb: enabling function ffs
+[   29.687307] android_usb: enabling function acm
+[   29.687316] android_usb: wait ffs to be ready
+[   29.687416] init: Starting service 'adbd'...
+[   29.690381] init: Starting service 'init_bt_nvm'...
+[   29.701451] read descriptors
+[   29.701488] read strings
+[   29.701532] mtp_bind_config
+[   29.703079] capability: warning: `rpc-daemon' uses 32-bit capabilities (legacy support in use)
+[   29.789599] init: Service 'init_bt_nvm' (pid 212) exited with status 0
+[   29.830742] graphics fb0: rockchip fb use 3 buffers
+[   29.885752] dwc2 e2100000.usb: new device is high-speed
+[   29.890438] init: Starting service 'bootanim'...
+[   29.892465] rockchip-vop vop0: blank mode:0
+[   29.941478] android_work: sent uevent USB_STATE=CONNECTED
+[   29.996445] dwc2 e2100000.usb: new device is high-speed
+[   30.051716] dwc2 e2100000.usb: new address 40
+[   30.073477] android_usb gadget: high-speed config #1: android
+[   30.073897] smb345_charger: do_charger(), ma = 500, type = 1, connect = 0
+[   30.076518] smb345_charger: smb345_enable_charging(), enable = 1 for type=1, ma=500
+[   30.078237] android_work: sent uevent USB_STATE=CONFIGURED
+[   30.080977] smb345_charger: smb345_set_current_limits()-cable_type = 1, current_limit = 500
+[   30.082829] sn700002_battery_external_power_changed [sn700002_battery_external_power_changed] USB_PC_CABLE
+[   30.169745] type=1400 audit(1458710221.890:8): avc: denied { write } for pid=241 comm="BootAnimation" name="property_service" dev="tmpfs" ino=1243 scontext=u:r:bootanim:s0 tcontext=u:object_r:property_socket:s0 tclass=sock_file permissive=0
+[   31.220103]  HAL: libhal_tm_post_processing: Could not allocate telemetry record
+[   31.385836] healthd: battery l=100 v=4213 t=27.7 h=2 st=2 c=0 chg=u 2016-03-23 05:17:03.128275616 UTC
+[   33.039333] vnvm xgold:nvm: handle fe message
+[   33.682908] oct: Gadget /dev/ttyGS1 open succeeded.
+[   46.075405] vnvm xgold:nvm: handle fe message
+[   68.942822] dwc2 e2100000.usb: dwc2_hsotg_ep_stop_xfr: timeout DOEPCTL.EPDisable
+[   68.947542] dwc2 e2100000.usb: GINNakEff triggered
+[   68.950748] android_work: sent uevent USB_STATE=DISCONNECTED
+[   68.952683] init: Service 'adbd' (pid 209) exited with status 1
+[   68.952789] init: Service 'adbd' (pid 209) killing any children in process group
+[   68.954168] init: Starting service 'adbd'...
+[   68.965997] read descriptors
+[   68.966064] read strings
+[   68.966150] mtp_bind_config
+[   69.165149] dwc2 e2100000.usb: new device is high-speed
+[   69.221612] android_work: sent uevent USB_STATE=CONNECTED
+[   69.275957] dwc2 e2100000.usb: new device is high-speed
+[   69.331169] dwc2 e2100000.usb: new address 41
+[   69.354101] android_usb gadget: high-speed config #1: android
+[   69.364368] android_work: sent uevent USB_STATE=CONFIGURED
+[   89.803001] healthd: battery l=100 v=4215 t=28.1 h=2 st=2 c=0 chg=u 2016-03-23 05:18:02.255884928 UTC
+[  116.701330] rk_iommu e1000300.vop_mmu: Detached IOMMU with pgtable 0x3eff5000
+[  116.701690] rockchip-vop vop0: blank mode:4
+[  122.990282] rk_iommu e1000300.vop_mmu: Attached IOMMU with pgtable 0x3eff5000
+[  123.029892] rockchip-vop vop0: blank mode:0
+[  125.121822] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--1
+[  125.151412] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--2
+[  125.181054] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--3
+[  125.210691] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--4
+[  125.240334] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--5
+[  125.269972] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--6
+[  125.299617] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--7
+[  125.329253] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--8
+[  125.358900] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--9
+[  125.388535] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--10
+[  125.418178] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--11
+[  125.447819] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--12
+[  125.477465] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--13
+[  125.507094] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--14
+[  125.536735] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--15
+[  125.566373] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--16
+[  125.596015] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--17
+[  125.625651] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--18
+[  125.655304] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--19
+[  125.684942] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--20
+[  125.714572] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--21
+[  125.744211] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--22
+[  125.773880] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--23
+[  125.803549] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--24
+[  125.833150] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--25
+[  125.862792] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--26
+[  125.892413] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--27
+[  125.922066] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--28
+[  125.951699] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--29
+[  125.981344] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--30
+[  126.010988] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--31
+[  126.040617] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--32
+[  126.070255] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--33
+[  126.099881] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--34
+[  126.129536] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--35
+[  126.159177] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--36
+[  126.188813] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--37
+[  126.218486] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--38
+[  126.248134] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--39
+[  126.277738] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--40
+[  126.307373] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--41
+[  126.337014] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--42
+[  126.366666] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--43
+[  126.396297] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--44
+[  126.425959] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--45
+[  126.455581] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--46
+[  126.485219] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--47
+[  126.514862] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--48
+[  126.544492] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--49
+[  126.574134] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--50
+[  126.603994] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--51
+[  126.633425] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--52
+[  126.663048] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--53
+[  126.692687] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--54
+[  126.722575] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--55
+[  126.751843] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--56
+[  126.781491] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--57
+[  126.811130] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--58
+[  126.840767] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--59
+[  126.870585] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--60
+[  126.870620] rockchip_fb_update_reg: wait reg effect timeout!
+[  126.900290] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--1
+[  126.929822] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--2
+[  126.959498] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--3
+[  126.989114] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--4
+[  127.018785] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--5
+[  127.048398] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--6
+[  127.078049] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--7
+[  127.107834] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--8
+[  127.137382] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--9
+[  127.166956] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--10
+[  127.196591] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--11
+[  127.226227] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--12
+[  127.255867] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--13
+[  127.285507] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--14
+[  127.315141] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--15
+[  127.344782] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--16
+[  127.374427] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--17
+[  127.404064] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--18
+[  127.433702] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--19
+[  127.463344] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--20
+[  127.492987] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--21
+[  127.522622] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--22
+[  127.552263] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--23
+[  127.581921] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--24
+[  127.611550] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--25
+[  127.641210] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--26
+[  127.670832] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--27
+[  127.700483] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--28
+[  127.730207] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--29
+[  127.759718] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--30
+[  127.789388] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--31
+[  127.819032] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--32
+[  127.848663] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--33
+[  127.878329] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--34
+[  127.907974] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--35
+[  127.937597] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--36
+[  127.967226] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--37
+[  127.996866] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--38
+[  128.026504] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--39
+[  128.056157] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--40
+[  128.085789] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--41
+[  128.115423] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--42
+[  128.145055] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--43
+[  128.174719] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--44
+[  128.204349] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--45
+[  128.233992] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--46
+[  128.263627] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--47
+[  128.293273] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--48
+[  128.322910] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--49
+[  128.352546] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--50
+[  128.382190] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--51
+[  128.411823] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--52
+[  128.441467] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--53
+[  128.471103] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--54
+[  128.500742] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--55
+[  128.530385] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--56
+[  128.560028] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--57
+[  128.589664] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--58
+[  128.619342] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--59
+[  128.648971] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--60
+[  128.649008] rockchip_fb_update_reg: wait reg effect timeout!
+[  128.708247] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--1
+[  128.738012] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--2
+[  128.767540] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--3
+[  128.797276] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--4
+[  128.826763] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--5
+[  128.856384] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--6
+[  128.886047] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--7
+[  128.915690] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--8
+[  128.945322] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--9
+[  128.974964] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--10
+[  129.004603] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--11
+[  129.034243] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--12
+[  129.063883] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--13
+[  129.093522] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--14
+[  129.123170] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--15
+[  129.152804] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--16
+[  129.182435] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--17
+[  129.212083] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--18
+[  129.241723] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--19
+[  129.271363] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--20
+[  129.301035] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--21
+[  129.330686] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--22
+[  129.360304] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--23
+[  129.389928] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--24
+[  129.419746] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--25
+[  129.449301] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--26
+[  129.478833] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--27
+[  129.508487] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--28
+[  129.538122] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--29
+[  129.567763] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--30
+[  129.597405] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--31
+[  129.627043] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--32
+[  129.656828] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--33
+[  129.686350] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--34
+[  129.715970] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--35
+[  129.745608] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--36
+[  129.775252] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--37
+[  129.804889] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--38
+[  129.834532] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--39
+[  129.864166] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--40
+[  129.893930] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--41
+[  129.923448] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--42
+[  129.953108] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--43
+[  129.982699] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--44
+[  130.012389] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--45
+[  130.042199] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--46
+[  130.071652] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--47
+[  130.101282] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--48
+[  130.130921] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--49
+[  130.160561] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--50
+[  130.190200] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--51
+[  130.219843] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--52
+[  130.249482] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--53
+[  130.279125] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--54
+[  130.308762] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--55
+[  130.338402] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--56
+[  130.368190] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--57
+[  130.397811] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--58
+[  130.427342] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--59
+[  130.456967] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--60
+[  130.457000] rockchip_fb_update_reg: wait reg effect timeout!
+[  130.486645] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--1
+[  130.516333] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--2
+[  130.545889] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--3
+[  130.575499] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--4
+[  130.605164] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--5
+[  130.634809] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--6
+[  130.664442] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--7
+[  130.694087] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--8
+[  130.723726] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--9
+[  130.753363] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--10
+[  130.782965] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--11
+[  130.812642] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--12
+[  130.842283] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--13
+[  130.871923] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--14
+[  130.901563] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--15
+[  130.931204] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--16
+[  130.960844] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--17
+[  130.990483] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--18
+[  131.020140] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--19
+[  131.049810] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--20
+[  131.079434] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--21
+[  131.109052] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--22
+[  131.138709] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--23
+[  131.168350] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--24
+[  131.197949] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--25
+[  131.227604] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--26
+[  131.257242] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--27
+[  131.286886] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--28
+[  131.316523] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--29
+[  131.346163] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--30
+[  131.375802] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--31
+[  131.405443] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--32
+[  131.435101] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--33
+[  131.464757] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--34
+[  131.494411] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--35
+[  131.524015] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--36
+[  131.553643] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--37
+[  131.583284] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--38
+[  131.613053] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--39
+[  131.642599] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--40
+[  131.672241] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--41
+[  131.701866] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--42
+[  131.731528] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--43
+[  131.761293] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--44
+[  131.790785] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--45
+[  131.820407] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--46
+[  131.850042] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--47
+[  131.879685] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--48
+[  131.909325] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--49
+[  131.938972] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--50
+[  131.968606] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--51
+[  131.998242] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--52
+[  132.027884] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--53
+[  132.057570] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--54
+[  132.087316] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--55
+[  132.116848] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--56
+[  132.146455] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--57
+[  132.176091] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--58
+[  132.205765] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--59
+[  132.235343] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--60
+[  132.235378] rockchip_fb_update_reg: wait reg effect timeout!
+[  132.294727] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--1
+[  132.324352] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--2
+[  132.353944] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--3
+[  132.383572] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--4
+[  132.413206] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--5
+[  132.442847] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--6
+[  132.472484] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--7
+[  132.502125] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--8
+[  132.531767] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--9
+[  132.561407] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--10
+[  132.591133] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--11
+[  132.620680] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--12
+[  132.650339] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--13
+[  132.679973] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--14
+[  132.709611] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--15
+[  132.739272] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--16
+[  132.768895] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--17
+[  132.798548] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--18
+[  132.828179] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--19
+[  132.857840] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--20
+[  132.887480] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--21
+[  132.917089] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--22
+[  132.946738] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--23
+[  132.976371] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--24
+[  133.006011] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--25
+[  133.035653] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--26
+[  133.065289] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--27
+[  133.094930] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--28
+[  133.124569] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--29
+[  133.154209] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--30
+[  133.183847] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--31
+[  133.213490] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--32
+[  133.243145] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--33
+[  133.272772] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--34
+[  133.302411] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--35
+[  133.332159] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--36
+[  133.361700] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--37
+[  133.391352] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--38
+[  133.420976] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--39
+[  133.450633] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--40
+[  133.480256] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--41
+[  133.509905] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--42
+[  133.539530] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--43
+[  133.569191] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--44
+[  133.598839] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--45
+[  133.628410] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--46
+[  133.658095] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--47
+[  133.687734] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--48
+[  133.717352] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--49
+[  133.746992] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--50
+[  133.776652] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--51
+[  133.806438] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--52
+[  133.835964] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--53
+[  133.865572] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--54
+[  133.895169] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--55
+[  133.924868] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--56
+[  133.954474] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--57
+[  133.984137] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--58
+[  134.013750] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--59
+[  134.043392] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--60
+[  134.043427] rockchip_fb_update_reg: wait reg effect timeout!
+[  134.073117] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--1
+[  134.102681] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--2
+[  134.132336] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--3
+[  134.161967] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--4
+[  134.191608] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--5
+[  134.221246] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--6
+[  134.250887] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--7
+[  134.280527] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--8
+[  134.310171] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--9
+[  134.339806] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--10
+[  134.369444] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--11
+[  134.399084] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--12
+[  134.428724] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--13
+[  134.458510] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--14
+[  134.488135] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--15
+[  134.517673] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--16
+[  134.547299] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--17
+[  134.576960] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--18
+[  134.606599] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--19
+[  134.636208] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--20
+[  134.665856] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--21
+[  134.695496] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--22
+[  134.725281] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--23
+[  134.754770] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--24
+[  134.784404] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--25
+[  134.814058] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--26
+[  134.843692] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--27
+[  134.873324] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--28
+[  134.902975] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--29
+[  134.932612] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--30
+[  134.962393] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--31
+[  134.991916] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--32
+[  135.021528] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--33
+[  135.051245] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--34
+[  135.080844] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--35
+[  135.110462] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--36
+[  135.140092] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--37
+[  135.169902] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--38
+[  135.199376] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--39
+[  135.229013] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--40
+[  135.258656] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--41
+[  135.288288] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--42
+[  135.317925] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--43
+[  135.347561] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--44
+[  135.377205] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--45
+[  135.406845] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--46
+[  135.436486] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--47
+[  135.466273] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--48
+[  135.495805] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--49
+[  135.525412] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--50
+[  135.555050] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--51
+[  135.584695] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--52
+[  135.614335] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--53
+[  135.643975] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--54
+[  135.673590] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--55
+[  135.703319] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--56
+[  135.733157] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--57
+[  135.762406] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--58
+[  135.792010] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--59
+[  135.821679] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--60
+[  135.821696] rockchip_fb_update_reg: wait reg effect timeout!
+[  135.881121] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--1
+[  135.910695] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--2
+[  135.940370] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--3
+[  135.970005] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--4
+[  135.999653] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--5
+[  136.029288] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--6
+[  136.058925] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--7
+[  136.088565] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--8
+[  136.118207] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--9
+[  136.147845] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--10
+[  136.177514] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--11
+[  136.207209] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--12
+[  136.236803] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--13
+[  136.266417] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--14
+[  136.296078] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--15
+[  136.325721] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--16
+[  136.355326] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--17
+[  136.384976] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--18
+[  136.414605] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--19
+[  136.444242] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--20
+[  136.473938] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--21
+[  136.503394] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--22
+[  136.533031] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--23
+[  136.562660] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--24
+[  136.592311] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--25
+[  136.621941] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--26
+[  136.651622] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--27
+[  136.681266] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--28
+[  136.710826] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--29
+[  136.740656] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--30
+[  136.770304] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--31
+[  136.799931] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--32
+[  136.829592] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--33
+[  136.859277] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--34
+[  136.888862] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--35
+[  136.918493] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--36
+[  136.948140] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--37
+[  136.977770] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--38
+[  137.007408] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--39
+[  137.037047] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--40
+[  137.066690] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--41
+[  137.096329] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--42
+[  137.125969] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--43
+[  137.155608] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--44
+[  137.185403] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--45
+[  137.214914] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--46
+[  137.244530] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--47
+[  137.274166] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--48
+[  137.303804] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--49
+[  137.333462] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--50
+[  137.363086] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--51
+[  137.392702] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--52
+[  137.422370] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--53
+[  137.451986] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--54
+[  137.481651] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--55
+[  137.511307] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--56
+[  137.540962] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--57
+[  137.570569] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--58
+[  137.600211] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--59
+[  137.629855] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--60
+[  137.629889] rockchip_fb_update_reg: wait reg effect timeout!
+[  137.659541] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--1
+[  137.689378] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--2
+[  137.718781] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--3
+[  137.748407] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--4
+[  137.778048] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--5
+[  137.807756] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--6
+[  137.837405] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--7
+[  137.867008] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--8
+[  137.896635] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--9
+[  137.926250] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--10
+[  137.955906] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--11
+[  137.985537] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--12
+[  138.015182] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--13
+[  138.044840] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--14
+[  138.074443] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--15
+[  138.104092] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--16
+[  138.133726] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--17
+[  138.163367] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--18
+[  138.193006] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--19
+[  138.222646] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--20
+[  138.252287] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--21
+[  138.281926] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--22
+[  138.311566] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--23
+[  138.341207] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--24
+[  138.370847] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--25
+[  138.400486] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--26
+[  138.430127] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--27
+[  138.459766] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--28
+[  138.489489] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--29
+[  138.519058] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--30
+[  138.548708] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--31
+[  138.578329] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--32
+[  138.607988] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--33
+[  138.637708] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--34
+[  138.667262] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--35
+[  138.696896] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--36
+[  138.726535] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--37
+[  138.756166] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--38
+[  138.785809] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--39
+[  138.815439] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--40
+[  138.845078] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--41
+[  138.874737] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--42
+[  138.904367] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--43
+[  138.933977] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--44
+[  138.963656] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--45
+[  138.993287] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--46
+[  139.022927] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--47
+[  139.052680] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--48
+[  139.082239] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--49
+[  139.111829] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--50
+[  139.141499] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--51
+[  139.171111] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--52
+[  139.200775] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--53
+[  139.230429] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--54
+[  139.260051] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--55
+[  139.289689] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--56
+[  139.319337] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--57
+[  139.348969] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--58
+[  139.378609] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--59
+[  139.408249] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--60
+[  139.408282] rockchip_fb_update_reg: wait reg effect timeout!
+[  139.467553] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--1
+[  139.497218] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--2
+[  139.526815] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--3
+[  139.556455] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--4
+[  139.586090] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--5
+[  139.615757] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--6
+[  139.645389] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--7
+[  139.675008] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--8
+[  139.704808] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--9
+[  139.734440] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--10
+[  139.763961] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--11
+[  139.793557] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--12
+[  139.823209] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--13
+[  139.852846] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--14
+[  139.882492] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--15
+[  139.912123] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--16
+[  139.941766] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--17
+[  139.971403] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--18
+[  140.001051] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--19
+[  140.030683] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--20
+[  140.060324] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--21
+[  140.089962] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--22
+[  140.119605] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--23
+[  140.149248] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--24
+[  140.178883] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--25
+[  140.208632] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--26
+[  140.238179] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--27
+[  140.267825] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--28
+[  140.297454] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--29
+[  140.327112] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--30
+[  140.356736] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--31
+[  140.386372] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--32
+[  140.416066] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--33
+[  140.445709] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--34
+[  140.475302] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--35
+[  140.504965] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--36
+[  140.534569] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--37
+[  140.564213] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--38
+[  140.593855] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--39
+[  140.623500] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--40
+[  140.653293] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--41
+[  140.682768] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--42
+[  140.712404] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--43
+[  140.742046] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--44
+[  140.771647] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--45
+[  140.801327] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--46
+[  140.830944] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--47
+[  140.860609] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--48
+[  140.890229] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--49
+[  140.919869] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--50
+[  140.949541] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--51
+[  140.979169] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--52
+[  141.008806] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--53
+[  141.038446] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--54
+[  141.068085] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--55
+[  141.097726] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--56
+[  141.127365] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--57
+[  141.157007] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--58
+[  141.186658] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--59
+[  141.216286] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--60
+[  141.216320] rockchip_fb_update_reg: wait reg effect timeout!
+[  141.246010] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--1
+[  141.275733] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--2
+[  141.305221] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--3
+[  141.335006] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--4
+[  141.364488] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--5
+[  141.394153] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--6
+[  141.423841] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--7
+[  141.453461] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--8
+[  141.483079] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--9
+[  141.512684] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--10
+[  141.542329] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--11
+[  141.571966] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--12
+[  141.601607] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--13
+[  141.631255] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--14
+[  141.660885] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--15
+[  141.690532] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--16
+[  141.720165] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--17
+[  141.749806] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--18
+[  141.779553] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--19
+[  141.809097] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--20
+[  141.838731] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--21
+[  141.868369] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--22
+[  141.898008] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--23
+[  141.927657] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--24
+[  141.957287] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--25
+[  141.986947] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--26
+[  142.016569] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--27
+[  142.046229] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--28
+[  142.075862] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--29
+[  142.105496] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--30
+[  142.135180] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--31
+[  142.164775] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--32
+[  142.194408] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--33
+[  142.224045] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--34
+[  142.253834] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--35
+[  142.283353] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--36
+[  142.312972] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--37
+[  142.342608] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--38
+[  142.372248] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--39
+[  142.401887] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--40
+[  142.431526] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--41
+[  142.461165] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--42
+[  142.490766] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--43
+[  142.520450] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--44
+[  142.550063] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--45
+[  142.579734] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--46
+[  142.609357] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--47
+[  142.638997] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--48
+[  142.668670] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--49
+[  142.698287] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--50
+[  142.727928] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--51
+[  142.757568] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--52
+[  142.787208] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--53
+[  142.816855] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--54
+[  142.846488] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--55
+[  142.876128] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--56
+[  142.905770] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--57
+[  142.935404] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--58
+[  142.965044] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--59
+[  142.994687] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--60
+[  142.994720] rockchip_fb_update_reg: wait reg effect timeout!
+[  143.054095] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--1
+[  143.083618] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--2
+[  143.113272] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--3
+[  143.142896] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--4
+[  143.172556] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--5
+[  143.202203] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--6
+[  143.231796] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--7
+[  143.261446] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--8
+[  143.291087] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--9
+[  143.320731] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--10
+[  143.350363] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--11
+[  143.380005] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--12
+[  143.409646] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--13
+[  143.439286] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--14
+[  143.468954] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--15
+[  143.498710] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--16
+[  143.528240] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--17
+[  143.558013] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--18
+[  143.587392] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--19
+[  143.617030] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--20
+[  143.646630] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--21
+[  143.676297] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--22
+[  143.706086] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--23
+[  143.735726] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--24
+[  143.765357] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--25
+[  143.794975] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--26
+[  143.824625] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--27
+[  143.854250] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--28
+[  143.883889] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--29
+[  143.913535] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--30
+[  143.943167] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--31
+[  143.972806] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--32
+[  144.002486] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--33
+[  144.032110] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--34
+[  144.061742] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--35
+[  144.091368] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--36
+[  144.121004] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--37
+[  144.150647] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--38
+[  144.180285] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--39
+[  144.209889] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--40
+[  144.239565] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--41
+[  144.269185] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--42
+[  144.298848] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--43
+[  144.328473] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--44
+[  144.358111] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--45
+[  144.387787] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--46
+[  144.417407] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--47
+[  144.447043] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--48
+[  144.476693] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--49
+[  144.506329] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--50
+[  144.535968] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--51
+[  144.565608] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--52
+[  144.595248] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--53
+[  144.624893] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--54
+[  144.654522] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--55
+[  144.684164] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--56
+[  144.713803] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--57
+[  144.743445] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--58
+[  144.773249] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--59
+[  144.802732] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--60
+[  144.802766] rockchip_fb_update_reg: wait reg effect timeout!
+[  144.833408] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--1
+[  144.862004] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--2
+[  144.891668] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--3
+[  144.921321] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--4
+[  144.950923] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--5
+[  144.980573] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--6
+[  145.010256] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--7
+[  145.039878] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--8
+[  145.069505] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--9
+[  145.099126] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--10
+[  145.128765] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--11
+[  145.158404] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--12
+[  145.188044] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--13
+[  145.217684] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--14
+[  145.247324] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--15
+[  145.276962] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--16
+[  145.306674] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--17
+[  145.336265] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--18
+[  145.365897] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--19
+[  145.395531] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--20
+[  145.425190] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--21
+[  145.454812] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--22
+[  145.484476] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--23
+[  145.514103] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--24
+[  145.543745] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--25
+[  145.573375] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--26
+[  145.602972] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--27
+[  145.632674] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--28
+[  145.662288] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--29
+[  145.691928] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--30
+[  145.721576] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--31
+[  145.751209] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--32
+[  145.780849] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--33
+[  145.810490] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--34
+[  145.840130] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--35
+[  145.869773] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--36
+[  145.899410] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--37
+[  145.929050] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--38
+[  145.958808] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--39
+[  145.988219] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--40
+[  146.017849] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--41
+[  146.048754] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--42
+[  146.077105] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--43
+[  146.106776] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--44
+[  146.136383] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--45
+[  146.166032] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--46
+[  146.195678] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--47
+[  146.225333] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--48
+[  146.254957] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--49
+[  146.284774] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--50
+[  146.314372] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--51
+[  146.344017] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--52
+[  146.373646] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--53
+[  146.403285] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--54
+[  146.433076] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--55
+[  146.462567] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--56
+[  146.492468] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--57
+[  146.521852] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--58
+[  146.552677] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--59
+[  146.581287] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--60
+[  146.581324] rockchip_fb_update_reg: wait reg effect timeout!
+[  146.640536] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--1
+[  146.670106] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--2
+[  146.699709] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--3
+[  146.729339] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--4
+[  146.758976] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--5
+[  146.788622] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--6
+[  146.818255] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--7
+[  146.847901] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--8
+[  146.877538] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--9
+[  146.907177] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--10
+[  146.936815] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--11
+[  146.966462] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--12
+[  146.996252] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--13
+[  147.025810] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--14
+[  147.055375] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--15
+[  147.085011] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--16
+[  147.114649] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--17
+[  147.144296] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--18
+[  147.173927] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--19
+[  147.203571] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--20
+[  147.234149] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--21
+[  147.262862] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--22
+[  147.292498] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--23
+[  147.322137] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--24
+[  147.351776] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--25
+[  147.381416] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--26
+[  147.411055] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--27
+[  147.440701] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--28
+[  147.470336] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--29
+[  147.500130] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--30
+[  147.529700] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--31
+[  147.559256] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--32
+[  147.589010] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--33
+[  147.618560] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--34
+[  147.648181] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--35
+[  147.677814] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--36
+[  147.707459] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--37
+[  147.737094] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--38
+[  147.766739] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--39
+[  147.796379] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--40
+[  147.826016] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--41
+[  147.855654] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--42
+[  147.885289] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--43
+[  147.914930] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--44
+[  147.944570] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--45
+[  147.974210] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--46
+[  148.003852] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--47
+[  148.033493] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--48
+[  148.063141] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--49
+[  148.092770] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--50
+[  148.122410] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--51
+[  148.152049] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--52
+[  148.181690] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--53
+[  148.211349] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--54
+[  148.240971] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--55
+[  148.270625] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--56
+[  148.300254] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--57
+[  148.329901] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--58
+[  148.359548] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--59
+[  148.389175] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--60
+[  148.389207] rockchip_fb_update_reg: wait reg effect timeout!
+[  148.419011] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--1
+[  148.448491] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--2
+[  148.478172] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--3
+[  148.507776] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--4
+[  148.537410] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--5
+[  148.566979] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--6
+[  148.596669] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--7
+[  148.626302] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--8
+[  148.655954] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--9
+[  148.685588] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--10
+[  148.715229] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--11
+[  148.744863] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--12
+[  148.774502] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--13
+[  148.804144] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--14
+[  148.833786] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--15
+[  148.863429] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--16
+[  148.893082] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--17
+[  148.922710] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--18
+[  148.952346] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--19
+[  148.981985] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--20
+[  149.011626] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--21
+[  149.041269] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--22
+[  149.070902] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--23
+[  149.100541] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--24
+[  149.130186] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--25
+[  149.159823] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--26
+[  149.189484] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--27
+[  149.219202] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--28
+[  149.220459] healthd: battery l=100 v=4213 t=28.1 h=2 st=5 c=-16 chg=u 2016-03-23 05:19:02.395013239 UTC
+[  149.248786] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--29
+[  149.278399] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--30
+[  149.308020] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--31
+[  149.337676] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--32
+[  149.367313] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--33
+[  149.396955] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--34
+[  149.426580] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--35
+[  149.456234] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--36
+[  149.485910] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--37
+[  149.515514] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--38
+[  149.545159] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--39
+[  149.574784] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--40
+[  149.604422] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--41
+[  149.634061] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--42
+[  149.663703] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--43
+[  149.693343] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--44
+[  149.722984] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--45
+[  149.752626] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--46
+[  149.782271] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--47
+[  149.811904] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--48
+[  149.841543] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--49
+[  149.871184] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--50
+[  149.900827] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--51
+[  149.930482] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--52
+[  149.960102] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--53
+[  149.989781] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--54
+[  150.019448] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--55
+[  150.049057] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--56
+[  150.078694] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--57
+[  150.108327] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--58
+[  150.137943] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--59
+[  150.167603] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--60
+[  150.167639] rockchip_fb_update_reg: wait reg effect timeout!
+[  150.227283] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--1
+[  150.256460] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--2
+[  150.286148] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--3
+[  150.315779] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--4
+[  150.345417] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--5
+[  150.375055] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--6
+[  150.404714] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--7
+[  150.434335] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--8
+[  150.463977] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--9
+[  150.493627] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--10
+[  150.523609] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--11
+[  150.552906] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--12
+[  150.582552] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--13
+[  150.612179] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--14
+[  150.641825] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--15
+[  150.671463] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--16
+[  150.701100] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--17
+[  150.730799] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--18
+[  150.760383] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--19
+[  150.790020] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--20
+[  150.819659] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--21
+[  150.849305] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--22
+[  150.878948] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--23
+[  150.908582] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--24
+[  150.938224] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--25
+[  150.967862] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--26
+[  150.997529] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--27
+[  151.027237] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--28
+[  151.056776] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--29
+[  151.086429] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--30
+[  151.116059] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--31
+[  151.145702] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--32
+[  151.175685] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--33
+[  151.205018] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--34
+[  151.234619] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--35
+[  151.264275] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--36
+[  151.293896] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--37
+[  151.323531] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--38
+[  151.353173] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--39
+[  151.382813] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--40
+[  151.412453] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--41
+[  151.442060] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--42
+[  151.471730] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--43
+[  151.501376] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--44
+[  151.531099] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--45
+[  151.560655] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--46
+[  151.590296] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--47
+[  151.619931] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--48
+[  151.649619] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--49
+[  151.679250] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--50
+[  151.708864] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--51
+[  151.738490] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--52
+[  151.768147] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--53
+[  151.797782] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--54
+[  151.827423] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--55
+[  151.857049] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--56
+[  151.886693] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--57
+[  151.916331] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--58
+[  151.945972] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--59
+[  151.975609] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--60
+[  151.975643] rockchip_fb_update_reg: wait reg effect timeout!
+[  152.005573] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--1
+[  152.034949] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--2
+[  152.064536] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--3
+[  152.094161] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--4
+[  152.123800] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--5
+[  152.153443] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--6
+[  152.183082] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--7
+[  152.212721] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--8
+[  152.242366] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--9
+[  152.272002] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--10
+[  152.301652] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--11
+[  152.331282] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--12
+[  152.360942] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--13
+[  152.390570] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--14
+[  152.420225] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--15
+[  152.449990] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--16
+[  152.479512] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--17
+[  152.509299] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--18
+[  152.538811] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--19
+[  152.568407] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--20
+[  152.598044] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--21
+[  152.627684] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--22
+[  152.657322] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--23
+[  152.686963] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--24
+[  152.716602] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--25
+[  152.746242] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--26
+[  152.775887] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--27
+[  152.805529] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--28
+[  152.835168] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--29
+[  152.864808] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--30
+[  152.894443] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--31
+[  152.924088] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--32
+[  152.953729] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--33
+[  152.983470] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--34
+[  153.013035] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--35
+[  153.042658] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--36
+[  153.072292] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--37
+[  153.101930] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--38
+[  153.131571] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--39
+[  153.161220] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--40
+[  153.190851] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--41
+[  153.220505] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--42
+[  153.250134] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--43
+[  153.279773] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--44
+[  153.309412] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--45
+[  153.339052] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--46
+[  153.368704] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--47
+[  153.398332] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--48
+[  153.428089] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--49
+[  153.457620] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--50
+[  153.487265] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--51
+[  153.516915] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--52
+[  153.546517] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--53
+[  153.576176] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--54
+[  153.605815] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--55
+[  153.635457] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--56
+[  153.665095] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--57
+[  153.694753] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--58
+[  153.724374] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--59
+[  153.754025] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--60
+[  153.754059] rockchip_fb_update_reg: wait reg effect timeout!
+[  153.813347] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--1
+[  153.842920] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--2
+[  153.872589] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--3
+[  153.902215] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--4
+[  153.931853] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--5
+[  153.961497] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--6
+[  153.991131] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--7
+[  154.020778] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--8
+[  154.050413] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--9
+[  154.080057] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--10
+[  154.109696] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--11
+[  154.139333] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--12
+[  154.168973] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--13
+[  154.198615] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--14
+[  154.228253] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--15
+[  154.257895] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--16
+[  154.287534] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--17
+[  154.317172] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--18
+[  154.346817] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--19
+[  154.376454] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--20
+[  154.406191] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--21
+[  154.435738] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--22
+[  154.465381] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--23
+[  154.495017] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--24
+[  154.524656] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--25
+[  154.554293] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--26
+[  154.583937] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--27
+[  154.613573] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--28
+[  154.643218] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--29
+[  154.672857] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--30
+[  154.702496] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--31
+[  154.732133] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--32
+[  154.761825] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--33
+[  154.791425] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--34
+[  154.821053] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--35
+[  154.850723] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--36
+[  154.880326] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--37
+[  154.909957] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--38
+[  154.939598] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--39
+[  154.969236] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--40
+[  154.998878] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--41
+[  155.028516] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--42
+[  155.058157] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--43
+[  155.087811] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--44
+[  155.117434] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--45
+[  155.147091] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--46
+[  155.176717] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--47
+[  155.206367] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--48
+[  155.236014] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--49
+[  155.265627] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--50
+[  155.295277] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--51
+[  155.324928] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--52
+[  155.354557] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--53
+[  155.384197] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--54
+[  155.413838] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--55
+[  155.443491] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--56
+[  155.473133] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--57
+[  155.502759] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--58
+[  155.532399] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--59
+[  155.562039] rockchip-vop vop0: win0:new_addr:0x10800000 cur_addr:0x10a60000--60
+[  155.562073] rockchip_fb_update_reg: wait reg effect timeout!
+[  155.591822] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--1
+[  155.621360] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--2
+[  155.650976] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--3
+[  155.680617] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--4
+[  155.710252] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--5
+[  155.739898] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--6
+[  155.769532] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--7
+[  155.799176] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--8
+[  155.828800] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--9
+[  155.858452] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--10
+[  155.888093] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--11
+[  155.917732] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--12
+[  155.947373] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--13
+[  155.977012] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--14
+[  156.006653] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--15
+[  156.036292] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--16
+[  156.065933] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--17
+[  156.095578] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--18
+[  156.125212] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--19
+[  156.154854] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--20
+[  156.184491] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--21
+[  156.214131] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--22
+[  156.243775] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--23
+[  156.273412] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--24
+[  156.303076] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--25
+[  156.332698] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--26
+[  156.362318] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--27
+[  156.392090] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--28
+[  156.421622] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--29
+[  156.451258] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--30
+[  156.480896] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--31
+[  156.510533] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--32
+[  156.540173] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--33
+[  156.569910] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--34
+[  156.599482] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--35
+[  156.629098] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--36
+[  156.658725] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--37
+[  156.688364] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--38
+[  156.718003] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--39
+[  156.747645] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--40
+[  156.777282] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--41
+[  156.806938] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--42
+[  156.836561] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--43
+[  156.866215] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--44
+[  156.895846] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--45
+[  156.925495] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--46
+[  156.955132] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--47
+[  156.984767] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--48
+[  157.014402] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--49
+[  157.044041] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--50
+[  157.073683] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--51
+[  157.103322] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--52
+[  157.132961] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--53
+[  157.162602] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--54
+[  157.192242] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--55
+[  157.221883] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--56
+[  157.251746] rockchip-vop vop0: win0:new_addr:0x10cc0000 cur_addr:0x10a60000--57

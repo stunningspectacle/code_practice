@@ -1,0 +1,32 @@
+diff --git a/opengl/libs/EGL/eglApi.cpp b/opengl/libs/EGL/eglApi.cpp
+index 8378907..3598c17 100644
+--- a/opengl/libs/EGL/eglApi.cpp
++++ b/opengl/libs/EGL/eglApi.cpp
+@@ -392,6 +392,27 @@ EGLBoolean eglChooseConfig( EGLDisplay dpy, const EGLint *attrib_list,
+                     }
+                 }
+             }
++
++            /*
++             * According to Khronos's definition of eglChooseConfig, when
++             * parameter "configs" is NULL, config_size should be ignored.
++             * However, Mali userspace library doesn't follow it when
++             * EGL_CONFIG_ID is given in the attributes list, so we add a
++             * workaournd here before we can get the new Mali library from
++             * Rockchip.
++             * */
++            size_t attribCount = 0;
++            EGLint attrib = attrib_list[attribCount];
++
++            while (attrib != EGL_NONE) {
++                if (attrib == EGL_CONFIG_ID) {
++                    if (configs == NULL && config_size == 0) {
++                        config_size = 1;
++                    }
++                    break;
++                }
++                attribCount++;
++                attrib = attrib_list[attribCount];
+         }
+ 
+         res = cnx->egl.eglChooseConfig(

@@ -1,0 +1,123 @@
+diff --git a/arch/x86/configs/i386_byt_defconfig b/arch/x86/configs/i386_byt_defconfig
+index bd2e996..1e79bd0 100644
+--- a/arch/x86/configs/i386_byt_defconfig
++++ b/arch/x86/configs/i386_byt_defconfig
+@@ -3544,8 +3544,9 @@ CONFIG_I2C_DESIGNWARE_PLATFORM_FORK=y
+ # CONFIG_I2C_DW_SPEED_MODE_DEBUG is not set
+ # CONFIG_TOUCHSCREEN_ATMEL_MXT224 is not set
+ # CONFIG_TOUCHSCREEN_R69001_I2C is not set
+-CONFIG_TOUCHSCREEN_ATMEL_MXT_FORK=m
++# CONFIG_TOUCHSCREEN_ATMEL_MXT_FORK is not set
+ # CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI4_FORK is not set
++CONFIG_TOUCHSCREEN_GOODIX_GT9XX=m
+ CONFIG_INPUT_INTEL_MID_VIBRA=y
+ # CONFIG_NFC_PN544_PLATFORM_DATA is not set
+ CONFIG_CHARGER_BQ24192=y
+diff --git a/arch/x86/configs/i386_cht_defconfig b/arch/x86/configs/i386_cht_defconfig
+index b313571..1066759 100644
+--- a/arch/x86/configs/i386_cht_defconfig
++++ b/arch/x86/configs/i386_cht_defconfig
+@@ -3538,6 +3538,7 @@ CONFIG_I2C_DESIGNWARE_PLATFORM_FORK=y
+ # CONFIG_TOUCHSCREEN_R69001_I2C is not set
+ CONFIG_TOUCHSCREEN_ATMEL_MXT_FORK=m
+ # CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI4_FORK is not set
++# CONFIG_TOUCHSCREEN_GOODIX_GT9XX is not set
+ CONFIG_INPUT_INTEL_MID_VIBRA=y
+ # CONFIG_NFC_PN544_PLATFORM_DATA is not set
+ # CONFIG_CHARGER_BQ24192 is not set
+diff --git a/arch/x86/configs/i386_crc_defconfig b/arch/x86/configs/i386_crc_defconfig
+index ec2fe4a..5f550fe 100644
+--- a/arch/x86/configs/i386_crc_defconfig
++++ b/arch/x86/configs/i386_crc_defconfig
+@@ -2742,6 +2742,7 @@ CONFIG_UUID=y
+ # CONFIG_TOUCHSCREEN_R69001_I2C is not set
+ # CONFIG_TOUCHSCREEN_ATMEL_MXT_FORK is not set
+ # CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI4_FORK is not set
++# CONFIG_TOUCHSCREEN_GOODIX_GT9XX is not set
+ # CONFIG_INPUT_INTEL_MID_VIBRA is not set
+ # CONFIG_NFC_PN544_PLATFORM_DATA is not set
+ # CONFIG_CHARGER_BQ24192 is not set
+diff --git a/arch/x86/configs/i386_ctp_defconfig b/arch/x86/configs/i386_ctp_defconfig
+index b7b0f81..feecc10 100644
+--- a/arch/x86/configs/i386_ctp_defconfig
++++ b/arch/x86/configs/i386_ctp_defconfig
+@@ -3368,6 +3368,7 @@ CONFIG_I2C_DESIGNWARE_PCI_FORK=y
+ # CONFIG_TOUCHSCREEN_R69001_I2C is not set
+ # CONFIG_TOUCHSCREEN_ATMEL_MXT_FORK is not set
+ CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI4_FORK=m
++# CONFIG_TOUCHSCREEN_GOODIX_GT9XX is not set
+ CONFIG_INPUT_INTEL_MID_VIBRA=y
+ CONFIG_LEDS_INTEL_KPD=y
+ CONFIG_NFC_PN544_PLATFORM_DATA=y
+diff --git a/arch/x86/configs/i386_moor_defconfig b/arch/x86/configs/i386_moor_defconfig
+index 8474c40..769fec9 100644
+--- a/arch/x86/configs/i386_moor_defconfig
++++ b/arch/x86/configs/i386_moor_defconfig
+@@ -3484,6 +3484,7 @@ CONFIG_I2C_PMIC=y
+ CONFIG_TOUCHSCREEN_R69001_I2C=y
+ # CONFIG_TOUCHSCREEN_ATMEL_MXT_FORK is not set
+ CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI4_FORK=m
++# CONFIG_TOUCHSCREEN_GOODIX_GT9XX is not set
+ CONFIG_INPUT_INTEL_MID_VIBRA=y
+ CONFIG_NFC_PN544_PLATFORM_DATA=y
+ # CONFIG_CHARGER_BQ24192 is not set
+diff --git a/arch/x86/configs/i386_morg_defconfig b/arch/x86/configs/i386_morg_defconfig
+index bd2775f..2bf1a6d 100644
+--- a/arch/x86/configs/i386_morg_defconfig
++++ b/arch/x86/configs/i386_morg_defconfig
+@@ -2623,6 +2623,7 @@ CONFIG_MDM_CTRL_DEV_NAME="mdm_ctrl"
+ # CONFIG_TOUCHSCREEN_R69001_I2C is not set
+ # CONFIG_TOUCHSCREEN_ATMEL_MXT_FORK is not set
+ # CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI4_FORK is not set
++# CONFIG_TOUCHSCREEN_GOODIX_GT9XX is not set
+ # CONFIG_INPUT_INTEL_MID_VIBRA is not set
+ # CONFIG_NFC_PN544_PLATFORM_DATA is not set
+ # CONFIG_CHARGER_BQ24192 is not set
+diff --git a/arch/x86/configs/i386_mrfl_defconfig b/arch/x86/configs/i386_mrfl_defconfig
+index 45c7135..c669203 100644
+--- a/arch/x86/configs/i386_mrfl_defconfig
++++ b/arch/x86/configs/i386_mrfl_defconfig
+@@ -3535,6 +3535,7 @@ CONFIG_I2C_PMIC=y
+ CONFIG_TOUCHSCREEN_R69001_I2C=y
+ # CONFIG_TOUCHSCREEN_ATMEL_MXT_FORK is not set
+ # CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI4_FORK is not set
++# CONFIG_TOUCHSCREEN_GOODIX_GT9XX is not set
+ CONFIG_INPUT_INTEL_MID_VIBRA=y
+ CONFIG_NFC_PN544_PLATFORM_DATA=y
+ # CONFIG_CHARGER_BQ24192 is not set
+diff --git a/arch/x86/configs/x86_64_byt_defconfig b/arch/x86/configs/x86_64_byt_defconfig
+index 230ec64..43b40b3 100644
+--- a/arch/x86/configs/x86_64_byt_defconfig
++++ b/arch/x86/configs/x86_64_byt_defconfig
+@@ -3443,6 +3443,7 @@ CONFIG_I2C_DESIGNWARE_PLATFORM_FORK=y
+ # CONFIG_TOUCHSCREEN_R69001_I2C is not set
+ CONFIG_TOUCHSCREEN_ATMEL_MXT_FORK=m
+ # CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI4_FORK is not set
++# CONFIG_TOUCHSCREEN_GOODIX_GT9XX is not set
+ CONFIG_INPUT_INTEL_MID_VIBRA=y
+ # CONFIG_NFC_PN544_PLATFORM_DATA is not set
+ # CONFIG_CHARGER_BQ24192 is not set
+diff --git a/arch/x86/configs/x86_64_cht_defconfig b/arch/x86/configs/x86_64_cht_defconfig
+index 2bee291..58da3df 100644
+--- a/arch/x86/configs/x86_64_cht_defconfig
++++ b/arch/x86/configs/x86_64_cht_defconfig
+@@ -3334,6 +3334,7 @@ CONFIG_I2C_DESIGNWARE_PLATFORM_FORK=y
+ # CONFIG_TOUCHSCREEN_R69001_I2C is not set
+ CONFIG_TOUCHSCREEN_ATMEL_MXT_FORK=m
+ # CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI4_FORK is not set
++# CONFIG_TOUCHSCREEN_GOODIX_GT9XX is not set
+ # CONFIG_INPUT_INTEL_MID_VIBRA is not set
+ # CONFIG_NFC_PN544_PLATFORM_DATA is not set
+ # CONFIG_CHARGER_BQ24192 is not set
+diff --git a/arch/x86/configs/x86_64_mrfl_defconfig b/arch/x86/configs/x86_64_mrfl_defconfig
+index 5a7f5b7..6202ed4 100644
+--- a/arch/x86/configs/x86_64_mrfl_defconfig
++++ b/arch/x86/configs/x86_64_mrfl_defconfig
+@@ -3450,6 +3450,7 @@ CONFIG_I2C_PMIC=y
+ CONFIG_TOUCHSCREEN_R69001_I2C=y
+ # CONFIG_TOUCHSCREEN_ATMEL_MXT_FORK is not set
+ # CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI4_FORK is not set
++# CONFIG_TOUCHSCREEN_GOODIX_GT9XX is not set
+ CONFIG_INPUT_INTEL_MID_VIBRA=y
+ CONFIG_NFC_PN544_PLATFORM_DATA=y
+ # CONFIG_CHARGER_BQ24192 is not set

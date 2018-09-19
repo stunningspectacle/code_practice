@@ -1,0 +1,26 @@
+diff --git a/gpu/arm/mali/Android.mk b/gpu/arm/mali/Android.mk
+index a967443..ee0ab9e 100644
+--- a/gpu/arm/mali/Android.mk
++++ b/gpu/arm/mali/Android.mk
+@@ -6,10 +6,19 @@ ifeq ($(wildcard hardware/arm/mali/driver/Android.mk),)
+ 
+ include $(CLEAR_VARS)
+ LOCAL_MODULE := libGLES_mali
++
++ifeq ($(TARGET_DISABLE_TRIPLE_BUFFERING),true)
++ifeq ($(TARGET_BUILD_TYPE),debug)
++	LOCAL_SRC_FILES := lib_512m/debug/$(LOCAL_MODULE).so
++else
++	LOCAL_SRC_FILES := lib_512m/release/$(LOCAL_MODULE).so
++endif
++else
+ ifeq ($(TARGET_BUILD_TYPE),debug)
+-LOCAL_SRC_FILES := lib/debug/$(LOCAL_MODULE).so
++	LOCAL_SRC_FILES := lib/debug/$(LOCAL_MODULE).so
+ else
+-LOCAL_SRC_FILES := lib/release/$(LOCAL_MODULE).so
++	LOCAL_SRC_FILES := lib/release/$(LOCAL_MODULE).so
++endif
+ endif
+ LOCAL_MODULE_TAGS := optional eng debug
+ LOCAL_MODULE_SUFFIX := .so

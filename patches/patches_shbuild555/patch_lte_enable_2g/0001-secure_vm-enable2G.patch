@@ -1,0 +1,15 @@
+diff --git a/inc/memory_map.h b/inc/memory_map.h
+index 9d4b682..3c848c5 100644
+--- a/inc/memory_map.h
++++ b/inc/memory_map.h
+@@ -7,8 +7,8 @@
+ #if defined(SOFIA_LTE_SOC)
+ #define ANDROID_START_ADDRESS   0x00000000
+ #define ANDROID_END_ADDRESS     0x2F000000
+-#define ANDROID_HIGH_START_ADDRESS     0x0
+-#define ANDROID_HIGH_END_ADDRESS       0x0
++#define ANDROID_HIGH_START_ADDRESS     0x40000000
++#define ANDROID_HIGH_END_ADDRESS       0x80000000
+ #define SHAREMEM_START_ADDRESS  0x2F000000
+ #define SHAREMEM_END_ADDRESS    0x30000000
+ #define SECVM_START_ADDRESS     CONF_START_ADDRESS

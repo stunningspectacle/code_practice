@@ -1,0 +1,87 @@
+diff --git a/drivers/leds/leds-xgold-bl.c b/drivers/leds/leds-xgold-bl.c
+index c24706aa..fa650f1 100644
+--- a/drivers/leds/leds-xgold-bl.c
++++ b/drivers/leds/leds-xgold-bl.c
+@@ -141,6 +141,7 @@ struct xgold_led_bl_device {
+ 	phys_addr_t phys_io_addr;
+ 	struct led_classdev led_bl_cdev;
+ 	struct work_struct work;
++	struct delayed_work delay_work;
+ 	enum led_brightness led_bl_brightness;
+ 	spinlock_t lock;
+ 	struct hrtimer timer;
+@@ -398,10 +399,13 @@ static int xgold_set_lcd_backlight(struct device *dev,
+ static void xgold_led_bl_work(struct work_struct *work)
+ {
+ 	struct xgold_led_bl_device *led_bl =
+-			container_of(work, struct xgold_led_bl_device, work);
++			container_of(work, struct xgold_led_bl_device, delay_work.work);
+ 	static int power_on = FALSE;
+ 	int ret = 0;
+ 
++	dev_err(&led_bl->pdev->dev,
++			"loooooog, %s:is called, brightness=%d\n",
++			__func__, led_bl->led_bl_brightness);
+ 	if (led_bl->led_bl_brightness) {
+ 		if (power_on == FALSE) {
+ 			if (led_bl->set_clk) {
+@@ -462,9 +466,13 @@ static void xgold_bl_brightness_set(struct led_classdev *led_cdev,
+ 	container_of(led_cdev, struct xgold_led_bl_device, led_bl_cdev);
+ 	unsigned long flags;
+ 
++	dev_err(&led_bl->pdev->dev,
++			"loooooog, %s:is called, brightness=%d\n",
++			__func__, brightness);
+ 	spin_lock_irqsave(&led_bl->lock, flags);
+ 	led_bl->led_bl_brightness = brightness;
+-	schedule_work(&led_bl->work);
++	//schedule_work(&led_bl->work);
++	schedule_delayed_work(&led_bl->delay_work, HZ / 10);
+ 	spin_unlock_irqrestore(&led_bl->lock, flags);
+ 	return;
+ }
+@@ -503,7 +511,8 @@ static int xgold_led_bl_probe(struct platform_device *pdev)
+ 
+ 	led_bl->pdev = pdev;
+ 	led_bl->led_bl_brightness = LED_HALF;
+-	INIT_WORK(&led_bl->work, xgold_led_bl_work);
++	//INIT_WORK(&led_bl->work, xgold_led_bl_work);
++	INIT_DELAYED_WORK(&led_bl->delay_work, xgold_led_bl_work);
+ 	spin_lock_init(&led_bl->lock);
+ 
+ 	led_bl->led_bl_cdev.name = "lcd-backlight";
+@@ -521,7 +530,7 @@ static int xgold_led_bl_probe(struct platform_device *pdev)
+ 	dev_set_drvdata(&pdev->dev, led_bl);
+ 
+ 	if (of_device_is_compatible(nbl, "intel,pmic-led")) {
+-		dev_info(&pdev->dev, "PMIC Backlight driver probed\n");
++		dev_info(&pdev->dev, "looooog PMIC Backlight driver probed\n");
+ 		led_bl->pmic_bl = true;
+ 		led_bl->set_clk = NULL;
+ 
+@@ -529,7 +538,8 @@ static int xgold_led_bl_probe(struct platform_device *pdev)
+ 		vmm_pmic_reg_write(PMIC_DEV1_ADDR | GPIO0P6CTLO_REG, 0x40);
+ 		vmm_pmic_reg_write(PMIC_DEV1_ADDR | GPIO0P6CTLI_REG, 0x00);
+ 		return 0;
+-	}
++	} else 
++		dev_info(&pdev->dev, "looooog no PMIC Backlight driver probed\n");
+ 
+ 	/* device pm */
+ 	led_bl->pm_platdata = of_device_state_pm_setup(nbl);
+@@ -637,6 +647,7 @@ static int xgold_led_bl_suspend(struct device *dev)
+ {
+ 	struct xgold_led_bl_device *led_bl = dev_get_drvdata(dev);
+ 
++	dev_err(&led_bl->pdev->dev, "loooooog, %s:is called\n", __func__);
+ 	xgold_led_set_pinctrl_state(dev, led_bl->pins_sleep);
+ 	if (led_bl->set_clk)
+ 		return led_bl->set_clk(dev, FALSE);
+@@ -647,6 +658,7 @@ static int xgold_led_bl_suspend(struct device *dev)
+ static int xgold_led_bl_resume(struct device *dev)
+ {
+ 	struct xgold_led_bl_device *led_bl = dev_get_drvdata(dev);
++	dev_err(&led_bl->pdev->dev, "loooooog, %s:is called\n", __func__);
+ 
+ 	xgold_led_set_pinctrl_state(dev, led_bl->pins_default);
+ 	return 0;

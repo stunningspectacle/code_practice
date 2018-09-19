@@ -1,0 +1,266 @@
+From 97dcca21e34a710c5c86131eac88d049beb736b0 Mon Sep 17 00:00:00 2001
+From: jli127 <jian.d.li@intel.com>
+Date: Thu, 23 Feb 2012 11:21:24 +0800
+Subject: [PATCH] Add LCOV comments for gpio_key and pwr_btn
+
+Add LCOV comments for input/keyboard/gpio_keys.c
+and platform/x86/intel_mid_powerbtn.c to identify
+dead code.
+
+Change-Id: Ia129a1d0c75bd53913d272168e081ba5b8a16700
+Signed-off-by: jli127 <jian.d.li@intel.com>
+---
+ drivers/input/keyboard/gpio_keys.c        |   29 +++++++++++++++++++++++------
+ drivers/platform/x86/intel_mid_powerbtn.c |   19 +++++++++++++++----
+ 2 files changed, 38 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/input/keyboard/gpio_keys.c b/drivers/input/keyboard/gpio_keys.c
+index 851fd9e..11f4fdd 100644
+--- a/drivers/input/keyboard/gpio_keys.c
++++ b/drivers/input/keyboard/gpio_keys.c
+@@ -165,7 +165,7 @@ static ssize_t gpio_keys_attr_show_helper(struct gpio_keys_drvdata *ddata,
+ 
+ 	bits = kcalloc(BITS_TO_LONGS(n_events), sizeof(*bits), GFP_KERNEL);
+ 	if (!bits)
+-		return -ENOMEM;
++		return -ENOMEM;/* LCOV_EXCL_LINE TYPE E*/
+ 
+ 	for (i = 0; i < ddata->n_buttons; i++) {
+ 		struct gpio_button_data *bdata = &ddata->data[i];
+@@ -208,7 +208,7 @@ static ssize_t gpio_keys_attr_store_helper(struct gpio_keys_drvdata *ddata,
+ 
+ 	bits = kcalloc(BITS_TO_LONGS(n_events), sizeof(*bits), GFP_KERNEL);
+ 	if (!bits)
+-		return -ENOMEM;
++		return -ENOMEM;/* LCOV_EXCL_LINE TYPE E*/
+ 
+ 	error = bitmap_parselist(buf, bits, n_events);
+ 	if (error)
+@@ -435,17 +435,21 @@ static int __devinit gpio_keys_setup_key(struct platform_device *pdev,
+ 
+ 	error = gpio_request(button->gpio, desc);
+ 	if (error < 0) {
++		/* LCOV_EXCL_START TYPE E*/
+ 		dev_err(dev, "failed to request GPIO %d, error %d\n",
+ 			button->gpio, error);
+ 		goto fail2;
++		/* LCOV_EXCL_STOP TYPE E*/
+ 	}
+ 
+ 	error = gpio_direction_input(button->gpio);
+ 	if (error < 0) {
++		/* LCOV_EXCL_START TYPE E*/
+ 		dev_err(dev, "failed to configure"
+ 			" direction for GPIO %d, error %d\n",
+ 			button->gpio, error);
+ 		goto fail3;
++		/* LCOV_EXCL_STOP TYPE E*/
+ 	}
+ 
+ 	if (button->debounce_interval) {
+@@ -458,10 +462,12 @@ static int __devinit gpio_keys_setup_key(struct platform_device *pdev,
+ 
+ 	irq = gpio_to_irq(button->gpio);
+ 	if (irq < 0) {
++		/* LCOV_EXCL_START TYPE E*/
+ 		error = irq;
+ 		dev_err(dev, "Unable to get irq number for GPIO %d, error %d\n",
+ 			button->gpio, error);
+ 		goto fail3;
++		/* LCOV_EXCL_STOP TYPE E*/
+ 	}
+ 
+ 	irqflags = IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING;
+@@ -474,15 +480,17 @@ static int __devinit gpio_keys_setup_key(struct platform_device *pdev,
+ 
+ 	error = request_any_context_irq(irq, gpio_keys_isr, irqflags, desc, bdata);
+ 	if (error < 0) {
++		/* LCOV_EXCL_START TYPE E*/
+ 		dev_err(dev, "Unable to claim irq %d; error %d\n",
+ 			irq, error);
+ 		goto fail3;
++		/* LCOV_EXCL_STOP TYPE E*/
+ 	}
+ 
+ 	return 0;
+ 
+ fail3:
+-	gpio_free(button->gpio);
++	gpio_free(button->gpio);/* LCOV_EXCL_LINE TYPE E*/
+ fail2:
+ 	return error;
+ }
+@@ -516,9 +524,11 @@ static int __devinit gpio_keys_probe(struct platform_device *pdev)
+ 			GFP_KERNEL);
+ 	input = input_allocate_device();
+ 	if (!ddata || !input) {
++		/* LCOV_EXCL_START TYPE E*/
+ 		dev_err(dev, "failed to allocate state\n");
+ 		error = -ENOMEM;
+ 		goto fail1;
++		/* LCOV_EXCL_STOP TYPE E*/
+ 	}
+ 
+ 	ddata->input = input;
+@@ -566,16 +576,20 @@ static int __devinit gpio_keys_probe(struct platform_device *pdev)
+ 
+ 	error = sysfs_create_group(&pdev->dev.kobj, &gpio_keys_attr_group);
+ 	if (error) {
++		/* LCOV_EXCL_START TYPE E*/
+ 		dev_err(dev, "Unable to export keys/switches, error: %d\n",
+ 			error);
+ 		goto fail2;
++		/* LCOV_EXCL_STOP TYPE E*/
+ 	}
+ 
+ 	error = input_register_device(input);
+ 	if (error) {
++		/* LCOV_EXCL_START TYPE E*/
+ 		dev_err(dev, "Unable to register input device, error: %d\n",
+ 			error);
+ 		goto fail3;
++		/* LCOV_EXCL_STOP TYPE E*/
+ 	}
+ 
+ 	/* get current state of buttons */
+@@ -587,6 +601,7 @@ static int __devinit gpio_keys_probe(struct platform_device *pdev)
+ 
+ 	return 0;
+ 
++/* LCOV_EXCL_START TYPE E*/
+  fail3:
+ 	sysfs_remove_group(&pdev->dev.kobj, &gpio_keys_attr_group);
+  fail2:
+@@ -602,10 +617,11 @@ static int __devinit gpio_keys_probe(struct platform_device *pdev)
+  fail1:
+ 	input_free_device(input);
+ 	kfree(ddata);
+-
++/* LCOV_EXCL_STOP TYPE E*/
+ 	return error;
+ }
+ 
++/* LCOV_EXCL_START TYPE A*/
+ static int __devexit gpio_keys_remove(struct platform_device *pdev)
+ {
+ 	struct gpio_keys_platform_data *pdata = pdev->dev.platform_data;
+@@ -630,7 +646,7 @@ static int __devexit gpio_keys_remove(struct platform_device *pdev)
+ 
+ 	return 0;
+ }
+-
++/* LCOV_EXCL_STOP TYPE A*/
+ 
+ #ifdef CONFIG_PM
+ static int gpio_keys_suspend(struct device *dev)
+@@ -724,11 +740,12 @@ static int __init gpio_keys_init(void)
+ {
+ 	return platform_driver_register(&gpio_keys_device_driver);
+ }
+-
++/* LCOV_EXCL_START TYPE A*/
+ static void __exit gpio_keys_exit(void)
+ {
+ 	platform_driver_unregister(&gpio_keys_device_driver);
+ }
++/* LCOV_EXCL_STOP TYPE A*/
+ 
+ module_init(gpio_keys_init);
+ module_exit(gpio_keys_exit);
+diff --git a/drivers/platform/x86/intel_mid_powerbtn.c b/drivers/platform/x86/intel_mid_powerbtn.c
+index 46f9dbb..9d3062e 100644
+--- a/drivers/platform/x86/intel_mid_powerbtn.c
++++ b/drivers/platform/x86/intel_mid_powerbtn.c
+@@ -70,13 +70,15 @@ static int __devinit mfld_pb_probe(struct platform_device *pdev)
+ 
+ 	irq = platform_get_irq(pdev, 0);
+ 	if (irq < 0)
+-		return -EINVAL;
++		return -EINVAL;/* LCOV_EXCL_LINE TYPE E*/
+ 
+ 	priv = kzalloc(sizeof(struct mfld_pb_priv), GFP_KERNEL);
+ 	input = input_allocate_device();
+ 	if (!priv || !input) {
++		/* LCOV_EXCL_START TYPE E */
+ 		ret = -ENOMEM;
+ 		goto fail;
++		/* LCOV_EXCL_STOP TYPE E */
+ 	}
+ 
+ 	priv->input = input;
+@@ -91,23 +93,29 @@ static int __devinit mfld_pb_probe(struct platform_device *pdev)
+ 
+ 	priv->pb_stat = ioremap(MSIC_PB_STAT, MSIC_PB_LEN);
+ 	if (!priv->pb_stat) {
++		/* LCOV_EXCL_START TYPE E */
+ 		ret = -ENOMEM;
+ 		goto fail;
++		/* LCOV_EXCL_STOP TYPE E */
+ 	}
+ 
+ 	ret = request_irq(priv->irq, mfld_pb_isr,
+ 			  IRQF_NO_SUSPEND, DRIVER_NAME, priv);
+ 	if (ret) {
++		/* LCOV_EXCL_START TYPE E */
+ 		dev_err(&pdev->dev,
+ 			"unable to request irq %d for power button\n", irq);
+ 		goto out_iounmap;
++		/* LCOV_EXCL_STOP TYPE E */
+ 	}
+ 
+ 	ret = input_register_device(input);
+ 	if (ret) {
++		/* LCOV_EXCL_START TYPE E */
+ 		dev_err(&pdev->dev,
+ 			"unable to register input dev, error %d\n", ret);
+ 		goto out_free_irq;
++		/* LCOV_EXCL_STOP TYPE E */
+ 	}
+ 
+ 	/* SCU firmware might send power button interrupts to IA core before
+@@ -124,7 +132,7 @@ static int __devinit mfld_pb_probe(struct platform_device *pdev)
+ 	ret = intel_scu_ipc_iowrite8(MSIC_IRQLVL1MSK, value);
+ 
+ 	return 0;
+-
++/* LCOV_EXCL_START TYPE E */
+ out_free_irq:
+ 	free_irq(priv->irq, priv);
+ out_iounmap:
+@@ -134,8 +142,10 @@ fail:
+ 	input_free_device(input);
+ 	kfree(priv);
+ 	return ret;
++/* LCOV_EXCL_STOP TYPE E */
+ }
+ 
++/* LCOV_EXCL_START TYPE A */
+ static int __devexit mfld_pb_remove(struct platform_device *pdev)
+ {
+ 	struct mfld_pb_priv *priv = platform_get_drvdata(pdev);
+@@ -147,7 +157,7 @@ static int __devexit mfld_pb_remove(struct platform_device *pdev)
+ 
+ 	return 0;
+ }
+-
++/* LCOV_EXCL_STOP TYPE A */
+ static struct platform_driver mfld_pb_driver = {
+ 	.driver = {
+ 		.name = DRIVER_NAME,
+@@ -162,11 +172,12 @@ static int __init mfld_pb_init(void)
+ 	return platform_driver_register(&mfld_pb_driver);
+ }
+ 
++/* LCOV_EXCL_START TYPE A */
+ static void __exit mfld_pb_exit(void)
+ {
+ 	platform_driver_unregister(&mfld_pb_driver);
+ }
+-
++/* LCOV_EXCL_STOP TYPE A */
+ module_init(mfld_pb_init);
+ module_exit(mfld_pb_exit);
+ 
+-- 
+1.7.1
+

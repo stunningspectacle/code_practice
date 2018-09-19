@@ -1,0 +1,152 @@
+diff --git a/libs/gui/tests/GLTest.cpp b/libs/gui/tests/GLTest.cpp
+index 1739d9c..4dc0b05 100644
+--- a/libs/gui/tests/GLTest.cpp
++++ b/libs/gui/tests/GLTest.cpp
+@@ -84,6 +84,29 @@ void GLTest::SetUp() {
+         mEglSurface = eglCreatePbufferSurface(mEglDisplay, mGlConfig,
+                 pbufferAttribs);
+     }
++///////////////
++/*
++    EGLConfig myEglConfig;
++    EGLint myNumConfigs;
++    EGLint myTotalConfigs;
++    EGLint myValue;
++    EGLint myattr[] = { EGL_CONFIG_ID, 0, EGL_NONE };
++    EGLConfig configArray[50] = { 0 };
++
++    eglGetConfigs(mEglDisplay, configArray, sizeof(configArray)/sizeof(configArray[0]), &myTotalConfigs);
++    ALOGI("xxxxxxx totall config num = %d\n", myTotalConfigs);
++    for (int i = 0; i < myTotalConfigs; i++) {
++        myattr[1] = (EGLint)i;
++        eglChooseConfig(mEglDisplay, myattr, &myEglConfig, 1, &myNumConfigs);
++        ALOGI("xxxxxxx i = %d, myNumConfigs = %d\n", i, myNumConfigs);
++    }
++    for (int i = 0; i < myTotalConfigs; i++) {
++        eglGetConfigAttrib(mEglDisplay, configArray[i], EGL_CONFIG_ID, &myValue);
++        ALOGI("xxxxxx configArray[%d], config id: %d\n", i, myValue);
++    }
++*/
++///////////////
++
+     ASSERT_EQ(EGL_SUCCESS, eglGetError());
+     ASSERT_NE(EGL_NO_SURFACE, mEglSurface);
+ 
+@@ -114,6 +137,8 @@ void GLTest::TearDown() {
+         eglSwapBuffers(mEglDisplay, mEglSurface);
+         sleep(mDisplaySecs);
+     }
++    ALOGI("xxxxxxxxxxxxabc No tear Down");
++    return;
+ 
+     if (mComposerClient != NULL) {
+         mComposerClient->dispose();
+diff --git a/libs/gui/tests/SurfaceTextureFBO.h b/libs/gui/tests/SurfaceTextureFBO.h
+index 7f1ae84..a0a71c9 100644
+--- a/libs/gui/tests/SurfaceTextureFBO.h
++++ b/libs/gui/tests/SurfaceTextureFBO.h
+@@ -46,6 +46,7 @@ protected:
+     }
+ 
+     virtual void TearDown() {
++        return;
+         SurfaceTextureGLTest::TearDown();
+ 
+         glDeleteTextures(1, &mFboTex);
+diff --git a/libs/gui/tests/SurfaceTextureFBO_test.cpp b/libs/gui/tests/SurfaceTextureFBO_test.cpp
+index c243fc0..79d52c9 100644
+--- a/libs/gui/tests/SurfaceTextureFBO_test.cpp
++++ b/libs/gui/tests/SurfaceTextureFBO_test.cpp
+@@ -35,6 +35,10 @@ TEST_F(SurfaceTextureFBOTest, BlitFromCpuFilledBufferToFbo) {
+             GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN));
+ 
+     android_native_buffer_t* anb;
++
++    //sp<GraphicBuffer> buf;
++    //uint8_t* img = NULL;
++
+     ASSERT_EQ(NO_ERROR, native_window_dequeue_buffer_and_wait(mANW.get(),
+             &anb));
+     ASSERT_TRUE(anb != NULL);
+@@ -43,6 +47,7 @@ TEST_F(SurfaceTextureFBOTest, BlitFromCpuFilledBufferToFbo) {
+ 
+     // Fill the buffer with green
+     uint8_t* img = NULL;
++    
+     buf->lock(GRALLOC_USAGE_SW_WRITE_OFTEN, (void**)(&img));
+     fillRGBA8BufferSolid(img, texWidth, texHeight, buf->getStride(), 0, 255,
+             0, 255);
+@@ -52,11 +57,15 @@ TEST_F(SurfaceTextureFBOTest, BlitFromCpuFilledBufferToFbo) {
+ 
+     ASSERT_EQ(NO_ERROR, mST->updateTexImage());
+ 
+-    glBindFramebuffer(GL_FRAMEBUFFER, mFbo);
+     drawTexture();
+-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+ 
+-    for (int i = 0; i < 4; i++) {
++    ALOGI("xxxxxxxxxab SurfaceTextureFBOTest\n");
++    //glBindFramebuffer(GL_FRAMEBUFFER, 0);
++    glBindFramebuffer(GL_FRAMEBUFFER, mFbo);
++    /*
++    int color[4][4] = {{255, 0, 0, 255 }, {0, 255, 0, 255},
++                        {0, 0, 255, 255}, {255, 255, 255, 255}};
++    for (int i = 0; i < 1; i++) {
+         SCOPED_TRACE(String8::format("frame %d", i).string());
+ 
+         ASSERT_EQ(NO_ERROR, native_window_dequeue_buffer_and_wait(mANW.get(),
+@@ -68,8 +77,8 @@ TEST_F(SurfaceTextureFBOTest, BlitFromCpuFilledBufferToFbo) {
+         // Fill the buffer with red
+         ASSERT_EQ(NO_ERROR, buf->lock(GRALLOC_USAGE_SW_WRITE_OFTEN,
+                 (void**)(&img)));
+-        fillRGBA8BufferSolid(img, texWidth, texHeight, buf->getStride(), 255, 0,
+-                0, 255);
++        fillRGBA8BufferSolid(img, texWidth, texHeight, buf->getStride(),
++                color[i][0], color[i][1], color[i][2], color[i][3]);
+         ASSERT_EQ(NO_ERROR, buf->unlock());
+         ASSERT_EQ(NO_ERROR, mANW->queueBuffer(mANW.get(),
+                 buf->getNativeBuffer(), -1));
+@@ -78,12 +87,17 @@ TEST_F(SurfaceTextureFBOTest, BlitFromCpuFilledBufferToFbo) {
+ 
+         drawTexture();
+ 
+-        EXPECT_TRUE(checkPixel( 24, 39, 255, 0, 0, 255));
++        //EXPECT_TRUE(checkPixel( 24, 39, 255, 0, 0, 255));
+     }
+ 
+     glBindFramebuffer(GL_FRAMEBUFFER, mFbo);
+ 
+     EXPECT_TRUE(checkPixel( 24, 39, 0, 255, 0, 255));
++    */
++    eglSwapBuffers(mEglDisplay, mEglSurface);
++    sleep(mDisplaySecs);
++    ALOGI("xxxxxxxxxxxxabc mDisplaySecs=%d", mDisplaySecs);
++    sleep(20);
+ }
+ 
+ } // namespace android
+diff --git a/libs/gui/tests/SurfaceTextureGL.h b/libs/gui/tests/SurfaceTextureGL.h
+index 53eb68c..e83ba6e 100644
+--- a/libs/gui/tests/SurfaceTextureGL.h
++++ b/libs/gui/tests/SurfaceTextureGL.h
+@@ -45,15 +45,18 @@ protected:
+         mANW = mSTC;
+         mTextureRenderer = new TextureRenderer(TEX_ID, mST);
+         ASSERT_NO_FATAL_FAILURE(mTextureRenderer->SetUp());
+-        mFW = new FrameWaiter;
+-        mST->setFrameAvailableListener(mFW);
++        ALOGI("xxxxxxxx SurfaceTextureGLText no listner");
++        //mFW = new FrameWaiter;
++        //mST->setFrameAvailableListener(mFW);
+     }
+ 
+     void TearDown() {
++        /*
+         mTextureRenderer.clear();
+         mANW.clear();
+         mSTC.clear();
+         mST.clear();
++        */
+         GLTest::TearDown();
+     }
+ 

@@ -1,0 +1,135 @@
+diff --git a/drivers/gpu/arm/mali/include/linux/mali/mali_utgard_ioctl.h b/drivers/gpu/arm/mali/include/linux/mali/mali_utgard_ioctl.h
+index f70c247..db0ead3 100644
+--- a/drivers/gpu/arm/mali/include/linux/mali/mali_utgard_ioctl.h
++++ b/drivers/gpu/arm/mali/include/linux/mali/mali_utgard_ioctl.h
+@@ -56,6 +56,7 @@ extern "C" {
+ #define MALI_IOC_MEM_ATTACH_DMA_BUF         _IOWR(MALI_IOC_MEMORY_BASE, _MALI_UK_ATTACH_DMA_BUF, _mali_uk_attach_dma_buf_s)
+ #define MALI_IOC_MEM_RELEASE_DMA_BUF        _IOW(MALI_IOC_MEMORY_BASE, _MALI_UK_RELEASE_DMA_BUF, _mali_uk_release_dma_buf_s)
+ #define MALI_IOC_MEM_DMA_BUF_GET_SIZE       _IOR(MALI_IOC_MEMORY_BASE, _MALI_UK_DMA_BUF_GET_SIZE, _mali_uk_dma_buf_get_size_s)
++#define MALI_IOC_MEM_DMA_BUF_SYNC_CPU       _IOR(MALI_IOC_MEMORY_BASE, _MALI_UK_DMA_BUF_SYNC_CPU, _mali_uk_dma_buf_sync_cpu_s)
+ #define MALI_IOC_MEM_ATTACH_UMP             _IOWR(MALI_IOC_MEMORY_BASE, _MALI_UK_ATTACH_UMP_MEM, _mali_uk_attach_ump_mem_s)
+ #define MALI_IOC_MEM_RELEASE_UMP            _IOW(MALI_IOC_MEMORY_BASE, _MALI_UK_RELEASE_UMP_MEM, _mali_uk_release_ump_mem_s)
+ #define MALI_IOC_MEM_QUERY_MMU_PAGE_TABLE_DUMP_SIZE _IOR (MALI_IOC_MEMORY_BASE, _MALI_UK_QUERY_MMU_PAGE_TABLE_DUMP_SIZE, _mali_uk_query_mmu_page_table_dump_size_s)
+diff --git a/drivers/gpu/arm/mali/include/linux/mali/mali_utgard_uk_types.h b/drivers/gpu/arm/mali/include/linux/mali/mali_utgard_uk_types.h
+index 2ca44fb..09d47e3 100644
+--- a/drivers/gpu/arm/mali/include/linux/mali/mali_utgard_uk_types.h
++++ b/drivers/gpu/arm/mali/include/linux/mali/mali_utgard_uk_types.h
+@@ -103,6 +103,7 @@ typedef enum {
+ 	_MALI_UK_ATTACH_DMA_BUF,                 /**< _mali_ukk_attach_dma_buf() */
+ 	_MALI_UK_RELEASE_DMA_BUF,                /**< _mali_ukk_release_dma_buf() */
+ 	_MALI_UK_DMA_BUF_GET_SIZE,               /**< _mali_ukk_dma_buf_get_size() */
++	_MALI_UK_DMA_BUF_SYNC_CPU,               /**< _mali_ukk_dma_buf_sync_cpu() */
+ 	_MALI_UK_ATTACH_UMP_MEM,                 /**< _mali_ukk_attach_ump_mem() */
+ 	_MALI_UK_RELEASE_UMP_MEM,                /**< _mali_ukk_release_ump_mem() */
+ 	_MALI_UK_MAP_EXT_MEM,                    /**< _mali_uku_map_external_mem() */
+@@ -757,6 +758,11 @@ typedef struct {
+ 
+ typedef struct {
+ 	u64 ctx;                      /**< [in,out] user-kernel context (trashed on output) */
++	u32 mem_fd;                   /**< [in] Memory descriptor */
++} __attribute__((aligned(8))) _mali_uk_dma_buf_sync_cpu_s;
++
++typedef struct {
++	u64 ctx;                      /**< [in,out] user-kernel context (trashed on output) */
+ 	u64 cookie;                     /**< [in] identifier for mapped memory object in kernel space  */
+ } __attribute__((aligned(8))) _mali_uk_release_dma_buf_s;
+ 
+diff --git a/drivers/gpu/arm/mali/linux/mali_kernel_linux.c b/drivers/gpu/arm/mali/linux/mali_kernel_linux.c
+index 28b533c..ff90438 100644
+--- a/drivers/gpu/arm/mali/linux/mali_kernel_linux.c
++++ b/drivers/gpu/arm/mali/linux/mali_kernel_linux.c
+@@ -916,6 +916,10 @@ static int mali_ioctl(struct inode *inode, struct file *filp, unsigned int cmd,
+ 		BUILD_BUG_ON(!IS_ALIGNED(sizeof(_mali_uk_dma_buf_get_size_s), sizeof(u64)));
+ 		err = mali_dma_buf_get_size(session_data, (_mali_uk_dma_buf_get_size_s __user *)arg);
+ 		break;
++	case MALI_IOC_MEM_DMA_BUF_SYNC_CPU:
++		BUILD_BUG_ON(!IS_ALIGNED(sizeof(_mali_uk_dma_buf_sync_cpu_s), sizeof(u64)));
++		err = mali_dma_buf_sync_cpu(session_data, (_mali_uk_dma_buf_sync_cpu_s __user *)arg);
++		break;
+ #else
+ 
+ 	case MALI_IOC_MEM_ATTACH_DMA_BUF:   /* FALL-THROUGH */
+diff --git a/drivers/gpu/arm/mali/linux/mali_memory_dma_buf.c b/drivers/gpu/arm/mali/linux/mali_memory_dma_buf.c
+index 97f28ad..b48732c 100644
+--- a/drivers/gpu/arm/mali/linux/mali_memory_dma_buf.c
++++ b/drivers/gpu/arm/mali/linux/mali_memory_dma_buf.c
+@@ -17,6 +17,9 @@
+ #include <linux/wait.h>
+ #include <linux/sched.h>
+ #include <linux/mutex.h>
++#if defined(CONFIG_ION_ROCKCHIP)
++#include <linux/rockchip_ion.h>
++#endif
+ 
+ #include "mali_ukk.h"
+ #include "mali_osk.h"
+@@ -453,3 +456,23 @@ int mali_dma_buf_get_size(struct mali_session_data *session, _mali_uk_dma_buf_ge
+ 
+ 	return 0;
+ }
++
++int mali_dma_buf_sync_cpu(struct mali_session_data *session, _mali_uk_dma_buf_sync_cpu_s __user *user_arg)
++{
++#if defined(CONFIG_ION_ROCKCHIP)
++	_mali_uk_dma_buf_sync_cpu_s args;
++	int ret;
++
++	/* get call arguments from user space. copy_from_user returns how many bytes which where NOT copied */
++	if (0 != copy_from_user(&args, (void __user *)user_arg, sizeof(_mali_uk_dma_buf_sync_cpu_s))) {
++		return -EFAULT;
++	}
++
++	ret = ion_sync_for_device(NULL, args.mem_fd);
++	if (ret) {
++		MALI_PRINT_ERROR(("%s: sync cpu cache failed!", __func__));
++		return ret;
++	}
++#endif
++	return 0;
++}
+diff --git a/drivers/gpu/arm/mali/linux/mali_memory_dma_buf.h b/drivers/gpu/arm/mali/linux/mali_memory_dma_buf.h
+index 4465985a..81d6225 100644
+--- a/drivers/gpu/arm/mali/linux/mali_memory_dma_buf.h
++++ b/drivers/gpu/arm/mali/linux/mali_memory_dma_buf.h
+@@ -26,6 +26,7 @@ struct mali_dma_buf_attachment;
+ int mali_attach_dma_buf(struct mali_session_data *session, _mali_uk_attach_dma_buf_s __user *arg);
+ int mali_release_dma_buf(struct mali_session_data *session, _mali_uk_release_dma_buf_s __user *arg);
+ int mali_dma_buf_get_size(struct mali_session_data *session, _mali_uk_dma_buf_get_size_s __user *arg);
++int mali_dma_buf_sync_cpu(struct mali_session_data *session, _mali_uk_dma_buf_sync_cpu_s __user *user_arg);
+ 
+ void mali_mem_dma_buf_release(mali_mem_allocation *descriptor);
+ 
+diff --git a/drivers/staging/android/ion/ion.c b/drivers/staging/android/ion/ion.c
+index 68c7268..3d883bac 100644
+--- a/drivers/staging/android/ion/ion.c
++++ b/drivers/staging/android/ion/ion.c
+@@ -1485,7 +1485,7 @@ end:
+ }
+ EXPORT_SYMBOL(ion_import_dma_buf);
+ 
+-static int ion_sync_for_device(struct ion_client *client, int fd)
++int ion_sync_for_device(struct ion_client *client, int fd)
+ {
+ 	struct dma_buf *dmabuf;
+ 	struct ion_buffer *buffer;
+@@ -1508,6 +1508,7 @@ static int ion_sync_for_device(struct ion_client *client, int fd)
+ 	dma_buf_put(dmabuf);
+ 	return 0;
+ }
++EXPORT_SYMBOL(ion_sync_for_device);
+ 
+ /* fix up the cases where the ioctl direction bits are incorrect */
+ static unsigned int ion_ioctl_dir(unsigned int cmd)
+diff --git a/drivers/staging/android/ion/ion.h b/drivers/staging/android/ion/ion.h
+index bd711af..c0da228 100644
+--- a/drivers/staging/android/ion/ion.h
++++ b/drivers/staging/android/ion/ion.h
+@@ -212,6 +212,8 @@ int ion_share_dma_buf_fd(struct ion_client *client, struct ion_handle *handle);
+  */
+ struct ion_handle *ion_import_dma_buf(struct ion_client *client, int fd);
+ 
++int ion_sync_for_device(struct ion_client *client, int fd);
++
+ int ion_map_iommu(struct device *iommu_dev, struct ion_client *client,
+ 		  struct ion_handle *handle, unsigned long *iova,
+ 		  unsigned long *size);

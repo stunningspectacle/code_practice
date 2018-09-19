@@ -1,0 +1,461 @@
+From 53d5cb3370090fa3222107aee0cdb708c0c0945b Mon Sep 17 00:00:00 2001
+From: Leo Yan <leo.yan@intel.com>
+Date: Thu, 28 May 2015 10:52:24 +0800
+Subject: [PATCH] Port the video patches from rk5.2.0
+
+Containing the following video patches:
+1. rockchip: update display drivers copyright
+2. video: rockchip: screen: add backlight control
+3. video: rockchip: screen: init gpio_flags before use it
+4. video: rockchip: vop: close backlight firstly when system suspend
+5. video: rockchip: screen: fix resume led backlight failed after blank
+6. video: rockchip: fb: Refine fb fence create add rockchip_fb_fence_create() function
+   This function return invalid fd if fence is NULL when call sync_fence_create().
+7. add of_find_led_classdev_by_node()
+   This function finds the struct led_classdev for a given device tree node. A dummy
+   function is provided so that it safely compiles out if OF support is disabled.
+
+Change-Id: Ib6e7313758706605b041619bb944048d0d3cb8c0
+Signed-off-by: Leo Yan <leo.yan@intel.com>
+---
+ drivers/leds/led-class.c                   |   29 +++++++++
+ drivers/video/rockchip/rockchip_disp_drv.c |    4 +-
+ drivers/video/rockchip/rockchip_disp_drv.h |    4 +-
+ drivers/video/rockchip/rockchip_fb.c       |   74 +++++++++++++---------
+ drivers/video/rockchip/rockchip_screen.c   |   91 +++++++++++++++++++++++++++-
+ drivers/video/rockchip/vop/rockchip_vop.c  |    6 +-
+ drivers/video/rockchip/vop/rockchip_vop.h  |    2 +-
+ include/linux/leds.h                       |   10 +++
+ include/linux/rockchip_screen.h            |   15 +++++
+ 9 files changed, 199 insertions(+), 36 deletions(-)
+
+diff --git a/drivers/leds/led-class.c b/drivers/leds/led-class.c
+index f37d63c..04814af 100644
+--- a/drivers/leds/led-class.c
++++ b/drivers/leds/led-class.c
+@@ -274,6 +274,35 @@ void led_classdev_unregister(struct led_classdev *led_cdev)
+ }
+ EXPORT_SYMBOL_GPL(led_classdev_unregister);
+ 
++#ifdef CONFIG_OF
++static int of_parent_match(struct device *dev, const void *data)
++{
++	return dev->parent && dev->parent->of_node == data;
++}
++
++/**
++ * of_find_led_classdev_by_node() - find led classdev by device-tree node
++ * @node: device-tree node of the led classdev device
++ *
++ * Returns a pointer to the led classdev corresponding to the given DT
++ * node or NULL if no such led classdev exists or if the device hasn't
++ * been probed yet.
++ *
++ * This function obtains a reference on the led classdev and it is the
++ * caller's responsibility to drop the reference by calling put_device() on
++ * the led classdev's .dev field.
++ */
++struct led_classdev *of_find_led_classdev_by_node(struct device_node *node)
++{
++	struct device *dev;
++
++	dev = class_find_device(leds_class, NULL, node, of_parent_match);
++
++	return dev ? dev_get_drvdata(dev) : NULL;
++}
++EXPORT_SYMBOL(of_find_led_classdev_by_node);
++#endif
++
+ static int __init leds_init(void)
+ {
+ 	leds_class = class_create(THIS_MODULE, "leds");
+diff --git a/drivers/video/rockchip/rockchip_disp_drv.c b/drivers/video/rockchip/rockchip_disp_drv.c
+index af0abc0a..9c2bf6d 100644
+--- a/drivers/video/rockchip/rockchip_disp_drv.c
++++ b/drivers/video/rockchip/rockchip_disp_drv.c
+@@ -1,8 +1,8 @@
+ /*
+  * rockchip display system driver
+  *
+- * Copyright (C) 2014 ROCKCHIP, Inc.
+- * Author:      Wenlong Zhuang <zwl@rock-chips.com>
++ * Copyright (C) 2014-2015 Rockchip Electronics Co., Ltd.
++ *
+  * This software is licensed under the terms of the GNU General Public
+  * License version 2, as published by the Free Software Foundation, and
+  * may be copied, distributed, and modified under those terms.
+diff --git a/drivers/video/rockchip/rockchip_disp_drv.h b/drivers/video/rockchip/rockchip_disp_drv.h
+index 1799758..9c8b431 100644
+--- a/drivers/video/rockchip/rockchip_disp_drv.h
++++ b/drivers/video/rockchip/rockchip_disp_drv.h
+@@ -1,6 +1,6 @@
+ /*
+- * Copyright (C) 2014 ROCKCHIP, Inc.
+- * Author:      Wenlong Zhuang <zwl@rock-chips.com>
++ * Copyright (C) 2014-2015 Rockchip Electronics Co., Ltd.
++ *
+  * This software is licensed under the terms of the GNU General Public
+  * License version 2, as published by the Free Software Foundation, and
+  * may be copied, distributed, and modified under those terms.
+diff --git a/drivers/video/rockchip/rockchip_fb.c b/drivers/video/rockchip/rockchip_fb.c
+index 6558923..b32541d 100644
+--- a/drivers/video/rockchip/rockchip_fb.c
++++ b/drivers/video/rockchip/rockchip_fb.c
+@@ -1,7 +1,7 @@
+ /*
+  * rockchip fb framework driver
+  *
+- * Copyright (C) 2010-2014 ROCKCHIP, Inc.
++ * Copyright (C) 2012-2015 Rockchip Electronics Co., Ltd.
+  *
+  * This software is licensed under the terms of the GNU General Public
+  * License version 2, as published by the Free Software Foundation, and
+@@ -422,6 +422,45 @@ static void rockchip_fb_fence_wait(struct rockchip_vop_driver *dev_drv,
+ 		dev_err(dev_drv->dev, "error waiting on fence\n");
+ }
+ 
++static int rockchip_fb_fence_create(struct rockchip_vop_driver *dev_drv,
++				    const char *name)
++{
++	int fd = get_unused_fd();
++	int err;
++	struct sync_pt *pt;
++	struct sync_fence *fence;
++
++	if (unlikely(!dev_drv) || unlikely(!name))
++		return -EINVAL;
++
++	if (fd < 0) {
++		pr_err("%s: get %s fd falied, fd=%d\n", __func__, name, fd);
++		return fd;
++	}
++
++	pt = sw_sync_pt_create(dev_drv->timeline, dev_drv->timeline_max);
++	if (pt == NULL) {
++		pr_err("%s: create sync pt falied!\n", __func__);
++		err = -ENOMEM;
++		goto err;
++	}
++
++	fence = sync_fence_create(name, pt);
++	if (fence == NULL) {
++		pr_err("%s: create %s fence falied!\n", __func__, name);
++		sync_pt_free(pt);
++		err = -ENOMEM;
++		goto err;
++	}
++
++	sync_fence_install(fence, fd);
++	return fd;
++
++err:
++	put_unused_fd(fd);
++	return err;
++}
++
+ static int rockchip_fb_check_config_var(struct rockchip_fb_area_par *area_par,
+ 				    struct rockchip_screen *screen)
+ {
+@@ -1042,11 +1081,7 @@ static int rockchip_fb_update_win_config(struct fb_info *info,
+ 	int list_is_empty = 0;
+ 
+ #ifdef H_USE_FENCE
+-	struct sync_fence *release_fence[SFA_MAX_BUF_NUM];
+-	struct sync_fence *retire_fence;
+-	struct sync_pt *release_sync_pt[SFA_MAX_BUF_NUM];
+-	struct sync_pt *retire_sync_pt;
+-	char fence_name[20];
++	char fence_name[20] = {0};
+ #endif
+ 
+ 	regs = kzalloc(sizeof(*regs), GFP_KERNEL);
+@@ -1091,40 +1126,25 @@ static int rockchip_fb_update_win_config(struct fb_info *info,
+ 	for (i = 0; i < SFA_MAX_BUF_NUM; i++) {
+ 		if (i < regs->buf_num) {
+ 			sprintf(fence_name, "fence%d", i);
+-			win_data->rel_fence_fd[i] = get_unused_fd();
++			win_data->rel_fence_fd[i] =
++				rockchip_fb_fence_create(dev_drv, fence_name);
+ 			if (win_data->rel_fence_fd[i] < 0) {
+-				pr_info("get fence fd failed,rel_fence_fd=%d\n",
+-					win_data->rel_fence_fd[i]);
++				dev_drv->timeline_max--;
+ 				ret = -EFAULT;
+ 				goto err_out;
+ 			}
+-			release_sync_pt[i] =
+-			    sw_sync_pt_create(dev_drv->timeline,
+-					      dev_drv->timeline_max);
+-			release_fence[i] =
+-			    sync_fence_create(fence_name, release_sync_pt[i]);
+-			sync_fence_install(release_fence[i],
+-					   win_data->rel_fence_fd[i]);
+ 		} else {
+ 			win_data->rel_fence_fd[i] = -1;
+ 		}
+ 	}
+ 
+-	win_data->ret_fence_fd = get_unused_fd();
++	win_data->ret_fence_fd =
++		rockchip_fb_fence_create(dev_drv, "ret_fence");
+ 	if (win_data->ret_fence_fd < 0) {
+-		pr_info("ret_fence_fd=%d\n", win_data->ret_fence_fd);
+-		ret = -EFAULT;
+-		goto err_out;
+-	}
+-	retire_sync_pt =
+-	    sw_sync_pt_create(dev_drv->timeline, dev_drv->timeline_max);
+-	retire_fence = sync_fence_create("ret_fence", retire_sync_pt);
+-	if (retire_fence == NULL) {
+-		pr_info("ret_fence pointer is NULL\n");
++		dev_drv->timeline_max--;
+ 		ret = -EFAULT;
+ 		goto err_out;
+ 	}
+-	sync_fence_install(retire_fence, win_data->ret_fence_fd);
+ #else
+ 	for (i = 0; i < SFA_MAX_BUF_NUM; i++)
+ 		win_data->rel_fence_fd[i] = -1;
+diff --git a/drivers/video/rockchip/rockchip_screen.c b/drivers/video/rockchip/rockchip_screen.c
+index 4716316..88704a8 100644
+--- a/drivers/video/rockchip/rockchip_screen.c
++++ b/drivers/video/rockchip/rockchip_screen.c
+@@ -1,6 +1,7 @@
+ /*
+  * rockchip screen driver
+  *
++ * Copyright (C) 2014-2015 Rockchip Electronics Co., Ltd.
+  * Copyright (C) 2014-2015 Intel Mobile Communications GmbH
+  *
+  * This software is licensed under the terms of the GNU General Public
+@@ -18,7 +19,7 @@
+ #include <linux/sizes.h>
+ #include <linux/delay.h>
+ #include <linux/regulator/consumer.h>
+-
++#include <linux/leds.h>
+ #include <linux/of_gpio.h>
+ #include <linux/rockchip_screen.h>
+ #include <linux/rockchip_fb.h>
+@@ -245,7 +246,7 @@ static int rockchip_screen_parse_gpio(struct rockchip_screen *screen)
+ 	}
+ 
+ 	screen->gpio_vlow = of_get_named_gpio_flags(np,
+-			PROP_DISPLAY_GPIOVL, 0, NULL);
++			PROP_DISPLAY_GPIOVL, 0, &gpio_flags);
+ 	if (gpio_is_valid(screen->gpio_vlow)) {
+ 		if (support_loader_display()) {
+ 			if (gpio_flags & OF_GPIO_ACTIVE_LOW)
+@@ -269,7 +270,7 @@ static int rockchip_screen_parse_gpio(struct rockchip_screen *screen)
+ 	}
+ 
+ 	screen->gpio_reset = of_get_named_gpio_flags(np,
+-			PROP_DISPLAY_GPIORST, 0, NULL);
++			PROP_DISPLAY_GPIORST, 0, &gpio_flags);
+ 	if (gpio_is_valid(screen->gpio_reset)) {
+ 		if (support_loader_display()) {
+ 			if (gpio_flags & OF_GPIO_ACTIVE_LOW)
+@@ -295,6 +296,87 @@ static int rockchip_screen_parse_gpio(struct rockchip_screen *screen)
+ 	return 0;
+ }
+ 
++static struct of_device_id backlight_dt_match[] = {
++	{	.compatible = "pwm-backlight",
++		.data = (void *)PWM_BACKLIGHT,
++	},
++	{	.compatible = "intel,agold620-led",
++		.data = (void *)LED_BACKLIGHT,
++	},
++	{},
++};
++
++static struct display_backlight *
++rockchip_screen_get_backlight(struct rockchip_screen *screen)
++{
++	struct device_node *backlight_node;
++	struct display_backlight *backlight = NULL;
++
++	backlight_node =
++		of_parse_phandle(screen->dev->of_node, "backlight", 0);
++
++	if (backlight_node) {
++		const struct of_device_id *match;
++
++		match = of_match_node(backlight_dt_match, backlight_node);
++		backlight = devm_kzalloc(screen->dev, sizeof(*backlight),
++					 GFP_KERNEL);
++		if (!backlight)
++			return 0;
++
++		backlight->type = (int)match->data;
++
++		if (backlight->type == PWM_BACKLIGHT)
++			backlight->u.pwm_bl =
++				of_find_backlight_by_node(backlight_node);
++		else if (backlight->type == LED_BACKLIGHT)
++			backlight->u.led_bl =
++				of_find_led_classdev_by_node(backlight_node);
++
++		of_node_put(backlight_node);
++
++		if (!backlight->u.pwm_bl && !backlight->u.led_bl) {
++			devm_kfree(screen->dev, backlight);
++			backlight = NULL;
++			dev_info(screen->dev, "No find screen backlight device\n");
++		}
++	} else {
++		dev_info(screen->dev, "No find screen backlight device node\n");
++	}
++
++	return backlight;
++}
++
++static int
++rockchip_screen_backlight_control(struct rockchip_screen *screen, bool enable)
++{
++	struct backlight_device *pwm_bl;
++	struct led_classdev *led_bl;
++
++	if (!screen->backlight) {
++		screen->backlight = rockchip_screen_get_backlight(screen);
++		if (unlikely(!screen->backlight))
++			return -ENODEV;
++	}
++
++	if (screen->backlight->type == PWM_BACKLIGHT) {
++		pwm_bl = screen->backlight->u.pwm_bl;
++		pwm_bl->props.fb_blank =
++			enable ? FB_BLANK_UNBLANK : FB_BLANK_POWERDOWN;
++
++		backlight_update_status(screen->backlight->u.pwm_bl);
++	} else if (screen->backlight->type == LED_BACKLIGHT) {
++		led_bl = screen->backlight->u.led_bl;
++
++		if (enable)
++			led_classdev_resume(led_bl);
++		else
++			led_classdev_suspend(led_bl);
++	}
++
++	return 0;
++}
++
+ static int rockchip_disp_pwr_ctr_parse_dt(struct device_node *np,
+ 					  struct rockchip_screen *screen)
+ {
+@@ -491,6 +573,9 @@ static int rockchip_screen_probe(struct platform_device *pdev)
+ 			screen->index = index;
+ 			screen->power_on = rockchip_screen_power_on;
+ 			screen->power_off = rockchip_screen_power_off;
++			screen->backlight_ctrl =
++				rockchip_screen_backlight_control;
++
+ 			screen->pm_platdata = pm_platdata;
+ 			list_add_tail(&screen->panel_list, &screen_list);
+ 
+diff --git a/drivers/video/rockchip/vop/rockchip_vop.c b/drivers/video/rockchip/vop/rockchip_vop.c
+index a6a918c..4b198b8 100644
+--- a/drivers/video/rockchip/vop/rockchip_vop.c
++++ b/drivers/video/rockchip/vop/rockchip_vop.c
+@@ -1,7 +1,7 @@
+ /*
+  * rockchip VOP(Video Output Processer) hardware driver.
+  *
+- * Copyright (C) 2014-2015 Intel Mobile Communications GmbH
++ * Copyright (C) 2014-2015 Rockchip Electronics Co., Ltd.
+  *
+  * This software is licensed under the terms of the GNU General Public
+  * License version 2, as published by the Free Software Foundation, and
+@@ -1445,6 +1445,10 @@ static int rockchip_vop_early_suspend(struct rockchip_vop_driver *dev_drv)
+ 		return 0;
+ 
+ 	dev_drv->suspend_flag = true;
++
++	if (screen->backlight_ctrl)
++		screen->backlight_ctrl(screen, false);
++
+ 	flush_kthread_worker(&dev_drv->update_regs_worker);
+ 
+ 	if (screen->index >= 0 &&
+diff --git a/drivers/video/rockchip/vop/rockchip_vop.h b/drivers/video/rockchip/vop/rockchip_vop.h
+index 44e6b32..040d6c6 100644
+--- a/drivers/video/rockchip/vop/rockchip_vop.h
++++ b/drivers/video/rockchip/vop/rockchip_vop.h
+@@ -1,7 +1,7 @@
+ /*
+  * Register definition file for rockchip VOP controller
+  *
+- * Copyright (C) 2014-2015 Intel Mobile Communications GmbH
++ * Copyright (C) 2014-2015 Rockchip Electronics Co., Ltd.
+  *
+  * This software is licensed under the terms of the GNU General Public
+  * License version 2, as published by the Free Software Foundation, and
+diff --git a/include/linux/leds.h b/include/linux/leds.h
+index 0287ab2..afa7fab 100644
+--- a/include/linux/leds.h
++++ b/include/linux/leds.h
+@@ -285,4 +285,14 @@ static inline void ledtrig_cpu(enum cpu_led_event evt)
+ }
+ #endif
+ 
++#ifdef CONFIG_OF
++struct led_classdev *of_find_led_classdev_by_node(struct device_node *node);
++#else
++static inline struct led_classdev *
++of_find_led_classdev_by_node(struct device_node *node)
++{
++	return NULL;
++}
++#endif
++
+ #endif		/* __LINUX_LEDS_H_INCLUDED */
+diff --git a/include/linux/rockchip_screen.h b/include/linux/rockchip_screen.h
+index 9540c96..440b88e 100644
+--- a/include/linux/rockchip_screen.h
++++ b/include/linux/rockchip_screen.h
+@@ -27,6 +27,11 @@
+ #define ALIGN_ODD_TIMES(x, align)	\
+ 	(((x) % ((align) * 2) == 0) ? ((x) + (align)) : (x))
+ 
++enum display_backlight_t {
++	PWM_BACKLIGHT = 0,
++	LED_BACKLIGHT,
++};
++
+ enum display_gpio_t {
+ 	DISPLAY_GPIO_VHIGH = 0,
+ 	DISPLAY_GPIO_VLOW = 1,
+@@ -41,6 +46,14 @@ struct display_pwr_gpio {
+ 	int delay;		/* in ms */
+ };
+ 
++struct display_backlight {
++	enum display_backlight_t type;
++	union {
++		struct backlight_device *pwm_bl;
++		struct led_classdev *led_bl;
++	} u;
++};
++
+ /*
+  * rockchip_screen description
+  * type: LVDS,RGB,MIPI,MCU
+@@ -107,6 +120,7 @@ struct rockchip_screen {
+ 	struct display_pwr_gpio *gpios_power_off;
+ 
+ 	struct rockchip_screen *ext_screen;
++	struct display_backlight *backlight;
+ 
+ 	struct list_head panel_list;
+ 
+@@ -116,6 +130,7 @@ struct rockchip_screen {
+ 	int (*refresh)(u8 arg);
+ 	void (*power_on)(struct rockchip_screen *screen);
+ 	void (*power_off)(struct rockchip_screen *screen);
++	int (*backlight_ctrl)(struct rockchip_screen *screen, bool enable);
+ };
+ 
+ size_t get_fb_size(void);
+-- 
+1.7.9.5
+

@@ -1,0 +1,14 @@
+diff --git a/drivers/input/misc/ltr301als.c b/drivers/input/misc/ltr301als.c
+index 9084b7c..e140063 100644
+--- a/drivers/input/misc/ltr301als.c
++++ b/drivers/input/misc/ltr301als.c
+@@ -223,7 +223,8 @@ static irqreturn_t ltr301_interrupt(int irq, void *data)
+ 	if (status < 0)
+ 		goto out;
+ 
+-	if (status & ALS_ST_INT && status & ALS_ST_DATA) {
++	dev_dbg(&chip->client->dev, "%s: status=0x%x\n", __func__, status);
++	if (status & ALS_ST_INT) {
+ 		mutex_lock(&chip->lock);
+ 		lux = ltr301_get_lux(chip);
+ 		if (lux < 0) {

@@ -1,0 +1,109 @@
+diff --git a/libgralloc/gr.h b/libgralloc/gr.h
+index 676092d..de55171 100644
+--- a/libgralloc/gr.h
++++ b/libgralloc/gr.h
+@@ -32,6 +32,7 @@
+ #include <errno.h>
+ 
+ #include <cutils/native_handle.h>
++#include <utils/String8.h>
+ 
+ /*****************************************************************************/
+ 
+@@ -45,6 +46,13 @@ static inline void print_private_handle(struct private_handle_t* hnd, const char
+ 		hnd->base, hnd->phys, hnd->fmt, (void*)hnd->ion_hdl);
+ }
+ 
++static inline void my_print_private_handle(struct private_handle_t* hnd, char *str)
++{
++	ALOGE("%s [fd:%d flags:0x%x size:%d %dx%d offset:0x%x base:0x%08x phys:0x%08x fmt:0x%x ion{hdl:%p}]",
++		str, hnd->fd, hnd->flags, hnd->size, hnd->w, hnd->h, hnd->offset,
++		hnd->base, hnd->phys, hnd->fmt, (void*)hnd->ion_hdl);
++}
++
+ 
+ inline size_t roundUpToPageSize(size_t x) {
+     return (x + (PAGE_SIZE-1)) & ~(PAGE_SIZE-1);
+diff --git a/libgralloc/gralloc.cpp b/libgralloc/gralloc.cpp
+index 55543ee..57ced64 100644
+--- a/libgralloc/gralloc.cpp
++++ b/libgralloc/gralloc.cpp
+@@ -381,7 +381,7 @@ static int gralloc_alloc(alloc_device_t* dev,
+ 	size_t size, stride, bpr, y_size, c_size, c_stride;
+ 	int bpp = 0;
+ 	int err;
+-	char* s;
++        char str[256];
+ 
+ 	if (HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED == format) {
+ 		//if (GRALLOC_USAGE_HW_VIDEO_ENCODER & usage) {
+@@ -495,18 +495,44 @@ static int gralloc_alloc(alloc_device_t* dev,
+ 		return -EINVAL;
+ 	}
+ 
++        int n = 0;
+ 	if (usage & GRALLOC_USAGE_HW_FB) {
+ 		err = gralloc_alloc_framebuffer(dev, size, usage, pHandle);
+-		s = (char*) "gralloc_alloc_framebuffer";
++		n = sprintf(str, "%s", "gralloc_alloc_framebuffer");
+ 	} else if ((usage & GRALLOC_USAGE_HW_MASK)) {
+-		err = gralloc_alloc_hwbuffer(dev, size, usage, pHandle,
+-			(private_handle_t::PRIV_FLAGS_CONTIGUOUS | private_handle_t::PRIV_FLAGS_USES_ION));
+-		s = (char*) "gralloc_alloc_hwbuffer";
++            err = gralloc_alloc_hwbuffer(dev, size, usage, pHandle,
++                    (private_handle_t::PRIV_FLAGS_CONTIGUOUS | private_handle_t::PRIV_FLAGS_USES_ION));
++            n = sprintf(str, "%s", "gralloc_alloc_hwbuffer ");
+ 	} else {
+ 		err = gralloc_alloc_buffer(dev, size, usage, pHandle);
+-		s = (char*) "gralloc_alloc_buffer";
++		n = sprintf(str, "%s", "gralloc_alloc_buffer");
+ 	}
+ 
++        if (usage & GRALLOC_USAGE_HW_TEXTURE)
++            n += sprintf(str + n, "%s", "TEXTURE ");
++        if (usage & GRALLOC_USAGE_HW_RENDER)
++            n += sprintf(str + n, "%s", "RENDER ");
++        if (usage & GRALLOC_USAGE_HW_2D)
++            n += sprintf(str + n, "%s", "2D ");
++        if (usage & GRALLOC_USAGE_HW_COMPOSER)
++            n += sprintf(str + n, "%s", "COMPOSER ");
++	if (usage & GRALLOC_USAGE_HW_FB)
++            n += sprintf(str + n, "%s", "FB ");
++        if (usage & GRALLOC_USAGE_HW_VIDEO_ENCODER)
++            n += sprintf(str + n, "%s", "VIDEO_ENCODER ");
++        if (usage & GRALLOC_USAGE_HW_CAMERA_WRITE)
++            n += sprintf(str + n, "%s", "CAMERA_WRITE ");
++        if (usage & GRALLOC_USAGE_HW_CAMERA_READ)
++            n += sprintf(str + n, "%s", "CAMERA_READ ");
++        if (usage & GRALLOC_USAGE_HW_CAMERA_ZSL)
++            n += sprintf(str + n, "%s", "CAMERA_ZSL ");
++        if (usage & GRALLOC_USAGE_HW_CAMERA_MASK)
++            n += sprintf(str + n, "%s", "CAMERA_MASK ");
++        if (usage & GRALLOC_USAGE_RENDERSCRIPT)
++            n += sprintf(str + n, "%s", "RENDERSCRIPT");
++
++        str[n] = 0;
++
+ 	if (err < 0) {
+ 		ALOGE("%s failed %d bytes usage:0x%08x", __FUNCTION__, size, usage);
+ 		return err;
+@@ -540,7 +566,8 @@ static int gralloc_alloc(alloc_device_t* dev,
+ 	((private_handle_t *)*pHandle)->stride = stride;
+ 	((private_handle_t *)*pHandle)->h = h;
+ 	((private_handle_t *)*pHandle)->bpp = bpp;
+-	print_private_handle((private_handle_t *)*pHandle, s );
++	//print_private_handle((private_handle_t *)*pHandle, s );
++	my_print_private_handle((private_handle_t *)*pHandle, str);
+ 
+ 	*pStride = stride;
+ 
+@@ -566,7 +593,8 @@ static int gralloc_free(alloc_device_t* dev,
+ 
+   if (hnd != NULL)
+   {
+-    print_private_handle((private_handle_t*)hnd, "gralloc_free" );
++    //print_private_handle((private_handle_t*)hnd, "gralloc_free" );
++    my_print_private_handle((private_handle_t *)hnd, "gralloc_free");
+ 
+     if(hnd->ion_hdl == 0) {
+       /* assume secure/protected buffer */

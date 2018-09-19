@@ -1,0 +1,33 @@
+From 1723737ff04f24fbbb49fdf3c8e27207d4d10dc1 Mon Sep 17 00:00:00 2001
+From: Leo Yan <leo.yan@intel.com>
+Date: Wed, 25 Jul 2012 18:07:29 +0800
+Subject: [PATCH] SensorService: Sort events in ascending order
+
+BZ: 47495
+
+The events in event buffer should be sorted in ascending order by the
+timestamp. Accroding to the definition of qsort, we need to change the
+compare function to sort the events correctly.
+
+Change-Id: I53a8fb57f70d610df28fba1208b3e19d681e1db7
+Signed-off-by: Leo Yan <leo.yan@intel.com>
+---
+ services/sensorservice/SensorService.cpp |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/services/sensorservice/SensorService.cpp b/services/sensorservice/SensorService.cpp
+index 795ddd5..3f7a855 100644
+--- a/services/sensorservice/SensorService.cpp
++++ b/services/sensorservice/SensorService.cpp
+@@ -332,7 +332,7 @@ void SensorService::sortEventBuffer(sensors_event_t* buffer, size_t count)
+         static int cmp(void const* lhs, void const* rhs) {
+             sensors_event_t const* l = static_cast<sensors_event_t const*>(lhs);
+             sensors_event_t const* r = static_cast<sensors_event_t const*>(rhs);
+-            return r->timestamp - l->timestamp;
++            return l->timestamp - r->timestamp;
+         }
+     };
+     qsort(buffer, count, sizeof(sensors_event_t), compar::cmp);
+-- 
+1.7.0.4
+

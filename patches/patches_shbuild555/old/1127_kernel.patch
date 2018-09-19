@@ -1,0 +1,465 @@
+diff --git a/drivers/video/xgold/dcc-core.c b/drivers/video/xgold/dcc-core.c
+index 36c7ee7..22eaa42 100644
+--- a/drivers/video/xgold/dcc-core.c
++++ b/drivers/video/xgold/dcc-core.c
+@@ -220,6 +220,7 @@ int dcc_core_probe(struct platform_device *pdev)
+ 	dcc_boot_dbg("kernel frequency is %d MHz\n", pdata->clk_rate/1000/1000);
+ 
+ 	/* Map dedicated memory */
++	DCC_DBG1("loooong: pbase: 0x%x\n", pdata->mem.pbase);
+ 	if (pdata->mem.pbase) {
+ 		pdata->mem.vbase = ioremap_wc(pdata->mem.pbase,
+ 						pdata->mem.size);
+diff --git a/drivers/video/xgold/dcc-core.h b/drivers/video/xgold/dcc-core.h
+index 83d24d2..0766ed0 100644
+--- a/drivers/video/xgold/dcc-core.h
++++ b/drivers/video/xgold/dcc-core.h
+@@ -79,7 +79,7 @@
+ }
+ #define dcc_boot_dbg(fmt, arg...) \
+ { \
+-	if (gradata->debug.boot && (gradata->debug.level >= 1)) \
++	if ((gradata->debug.level >= 1)) \
+ 		pr_debug(DCC_MODULE_NAME"[ ]: "fmt, ##arg); \
+ }
+ 
+@@ -262,6 +262,11 @@ struct dcc_drvdata {
+ 	struct kobject *kobj_mipidsi_phy;
+ 	int(*drv_suspend)(struct device *dev);
+ 	int(*drv_resume)(struct device *dev);
++	int underflow_cnt;
++	unsigned int tx_cnt;
++	unsigned int rx_cnt;
++	unsigned int frame_cnt;
++	unsigned int vsync_cnt;
+ };
+ 
+ #define m_to_dccdata(_p_, _m_) \
+@@ -373,6 +378,19 @@ int dcc_dbi_probe(struct dcc_display *lcd);
+ 
+ extern struct dcc_drvdata *gradata;
+ 
++static inline void dump_dcc(const char *str, struct dcc_drvdata *p) {
++	DCC_DBG1("loooong: %s: timeline_current=%d, (updt_pt_curr=%d, updt_done_tl=%d),"
++		"update_pt_last=%d,  timeline=%d,"
++		"frame_cnt=%u, vsync_us=%lld\n", 
++		str, p->timeline_current,
++		p->timeline_current-p->update_pt_curr,
++		p->timeline_current-p->updt_done_tl->value,
++		p->timeline_current-p->update_pt_last,
++		p->timeline_current-p->timeline->value,
++		p->frame_cnt, p->vsync_us);
++}
++
++
+ static inline int dcc_get_fb_fmt(struct dcc_drvdata *data)
+ {
+ 	return data->fbfmt;
+diff --git a/drivers/video/xgold/dcc-dif-mipi-dsi.c b/drivers/video/xgold/dcc-dif-mipi-dsi.c
+index 46a48c9..fc563f1 100644
+--- a/drivers/video/xgold/dcc-dif-mipi-dsi.c
++++ b/drivers/video/xgold/dcc-dif-mipi-dsi.c
+@@ -564,6 +564,7 @@ static int dcc_dsi_configure_video_mode(struct dcc_display *lcd,
+ 		return -EINVAL;
+ 	}
+ 	dsicfg = DSI_CFG_TX_HS_PIXEL(dif->nblanes, dif->mode);
++	DCC_DBG1("looong dcc: %s fps=%d\n", __func__, lcd->fps);
+ 
+ 	dcc_dsi_get_bllp(lcd,
+ 			nlines + dif->vfp + dif->vbp + dif->vsa,
+diff --git a/drivers/video/xgold/dcc-dts.c b/drivers/video/xgold/dcc-dts.c
+index 73257a7..3fb0e97 100644
+--- a/drivers/video/xgold/dcc-dts.c
++++ b/drivers/video/xgold/dcc-dts.c
+@@ -327,7 +327,7 @@ int dcc_of_parse_graphics(struct platform_device *pdev,
+ 	/* debug */
+ 	ret = of_property_read_u32(ngraphics, "intel,dcc-debug-level",
+ 			&pdata->debug.level);
+-	if (ret < 0)
++	//if (ret < 0)
+ 		pdata->debug.level = DCC_DEFAULT_DEBUG_LEVEL;
+ 
+ 	/* tests */
+diff --git a/drivers/video/xgold/dcc-gra.c b/drivers/video/xgold/dcc-gra.c
+index e281df7..1dd3359 100644
+--- a/drivers/video/xgold/dcc-gra.c
++++ b/drivers/video/xgold/dcc-gra.c
+@@ -462,10 +462,8 @@ static int dcc_sprite_conf(struct dcc_drvdata *p, struct dcc_sprite_t *spr)
+ 		goto out;
+ 	}
+ 
+-	DCC_DBG2("ovl[%d] %s @0x%08x %dx%d(%d,%d) %s a:0x%x glb:%d\n",
+-		spr->id, spr->phys ? "ON " : "OFF", spr->phys, spr->w, spr->h,
+-		spr->x, spr->y, dcc_format_name(spr->fmt), spr->alpha,
+-		spr->global);
++	if (p->overlay_updt_cnt % 40 == 0)
++		dump_dcc("dcc_sprite_conf", p);
+ 
+ 	/**
+ 	 * Set DIF_SPRITE_CONFx value
+@@ -808,6 +806,8 @@ exit:
+ 
+ void dcc_update(struct dcc_drvdata *p, struct x_rect_t *r, unsigned int alpha)
+ {
++	static long long least = 1000000;
++	long long diff;
+ 	/* prepare update */
+ 	dcc_conf_back(p, DCC_UPDATE_NOBG_GET(r->flags));
+ 
+@@ -839,6 +839,11 @@ void dcc_update(struct dcc_drvdata *p, struct x_rect_t *r, unsigned int alpha)
+ 	} else if (DCC_UPDATE_MODE_GET(r->flags) == DCC_UPDATE_CONTINOUS) {
+ 		uint32_t paramssc[6] = { alpha, 0x6, r->x, r->y, X2(r), Y2(r) };
+ 
++		diff = measdelay_stop(NULL, &p->vsync_begin);
++		if (diff < least) {
++			DCC_DBG1("diff=%lld, least=%lld\n", diff, least);
++			least = diff;
++		} 
+ 		gra_sendcmd(p, GRACMD_SCHEDULE_UPDATE, 0, paramssc, 6);
+ 		dcc_dsi_start_video(&p->display);/* TEMP PATCH SMS05120496 */
+ 	}
+@@ -1240,6 +1245,14 @@ int dcc_rq_update(struct dcc_drvdata *p, struct dcc_rect_t *ru)
+ 		DCC_DBG2("update 0x%x --> (%d,%d) %dx%d %s f:0x%x\n",
+ 			ru->phys, rk.x, rk.y, rk.w, rk.h,
+ 			dcc_format_name(ru->fmt), rk.flags);
++		if (p->underflow_cnt > 0) {
++			dump_dcc("dcc_rq_update", p);
++			p->underflow_cnt = 0;
++			if (p->vsync_us < 10000) {
++				DCC_DBG1("%s: delay some time!!!!!!!!!\n", __func__);
++				mdelay(22000 - p->vsync_us);
++			}
++		}
+ 		dcc_set_framebuffer(p, ru->phys, ru->fbwidth);
+ 		dcc_update(p, &rk, (ru->color >> 24) & 0xFF);
+ 	} else {
+@@ -1314,20 +1327,25 @@ static int dcc_rq_compose(struct dcc_drvdata *p,
+ 	unsigned int global_ovl_status = 0;
+ 	int ret = 0, ovl_draw = -1, l_id = 0, ovl_id;
+ 	struct dcc_layer_ovl *l = &updt->ovls[l_id];
++	int w, h;
+ 
+ 	DCC_DBG2("compose --> BACK @ 0x%x %s\n",
+ 		updt->back.phys, dcc_format_name(updt->back.fmt));
+ 	DCC_DBG2("dcc[ ]: compose bg @0x%x ,ov_up_cnt=%d updt_pt=%d\n",
+ 			updt->back.phys, p->overlay_updt_cnt, update_pt);
+ 	for (ovl_id = 0; ovl_id < DCC_OVERLAY_NUM; ovl_id++) {
++#if 0
+ 		/* skip update layers with a null pointer */
+ 		while (!l->phys && l_id < DCC_OVERLAY_NUM) {
+ 			l = &updt->ovls[l_id];
+ 			l_id++;
+ 		}
+-
++#endif
++		l = &updt->ovls[ovl_id];
++		global_ovl_status |= l->phys;
++#if 0
+ 		if (!dcc_ovl_en(ovl_id, p->overlay_updt_cnt) ||
+-			l_id >= DCC_OVERLAY_NUM) {
++				l_id >= DCC_OVERLAY_NUM) {
+ 			/* this overlay cannot be used this time, skip it and
+ 			 * disable for next update */
+ 			dcc_clr_overlay(&spr, ovl_id);
+@@ -1339,6 +1357,17 @@ static int dcc_rq_compose(struct dcc_drvdata *p,
+ 			l = &updt->ovls[l_id];
+ 			global_ovl_status = 1;
+ 		}
++#endif
++		/* YUV formats offset not suppported! */
++		if (l->phys)
++			l->phys += dcc_sprite_fmt2bpp(l->fmt) *
++				(l->src.y *l->src.w + l->src.x);
++		DCC_SPRITE_INIT((spr),
++			(l->phys ? 1 : 0),
++			ovl_id,
++			l->phys,
++			l->dst.x, l->dst.y, l->dst.w, l->dst.h,
++			l->alpha, l->global, l->fmt, l->chromakey);
+ 		dcc_sprite_conf(p, &spr);
+ 	}
+ 	dcc_sprite_global(p, (!!global_ovl_status));
+@@ -1346,7 +1375,7 @@ static int dcc_rq_compose(struct dcc_drvdata *p,
+ 	/* if any overlay is enabled toggle configuration for next time */
+ 	if (global_ovl_status)
+ 		p->overlay_updt_cnt++;
+-
++#if 0
+ 	/* check if all update layers could be rendered */
+ 	while (l_id < DCC_OVERLAY_NUM) {
+ 		l = &updt->ovls[l_id];
+@@ -1355,6 +1384,8 @@ static int dcc_rq_compose(struct dcc_drvdata *p,
+ 				l_id, l->phys);
+ 		l_id++;
+ 	}
++#endif
++
+ 
+ 	if (ovl_draw >= 0) {
+ 		struct x_rect_t dr, swin;
+@@ -1410,7 +1441,7 @@ static void acq_fence_wq(struct work_struct *ws)
+ 			fence = w->acquire_fence[i];
+ 			if (fence != NULL) {
+ 				if(sync_fence_wait(fence, 1000))
+-					dcc_err("fence timedout\n");
++					dcc_err("fence %d timedout\n", i);
+ 				sync_fence_put(fence);
+ 			}
+ 		}
+@@ -1482,7 +1513,7 @@ int dcc_rq_acquire_and_compose(struct dcc_drvdata *p,
+ 		}
+ 	}
+ #ifdef CONFIG_SW_SYNC_USER
+-	if (updt_pt > 0) {
++	if (p->use_fences && updt_pt > 0) {
+ 		struct sync_fence *f;
+ 		/* add a fence on the previous update */
+ 		f = dcc_update_queue_fence_create(p, updt_pt - 1);
+diff --git a/drivers/video/xgold/dcc-irqs.c b/drivers/video/xgold/dcc-irqs.c
+index e24e800..d5736f0 100644
+--- a/drivers/video/xgold/dcc-irqs.c
++++ b/drivers/video/xgold/dcc-irqs.c
+@@ -63,6 +63,7 @@ static irqreturn_t dcc_hal_event_vsync(int irq, void *dev_id)
+ {
+ 	struct dcc_drvdata *pdata = (struct dcc_drvdata *)dev_id;
+ 
++	pdata->vsync_cnt++;
+ 	dcc_hal_signal_vsync(pdata);
+ 
+ 	return IRQ_HANDLED;
+@@ -141,6 +142,10 @@ static irqreturn_t dcc_hal_irq_err(int irq, void *dev_id)
+ 
+ 	DCC_DBG4("%s: Hardware Interrupt EXR_DIF_ERRIRQSS = 0x%08x\n",
+ 			__func__, dif_err_irqss);
++	if (dif_err_irqss & DCC_IRQ_ERR_DSIUFL) {
++		pdata->underflow_cnt++;
++		dump_dcc("dcc_hal_irq_err", pdata);
++	}
+ 
+ 	DCC_LOG_INTERRUPT_ERROR(DCC_IRQ_ERR_RXFUFL, pdata);
+ 	DCC_LOG_INTERRUPT_ERROR(DCC_IRQ_ERR_RXFOFL, pdata);
+@@ -188,6 +193,7 @@ static inline void dcc_hal_irq_burst(void)
+ 	return;
+ }
+ 
++
+ static irqreturn_t dcc_hal_irq_tx(int irq, void *dev_id)
+ {
+ 	unsigned int dif_ris;
+@@ -199,6 +205,7 @@ static irqreturn_t dcc_hal_irq_tx(int irq, void *dev_id)
+ 	if (dif_ris & 0x80) {
+ 		/* Burst interrupt received
+ 		 * -> now there is room in hardware fifo */
++		pdata->tx_cnt++;
+ 		dcc_hal_irq_burst();
+ 		DCC_DBG2("%s: Scheduling burst thread now!\n", __func__);
+ 		gra_write_field(pdata, EXR_DIF_ICR, 0x80);
+@@ -210,16 +217,27 @@ static irqreturn_t dcc_hal_irq_tx(int irq, void *dev_id)
+ 
+ static irqreturn_t dcc_hal_irq_rx(int irq, void *dev_id)
+ {
++	struct dcc_drvdata *pdata = (struct dcc_drvdata *)dev_id;
++
++	pdata->rx_cnt++;
+ 	return IRQ_HANDLED;
+ }
+ 
++struct timeval frame_begin;
+ 
+ static irqreturn_t dcc_hal_irq_frame(int irq, void *dev_id)
+ {
+ 	struct dcc_drvdata *pdata = (struct dcc_drvdata *)dev_id;
+ 
++	pdata->frame_cnt++;
+ 	if (pdata->display_autorefresh)
+ 		dcc_hal_signal_vsync(pdata);
++
++	long long myvsync_us = measdelay_stop(NULL, &frame_begin);
++	measdelay_start(&frame_begin);
++
++	if (myvsync_us < 10000)
++		DCC_DBG1("%s: myvsync_us=%lld, \n", __func__, myvsync_us);
+ 	queue_work(pdata->eof_wq, &pdata->eof_work);
+ 
+ 	complete(&pdata->sync.eof);
+diff --git a/drivers/video/xgold/dcc-sysfs.c b/drivers/video/xgold/dcc-sysfs.c
+index 3999e34..dc4827e 100644
+--- a/drivers/video/xgold/dcc-sysfs.c
++++ b/drivers/video/xgold/dcc-sysfs.c
+@@ -32,6 +32,8 @@
+ #include "dcc-core.h"
+ #include "dcc-display.h"
+ #include "dcc-sysfs.h"
++#include "dcc-gra.h"
++#include "dcc-hwregs.h"
+ 
+ 
+ /**
+@@ -118,9 +120,110 @@ static ssize_t dcc_sys_frame_update_number_store(struct device *dev,
+ 	return count;
+ }
+ 
+-static DEVICE_ATTR(frame_update_number, 0666, dcc_sys_frame_update_number_show,
++static DEVICE_ATTR(frame_update_number, 0660, dcc_sys_frame_update_number_show,
+ 			 dcc_sys_frame_update_number_store);
+ 
++static ssize_t dcc_sys_cleardcc_store(struct device *dev,
++				    struct device_attribute *attr,
++				    const char *buf, size_t count)
++{
++	struct dcc_drvdata *pdata = dev_get_drvdata(dev);
++
++	dcc_bootscreen(pdata);
++
++	return count;
++}
++
++static DEVICE_ATTR(cleardcc, 0222, NULL, dcc_sys_cleardcc_store);
++
++unsigned int field;
++static ssize_t dcc_sys_field_show(struct device *dev,
++				    struct device_attribute *attr,
++				    const char *buf, size_t count)
++{
++	struct dcc_drvdata *pdata = dev_get_drvdata(dev);
++
++	return sprintf(buf, "field: %d\n", field);
++}
++static ssize_t dcc_sys_field_store(struct device *dev,
++				    struct device_attribute *attr,
++				    const char *buf, size_t count)
++{
++	struct dcc_drvdata *pdata = dev_get_drvdata(dev);
++
++	sscanf(buf, "%d", &field);
++
++	return count;
++}
++
++static DEVICE_ATTR(field, 0660, dcc_sys_field_show, dcc_sys_field_store);
++
++static ssize_t dcc_sys_value_show(struct device *dev,
++				    struct device_attribute *attr,
++				    const char *buf, size_t count)
++{
++	struct dcc_drvdata *pdata = dev_get_drvdata(dev);
++	unsigned int val;
++
++	gra_read_field(pdata, field, &val);
++
++	return sprintf(buf, "val: %d(0x%x)\n", val, val);
++}
++static ssize_t dcc_sys_value_store(struct device *dev,
++				    struct device_attribute *attr,
++				    const char *buf, size_t count)
++{
++	struct dcc_drvdata *pdata = dev_get_drvdata(dev);
++	unsigned int val;
++
++	sscanf(buf, "%d", &val);
++	gra_write_field(pdata, field, val);
++
++	return count;
++}
++
++static DEVICE_ATTR(value, 0660, dcc_sys_value_show, dcc_sys_value_store);
++
++static ssize_t dcc_sys_reset_store(struct device *dev,
++				    struct device_attribute *attr,
++				    const char *buf, size_t count)
++{
++	struct dcc_drvdata *pdata = dev_get_drvdata(dev);
++	struct platform_device *pdev =
++		container_of(dev, struct platform_device, dev);
++
++	//dcc_core_suspend(pdev);
++	//dcc_core_resume(pdev);
++
++	//flush_workqueue(pdata->acq_wq);
++	//flush_workqueue(pdata->vsync_wq);
++	//flush_workqueue(pdata->eof_wq);
++	//dcc_display_suspend(pdata);
++	//dcc_core_hwstop(pdata);
++
++	//dcc_core_hwstart(pdata)
++	//gra_write_field(pdata, EXR_DIF_RUNCTRL, DCC_MODE_RUN);
++	//xgold_noc_qos_set("DCC2");
++	//gra_write_field(pdata, EXR_DIF_RUNCTRL, DCC_MODE_CONF);
++	/* Initialize interrupts */
++	//dcc_interrupt_setup(pdata);
++	//dcc_display_setup(pdata);
++	//dcc_core_hwsetup(pdata);
++	
++	pdata->display.dif_config(&pdata->display, DIF_TX_DATA);
++	pdata->display.sleep_in(&pdata->display);
++	pdata->display.dif_stop(&pdata->display);
++	//mdelay(10);
++
++	pdata->display.dif_init(&pdata->display);
++	pdata->display.dif_config(&pdata->display, DIF_TX_DATA);
++	pdata->display.sleep_out(&pdata->display);
++	pdata->display.dif_config(&pdata->display, DIF_TX_PIXELS);
++
++	return count;
++}
++
++static DEVICE_ATTR(reset, 0222, NULL, dcc_sys_reset_store);
+ 
+ static ssize_t dcc_sys_dif_rate_show(struct device *dev,
+ 				      struct device_attribute *attr,
+@@ -147,7 +250,7 @@ static ssize_t dcc_sys_dif_rate_store(struct device *dev,
+ 	return count;
+ }
+ 
+-static DEVICE_ATTR(dif_rate, 0666, dcc_sys_dif_rate_show,
++static DEVICE_ATTR(dif_rate, 0660, dcc_sys_dif_rate_show,
+ 			 dcc_sys_dif_rate_store);
+ 
+ static ssize_t dcc_sys_display_power_store(struct device *dev,
+@@ -211,7 +314,7 @@ static ssize_t dcc_sys_##_name_##_store(struct device *dev, \
+ 	return count; \
+ } \
+ \
+-static DEVICE_ATTR(_name_, 0666, dcc_sys_##_name_##_show, \
++static DEVICE_ATTR(_name_, 0660, dcc_sys_##_name_##_show, \
+ 			 dcc_sys_##_name_##_store);
+ 
+ #define DCC_SYSFS_GET_SET_LLVAL(_name_, _var_) \
+@@ -234,7 +337,7 @@ static ssize_t dcc_sys_##_name_##_store(struct device *dev, \
+ 	return count; \
+ } \
+ \
+-static DEVICE_ATTR(_name_, 0666, dcc_sys_##_name_##_show, \
++static DEVICE_ATTR(_name_, 0660, dcc_sys_##_name_##_show, \
+ 			 dcc_sys_##_name_##_store);
+ 
+ 
+@@ -281,7 +384,7 @@ static ssize_t dcc_sys_enable_store(struct device *dev,
+ 
+ 	return count;
+ }
+-static DEVICE_ATTR(enable, 0666, dcc_sys_enable_show, dcc_sys_enable_store);
++static DEVICE_ATTR(enable, 0660, dcc_sys_enable_show, dcc_sys_enable_store);
+ 
+ 
+ static struct device_attribute *dcc_attrs[] = {
+@@ -293,6 +396,10 @@ static struct device_attribute *dcc_attrs[] = {
+ 	&dev_attr_dif_rate,
+ 	&dev_attr_display_power,
+ 	&dev_attr_display_sleep,
++	&dev_attr_cleardcc,
++	&dev_attr_field,
++	&dev_attr_value,
++	&dev_attr_reset,
+ 	&dev_attr_vsyncts0,
+ 	&dev_attr_vsync_us,
+ 	&dev_attr_enable,
+@@ -336,7 +443,7 @@ static ssize_t dcc_sys_##_name_##_store(struct kobject *kobj, \
+ 	return count; \
+ } \
+ \
+-KOBJ_ATTR(_name_, 0666, \
++KOBJ_ATTR(_name_, 0660, \
+ 		dcc_sys_##_name_##_show, dcc_sys_##_name_##_store)
+ 
+ 

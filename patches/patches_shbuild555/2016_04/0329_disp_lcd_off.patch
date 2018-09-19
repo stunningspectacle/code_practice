@@ -1,0 +1,286 @@
+diff --git a/arch/x86/boot/dts/SF_3GX-mrd_n1.dts b/arch/x86/boot/dts/SF_3GX-mrd_n1.dts
+index ab26189..4c8ed77 100644
+--- a/arch/x86/boot/dts/SF_3GX-mrd_n1.dts
++++ b/arch/x86/boot/dts/SF_3GX-mrd_n1.dts
+@@ -120,6 +120,10 @@
+                 pm,user-name = "lcd";
+                 pm,state-D0 = "enable";
+                 pm,state-D3 = "disable";
++		pinctrl-names = "default", "sleep", "inactive";
++		pinctrl-0 = <&lcd_default_pins>;
++		pinctrl-1 = <&lcd_sleep_pins>;
++		pinctrl-2 = <&lcd_inactive_pins>;
+                 intel,display-gpio-vhigh = <&xgold_pmx_gpio 18 0>;
+                 intel,display-gpio-reset = <&xgold_pmx_gpio 62 0>;
+                 #include "xgold/display/NT35596-3gr.dtsi"
+@@ -600,5 +604,7 @@
+ };
+ 
+ 
++
++
+ #include "xgold/sofia_3gx_soc/pinctrl-sf_3gx.dtsi"
+ #include "xgold/agold620/pinctrl-sf_3gx.dtsi"
+diff --git a/arch/x86/boot/dts/xgold/display/NT35596-3gr.dtsi b/arch/x86/boot/dts/xgold/display/NT35596-3gr.dtsi
+index 73f5c75..31e5872 100644
+--- a/arch/x86/boot/dts/xgold/display/NT35596-3gr.dtsi
++++ b/arch/x86/boot/dts/xgold/display/NT35596-3gr.dtsi
+@@ -7,7 +7,7 @@ display-panel@nt35596 {
+ 	intel,display-dc-clkrate = <297000000>;
+ 	intel,display-preinit = <0>;
+ 	intel,display-ramless = <1>;
+-	intel,display-fps = <30>;
++	intel,display-fps = <60>;
+ 	intel,display-vid-mode = "pulses";
+ 	intel,display-vid-id = <0>;
+ 	intel,display-eot = <1>;
+@@ -42,7 +42,7 @@ display-panel@nt35596 {
+ 			color-mode = <COLOR_RGB>;
+ 			width = <75>;
+ 			height = <132>;
+-			clock-frequency = <65774400>;
++			clock-frequency = <131548800>;
+ 			hactive = <1080>;
+ 			vactive = <1920>;
+ 			hback-porch = <24>;
+diff --git a/arch/x86/boot/dts/xgold/sofia_3gx_soc/pinctrl-sf_3gx.dtsi b/arch/x86/boot/dts/xgold/sofia_3gx_soc/pinctrl-sf_3gx.dtsi
+index 7ce8441..95d440f 100644
+--- a/arch/x86/boot/dts/xgold/sofia_3gx_soc/pinctrl-sf_3gx.dtsi
++++ b/arch/x86/boot/dts/xgold/sofia_3gx_soc/pinctrl-sf_3gx.dtsi
+@@ -318,24 +318,17 @@ kp_sleep_pins:kp_sleep_pins {
+ 
+ pwm2_default_pins:pwm2_default_pins {
+         pinctrl-single,pins = <
+-                0x2dc 0x1410    /* pwm2, gpio55 */
++                0x2dc 0x1010    /* pwm2, gpio55 */
+         >;
+ };
+ pwm2_inactive_pins:pwm2_inactive_pins {
+         pinctrl-single,pins = <
+-                0x2dc 0x4100    /* pwm2 */
++                0x2dc 0x5100    /* pwm2 */
+         >;
+ };
+ pwm2_sleep_pins:pwm2_sleep_pins {
+         pinctrl-single,pins = <
+-                0x2dc 0x4100    /* pwm2 */
+-        >;
+-};
+-
+-touch_default_pins:touch_default_pins {
+-        pinctrl-single,pins = <
+-                0x318 0x3004
+-		0x2e8 0x1700
++                0x2dc 0x5100    /* pwm2 */
+         >;
+ };
+ 
+@@ -391,6 +384,13 @@ cam1_sleep_pins:cam1_sleep_pins {
+         >;
+ };
+ 
++touch_default_pins:touch_default_pins {
++        pinctrl-single,pins = <
++                0x318 0x3004
++		0x2e8 0x1700
++        >;
++};
++
+ touch_inactive_pins:touch_inactive_pins {
+         pinctrl-single,pins = <
+                 0x318 0x5100
+@@ -404,6 +404,26 @@ touch_sleep_pins:touch_sleep_pins {
+         >;
+ };
+ 
++lcd_default_pins:lcd_default_pins {
++        pinctrl-single,pins = <
++                0x248 0x1700
++		0x2f8 0x1500
++        >;
++};
++
++lcd_inactive_pins:lcd_inactive_pins {
++        pinctrl-single,pins = <
++                0x248 0x5100
++		0x2f8 0x5100
++        >;
++};
++lcd_sleep_pins:lcd_sleep_pins {
++        pinctrl-single,pins = <
++                0x248 0x5100
++		0x2f8 0x5100
++        >;
++};
++
+ gnss_default_pins:gnss_default_pins {
+         pinctrl-single,pins = <
+                 0x28c 0x1430    /* gnss_fta */
+diff --git a/arch/x86/configs/i386_sofia_3gx_defconfig b/arch/x86/configs/i386_sofia_3gx_defconfig
+index 2284dc2..f54201e 100644
+--- a/arch/x86/configs/i386_sofia_3gx_defconfig
++++ b/arch/x86/configs/i386_sofia_3gx_defconfig
+@@ -3254,7 +3254,10 @@ CONFIG_INTEL_ADC_SENSORS=y
+ #
+ # CONFIG_MLX90614 is not set
+ # CONFIG_TMP006 is not set
+-# CONFIG_PWM is not set
++CONFIG_LEDS_PWM=y
++CONFIG_PWM_SYSFS=y
++CONFIG_PWM=y
++CONFIG_PWM_ROCKCHIP=y
+ CONFIG_IRQCHIP=y
+ CONFIG_X86_INTEL_XGOLD_VPIC=y
+ # CONFIG_IPACK_BUS is not set
+diff --git a/drivers/gpio/gpiolib-legacy.c b/drivers/gpio/gpiolib-legacy.c
+index 8b83099..de51980 100644
+--- a/drivers/gpio/gpiolib-legacy.c
++++ b/drivers/gpio/gpiolib-legacy.c
+@@ -67,6 +67,7 @@ EXPORT_SYMBOL_GPL(gpio_request_one);
+ int gpio_request(unsigned gpio, const char *label)
+ {
+ 	struct gpio_desc *desc = gpio_to_desc(gpio);
++	pr_info("%s: xxxxxxxxx request label %s, %d\n", __func__, label, gpio);
+ 
+ 	/* Compatibility: assume unavailable "valid" GPIOs will appear later */
+ 	if (!desc && gpio_is_valid(gpio))
+diff --git a/drivers/leds/leds-pwm.c b/drivers/leds/leds-pwm.c
+index 66119f6..b9d57d4 100644
+--- a/drivers/leds/leds-pwm.c
++++ b/drivers/leds/leds-pwm.c
+@@ -24,15 +24,12 @@
+ #include <linux/slab.h>
+ #include <linux/workqueue.h>
+ 
+-#define DUTY_DECREASE_STEP 58
+-
+ struct led_pwm_data {
+ 	struct led_classdev	cdev;
+ 	struct pwm_device	*pwm;
+ 	struct work_struct	work;
+ 	unsigned int		active_low;
+ 	unsigned int		period;
+-	unsigned int		min_brightness;
+ 	int			duty;
+ 	bool			can_sleep;
+ };
+@@ -48,12 +45,8 @@ static void __led_pwm_set(struct led_pwm_data *led_dat)
+ 
+ 	pwm_config(led_dat->pwm, new_duty, led_dat->period);
+ 
+-	if (new_duty == 0) {
+-		pwm_config(led_dat->pwm, new_duty + DUTY_DECREASE_STEP,
+-				led_dat->period);
+-		pwm_config(led_dat->pwm, new_duty, led_dat->period);
++	if (new_duty == 0)
+ 		pwm_disable(led_dat->pwm);
+-	}
+ 	else
+ 		pwm_enable(led_dat->pwm);
+ }
+@@ -72,19 +65,10 @@ static void led_pwm_set(struct led_classdev *led_cdev,
+ 	struct led_pwm_data *led_dat =
+ 		container_of(led_cdev, struct led_pwm_data, cdev);
+ 	unsigned int max = led_dat->cdev.max_brightness;
+-	unsigned int min = led_dat->min_brightness;
+ 	unsigned long long duty =  led_dat->period;
+ 
+-	if ((brightness < min) && (brightness > 0))
+-		duty *= min;
+-	else
+-		duty *= brightness;
+-
++	duty *= brightness;
+ 	do_div(duty, max);
+-
+-	if (led_dat->active_low)
+-		duty = led_dat->period - duty;
+-
+ 	led_dat->duty = duty;
+ 
+ 	if (led_dat->can_sleep)
+@@ -121,9 +105,6 @@ static int led_pwm_add(struct device *dev, struct led_pwm_priv *priv,
+ 	led_data->cdev.brightness = LED_OFF;
+ 	led_data->cdev.max_brightness = led->max_brightness;
+ 	led_data->cdev.flags = LED_CORE_SUSPENDRESUME;
+-	of_property_read_u32(child, "min-brightness",
+-			&led_data->min_brightness);
+-	of_property_read_u32(child, "period", &led_data->period);
+ 
+ 	if (child)
+ 		led_data->pwm = devm_of_pwm_get(dev, child, NULL);
+diff --git a/drivers/video/rockchip/rockchip_screen.c b/drivers/video/rockchip/rockchip_screen.c
+index 91a0b2e..95b91e4 100644
+--- a/drivers/video/rockchip/rockchip_screen.c
++++ b/drivers/video/rockchip/rockchip_screen.c
+@@ -236,8 +236,8 @@ static int rockchip_screen_parse_gpio(struct rockchip_screen *screen)
+ 		}
+ 		ret = gpio_request_one(screen->gpio_vhigh, flags, "disp_vhigh");
+ 		if (ret) {
+-			pr_err("%s: request display high power gpio fail: %d\n",
+-			       __func__, ret);
++			pr_err("%s: request display high power gpio %d, fail: %d\n",
++			       __func__, screen->gpio_vhigh, ret);
+ 			screen->gpio_vhigh = 0;
+ 		}
+ 	} else {
+@@ -260,8 +260,8 @@ static int rockchip_screen_parse_gpio(struct rockchip_screen *screen)
+ 		}
+ 		ret = gpio_request_one(screen->gpio_vlow, flags, "disp_vlow");
+ 		if (ret) {
+-			pr_err("%s: request display low power gpio fail: %d\n",
+-			       __func__, ret);
++			pr_err("%s: request display low power gpio %d fail: %d\n",
++			       __func__, screen->gpio_vlow, ret);
+ 			screen->gpio_vlow = 0;
+ 		}
+ 	} else {
+@@ -284,8 +284,8 @@ static int rockchip_screen_parse_gpio(struct rockchip_screen *screen)
+ 		}
+ 		ret = gpio_request_one(screen->gpio_reset, flags, "disp_rst");
+ 		if (ret) {
+-			pr_err("%s: request display reset gpio fail: %d\n",
+-			       __func__, ret);
++			pr_err("%s: request display reset gpio %d fail: %d\n",
++			       __func__, screen->gpio_reset, ret);
+ 			screen->gpio_reset = 0;
+ 		}
+ 	} else {
+@@ -301,7 +301,9 @@ static int rockchip_disp_pwr_ctr_parse_dt(struct device_node *np,
+ 	int ret = 0;
+ 	struct device_node *child;
+ 
++	pr_info("%s: xxxxxxxxxx 111111111111111\n", __func__);
+ 	if (screen->type != SCREEN_MIPI) {
++		pr_info("%s: xxxxxxxxxx 222222221111111\n", __func__);
+ 		rockchip_screen_parse_gpio(screen);
+ 
+ 		for_each_child_of_node(np, child) {
+diff --git a/drivers/video/xgold/dsi/dsi_display.c b/drivers/video/xgold/dsi/dsi_display.c
+index 638659e..96a48e1 100644
+--- a/drivers/video/xgold/dsi/dsi_display.c
++++ b/drivers/video/xgold/dsi/dsi_display.c
+@@ -619,6 +619,7 @@ dsi_set_gpiolist(
+ 			gpio_request(mipi_dsi->gpio_vhigh, "disp_vhigh");
+ 			gpio_direction_output(
+ 					mipi_dsi->gpio_vhigh, gpio->value);
++			gpio_free(mipi_dsi->gpio_vhigh);
+ 			break;
+ 
+ 		case DSI_GPIO_VLOW:
+@@ -628,6 +629,7 @@ dsi_set_gpiolist(
+ 			gpio_request(mipi_dsi->gpio_vlow, "disp_vlow");
+ 			gpio_direction_output(
+ 					mipi_dsi->gpio_vlow, gpio->value);
++			gpio_free(mipi_dsi->gpio_vlow);
+ 			break;
+ 
+ 		case DSI_GPIO_RESET:
+@@ -637,6 +639,7 @@ dsi_set_gpiolist(
+ 			gpio_request(mipi_dsi->gpio_reset, "disp_rst");
+ 			gpio_direction_output(
+ 					mipi_dsi->gpio_reset, gpio->value);
++			gpio_free(mipi_dsi->gpio_reset);
+ 			break;
+ 		}
+ 

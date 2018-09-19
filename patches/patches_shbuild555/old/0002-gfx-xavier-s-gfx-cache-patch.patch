@@ -1,0 +1,72 @@
+From 6cd18b27748a29d8b929cfec89cc3ebb996a5def Mon Sep 17 00:00:00 2001
+From: Haicheng Li <haicheng.li@intel.com>
+Date: Tue, 7 Apr 2015 09:07:37 +0800
+Subject: [PATCH 2/6] gfx: xavier's gfx cache patch
+
+Change-Id: I7243801871ea4dc8d406b882edd2471fc041ee2f
+Signed-off-by: Haicheng Li <haicheng.li@intel.com>
+---
+ drivers/gpu/arm/mali/linux/mali_memory_os_alloc.c |   17 ++++++++++++++++-
+ 1 file changed, 16 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/arm/mali/linux/mali_memory_os_alloc.c b/drivers/gpu/arm/mali/linux/mali_memory_os_alloc.c
+index 7efa3fa..0679e4f 100644
+--- a/drivers/gpu/arm/mali/linux/mali_memory_os_alloc.c
++++ b/drivers/gpu/arm/mali/linux/mali_memory_os_alloc.c
+@@ -196,6 +196,7 @@ static int mali_mem_os_alloc_pages(mali_mem_allocation *descriptor, u32 size)
+ 	size_t page_count = PAGE_ALIGN(size) / _MALI_OSK_MALI_PAGE_SIZE;
+ 	size_t remaining = page_count;
+ 	u32 i;
++	struct pages **new_array_pages;
+ 
+ 	MALI_DEBUG_ASSERT_POINTER(descriptor);
+ 	MALI_DEBUG_ASSERT(MALI_MEM_OS == descriptor->type);
+@@ -225,6 +226,9 @@ static int mali_mem_os_alloc_pages(mali_mem_allocation *descriptor, u32 size)
+ 		list_move_tail(&new_page->lru, &descriptor->os_mem.pages);
+ 	}
+ 
++	new_array_pages = kzalloc(sizeof(struct pages *) * remaining,
++			GFP_KERNEL);
++
+ 	/* Allocate new pages, if needed. */
+ 	for (i = 0; i < remaining; i++) {
+ 		dma_addr_t dma_addr;
+@@ -260,6 +264,11 @@ static int mali_mem_os_alloc_pages(mali_mem_allocation *descriptor, u32 size)
+ 		if (unlikely(err)) {
+ 			MALI_DEBUG_PRINT_ERROR(("OS Mem: Failed to DMA map page %p: %u",
+ 						new_page, err));
++
++#ifdef CONFIG_X86
++			if (i)
++				set_pages_array_wb(new_array_pages, i);
++#endif
+ 			__free_page(new_page);
+ 			descriptor->os_mem.count = (page_count - remaining) + i;
+ 			atomic_add(descriptor->os_mem.count, &mali_mem_os_allocator.allocated_pages);
+@@ -268,9 +277,10 @@ static int mali_mem_os_alloc_pages(mali_mem_allocation *descriptor, u32 size)
+ 		}
+ 
+ #ifdef CONFIG_X86
+-		set_pages_wc(new_page, 1);
++//		set_pages_wc(new_page, 1);
+ #endif
+ 
++		new_array_pages[i] = new_page;
+ 		/* Store page phys addr */
+ 		SetPagePrivate(new_page);
+ 		set_page_private(new_page, dma_addr);
+@@ -280,6 +290,11 @@ static int mali_mem_os_alloc_pages(mali_mem_allocation *descriptor, u32 size)
+ 
+ 	mem_cal_dbg_f(alloc, descriptor, page_count * _MALI_OSK_MALI_PAGE_SIZE);
+ 
++#ifdef CONFIG_X86
++	set_pages_array_wc(new_array_pages, remaining);
++#endif
++	kfree(new_array_pages);
++
+ 	atomic_add(page_count, &mali_mem_os_allocator.allocated_pages);
+ 
+ 	if (MALI_OS_MEMORY_KERNEL_BUFFER_SIZE_IN_PAGES > mali_mem_os_allocator.pool_count) {
+-- 
+1.7.9.5
+

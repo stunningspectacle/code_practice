@@ -1,0 +1,56 @@
+From 48880c3c848a2a34c3d219f45878420afdf0ff01 Mon Sep 17 00:00:00 2001
+From: Thomas Buhot <thomas.buhot@intel.com>
+Date: Thu, 30 Oct 2014 18:58:03 +0100
+Subject: [PATCH 05/12] speed up performance of drawPaint.
+
+Make a single call to proc when the rect width
+matches the bitmap width instead of 1 per line.
+fps2d performance gain is 33 fps to 60 fps on
+a 2560 x 1440 display. It makes a single call
+to skmemset32 instead of 1 per line (2560 in
+portrait mode)
+
+Change-Id: I7346f46664065e9f9a6b3105216c3e686ddc30a9
+Old-Change-ID: I430a133caffb5ddd5cf531d9e125f2f0ea62cd66
+Ori-Change-ID: Ifd06e138abe6367238fece92e5216b00eb1cc1b2
+Orig-Change-Id: Ieee5d8b4088dda5a374b5233c7c1bf29025738ee
+Category: aosp improvement
+Domain: AOSP-Others
+Origin: internal
+Upstream-Candidate: yes
+Tracked-On: https://jira01.devtools.intel.com/browse/CTEAN-1950
+Orig-Tracked-On: https://jira01.devtools.intel.com/browse/IMINAN-2473
+Signed-off-by: Joakim Landberg <joakim.landberg@intel.com>
+Old-Reviewed-on: https://android.intel.com:443/374225
+Signed-off-by: Xinyun Liu <xinyun.liu@intel.com>
+---
+ src/core/SkDraw.cpp |   12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/src/core/SkDraw.cpp b/src/core/SkDraw.cpp
+index b77eb43..4a121b7 100644
+--- a/src/core/SkDraw.cpp
++++ b/src/core/SkDraw.cpp
+@@ -242,11 +242,15 @@ static void CallBitmapXferProc(const SkBitmap& bitmap, const SkIRect& rect,
+     const size_t rowBytes = bitmap.rowBytes();
+     const int widthBytes = rect.width() << shiftPerPixel;
+ 
+-    // skip down to the first scanline and X position
++    // skip down to the first scanline and X position mupp
+     pixels += rect.fTop * rowBytes + (rect.fLeft << shiftPerPixel);
+-    for (int scans = rect.height() - 1; scans >= 0; --scans) {
+-        proc(pixels, widthBytes, procData);
+-        pixels += rowBytes;
++    if ((rect.left() == 0) && (rowBytes == (size_t) widthBytes)) {
++        proc(pixels, widthBytes * rect.height(), procData);
++    } else {
++        for (int scans = rect.height() - 1; scans >= 0; --scans) {
++            proc(pixels, widthBytes, procData);
++            pixels += rowBytes;
++        }
+     }
+ }
+ 
+-- 
+1.7.9.5
+

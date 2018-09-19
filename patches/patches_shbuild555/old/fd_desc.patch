@@ -1,0 +1,45 @@
+diff --git a/drivers/video/xgold/dcc-main.c b/drivers/video/xgold/dcc-main.c
+index 6370975..2d55271 100644
+--- a/drivers/video/xgold/dcc-main.c
++++ b/drivers/video/xgold/dcc-main.c
+@@ -619,7 +619,7 @@ static int dcc_fence_create(struct dcc_drvdata *pdata,
+ 	}
+ 
+ 	/* Create fd */
+-	fd = get_unused_fd();
++	fd = get_unused_fd_flags(0x1234);
+ 	if (fd < 0) {
+ 		dcc_err("fence_fd not initialized\n");
+ 		sync_fence_put(fence);
+diff --git a/fs/file.c b/fs/file.c
+index eb56a13..137a901 100644
+--- a/fs/file.c
++++ b/fs/file.c
+@@ -456,6 +456,8 @@ int __alloc_fd(struct files_struct *files,
+ 	unsigned int fd;
+ 	int error;
+ 	struct fdtable *fdt;
++	static unsigned int count = 0;
++	static unsigned int max = 0;
+ 
+ 	spin_lock(&files->file_lock);
+ repeat:
+@@ -471,6 +473,18 @@ repeat:
+ 	 * N.B. For clone tasks sharing a files structure, this test
+ 	 * will limit the total number of files that can be opened.
+ 	 */
++	if (flags == 0x1234) {
++		if (fd > max) {
++			max = fd;
++			pr_err("loooong: start=%u, end=%u, fd=%u, max=%u\n",
++					start, end, fd, max);
++		} else if (count % 60 == 0) {
++			pr_err("loooong: start=%u, end=%u, fd=%u, max=%u\n",
++					start, end, fd, max);
++		}
++		count++;
++		flags = 0;
++	}
+ 	error = -EMFILE;
+ 	if (fd >= end)
+ 		goto out;

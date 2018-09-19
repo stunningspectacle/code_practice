@@ -1,0 +1,82 @@
+diff --git a/common/androidfls.mk b/common/androidfls.mk
+index b15c5d3..cd211af 100644
+--- a/common/androidfls.mk
++++ b/common/androidfls.mk
+@@ -26,8 +26,8 @@ CACHE_FLS 	  	:= $(FLASHFILES_DIR)/cache.fls
+ SYSTEM_SIGNED_FLS_LIST  += $(SIGN_FLS_DIR)/cache_signed.fls
+ BOOTIMG_FLS		:= $(FLASHFILES_DIR)/boot.fls
+ SYSTEM_SIGNED_FLS_LIST  += $(SIGN_FLS_DIR)/boot_signed.fls
+-RECOVERY_FLS		:= $(FLASHFILES_DIR)/recovery.fls
+-SYSTEM_SIGNED_FLS_LIST  += $(SIGN_FLS_DIR)/recovery_signed.fls
++#RECOVERY_FLS		:= $(FLASHFILES_DIR)/recovery.fls
++#SYSTEM_SIGNED_FLS_LIST  += $(SIGN_FLS_DIR)/recovery_signed.fls
+ 
+ $(SYSTEM_FLS): createflashfile_dir $(FLSTOOL) $(INTEL_PRG_FILE) systemimage $(INSTALLED_SYSTEMIMAGE) $(FLASHLOADER_FLS)
+ 	$(FLSTOOL) --prg $(INTEL_PRG_FILE) --output $@ --tag SYSTEM $(INJECT_FLASHLOADER_FLS) $(INSTALLED_SYSTEMIMAGE) --replace --to-fls2
+@@ -40,19 +40,21 @@ $(CACHE_FLS): createflashfile_dir $(FLSTOOL) $(INTEL_PRG_FILE) cacheimage $(INST
+ 
+ $(BOOTIMG_FLS): createflashfile_dir $(FLSTOOL) $(INTEL_PRG_FILE) $(BUILT_RAMDISK_TARGET) $(INSTALLED_KERNEL_TARGET) bootimage $(INSTALLED_BOOTIMAGE_TARGET) $(FLASHLOADER_FLS)
+ 	$(FLSTOOL) --prg $(INTEL_PRG_FILE) --output $@ --tag BOOT_IMG $(INJECT_FLASHLOADER_FLS) $(INSTALLED_BOOTIMAGE_TARGET) --replace --to-fls2
+-$(RECOVERY_FLS): createflashfile_dir $(FLSTOOL) $(INTEL_PRG_FILE) $(INSTALLED_KERNEL_TARGET) recoveryimage $(BUILT_RECOVERY_MVCONFIG_TARGET) $(BUILT_VMM_TARGET_BIN) $(INSTALLED_RECOVERYIMAGE_TARGET) $(FLASHLOADER_FLS)
+-	$(FLSTOOL) --prg=$(INTEL_PRG_FILE) --output $@ --tag=RECOVERY $(INJECT_FLASHLOADER_FLS)  $(BUILT_VMM_TARGET_BIN):2 $(BUILT_RECOVERY_MVCONFIG_TARGET):1 $(INSTALLED_RECOVERYIMAGE_TARGET):3 --replace --to-fls2
++#$(RECOVERY_FLS): createflashfile_dir $(FLSTOOL) $(INTEL_PRG_FILE) $(INSTALLED_KERNEL_TARGET) recoveryimage $(BUILT_RECOVERY_MVCONFIG_TARGET) $(BUILT_VMM_TARGET_BIN) $(INSTALLED_RECOVERYIMAGE_TARGET) $(FLASHLOADER_FLS)
++#	$(FLSTOOL) --prg=$(INTEL_PRG_FILE) --output $@ --tag=RECOVERY $(INJECT_FLASHLOADER_FLS)  $(BUILT_VMM_TARGET_BIN):2 $(BUILT_RECOVERY_MVCONFIG_TARGET):1 $(INSTALLED_RECOVERYIMAGE_TARGET):3 --replace --to-fls2
+ 
+ 
+-.PHONY: system.fls userdata.fls cache.fls boot.fls recovery.fls
++#.PHONY: system.fls userdata.fls cache.fls boot.fls recovery.fls
++.PHONY: system.fls userdata.fls cache.fls boot.fls
+ 
+ system.fls: $(SYSTEM_FLS)
+ userdata.fls: $(USERDATA_FLS)
+ cache.fls: $(CACHE_FLS)
+ boot.fls: $(BOOTIMG_FLS)
+-recovery.fls: $(RECOVERY_FLS)
++#recovery.fls: $(RECOVERY_FLS)
+ 
+-android_fls: $(SYSTEM_FLS) $(USERDATA_FLS) $(CACHE_FLS) $(BOOTIMG_FLS) $(RECOVERY_FLS)
++#android_fls: $(SYSTEM_FLS) $(USERDATA_FLS) $(CACHE_FLS) $(BOOTIMG_FLS) $(RECOVERY_FLS)
++android_fls: $(SYSTEM_FLS) $(USERDATA_FLS) $(CACHE_FLS) $(BOOTIMG_FLS)
+ 
+ ifeq ($(GEN_ANDROID_FLS_FILES),true)
+ droidcore: android_fls
+diff --git a/sofia3g/BoardConfig.mk b/sofia3g/BoardConfig.mk
+index e06cd8f..e4da5b5 100644
+--- a/sofia3g/BoardConfig.mk
++++ b/sofia3g/BoardConfig.mk
+@@ -120,21 +120,26 @@ BLOB_GEN_XML_FILE := SetupHeader-AOSP.xml
+ MODEM_PROJECTNAME ?= SF_3G
+ MODEM_BUILD_ARGUMENTS = INT_STAGE=MEX HW_BASE=XG_ES_2.0 SDLROOT=$(CURDIR)/$(PRODUCT_OUT)/sdlcode UTA_CLIENT=RPC ASM_DEFS_PLATFORM= CBE_UMTSFW_DEVEL=YES CREATEFLS=NO
+ 
+-BUILD_BOOTCORE_FROM_SRC := true
++BUILD_BOOTCORE_FROM_SRC := false
+ GEN_PRG_FROM_SRC := false
+-BUILD_VMM_FROM_SRC := true
+-BUILD_THREADX_FROM_SRC := true
+-BUILD_3GFW_FROM_SRC := true
+-BUILD_MODEM_FROM_SRC := true
+-BUILD_SECVM_FROM_SRC := true
+-GEN_VMM_FLS_FILES := true
++BUILD_VMM_FROM_SRC := false
++BUILD_THREADX_FROM_SRC := false
++BUILD_3GFW_FROM_SRC := false
++BUILD_MODEM_FROM_SRC := false
++BUILD_SECVM_FROM_SRC := false
++GEN_VMM_FLS_FILES := false
+ GEN_ANDROID_FLS_FILES := true
+-GEN_THREADX_FLS_FILES:= true
+-GEN_SECBIN_FILES := true
++GEN_THREADX_FLS_FILES:= false
++GEN_SECBIN_FILES := false
+ 
+ ifneq ($(GEN_PRG_FROM_SRC), true)
+ INTEL_PRG_FILE := device/intel/sofia3g/prg/modem_cfg_emmc.prg
+ endif
++ifneq ($(BUILD_BOOTCORE_FROM_SRC), true)
++BOOTLOADER_BIN_PATH := device/intel/sofia3g_svb/bootloader/$(MODEM_PLATFORM)
++PSI_RAM_FLS            := device/intel/sofia3g/flashloader/psi_ram.fls
++EBL_FLS                := device/intel/sofia3g/flashloader/ebl.fls
++endif
+ 
+ INTEL_VPU_FEATURES := FEAT_INCLUDE_LIBS
+ 

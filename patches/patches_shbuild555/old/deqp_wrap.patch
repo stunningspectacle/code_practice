@@ -1,0 +1,13 @@
+diff --git a/modules/gles2/functional/es2fTextureWrapTests.cpp b/modules/gles2/functional/es2fTextureWrapTests.cpp
+index 40ad350..71008f5 100644
+--- a/modules/gles2/functional/es2fTextureWrapTests.cpp
++++ b/modules/gles2/functional/es2fTextureWrapTests.cpp
+@@ -194,7 +194,7 @@ TextureWrapCase::IterateResult TextureWrapCase::iterate (void)
+ 		computeQuadTexCoord2D(texCoord, tcu::Vec2(-1.5f, -3.0f), tcu::Vec2(1.5f, 2.5f));
+ 
+ 		m_renderer.renderQuad(0, &texCoord[0], refParams);
+-		glu::readPixels(m_renderCtx, viewport.x, viewport.y, renderedFrame.getAccess());
++		//glu::readPixels(m_renderCtx, viewport.x, viewport.y, renderedFrame.getAccess());
+ 
+ 		sampleTexture(SurfaceAccess(referenceFrame, m_renderCtx.getRenderTarget().getPixelFormat(), 0, 0, leftWidth, viewport.height),
+ 					  m_texture->getRefTexture(), &texCoord[0], refParams);

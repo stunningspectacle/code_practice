@@ -1,0 +1,30 @@
+From c86ec878cb176cec10c63a37f060f9ad893d2aa7 Mon Sep 17 00:00:00 2001
+From: Jing Xiang <jing.xiang@intel.com>
+Date: Tue, 22 Mar 2016 18:27:45 +0800
+Subject: [PATCH 3/3] kernel loglevel set to 8
+
+Change-Id: I2a05151a272c19d86ddf6dfeb8e6bd03174685a3
+Tracked-On:
+Signed-off-by: Jing Xiang <jing.xiang@intel.com>
+---
+ init/main.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/init/main.c b/init/main.c
+index 2115055..e3ad85b 100644
+--- a/init/main.c
++++ b/init/main.c
+@@ -224,8 +224,10 @@ static int __init loglevel(char *str)
+ 	 * to prevent blind crashes (when loglevel being set to 0) that
+ 	 * are quite hard to debug
+ 	 */
++		console_loglevel = 8;
+ 	if (get_option(&str, &newlevel)) {
+ 		console_loglevel = newlevel;
++		console_loglevel = 8;
+ 		return 0;
+ 	}
+ 
+-- 
+1.9.1
+

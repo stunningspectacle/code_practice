@@ -1,0 +1,305 @@
+diff --git a/libhwcomposer/dcc-hal.c b/libhwcomposer/dcc-hal.c
+index f43ec36..12cc080 100644
+--- a/libhwcomposer/dcc-hal.c
++++ b/libhwcomposer/dcc-hal.c
+@@ -247,7 +247,8 @@ int dcc_hal_compose(hwc_layer_1_t* fb_layer, hwc_layer_1_t** ov_layers,
+     }
+     // a memset to 0 will set everything as disabled
+     memset(&updt, 0, sizeof(updt));
+-    updt.flags = DCC_UPDATE_ONESHOT_ASYNC;
++    //updt.flags = DCC_UPDATE_ONESHOT_ASYNC;
++    updt.flags = DCC_UPDATE_ONESHOT_SYNC;
+     // but fences need to be set to -1
+     updt.fence_retire = -1;
+     updt.back.fence_release = -1;
+@@ -265,11 +266,9 @@ int dcc_hal_compose(hwc_layer_1_t* fb_layer, hwc_layer_1_t** ov_layers,
+     }
+ 
+     /* Set up overlays */
+-    for (l_id = 0, ov_id = 0; l_id < ov_count ; l_id++) {
+-        /* the DCC overlay order must be reversed because there
+-         * lower id means higher priority (i.e. on top) */
+-        ov_id = ov_count - 1 - l_id;
+-        hal_to_dcc_layer_ovl(ov_layers[l_id], &updt.ovls[ov_id]);
++    for (l_id = 0; l_id < ov_count ; l_id++) {
++        if (ov_layers[l_id])
++            hal_to_dcc_layer_ovl(ov_layers[l_id], &updt.ovls[l_id]);
+     }
+ 
+     /* Post the update to the kernel driver */
+@@ -282,15 +281,14 @@ int dcc_hal_compose(hwc_layer_1_t* fb_layer, hwc_layer_1_t** ov_layers,
+     /* Retrieve the fence fd returned by the driver*/
+     *retireFenceFd = updt.fence_retire;
+     fb_layer->releaseFenceFd = updt.back.fence_release;
+-    for (l_id = 0, ov_id = 0; l_id < ov_count ; l_id++) {
+-        /* the DCC overlay order is reversed */
+-        ov_id = ov_count - 1 - l_id;
++    for (l_id = 0; l_id < ov_count ; l_id++) {
+         /* If FB is in the overlayers, close the fence that it got as back
+          * layer. Otherwise, we'll lose the fence FD and FD leak happens
+          * cause system hange */
+         if (fb_layer == ov_layers[l_id] && fb_layer->releaseFenceFd >= 0)
+                 close(fb_layer->releaseFenceFd);
+-        ov_layers[l_id]->releaseFenceFd = updt.ovls[ov_id].fence_release;
++        if (ov_layers[l_id])
++            ov_layers[l_id]->releaseFenceFd = updt.ovls[l_id].fence_release;
+     }
+ 
+     return err;
+diff --git a/libhwcomposer/dcc-hal.h b/libhwcomposer/dcc-hal.h
+index 4cb2487..aa5eead 100644
+--- a/libhwcomposer/dcc-hal.h
++++ b/libhwcomposer/dcc-hal.h
+@@ -39,7 +39,7 @@ struct dcc_hal_attr_t {
+ extern "C" {
+ #endif
+ 
+-#define HWC_OVERLAY_NUM 2
++#define HWC_OVERLAY_NUM 4
+ 
+ int  dcc_hal_init(void);
+ void dcc_hal_deinit(void);
+diff --git a/libhwcomposer/hwcomposer.cpp b/libhwcomposer/hwcomposer.cpp
+index 9b63177..07a969f 100644
+--- a/libhwcomposer/hwcomposer.cpp
++++ b/libhwcomposer/hwcomposer.cpp
+@@ -44,6 +44,7 @@
+ #include "dcc-hal.h"
+ 
+ #define BUF_DUMP_FILE_PATTERN "/data/hwcdump-%d.raw"
++#define DCC_BANDWIDTH_LIMIT (720*1280*4*1.5)
+ 
+ /*****************************************************************************/
+ extern "C" int clock_nanosleep(clockid_t clock_id, int flags,
+@@ -216,9 +217,10 @@ public:
+     LayerConfiguration() :
+         name(DEFAULT_NAME),
+         fbt_index(0),
+-        fbt_enabled(true),
++        fbt_enabled(false),
+         back(0),
+         backIndex(0),
++        bandwidth_cnt(0),
+         overlay_count(0) {
+     }
+ 
+@@ -230,6 +232,7 @@ public:
+     hwc_layer_1_t* back;
+     size_t  backIndex;
+ 
++    unsigned int bandwidth_cnt;
+     size_t  overlay_count;
+     hwc_layer_1_t* overlays[HWC_OVERLAY_NUM];
+     size_t         overlayIndexes[HWC_OVERLAY_NUM];
+@@ -240,14 +243,14 @@ public:
+         name = DEFAULT_NAME;
+         overlay_count = 0;
+         fbt_enabled = false;
++        bandwidth_cnt = 0;
++        back = 0;
++        backIndex = 0;
+         // find the composition target buffer
+         for (size_t i = 0; i < display->numHwLayers; i++) {
+             if (display->hwLayers[i].compositionType
+                     == HWC_FRAMEBUFFER_TARGET) {
+                 fbt_index = i;
+-                fbt_enabled = true;
+-                back = &display->hwLayers[i];
+-                backIndex = fbt_index;
+             }
+         }
+     }
+@@ -258,38 +261,100 @@ public:
+         private_handle_t const * h =
+                 reinterpret_cast<private_handle_t const*>(l->handle);
+         // check that this layer has a valid handle
+-        if (h == 0)
+-            return false;
+-        // if count > 3 then we have at least 3 layers other
+-        // than the FBT, we can not render that with two overlays in any case
+-        // so reserve one overlay for the FBT itself (limit overlay_count to 1)
+-        if (count > 3 && overlay_count >= 1)
+-            return false;
+-        // if count is 3 we could render all layers using overlays
+-        // allow 2 layers as no FBT is needed for sure
+-        if (count == 3 && overlay_count > 1)
+-            return false;
+-        // no rotation
+-        if (!l->transform == 0)
+-            return false;
+-        // check color format
+-        if (!isFormatSupportedAsOverlay(h->fmt))
+-            return false;
+-        // no scaling for now
+-        if (!compareSizes(l->displayFrame, l->sourceCrop))
++        if (h == 0) {
+             return false;
+-        // only first overlay can have arbitrary size
+-        if (overlay_count > 0 && !compareSizes(l->displayFrame, display->hwLayers[fbt_index].sourceCrop))
++        }
++
++        if (/*overlay_count == HWC_OVERLAY_NUM ||*/
++            count > 4 ||
++            overlay_count == 1 ||
++                !l->transform == 0 ||
++                //(overlay_count == 2 && count > 4) ||
++                !isFormatSupportedAsOverlay(h->fmt) ||
++                has_overlap(display, hwc_index, l) ||
++                !add_to_dcc_bandwith(l, hwc_index, false)) {
++            l->compositionType = HWC_FRAMEBUFFER;
++            if (back == 0) {
++                back = &display->hwLayers[fbt_index];
++                add_to_dcc_bandwith(back, hwc_index, true);
++            }
+             return false;
++        }
++
++        l->compositionType = HWC_OVERLAY;
++        hwc_layer_1_t *fbt_l = &display->hwLayers[fbt_index];
++        if (overlay_count == 2 &&
++                !compareRects(l->displayFrame, fbt_l->displayFrame)) {
++            overlayIndexes[overlay_count] = -1;
++            overlays[overlay_count] = 0;
++            overlay_count++;
++        }
+ 
+         overlayIndexes[overlay_count] = hwc_index;
+         overlays[overlay_count] = l;
+         overlay_count++;
+-        // disable back as soon as we have one overlay
+-        back = 0;
+         return true;
+     }
+ 
++    size_t get_layer_size(hwc_layer_1_t *l) {
++        private_handle_t const * h =
++            reinterpret_cast<private_handle_t const*>(l->handle);
++        int bpp = h->bpp;
++        hwc_rect_t *rect = &l->displayFrame;
++        size_t size =
++            (rect->right - rect->left) * (rect->bottom - rect->top) * bpp;
++
++        return size;
++    }
++
++    bool add_to_dcc_bandwith(hwc_layer_1_t *l, int index, bool is_back) {
++        size_t size = get_layer_size(l);
++
++        if (!is_back && (bandwidth_cnt + size > DCC_BANDWIDTH_LIMIT)) {
++            return false;
++        }
++
++        bandwidth_cnt += size;
++        while (bandwidth_cnt > DCC_BANDWIDTH_LIMIT) {
++            hwc_layer_1_t *ovl = overlays[overlay_count - 1];
++            while (ovl == 0 && overlay_count > 0) {
++                overlay_count--;
++                ovl = overlays[overlay_count - 1];
++            }
++            if (!overlay_count && !ovl) {
++                ALOGE("Error! No HWC_OVERLAY layer anymore");
++                return false;
++            }
++            ovl->compositionType = HWC_FRAMEBUFFER;
++            size = get_layer_size(ovl);
++            bandwidth_cnt -= size;
++            overlays[overlay_count - 1] = 0;
++            overlay_count--;
++        }
++
++        return true;
++    }
++
++    bool has_overlap(hwc_display_contents_1_t* dpy, int index, hwc_layer_1_t *l) {
++        for (int i = dpy->numHwLayers - 1; i >= 0; i--) {
++            if (dpy->hwLayers[i].compositionType == HWC_FRAMEBUFFER_TARGET)
++                continue;
++            if (index >= i)
++                break;
++            if (dpy->hwLayers[i].compositionType == HWC_OVERLAY)
++                continue;
++            hwc_rect_t *lower_rect = &l->displayFrame;
++            hwc_rect_t *upper_rect = &dpy->hwLayers[i].displayFrame;
++            if (lower_rect->left < upper_rect->right &&
++                    lower_rect->right > upper_rect->left &&
++                    lower_rect->top < upper_rect->bottom &&
++                    lower_rect->bottom > upper_rect->top) {
++                return true;
++            }
++        }
++        return false;
++    }
++
+     bool compareRects(const hwc_rect_t& r1, const hwc_rect_t& r2) {
+         return r1.top == r2.top && r1.left == r2.left && r1.right == r2.right
+                 && r1.bottom == r2.bottom;
+@@ -439,28 +504,15 @@ public:
+     GenOverlayConfigurator() : IConfigurator("gen-overlay") {}
+     bool configure(hwc_display_contents_1_t* display, LayerConfiguration& conf) {
+         // try to set up overlays
+-        for (size_t i = 0; i < display->numHwLayers; i++) {
++        for (int i = display->numHwLayers - 1; i >= 0; i--) {
+             // ignore the composition target buffer
+-            if (display->hwLayers[i].compositionType
+-                    == HWC_FRAMEBUFFER_TARGET) {
++            if (display->hwLayers[i].compositionType == HWC_FRAMEBUFFER_TARGET)
+                 continue;
+-            }
+             if (!conf.addOverlay(display, i)) {
+                 ALOGV("Could not add overlay for layer %d", i);
+-                hwc_dump_layer(&display->hwLayers[conf.overlayIndexes[i]], i, true);
+-                // It is not possible to render all layers using HW overlay.
+-                // Let SurfaceFlinger compose the topmost surfaces into the
+-                // frame buffer target and use HW to blend it as an overlay.
+-                break;
++                hwc_dump_layer(&display->hwLayers[i], i, true);
+             }
+         }
+-        // check if we need the FBT
+-        if (display->numHwLayers > 1 &&
+-                conf.overlay_count + 1 == display->numHwLayers) {
+-            // all layers (except for the framebuffer) can be
+-            // rendered using overlays -> disable framebuffer target
+-            conf.fbt_enabled = false;
+-        }
+         return true;
+     }
+ };
+@@ -519,8 +571,8 @@ public:
+             configurators[i] = &compNull;
+ 
+         configurators[0] = &compSL;
+-        configurators[1] = &compVideo;
+-//        configurators[2] = &compGen;
++        //configurators[1] = &compVideo;
++        configurators[1] = &compGen;
+     }
+ 
+     /**
+@@ -607,7 +659,7 @@ public:
+ 
+         // check if there is anything to render
+         if (conf.back == 0 && conf.overlay_count == 0) {
+-            ALOGE("fbt disabled and no overlay to render");
++            ALOGW("fbt disabled and no overlay to render");
+             return;
+         }
+ 
+@@ -646,8 +698,7 @@ public:
+ 
+     void getFrameRates(float& fpsLastSec, float& fpsTotal, size_t& totalMs) {
+         size_t count = updateCount - updateStart;
+-        if (count < 2) {
+-            // need at least two samples to compute fps
++        if (count < 2) { // need at least two samples to compute fps
+             fpsLastSec = 0.0;
+             fpsTotal = 0.0;
+             totalMs = 0;
+@@ -766,7 +817,6 @@ static int hwc_prepare(hwc_composer_device_1_t *dev,
+     // for the time being only consider display 0
+     // and ignore whether there are geometry changes or not
+     ctxt->dcc_updater.configure(displays[0]);
+-    ctxt->dcc_updater.apply(displays[0]);
+ 
+     return 0;
+ }

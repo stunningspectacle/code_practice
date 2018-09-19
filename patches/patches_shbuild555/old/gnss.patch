@@ -1,0 +1,72 @@
+From 982caaf00b22fcd871f833a39b759b367204e602 Mon Sep 17 00:00:00 2001
+From: li zhuangzhi <zhuangzhi.li@intel.com>
+Date: Fri, 15 May 2015 12:46:46 +0800
+Subject: [PATCH] [DEBUG] Keep GNSS D0 state to avoid IDI NOC error
+
+Change-Id: I97f4c6c3e7e97759d8fc64c3a0513a175f766265
+Signed-off-by: li zhuangzhi <zhuangzhi.li@intel.com>
+---
+ imc_idi_gnss.c |   15 ++++++++-------
+ 1 file changed, 8 insertions(+), 7 deletions(-)
+
+diff --git a/imc_idi_gnss.c b/imc_idi_gnss.c
+index 0ea375e..ad267bc 100755
+--- a/imc_idi_gnss.c
++++ b/imc_idi_gnss.c
+@@ -1744,7 +1744,7 @@ static int gnss_set_idi_power_state(struct idi_peripheral_device *p_device,
+ 
+ 	IMC_IDI_GNSS_ENTER;
+ 
+-	dev_dbg(dev, "Setting IDI power to %d\n", state);
++	dev_warn(dev, "Setting IDI power to %d +\n", state);
+ 
+ 	/* TODO: make sure there are no transactions */
+ 	if (atomic_read(&p_gnss->tx_trans_in_process) > 0)
+@@ -1778,11 +1778,11 @@ static int gnss_set_idi_power_state(struct idi_peripheral_device *p_device,
+ 		p_setting = &gnss_power_setting_array[0];
+ 		break;
+ 	case D0I3:
+-		p_setting = &gnss_power_setting_array[1];
++		p_setting = &gnss_power_setting_array[0];
+ 		break;
+ 	case D3:
+-		reconfig_idi_channle = true;
+-		p_setting = &gnss_power_setting_array[2];
++//		reconfig_idi_channle = true;
++		p_setting = &gnss_power_setting_array[0];
+ 		break;
+ 	}
+ 
+@@ -1828,7 +1828,7 @@ idi_set_power_success:
+ 	spin_lock_irqsave(&p_gnss->hw_lock, flags);
+ 	p_gnss->idi_power_state = state;
+ 	spin_unlock_irqrestore(&p_gnss->hw_lock, flags);
+-
++	dev_warn(dev, "Setting IDI power to %d -\n", state);
+ 	IMC_IDI_GNSS_EXIT;
+ 	return 0;
+ 
+@@ -2518,17 +2518,18 @@ static int idi_gnss_ioctl(struct uart_port *port, unsigned int cmd,
+ 		ret = copy_to_user((unsigned int *)arg,
+ 				&p_gnss->idi_power_state,
+ 				sizeof(unsigned int));
++		dev_warn(dev, "GNSS_IOC_GET_PWR_STATE: 0x%x\n", p_gnss->idi_power_state);
+ 		break;
+ 
+ 	case GNSS_IOC_SET_PWR_STATE:
+-		dev_dbg(dev, "GNSS_IOC_SET_PWR_STATE. arg = 0x%x\n",
++		dev_warn(dev, "GNSS_IOC_SET_PWR_STATE. arg = 0x%x\n",
+ 				(unsigned int)arg);
+ 		ret = wait_event_interruptible_timeout(ioctl_wq, uart_circ_empty(xmit), HZ/2);
+ 		if(ret <= 0) {
+ 			if(ret == 0)
+ 				dev_warn(dev, "%s: timeout waiting for uart buf_empty\n", __func__);
+ 			else
+-				dev_dbg(dev, "interrupt recv while waiting for uart buf_empty\n");
++				dev_warn(dev, "interrupt recv while waiting for uart buf_empty\n");
+ 			return -EAGAIN;
+ 		}
+ 
+-- 
+1.7.9.5
+

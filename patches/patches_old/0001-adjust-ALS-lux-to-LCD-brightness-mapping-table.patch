@@ -1,0 +1,79 @@
+From 4507a3bc5bcd12866d4ff1f0f0183f7c2ad429f8 Mon Sep 17 00:00:00 2001
+From: Hong Liu <hong.liu@intel.com>
+Date: Fri, 24 Feb 2012 09:59:33 +0800
+Subject: [PATCH] adjust ALS lux to LCD brightness mapping table
+
+BZ: 23937
+
+Changing the mapping table to increase LCD brightness for indoor
+office environment (250 ~ 500 lux).
+
+Change-Id: Id5ceaedd96682dc2aca1afec7b329398be1f2c5b
+Signed-off-by: Hong Liu <hong.liu@intel.com>
+---
+ .../frameworks/base/core/res/res/values/config.xml |   16 +++++++++++++---
+ 1 files changed, 13 insertions(+), 3 deletions(-)
+
+diff --git a/overlays/frameworks/base/core/res/res/values/config.xml b/overlays/frameworks/base/core/res/res/values/config.xml
+index b1b12ce..8ce1e91 100755
+--- a/overlays/frameworks/base/core/res/res/values/config.xml
++++ b/overlays/frameworks/base/core/res/res/values/config.xml
+@@ -33,8 +33,10 @@
+          Must be overridden in platform specific overlays -->
+     <integer-array name="config_autoBrightnessLevels">
+         <item>100</item>
++        <item>250</item>
++        <item>350</item>
+         <item>500</item>
+-        <item>1200</item>
++        <item>1600</item>
+         <item>3200</item>
+     </integer-array>
+     <!-- Array of output values for LCD backlight corresponding to the LUX values
+@@ -43,9 +45,11 @@
+          This must be overridden in platform specific overlays -->
+     <integer-array name="config_autoBrightnessLcdBacklightValues">
+         <item>40</item>
+-        <item>60</item>
+         <item>80</item>
++        <item>125</item>
+         <item>150</item>
++        <item>175</item>
++        <item>200</item>
+         <item>250</item>
+     </integer-array>
+ 
+@@ -59,6 +63,8 @@
+         <item>0</item>
+         <item>0</item>
+         <item>0</item>
++        <item>0</item>
++        <item>0</item>
+     </integer-array>
+ 
+     <integer-array name="config_autoBrightnessButtonBacklightValues_LcdNoSync">
+@@ -67,6 +73,8 @@
+         <item>0</item>
+         <item>0</item>
+         <item>0</item>
++        <item>0</item>
++        <item>0</item>
+     </integer-array>
+ 
+     <!-- Array of output values for keyboard backlight corresponding to the LUX values
+@@ -75,9 +83,11 @@
+          This must be overridden in platform specific overlays -->
+     <integer-array name="config_autoBrightnessKeyboardBacklightValues">
+         <item>40</item>
+-        <item>60</item>
+         <item>80</item>
++        <item>125</item>
+         <item>150</item>
++        <item>175</item>
++        <item>200</item>
+         <item>250</item>
+     </integer-array>
+ </resources>
+-- 
+1.7.7.6
+

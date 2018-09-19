@@ -1,0 +1,194 @@
+diff --git a/gpu/arm/mali/cmplibs b/gpu/arm/mali/cmplibs
+index 60a38bf..b7fe9b9 100755
+--- a/gpu/arm/mali/cmplibs
++++ b/gpu/arm/mali/cmplibs
+@@ -3,6 +3,7 @@
+ # Copyright (C) 2014 Intel Mobile Communications GmbH
+ #
+ # Notes:
++# Dec 12 2014: IMC: Update DEFAULT_BOARD to Sf3g_svb_dvfs_v2
+ # Sep 05 2014: IMC: Adapt script to MALI400 r4p1-01rel0 release
+ # Feb 03 2014: IMC: Initial compare script for MALI400 derived from Verisilicon compare script
+ #
+@@ -18,7 +19,7 @@ echo ${BUILD_BASE}
+ 
+ LIBS="egl/libGLES_mali.so"
+ 
+-DEFAULT_BOARD="sofia3g_xges2_0_ages2_svb"
++DEFAULT_BOARD="Sf3g_svb_dvfs_v2"
+ 
+ 
+ function cmp_libs()
+diff --git a/gpu/arm/mali/copylibs b/gpu/arm/mali/copylibs
+index c78aeb6..91a5a12 100755
+--- a/gpu/arm/mali/copylibs
++++ b/gpu/arm/mali/copylibs
+@@ -3,6 +3,7 @@
+ # Copyright (C) 2014 Intel Mobile Communications GmbH
+ #
+ # Notes:
++# Dec 12 2014: IMC: Update DEFAULT_BOARD to Sf3g_svb_dvfs_v2
+ # Sep 05 2014: IMC: Adapt script to MALI400 r4p1-01rel0 release
+ # Feb 03 2014: IMC: Initial copy script for MALI400 derived from Verisilicon copy script
+ #
+@@ -18,7 +19,7 @@ echo "${prompt} build environment: ${BUILD_BASE}"
+ 
+ LIBS="egl/libGLES_mali.so"
+ 
+-DEFAULT_BOARD="sofia3g_xges2_0_ages2_svb"
++DEFAULT_BOARD="Sf3g_svb_dvfs_v2"
+ 
+ 
+ function copy_libs()
+diff --git a/libgralloc/gralloc.cpp b/libgralloc/gralloc.cpp
+index a75d510..cfe5570 100644
+--- a/libgralloc/gralloc.cpp
++++ b/libgralloc/gralloc.cpp
+@@ -370,7 +370,7 @@ static int gralloc_alloc(alloc_device_t* dev,
+ {
+ 	if (!dev || !pHandle || !pStride)
+ 		return -EINVAL;
+-	size_t size, stride, bpr, y_size, c_size, c_stride;
++	size_t size, pixel_stride, bpr, y_size, c_size, c_stride;
+ 	int bpp = 0;
+ 	int err;
+ 	char* s;
+@@ -394,21 +394,21 @@ static int gralloc_alloc(alloc_device_t* dev,
+ 		bpp = 4;
+ 		bpr = GRALLOC_ALIGN(w * bpp, 8);
+ 		size = bpr * h;
+-		stride = bpr / bpp;
++		pixel_stride = bpr / bpp;
+ 		break;
+ 	/* TODO: review this; bpp=3 is not possible with DCC */
+         case HAL_PIXEL_FORMAT_RGB_888:
+ 		bpp = 3;
+ 		bpr = GRALLOC_ALIGN(w * bpp, 8);
+ 		size = bpr * h;
+-		stride = bpr / bpp;
++		pixel_stride = bpr / bpp;
+ 		break;
+ 	case HAL_PIXEL_FORMAT_RGB_565:
+ 	case HAL_PIXEL_FORMAT_RAW_SENSOR:
+ 		bpp = 2;
+ 		bpr = GRALLOC_ALIGN(w * bpp, 8);
+ 		size = bpr * h;
+-		stride = bpr / bpp;
++		pixel_stride = bpr / bpp;
+ 		break;
+ 
+ 	/* YCbCr 4:2:0 Planar : 3 Planes Co-sited*/
+@@ -437,7 +437,7 @@ static int gralloc_alloc(alloc_device_t* dev,
+ 		c_stride = GRALLOC_ALIGN(bpr/2, 16);
+ 		c_size = c_stride * h/2;
+ 		size = y_size + (c_size * 2);
+-		stride = bpr;
++		pixel_stride = bpr;
+ 		break;
+ 
+ 	/* YCbCr 4:2:0 Semi Planar: 2 Planes Co-sited*/
+@@ -460,7 +460,7 @@ static int gralloc_alloc(alloc_device_t* dev,
+ 		y_size = bpr * h;
+ 		c_size = bpr * h/2;
+ 		size = y_size + c_size;
+-		stride = bpr;
++		pixel_stride = bpr;
+ 		break;
+ 
+ 	case HAL_PIXEL_FORMAT_YCbCr_422_SP:
+@@ -468,13 +468,15 @@ static int gralloc_alloc(alloc_device_t* dev,
+ 		bpp = 2;
+ 		bpr = GRALLOC_ALIGN(w, 16);
+ 		size = bpr * h * 2;
+-		stride = bpr;
++		pixel_stride = bpr;
+ 		break;
+-   case HAL_PIXEL_FORMAT_BLOB:
++
++	case HAL_PIXEL_FORMAT_BLOB:
+ 		bpp = 1;
++		bpr = w;
+ 		size = h * w;
+-		stride = w;
+-      break;
++		pixel_stride = bpr;
++		break;
+ 	default:
+ 		ALOGW("%s - unknown format (0x%x)", __FUNCTION__, format);
+ 		return -EINVAL;
+@@ -520,13 +522,20 @@ static int gralloc_alloc(alloc_device_t* dev,
+ 			break;
+ 	}
+ 
+-	((private_handle_t *)*pHandle)->fmt = format;
+-	((private_handle_t *)*pHandle)->w = w;
+-	((private_handle_t *)*pHandle)->h = h;
+-	((private_handle_t *)*pHandle)->bpp = bpp;
+-	print_private_handle((private_handle_t *)*pHandle, s );
++	hnd->fmt = format;
++	hnd->w = w;
++	hnd->h = h;
++	hnd->bpp = bpp;
++	hnd->byte_stride = bpr;
++
++	print_private_handle(hnd, s);
++
++	if (err < 0) {
++		ALOGE("%s failed %d bytes usage:0x%08x", __FUNCTION__, size, usage);
++		return err;
++	}
+ 
+-	*pStride = stride;
++	*pStride = pixel_stride;
+ 
+ 	return 0;
+ }
+@@ -633,6 +642,7 @@ static int gralloc_reserve_fb(alloc_device_t *p_alloc_dev, int fb_w, int fb_h, i
+ 		m->fb_list->framebuffer[i]->w = fb_w;
+ 		m->fb_list->framebuffer[i]->h = fb_h;
+ 		m->fb_list->framebuffer[i]->bpp = bpp;
++		m->fb_list->framebuffer[i]->byte_stride = bpr;
+ 
+ 		print_private_handle(m->fb_list->framebuffer[i], __func__ );
+ 	}
+diff --git a/libgralloc/gralloc_priv.h b/libgralloc/gralloc_priv.h
+index b4a21fa..54e0308 100644
+--- a/libgralloc/gralloc_priv.h
++++ b/libgralloc/gralloc_priv.h
+@@ -167,12 +167,14 @@ struct private_handle_t {
+     int			w;
+     int			h;
+     int			bpp;
++    int			byte_stride;
++
+     /* ION */
+     ion_user_handle_t	ion_hdl;
+     int			ion_fd;
+ 
+ #ifdef __cplusplus
+-    static const int sNumInts = 15;
++    static const int sNumInts = 17;
+     static const int sNumFds = 1;
+     static const int sMagic = 0x3141592;
+ 
+@@ -191,6 +193,7 @@ struct private_handle_t {
+ 	w(0),
+ 	h(0),
+ 	bpp(0),
++	byte_stride(0),
+ 	ion_hdl(0),
+ 	ion_fd(-1)
+     {
+diff --git a/libgralloc/mapper.cpp b/libgralloc/mapper.cpp
+index cca5e52..5793bd2 100644
+--- a/libgralloc/mapper.cpp
++++ b/libgralloc/mapper.cpp
+@@ -43,7 +43,7 @@ static int gralloc_map(gralloc_module_t const* module, buffer_handle_t handle)
+ {
+     private_handle_t* hnd = (private_handle_t*)handle;
+ 
+-    if(hnd->usage & GRALLOC_USAGE_PROTECTED == 0) {
++    if((hnd->usage & GRALLOC_USAGE_PROTECTED) == 0) {
+         void* mappedAddress = mmap(0, hnd->size, PROT_READ|PROT_WRITE, MAP_SHARED,
+             hnd->fd, 0);
+         if (mappedAddress == MAP_FAILED) {

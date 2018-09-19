@@ -1,0 +1,174 @@
+From a0d89138462bf1785fc563e64d61e4e3b2cc9a9f Mon Sep 17 00:00:00 2001
+From: Tobias Selig <tobias.selig@intel.com>
+Date: Tue, 25 Nov 2014 10:38:52 +0100
+Subject: [PATCH 2/5] [1/22]x86,configs,sofia: Update Mali400 GPU config
+
+Change-Id: I7f44f0657ed95d4546c9128f8b2b02c13c630dff
+Tracked-On: https://jira01.devtools.intel.com/browse/IMINAN-17187
+Signed-off-by: Tobias Selig <tobias.selig@intel.com>
+---
+ arch/x86/configs/i386_SF-3G_dvfs_smp_defconfig   |    8 ++++++--
+ arch/x86/configs/i386_SF-3G_native_defconfig     |   11 +++++++++--
+ arch/x86/configs/i386_SF-LTE_pm_native_defconfig |    9 +++++++--
+ arch/x86/configs/i386_SF_3G_tablet_defconfig     |    9 +++++++--
+ arch/x86/configs/i386_sofia_defconfig            |    8 ++++++--
+ 5 files changed, 35 insertions(+), 10 deletions(-)
+
+diff --git a/arch/x86/configs/i386_SF-3G_dvfs_smp_defconfig b/arch/x86/configs/i386_SF-3G_dvfs_smp_defconfig
+index 000f84c..a11d4d9 100755
+--- a/arch/x86/configs/i386_SF-3G_dvfs_smp_defconfig
++++ b/arch/x86/configs/i386_SF-3G_dvfs_smp_defconfig
+@@ -2087,12 +2087,14 @@ CONFIG_MEDIA_TUNER_MC44S803=y
+ CONFIG_MALI400=y
+ # CONFIG_MALI450 is not set
+ # CONFIG_MALI400_DEBUG is not set
+-# CONFIG_MALI400_PROFILING is not set
++CONFIG_MALI400_PROFILING=y
++# CONFIG_MALI400_INTERNAL_PROFILING is not set
+ # CONFIG_MALI400_UMP is not set
+-# CONFIG_MALI400_POWER_PERFORMANCE_POLICY is not set
++CONFIG_MALI_DVFS=y
+ CONFIG_MALI_DMA_BUF_MAP_ON_ATTACH=y
+ CONFIG_MALI_SHARED_INTERRUPTS=y
+ # CONFIG_MALI_PMU_PARALLEL_POWER_UP is not set
++CONFIG_MALI_DT=y
+ # CONFIG_MALI_QUIET is not set
+ # CONFIG_VGASTATE is not set
+ # CONFIG_VIDEO_OUTPUT_CONTROL is not set
+@@ -3022,6 +3024,8 @@ CONFIG_RESET_CONTROLLER=y
+ #
+ CONFIG_OCT=y
+ # CONFIG_GATOR is not set
++# CONFIG_GATOR_MALI_4XXMP is not set
++# CONFIG_GATOR_MALI_MIDGARD is not set
+ 
+ #
+ # Firmware Drivers
+diff --git a/arch/x86/configs/i386_SF-3G_native_defconfig b/arch/x86/configs/i386_SF-3G_native_defconfig
+index 1d69a37..d6bf688 100644
+--- a/arch/x86/configs/i386_SF-3G_native_defconfig
++++ b/arch/x86/configs/i386_SF-3G_native_defconfig
+@@ -1850,12 +1850,15 @@ CONFIG_VIDEO_OV9740=y
+ CONFIG_MALI400=y
+ # CONFIG_MALI450 is not set
+ CONFIG_MALI400_DEBUG=y
+-# CONFIG_MALI400_PROFILING is not set
++CONFIG_MALI400_PROFILING=y
++# CONFIG_MALI400_INTERNAL_PROFILING is not set
+ # CONFIG_MALI400_UMP is not set
+-# CONFIG_MALI400_POWER_PERFORMANCE_POLICY is not set
++CONFIG_MALI_DVFS=y
+ CONFIG_MALI_DMA_BUF_MAP_ON_ATTACH=y
+ CONFIG_MALI_SHARED_INTERRUPTS=y
+ # CONFIG_MALI_PMU_PARALLEL_POWER_UP is not set
++CONFIG_MALI_DT=y
++# CONFIG_MALI_QUIET is not set
+ # CONFIG_VGASTATE is not set
+ # CONFIG_VIDEO_OUTPUT_CONTROL is not set
+ CONFIG_FB=y
+@@ -2324,6 +2327,10 @@ CONFIG_ARCH_HAS_RESET_CONTROLLER=y
+ CONFIG_XGOLD_RESET=y
+ CONFIG_RESET_CONTROLLER=y
+ 
++# CONFIG_GATOR is not set
++# CONFIG_GATOR_MALI_4XXMP is not set
++# CONFIG_GATOR_MALI_MIDGARD is not set
++
+ #
+ # Firmware Drivers
+ #
+diff --git a/arch/x86/configs/i386_SF-LTE_pm_native_defconfig b/arch/x86/configs/i386_SF-LTE_pm_native_defconfig
+index a87b8f2..37b4ce6 100644
+--- a/arch/x86/configs/i386_SF-LTE_pm_native_defconfig
++++ b/arch/x86/configs/i386_SF-LTE_pm_native_defconfig
+@@ -1767,12 +1767,14 @@ CONFIG_REGULATOR_FIXED_VOLTAGE=y
+ CONFIG_MALI400=y
+ # CONFIG_MALI450 is not set
+ # CONFIG_MALI400_DEBUG is not set
+-# CONFIG_MALI400_PROFILING is not set
++CONFIG_MALI400_PROFILING=y
++# CONFIG_MALI400_INTERNAL_PROFILING is not set
+ # CONFIG_MALI400_UMP is not set
+-# CONFIG_MALI400_POWER_PERFORMANCE_POLICY is not set
++CONFIG_MALI_DVFS=y
+ CONFIG_MALI_DMA_BUF_MAP_ON_ATTACH=y
+ CONFIG_MALI_SHARED_INTERRUPTS=y
+ # CONFIG_MALI_PMU_PARALLEL_POWER_UP is not set
++CONFIG_MALI_DT=y
+ # CONFIG_MALI_QUIET is not set
+ # CONFIG_VGASTATE is not set
+ # CONFIG_VIDEO_OUTPUT_CONTROL is not set
+@@ -2490,6 +2492,9 @@ CONFIG_RESET_CONTROLLER=y
+ # OCT config
+ #
+ CONFIG_OCT=y
++# CONFIG_GATOR is not set
++# CONFIG_GATOR_MALI_4XXMP is not set
++# CONFIG_GATOR_MALI_MIDGARD is not set
+ 
+ #
+ # Firmware Drivers
+diff --git a/arch/x86/configs/i386_SF_3G_tablet_defconfig b/arch/x86/configs/i386_SF_3G_tablet_defconfig
+index e9a1a01..83a1f04 100644
+--- a/arch/x86/configs/i386_SF_3G_tablet_defconfig
++++ b/arch/x86/configs/i386_SF_3G_tablet_defconfig
+@@ -1974,12 +1974,14 @@ CONFIG_MEDIA_TUNER_MC44S803=y
+ CONFIG_MALI400=y
+ # CONFIG_MALI450 is not set
+ # CONFIG_MALI400_DEBUG is not set
+-# CONFIG_MALI400_PROFILING is not set
++CONFIG_MALI400_PROFILING=y
++# CONFIG_MALI400_INTERNAL_PROFILING is not set
+ # CONFIG_MALI400_UMP is not set
+-# CONFIG_MALI400_POWER_PERFORMANCE_POLICY is not set
++CONFIG_MALI_DVFS=y
+ CONFIG_MALI_DMA_BUF_MAP_ON_ATTACH=y
+ CONFIG_MALI_SHARED_INTERRUPTS=y
+ # CONFIG_MALI_PMU_PARALLEL_POWER_UP is not set
++CONFIG_MALI_DT=y
+ # CONFIG_MALI_QUIET is not set
+ # CONFIG_VGASTATE is not set
+ # CONFIG_VIDEO_OUTPUT_CONTROL is not set
+@@ -2747,6 +2749,9 @@ CONFIG_RESET_CONTROLLER=y
+ # OCT config
+ #
+ CONFIG_OCT=y
++# CONFIG_GATOR is not set
++# CONFIG_GATOR_MALI_4XXMP is not set
++# CONFIG_GATOR_MALI_MIDGARD is not set
+ 
+ #
+ # Firmware Drivers
+diff --git a/arch/x86/configs/i386_sofia_defconfig b/arch/x86/configs/i386_sofia_defconfig
+index d50e0d8..f5ba0c7 100755
+--- a/arch/x86/configs/i386_sofia_defconfig
++++ b/arch/x86/configs/i386_sofia_defconfig
+@@ -2098,12 +2098,14 @@ CONFIG_MEDIA_TUNER_MC44S803=y
+ CONFIG_MALI400=y
+ # CONFIG_MALI450 is not set
+ # CONFIG_MALI400_DEBUG is not set
+-# CONFIG_MALI400_PROFILING is not set
++CONFIG_MALI400_PROFILING=y
++# CONFIG_MALI400_INTERNAL_PROFILING is not set
+ # CONFIG_MALI400_UMP is not set
+-# CONFIG_MALI400_POWER_PERFORMANCE_POLICY is not set
++CONFIG_MALI_DVFS=y
+ CONFIG_MALI_DMA_BUF_MAP_ON_ATTACH=y
+ CONFIG_MALI_SHARED_INTERRUPTS=y
+ # CONFIG_MALI_PMU_PARALLEL_POWER_UP is not set
++CONFIG_MALI_DT=y
+ # CONFIG_MALI_QUIET is not set
+ # CONFIG_VGASTATE is not set
+ # CONFIG_VIDEO_OUTPUT_CONTROL is not set
+@@ -3033,6 +3035,8 @@ CONFIG_RESET_CONTROLLER=y
+ #
+ CONFIG_OCT=y
+ # CONFIG_GATOR is not set
++# CONFIG_GATOR_MALI_4XXMP is not set
++# CONFIG_GATOR_MALI_MIDGARD is not set
+ 
+ #
+ # Firmware Drivers
+-- 
+1.7.9.5
+

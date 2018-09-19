@@ -1,0 +1,126 @@
+diff --git a/framework/common/tcuApp.cpp b/framework/common/tcuApp.cpp
+index a16e45e..1c27026 100644
+--- a/framework/common/tcuApp.cpp
++++ b/framework/common/tcuApp.cpp
+@@ -53,7 +53,7 @@ App::App (Platform& platform, Archive& archive, TestLog& log, const CommandLine&
+ 	, m_testExecutor	(DE_NULL)
+ {
+ 	print("dEQP Core %s (0x%08x) starting..\n", qpGetReleaseName(), qpGetReleaseId());
+-	print("  target implementation = '%s'\n", qpGetTargetName());
++	print("  target implementation xxxxxxxxxx = '%s'\n", qpGetTargetName());
+ 
+ 	if (!deSetRoundingMode(DE_ROUNDINGMODE_TO_NEAREST))
+ 		qpPrintf("WARNING: Failed to set floating-point rounding mode!\n");
+diff --git a/modules/egl/teglChooseConfigTests.cpp b/modules/egl/teglChooseConfigTests.cpp
+index 69fc87c..68b11bc 100644
+--- a/modules/egl/teglChooseConfigTests.cpp
++++ b/modules/egl/teglChooseConfigTests.cpp
+@@ -178,14 +178,28 @@ protected:
+ 		std::vector<EGLConfig>	resultConfigs;
+ 		std::vector<EGLConfig>	referenceConfigs;
+ 
++                EGLint mynumConfigs = 0;
++                EGLint myattr[] = { EGL_CONFIG_ID, 0, EGL_NONE };
++                EGLConfig myconfig;
++                for (int i = 0; i < 26; i++) {
++                    myattr[1] = (EGLint)i;
++                    EGLU_CHECK_CALL(egl, chooseConfig(m_display, myattr, &myconfig, 1, &mynumConfigs));
++                    log << TestLog::Message << "a, m_display =" << m_display << ", i=" << i << ", mynumConfigs:" << mynumConfigs << TestLog::EndMessage;
++                }
++
+ 		// Query from EGL implementation
+ 		{
+ 			EGLint numConfigs = 0;
+-			EGLU_CHECK_CALL(egl, chooseConfig(m_display, &attribList[0], DE_NULL, 0, &numConfigs));
++			EGLU_CHECK_CALL(egl, chooseConfig(m_display, &attribList[0], DE_NULL, 1, &numConfigs));
+ 			resultConfigs.resize(numConfigs);
+ 
++                        log << TestLog::Message << "xxxx1 numConfigs:" << numConfigs << TestLog::EndMessage;
+ 			if (numConfigs > 0)
+ 				EGLU_CHECK_CALL(egl, chooseConfig(m_display, &attribList[0], &resultConfigs[0], (EGLint)resultConfigs.size(), &numConfigs));
++
++                        log << TestLog::Message << "xxxx2 numConfigs:" << numConfigs << TestLog::EndMessage;
++
++
+ 		}
+ 
+ 		// Build reference
+@@ -199,14 +213,14 @@ protected:
+ 		bool isMatch		= isSetMatch && (checkOrder ? isExactMatch : true);
+ 
+ 		if (isMatch)
+-			log << TestLog::Message << "Pass" << TestLog::EndMessage;
++			log << TestLog::Message << "Passxxxxxxx" << TestLog::EndMessage;
+ 		else if (!isSetMatch)
+ 			log << TestLog::Message << "Fail, configs don't match" << TestLog::EndMessage;
+ 		else if (!isExactMatch)
+ 			log << TestLog::Message << "Fail, got correct configs but in invalid order" << TestLog::EndMessage;
+ 
+ 		if (!isMatch)
+-			m_testCtx.setTestResult(QP_TEST_RESULT_FAIL, "Fail");
++			m_testCtx.setTestResult(QP_TEST_RESULT_FAIL, "Failxxxx");
+ 	}
+ 
+ 	void fillDontCare (std::vector<std::pair<EGLenum, EGLint> >& attributes)
+@@ -291,7 +305,15 @@ protected:
+ 		{
+ 			de::Random rnd(0);
+ 			vector<EGLConfig> configs = eglu::getConfigs(m_eglTestCtx.getLibrary(), m_display);
+-			return eglu::getConfigID(m_eglTestCtx.getLibrary(), m_display, configs[rnd.getInt(0, (int)configs.size()-1)]);
++                        //int tmp = (int)rnd.getInt(0, (int)configs.size()-1);
++                        int tmp = 4;
++			int num = (int)eglu::getConfigID(m_eglTestCtx.getLibrary(), m_display, configs[tmp]);
++                        TestLog& log = m_testCtx.getLog();
++                        log << TestLog::Message << "m_display:" << m_display << ", xxxxxx configs.size(): " << (int)configs.size() <<
++                            " tmp:" << tmp << " << num:" << num << TestLog::EndMessage;
++			//return eglu::getConfigID(m_eglTestCtx.getLibrary(), m_display, configs[rnd.getInt(0, (int)configs.size()-1)]);
++			//return eglu::getConfigID(m_eglTestCtx.getLibrary(), m_display, configs[tmp]);
++			return (EGLint)num;
+ 		}
+ 		else
+ 		{
+diff --git a/modules/gles2/functional/es2fTextureWrapTests.cpp b/modules/gles2/functional/es2fTextureWrapTests.cpp
+index 40ad350..78d9b14 100644
+--- a/modules/gles2/functional/es2fTextureWrapTests.cpp
++++ b/modules/gles2/functional/es2fTextureWrapTests.cpp
+@@ -29,7 +29,9 @@
+ #include "gluPixelTransfer.hpp"
+ #include "tcuTestLog.hpp"
+ #include "tcuTextureUtil.hpp"
++#include "tcuImageIO.hpp"
+ 
++#include "glw.h"
+ #include "glwEnums.hpp"
+ #include "glwFunctions.hpp"
+ 
+@@ -194,8 +196,7 @@ TextureWrapCase::IterateResult TextureWrapCase::iterate (void)
+ 		computeQuadTexCoord2D(texCoord, tcu::Vec2(-1.5f, -3.0f), tcu::Vec2(1.5f, 2.5f));
+ 
+ 		m_renderer.renderQuad(0, &texCoord[0], refParams);
+-		glu::readPixels(m_renderCtx, viewport.x, viewport.y, renderedFrame.getAccess());
+-
++		//glu::readPixels(m_renderCtx, viewport.x, viewport.y, renderedFrame.getAccess());
+ 		sampleTexture(SurfaceAccess(referenceFrame, m_renderCtx.getRenderTarget().getPixelFormat(), 0, 0, leftWidth, viewport.height),
+ 					  m_texture->getRefTexture(), &texCoord[0], refParams);
+ 	}
+@@ -217,7 +218,19 @@ TextureWrapCase::IterateResult TextureWrapCase::iterate (void)
+ 	bool isOk = compareImages(log, referenceFrame, renderedFrame, threshold);
+ 
+ 	m_testCtx.setTestResult(isOk ? QP_TEST_RESULT_PASS	: QP_TEST_RESULT_FAIL,
+-							isOk ? "Pass"				: "Image comparison failed");
++							isOk ? "Pass xxx8"				: "Image comparison failed xxx8");
++#if 1
++        static int count = 0;
++        char ref_buf[64];
++        char ren_buf[64];
++        if (!isOk) {
++            count++;
++            snprintf(ref_buf, 64, "%s%d.png", "/sdcard/deqp1/refer", count);
++            snprintf(ren_buf, 64, "%s%d.png", "/sdcard/deqp1/render", count);
++            tcu::ImageIO::savePNG(referenceFrame.getAccess(), ref_buf);
++            tcu::ImageIO::savePNG(renderedFrame.getAccess(), ren_buf);
++        }
++#endif
+ 
+ 	return STOP;
+ }

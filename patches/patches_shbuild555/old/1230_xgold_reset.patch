@@ -1,0 +1,228 @@
+diff --git a/drivers/misc/noc/noc.c b/drivers/misc/noc/noc.c
+index 185b86a..e3e8208 100644
+--- a/drivers/misc/noc/noc.c
++++ b/drivers/misc/noc/noc.c
+@@ -1291,17 +1291,30 @@ void xgold_noc_qos_set(const char *name)
+ 	struct dev_qos_cfg *qos;
+ 	struct regcfg *reg;
+ 	int idev = 0;
++	unsigned old_value;
+ 	for (idev = 0; idev < 2; idev++) {
+ 		struct xgold_noc_device *noc_dev =
+ 					noc_dev_glob[idev];
+ 
+-		if ((!noc_dev) || (!noc_dev->qos))
++		if ((!noc_dev) || (!noc_dev->qos)) {
++			if (!noc_dev)
++				pr_err("looong: dcc: No noc dev, failed for %s\n", name);
++			else if (!noc_dev->qos)
++				pr_err("looong: dcc: No noc dev qos, failed for %s\n", name);
+ 			return;
++		}
+ 
+ 		list_for_each_entry(qos, &noc_dev->qos->list, list) {
+ 
+ 			if (strcmp(qos->name, name) == 0) {
+ 				if (qos->config) {
++					list_for_each_entry(reg, &qos->config->list, list) {
++						old_value = ioread32(noc_dev->hw_base + reg->offset);
++						pr_err("looong: dcc: name:%s old_value=0x%x, new_value=0x%x, offset=0x%x\n",
++								name, old_value, reg->value, reg->offset);
++					}
++				}
++				if (qos->config) {
+ 					pr_debug("Set QoS config %s\n",
+ 							qos->name);
+ 					list_for_each_entry(reg,
+@@ -1316,7 +1329,7 @@ void xgold_noc_qos_set(const char *name)
+ 			}
+ 		}
+ 	}
+-	pr_debug("QoS config %s not found\n", name);
++	pr_err("QoS config %s not found\n", name);
+ }
+ EXPORT_SYMBOL(xgold_noc_qos_set);
+ 
+@@ -1324,15 +1337,17 @@ static void noc_device_qos_set(struct xgold_noc_device *noc_device)
+ {
+ 	struct dev_qos_cfg *qos;
+ 	if (!noc_device) {
+-		pr_err("%s NULL noc device\n", __func__);
++		pr_err("loooong: dcc: %s NULL noc device\n", __func__);
+ 		return;
+ 	}
+-	if (!noc_device->qos)
++	if (!noc_device->qos) {
++		pr_err("loooong: dcc: failed at %s\n", __func__);
+ 		return;
++	}
+ 
+ 	list_for_each_entry(qos, &noc_device->qos->list, list) {
+ 		if (qos->noc_owner) {
+-			pr_debug("noc: Set default QoS config %s\n",
++			pr_err("loooong: dcc: noc: Set default QoS config %s\n",
+ 					qos->name);
+ 			xgold_noc_qos_set(qos->name);
+ 		}
+diff --git a/drivers/video/xgold/dcc-core.c b/drivers/video/xgold/dcc-core.c
+index 6cec756..21c5832 100644
+--- a/drivers/video/xgold/dcc-core.c
++++ b/drivers/video/xgold/dcc-core.c
+@@ -412,6 +412,36 @@ int dcc_core_resume(struct platform_device *pdev)
+ 
+ 	return ret;
+ }
++
++void my_dcc_reset(struct dcc_drvdata *pdata)
++{
++	dcc_err("looooooog: my_dcc_reset 2\n");
++#if 0
++	/* suspend */
++	ret = dcc_display_suspend(pdata);
++	if (ret != 0)
++		dcc_err("Error during display suspend\n");
++	ret = dcc_core_hwstop(pdata);
++
++	/* resume */
++	dcc_core_hwstart(pdata);
++	gra_write_field(pdata, EXR_DIF_RUNCTRL, DCC_MODE_RUN);
++	//xgold_noc_qos_set("DCC2");
++	gra_write_field(pdata, EXR_DIF_RUNCTRL, DCC_MODE_CONF);
++
++	ret = dcc_interrupt_setup(pdata);
++	if (ret != 0)
++		dcc_err("Error during Interrupt initialization\n");
++
++	ret = dcc_display_setup(pdata);
++	if (ret != 0)
++		dcc_err("Error during display resume\n");
++
++	dcc_core_hwsetup(pdata);
++#endif
++	xgold_noc_qos_set("DCC2");
++}
++
+ #endif /* CONFIG_PM */
+ 
+ long long dcc_timeval_diff(struct timeval *difference,
+diff --git a/drivers/video/xgold/dcc-core.h b/drivers/video/xgold/dcc-core.h
+index 83d24d2..857d06e 100644
+--- a/drivers/video/xgold/dcc-core.h
++++ b/drivers/video/xgold/dcc-core.h
+@@ -344,6 +344,7 @@ int dcc_core_remove(struct platform_device *pdev);
+ #ifdef CONFIG_PM
+ int dcc_core_suspend(struct platform_device *pdev);
+ int dcc_core_resume(struct platform_device *pdev);
++void my_dcc_reset(struct dcc_drvdata *pdata);
+ #endif /* CONFIG_PM */
+ 
+ int dcc_hal_probe(struct dcc_drvdata *pdata);
+diff --git a/drivers/video/xgold/dcc-dif-mipi-dsi.c b/drivers/video/xgold/dcc-dif-mipi-dsi.c
+index 46a48c9..192c14b 100644
+--- a/drivers/video/xgold/dcc-dif-mipi-dsi.c
++++ b/drivers/video/xgold/dcc-dif-mipi-dsi.c
+@@ -631,15 +631,29 @@ void dcc_dsi_start_video(struct dcc_display *lcd)
+ 	struct dcc_drvdata *pdata = m_to_dccdata(lcd, display);
+ 	struct dcc_display_if_mipi_dsi *dif =
+ 					&lcd->dif.u.dsi;
++	struct device *dev = pdata->dev;
++	struct platform_device *pdev =
++		container_of(dev, struct platform_device, dev);
++	int ret = 0;
++	static unsigned int save;
++
+ 	if (lcd->dif.u.dsi.mode != DSI_VIDEO) {
+ 		dcc_err("not video mode\n");
+ 		return;
+ 	}
+-	if (SMS05120496_once) {/* TEMP PATCH SMS05120496 */
++	if (SMS05120496_once == 1) {/* TEMP PATCH SMS05120496 */
++		gra_read_field(pdata, INR_DIF_DSICFG, &save);
+ 		unsigned int dsicfg =
+ 			DSI_CFG_TX_HS_PIXEL(dif->nblanes, dif->mode);
+ 		gra_write_field(pdata, INR_DIF_DSICFG, dsicfg);
+-		SMS05120496_once--;
++		SMS05120496_once = 2;
++		dcc_err("loooong: %s: video mode save = 0x%x, new=0x%x\n",
++				__func__,
++				save, dsicfg);
++	} else if (SMS05120496_once == 2) {
++		//my_dcc_reset(pdata);
++		//gra_write_field(pdata, INR_DIF_DSICFG, save);
++		SMS05120496_once = 0;
+ 	}
+ }
+ 
+@@ -955,6 +969,7 @@ static int dcc_dsi_config(struct dcc_display *lcd, int type)
+ 			dcc_dsi_configure_video_mode(lcd,
+ 					(dcc_get_display_w(pdata) * 3),
+ 					dcc_get_display_h(pdata));
++			dcc_err("looooong: %s VIDEO MODE\n", __func__);
+ 		}
+ 
+ 		lcd->set_rate(lcd, lcd->dif.u.dsi.brdef);
+diff --git a/drivers/video/xgold/dcc-main.c b/drivers/video/xgold/dcc-main.c
+index cd5df80..8ebf4a2 100644
+--- a/drivers/video/xgold/dcc-main.c
++++ b/drivers/video/xgold/dcc-main.c
+@@ -38,6 +38,7 @@
+ #if defined(CONFIG_PM_SLEEP) || defined(CONFIG_PM_RUNTIME)
+ #include <linux/pm_runtime.h>
+ #endif
++#include <linux/xgold_noc.h>
+ 
+ #include "dcc-core.h"
+ #include "dcc-gra.h"
+@@ -640,6 +641,9 @@ static int dcc_close(struct inode *inode, struct file *file)
+ 	return 0;
+ }
+ 
++static int dcc_main_suspend(struct device *dev);
++static int dcc_main_resume(struct device *dev);
++
+ /*
+  * Ioctl function implementation.
+  */
+@@ -804,6 +808,8 @@ long dcc_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+ 		for (ovl_id = 0; ovl_id < DCC_OVERLAY_NUM; ovl_id++)
+ 			updt.ovls[ovl_id].fence_release = -1;
+ 
++		if (pdata->timeline_current == 0)
++			xgold_noc_qos_set("DCC2");
+ 		if (err == 0) {
+ #ifdef CONFIG_SW_SYNC_USER
+ 			if (pdata->use_fences) {
+@@ -871,9 +877,6 @@ const struct file_operations dcc_ops = {
+ };
+ 
+ 
+-static int dcc_main_suspend(struct device *dev);
+-static int dcc_main_resume(struct device *dev);
+-
+ int dcc_main_probe(struct platform_device *pdev)
+ {
+ 	int ret = 0;
+@@ -991,6 +994,7 @@ int dcc_main_probe(struct platform_device *pdev)
+ 	/* disable boot debug messages */
+ 	pdata->debug.boot = 0;
+ 	pdata->drv_state = DRV_DCC_ENABLED;
++
+ 	return 0;
+ 
+ exit:
+@@ -1036,6 +1040,7 @@ static int dcc_main_suspend(struct device *dev)
+ 	struct platform_device *pdev =
+ 		container_of(dev, struct platform_device, dev);
+ 
++	dcc_err("loooooong: %s\n", __func__);
+ 	pdata = (struct dcc_drvdata *)platform_get_drvdata(pdev);
+ 	if (!pdata)
+ 		return -1;
+@@ -1083,6 +1088,7 @@ static int dcc_main_resume(struct device *dev)
+ 	struct platform_device *pdev =
+ 		container_of(dev, struct platform_device, dev);
+ 
++	dcc_err("loooooong: %s\n", __func__);
+ 	pdata = (struct dcc_drvdata *)platform_get_drvdata(pdev);
+ 	if (!pdata)
+ 		return -1;

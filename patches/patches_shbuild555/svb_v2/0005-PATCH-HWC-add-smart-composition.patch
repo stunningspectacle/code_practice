@@ -1,0 +1,114 @@
+From ee6679cfb65cba0605e03223554db8f8eef3614c Mon Sep 17 00:00:00 2001
+From: Lei Zhang <lei.zhang@intel.com>
+Date: Tue, 2 Dec 2014 13:50:16 +0800
+Subject: [PATCH 5/8] [PATCH] HWC: add smart composition
+
+BZ:263
+
+This is the patch to add smart composition.
+
+Change-Id: Id66ff21c6b007b1b09755a70ed32d23442433d20
+Signed-off-by: Lei Zhang <lei.zhang@intel.com>
+---
+ libhwcomposer/dcc-hal.h      |    3 ++-
+ libhwcomposer/hwcomposer.cpp |   40 ++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 40 insertions(+), 3 deletions(-)
+
+diff --git a/libhwcomposer/dcc-hal.h b/libhwcomposer/dcc-hal.h
+index 5002d2e..5146a63 100644
+--- a/libhwcomposer/dcc-hal.h
++++ b/libhwcomposer/dcc-hal.h
+@@ -39,7 +39,8 @@ struct dcc_hal_attr_t {
+ extern "C" {
+ #endif
+ 
+-#define HWC_OVERLAY_NUM 2
++/* TODO: support dynamical layer count */
++#define HWC_MAX_LAYER_NUM 10
+ #define HWC_OVERLAY_INVALID HWC_OVERLAY_NUM
+ 
+ int  dcc_hal_init(void);
+diff --git a/libhwcomposer/hwcomposer.cpp b/libhwcomposer/hwcomposer.cpp
+index 97f8d3d..e7dfcf0 100644
+--- a/libhwcomposer/hwcomposer.cpp
++++ b/libhwcomposer/hwcomposer.cpp
+@@ -234,7 +234,8 @@ public:
+         fbt_enabled(true),
+         back(0),
+         backIndex(0),
+-        overlay_count(0) {
++        overlay_count(0),
++        fb_count(0) {
+         for (size_t i = 0; i < HWC_OVERLAY_NUM; i++)
+             overrides[i] = 0;
+     }
+@@ -255,11 +256,17 @@ public:
+     hwc_layer_1_t* overrides[HWC_OVERLAY_NUM];
+     size_t         overlayIndexes[HWC_OVERLAY_NUM];
+ 
++    size_t  fb_count;
++    hwc_layer_1_t* fbLayers[HWC_MAX_LAYER_NUM];
++    buffer_handle_t fbLastHandle[HWC_MAX_LAYER_NUM];
++
+     static const char *DEFAULT_CONFIGURATOR_NAME;
+ 
+     void reset(hwc_display_contents_1_t* display) {
+         configuratorName = DEFAULT_CONFIGURATOR_NAME;
+         overlay_count = 0;
++        fb_count = 0;
++        memset(fbLastHandle, 0, HWC_MAX_LAYER_NUM*sizeof(buffer_handle_t));
+         fbt_enabled = false;
+         ppLayerIndex = HWC_OVERLAY_INVALID;
+         // find the composition target buffer
+@@ -688,11 +695,38 @@ public:
+         // and mark as FrameBuffer the rest (except for the FBT, of course)
+         for (i = 0; i < display->numHwLayers; i++) {
+             if (display->hwLayers[i].compositionType != HWC_FRAMEBUFFER_TARGET
+-                    && display->hwLayers[i].compositionType != HWC_OVERLAY)
++                    && display->hwLayers[i].compositionType != HWC_OVERLAY) {
+                 display->hwLayers[i].compositionType = HWC_FRAMEBUFFER;
++
++                conf.fbLayers[conf.fb_count] = &display->hwLayers[i];
++                conf.fb_count++;
++            }
+         }
+     }
+ 
++    void setupSmartComposition() {
++         int compositionType = HWC_OVERLAY;
++
++         // setup smart composition only there's no update on all FB layers
++         for (size_t i = 0; i < conf.fb_count; i++) {
++             buffer_handle_t lastHandle = conf.fbLastHandle[i];
++             buffer_handle_t currentHandle = conf.fbLayers[i]->handle;
++
++             if (lastHandle != currentHandle) {
++                 conf.fbLastHandle[i] = currentHandle;
++                 compositionType = HWC_FRAMEBUFFER;
++             }
++         }
++
++         ALOGV("smart composition enabled %s",
++                (compositionType == HWC_OVERLAY) ? "TRUE" : "FALSE");
++
++         // reset compositionType per SmartComposition
++         for (size_t i = 0; i < conf.fb_count; i++) {
++             conf.fbLayers[i]->compositionType = compositionType;
++         }
++    }
++
+     /**
+      * Render the current configuration to the display using DCC.
+      */
+@@ -945,6 +979,8 @@ static int hwc_prepare(hwc_composer_device_1_t *dev,
+     if (displays[0]->flags & HWC_GEOMETRY_CHANGED) {
+         ctxt->dcc_updater.configure(displays[0]);
+         ctxt->dcc_updater.apply(displays[0]);
++    } else {
++        ctxt->dcc_updater.setupSmartComposition();
+     }
+ 
+     return 0;
+-- 
+1.7.9.5
+

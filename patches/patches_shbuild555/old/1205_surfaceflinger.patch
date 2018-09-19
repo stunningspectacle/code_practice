@@ -1,0 +1,26 @@
+diff --git a/services/surfaceflinger/SurfaceFlinger.cpp b/services/surfaceflinger/SurfaceFlinger.cpp
+index cf9270d..58c9131 100755
+--- a/services/surfaceflinger/SurfaceFlinger.cpp
++++ b/services/surfaceflinger/SurfaceFlinger.cpp
+@@ -284,9 +284,11 @@ sp<IGraphicBufferAlloc> SurfaceFlinger::createGraphicBufferAlloc()
+ 
+ void SurfaceFlinger::bootFinished()
+ {
++    const nsecs_t finish = systemTime(CLOCK_MONOTONIC);
+     const nsecs_t now = systemTime();
+     const nsecs_t duration = now - mBootTime;
+-    ALOGI("Boot is finished (%ld ms)", long(ns2ms(duration)) );
++    ALOGE("looooong: Boot is finished (%ld ms)", long(ns2ms(duration)) );
++    ALOGE("looooong: Boot is finished at (%ld ms)", long(ns2ms(finish)) );
+     mBootFinished = true;
+ 
+     // wait patiently for the window manager death
+@@ -2085,6 +2087,8 @@ status_t SurfaceFlinger::createLayer(
+             result = BAD_VALUE;
+             break;
+     }
++    ALOGE("loooooooooog: createLayer() name=%s, w=%d, h=%d, format=0x%x, flags=%d",
++            name.string(), w, h, format, flags);
+ 
+     if (result == NO_ERROR) {
+         addClientLayer(client, *handle, *gbp, layer);

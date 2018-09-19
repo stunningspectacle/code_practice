@@ -1,0 +1,15 @@
+diff --git a/ctp_pr0/AccelSensor.cpp b/ctp_pr0/AccelSensor.cpp
+index 3839064..2e7cd4b 100644
+--- a/ctp_pr0/AccelSensor.cpp
++++ b/ctp_pr0/AccelSensor.cpp
+@@ -139,6 +139,10 @@ int AccelSensor::readEvents(sensors_event_t* data, int count)
+                 mPendingEvent.data[2] = CONVERT_A_Z(value);
+         } else if (type == EV_SYN) {
+             mPendingEvent.timestamp = timevalToNano(event->time);
++
++			int64_t timestamp = getTimestamp();
++            LOGE("timevalToNano=%lld, getTimestamp=%lld\n",
++					mPendingEvent.timestamp, timestamp);
+             if (mEnabled) {
+                 *data++ = mPendingEvent;
+                 count--;

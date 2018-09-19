@@ -1,0 +1,99 @@
+diff --git a/sensors.cpp b/sensors.cpp
+index 1dbbf05..0dd932f 100644
+--- a/sensors.cpp
++++ b/sensors.cpp
+@@ -70,34 +70,34 @@ static const struct sensor_t sSensorList[] = {
+         { "LIS3DH 3-axis Accelerometer",
+           "STMicroelectronics",
+           1, SENSORS_ACCELERATION_HANDLE,
+-          SENSOR_TYPE_ACCELEROMETER, RANGE_A, CONVERT_A, 0.006f, 10000, { } },
++          SENSOR_TYPE_ACCELEROMETER, RANGE_A, RESOLUTION_A, 0.011f, 10000, { } },
+         { "Honeywell 3-axis Magnetic field sensor",
+           "Honeywell Microdevices",
+           1, SENSORS_MAGNETIC_FIELD_HANDLE,
+-          SENSOR_TYPE_MAGNETIC_FIELD, 800.0f, CONVERT_M, 0.1f, 20000, { } },
++          SENSOR_TYPE_MAGNETIC_FIELD, RANGE_M, RESOLUTION_M, 0.1f, 20000, { } },
+ #ifdef TARGET_MFLD_DV10
+ 	{ "LTR301ALS-01 Ambient Light Sensor",
+ 	  "Lite-on",
+ 	  1, SENSORS_LIGHT_HANDLE,
+-          SENSOR_TYPE_LIGHT, 50000.0f, 1.0f, 0.75f, 0, { } },
++          SENSOR_TYPE_LIGHT, RANGE_L, RESOLUTION_L, 0.3f, 0, { } },
+ #else
+         { "LTR-502ALS-01 Light sensor",
+           "Lite-on",
+           1, SENSORS_LIGHT_HANDLE,
+-          SENSOR_TYPE_LIGHT, 50000.0f, 1.0f, 0.35f, 0, { } },
++          SENSOR_TYPE_LIGHT, RANGE_L, RESOLUTION_L, 0.35f, 0, { } },
+         { "LTR-502ALS-01 Proximity sensor",
+           "Lite-on",
+           1, SENSORS_PROXIMITY_HANDLE,
+-          SENSOR_TYPE_PROXIMITY, 6.0f, 6.0f, 0.35f, 0, { } },
++          SENSOR_TYPE_PROXIMITY, RANGE_PROXIMITY, RESOLUTION_PROXIMITY, 0.35f, 0, { } },
+ #endif
+         { "MPU3050 Gyroscope sensor",
+           "InvenSense",
+           1, SENSORS_GYROSCOPE_HANDLE,
+-          SENSOR_TYPE_GYROSCOPE, RANGE_GYRO, CONVERT_GYRO, 6.1f, 10000, { } },
++          SENSOR_TYPE_GYROSCOPE, RANGE_GYRO, RESOLUTION_GYRO, 6.5f, 10000, { } },
+         { "Measurement MS5607-02BA Pressure sensor",
+           "Measurement",
+           1, SENSORS_PRESSURE_HANDLE,
+-          SENSOR_TYPE_PRESSURE, 1200, 0.024f, 0.001f, 50000, { } },
++          SENSOR_TYPE_PRESSURE, RANGE_PRESSURE, RESOLUTION_PRESSURE, 0.001f, 50000, { } },
+ };
+ 
+ 
+diff --git a/sensors.h b/sensors.h
+index 1d01560..8410a3a 100644
+--- a/sensors.h
++++ b/sensors.h
+@@ -122,12 +122,15 @@ static inline int64_t timespec_to_ns(const struct timespec *ts)
+ #define CONVERT_A_X(x)              (((float)x/1000) * GRAVITY)
+ #define CONVERT_A_Y(x)              (((float)x/1000) * GRAVITY)
+ #define CONVERT_A_Z(x)              (((float)x/1000) * GRAVITY)
++#define RESOLUTION_A                (GRAVITY_EARTH / 1000)
+ 
+ // conversion of magnetic data to uT units
+ #define CONVERT_M                   (0.5f)
+ #define CONVERT_M_X                 (-CONVERT_M)
+ #define CONVERT_M_Y                 (-CONVERT_M)
+ #define CONVERT_M_Z                 (-CONVERT_M)
++#define RESOLUTION_M                (0.15f)
++#define RANGE_M                     (250.0f)
+ 
+ /* conversion of orientation data to degree units */
+ #define CONVERT_O                   (1.0f/64.0f)
+@@ -137,7 +140,8 @@ static inline int64_t timespec_to_ns(const struct timespec *ts)
+ 
+ // conversion of gyro data to SI units (radian/sec)
+ #define RANGE_GYRO                  (2000.0f*(float)M_PI/180.0f)
+-#define CONVERT_GYRO                ((1.0f / 14.375f) * ((float)M_PI / 180.0f))
++#define CONVERT_GYRO                ((1.0f / 16.4) * ((float)M_PI / 180.0f))
++#define RESOLUTION_GYRO             ((1.0f / 16.4) * ((float)M_PI / 180.0f))
+ // Used by platform MFLD_DV10 due to mounting position/orientation of sensor
+ #ifdef TARGET_MFLD_DV10
+ #define CONVERT_GYRO_X              (CONVERT_GYRO)
+@@ -151,6 +155,22 @@ static inline int64_t timespec_to_ns(const struct timespec *ts)
+ 
+ #define SENSOR_STATE_MASK           (0x7FFF)
+ 
++/* conversion of light data to lux */
++#ifdef TARGET_MFLD_DV10
++#define RANGE_L                     (64000.0f)
++#define RESOLUTION_L                (1.0f)
++#else
++#define RANGE_L                     (100000.0f)
++#define RESOLUTION_L                (1.0f)
++#endif
++
++/* conversion of ps data to lux */
++#define RANGE_PROXIMITY             (6.0f)
++#define RESOLUTION_PROXIMITY        (6.0f)
++
++/* conversion of pressure data to lux */
++#define RANGE_PRESSURE              (1200.0f)
++#define RESOLUTION_PRESSURE         (0.024f)
+ /*****************************************************************************/
+ 
+ __END_DECLS

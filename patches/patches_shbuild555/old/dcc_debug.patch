@@ -1,0 +1,26 @@
+diff --git a/drivers/video/xgold/dcc-core.h b/drivers/video/xgold/dcc-core.h
+index 4d69f02..e212a7d 100644
+--- a/drivers/video/xgold/dcc-core.h
++++ b/drivers/video/xgold/dcc-core.h
+@@ -58,7 +58,7 @@
+ /**
+  * Debug
+  */
+-#define DCC_DEFAULT_DEBUG_LEVEL	1
++#define DCC_DEFAULT_DEBUG_LEVEL	2
+ 
+ #define dcc_info(fmt, arg...) \
+ { \
+diff --git a/drivers/video/xgold/dcc-dts.c b/drivers/video/xgold/dcc-dts.c
+index 1b9843c..f4622d1 100644
+--- a/drivers/video/xgold/dcc-dts.c
++++ b/drivers/video/xgold/dcc-dts.c
+@@ -333,7 +333,7 @@ int dcc_of_parse_graphics(struct platform_device *pdev,
+ 	/* debug */
+ 	ret = of_property_read_u32(ngraphics, "intel,dcc-debug-level",
+ 			&pdata->debug.level);
+-	if (ret < 0)
++	//if (ret < 0)
+ 		pdata->debug.level = DCC_DEFAULT_DEBUG_LEVEL;
+ 
+ 	/* tests */

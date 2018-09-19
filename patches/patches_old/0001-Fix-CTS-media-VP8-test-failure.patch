@@ -1,0 +1,58 @@
+From 6162f0428b5733a5b608287253be65ec12675cc6 Mon Sep 17 00:00:00 2001
+From: Huan Zheng <huan.zheng@intel.com>
+Date: Mon, 21 Dec 2015 09:14:01 +0800
+Subject: [PATCH] Fix CTS media VP8 test failure.
+
+Signed-off-by: Huan Zheng <huan.zheng@intel.com>
+---
+ driver/src/egl/egl_platform_android.cpp |   19 +++++++++++++++++--
+ 1 file changed, 17 insertions(+), 2 deletions(-)
+
+diff --git a/driver/src/egl/egl_platform_android.cpp b/driver/src/egl/egl_platform_android.cpp
+index 0d4713c..d9d64ad 100644
+--- a/driver/src/egl/egl_platform_android.cpp
++++ b/driver/src/egl/egl_platform_android.cpp
+@@ -662,7 +662,12 @@ void __egl_platform_cancel_buffers(egl_surface *surface, mali_bool cancel_frameb
+ 					mali_bool buffer_released = MALI_FALSE;
+ 					native_buf = MALI_REINTERPRET_CAST(android_native_buffer_t *)surface->buffer[i].data;
+ 
+-					if (MALI_FALSE == IS_FRAMEBUFFER(native_buf))
++					/* Add NULL pointer check to avoid crash */
++					if (NULL == native_buf->handle)
++					{
++						buffer_released = MALI_TRUE;
++					}
++					else if (MALI_FALSE == IS_FRAMEBUFFER(native_buf))
+ 					{
+ 						ADBG(2, "cancel UMP/dma_buf buffer at index %i buffer 0x%pn (flags: %i)\n", i, surface->buffer[i].data, surface->buffer[i].flags);
+ 						native_win->cancelBuffer(native_win, native_buf, -1);
+@@ -1674,8 +1679,15 @@ void __egl_platform_dequeue_buffer(egl_surface *surface)
+ 
+ 	buffer_index = __egl_platform_surface_get_buffer_index(surface, native_buf);
+ 
+-	if (buffer_index < 0)
++	if (buffer_index < 0 || native_buf->common.reserved[3] == NULL)
+ 	{
++		/* This buffer has same address as one buffer slot - reset the buffer slots to avoid confusion */
++		if (buffer_index >= 0)
++		{
++			buffer_index = -1;
++			need_reset = MALI_TRUE;
++		}
++
+ 		/* We got a buffer we have not seen before - reset the buffer slots if we're already full */
+ 		for (i = 0; i < surface->num_buffers; i++) if (surface->buffer[i].render_target == NULL)
+ 			{
+@@ -1754,6 +1766,9 @@ void __egl_platform_dequeue_buffer(egl_surface *surface)
+ #endif
+ 		surface->width = native_buf->width;
+ 		surface->height = native_buf->height;
++
++		/* Set a special value to reserved[3] to flag a native_buf is recorded or not. */
++		native_buf->common.reserved[3] = MALI_REINTERPRET_CAST(void *)0xdeadbeef;
+ 	}
+ 
+ 	MALI_SYSTRACE_VALUE(MALI_SYSTRACE_API_EGL_INTERNAL, "egl_buffer", buffer_index);
+-- 
+1.7.9.5
+

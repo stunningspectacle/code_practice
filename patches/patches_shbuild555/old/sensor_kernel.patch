@@ -1,0 +1,14 @@
+diff --git a/hwmon/psh_ia_common.c b/hwmon/psh_ia_common.c
+index 65160d5..671c848 100644
+--- a/hwmon/psh_ia_common.c
++++ b/hwmon/psh_ia_common.c
+@@ -341,7 +341,9 @@ ssize_t ia_start_control(struct device *dev,
+ 		}
+ 	}
+ 
++	psh_err("%s: 00000000000000000\n");
+ 	ret = ia_send_cmd(psh_ia_data, &cmd_user, token);
++	psh_err("%s: 11111111111111111\n");
+ 	if (ret)
+ 		return ret;
+ 	else

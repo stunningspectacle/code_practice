@@ -1,0 +1,112 @@
+diff --git a/sofia_3gr/graphics/source/surfaceflinger/DisplayHardware/HWComposer.cpp b/sofia_3gr/graphics/source/surfaceflinger/DisplayHardware/HWComposer.cpp
+index d233b0d..fa87bc1 100644
+--- a/sofia_3gr/graphics/source/surfaceflinger/DisplayHardware/HWComposer.cpp
++++ b/sofia_3gr/graphics/source/surfaceflinger/DisplayHardware/HWComposer.cpp
+@@ -579,6 +579,8 @@ status_t HWComposer::createWorkList(int32_t id, size_t numLayers) {
+                     + numLayers * sizeof(hwc_layer_1_t);
+             free(disp.list);
+             disp.list = (hwc_display_contents_1_t*)malloc(size);
++            if (disp.list == NULL)
++                return NO_MEMORY;
+             memset(disp.list, 0, size);
+             disp.capacity = numLayers;
+         }
+@@ -825,13 +827,13 @@ bool HWComposer::hasGlesComposition(int32_t id) const {
+ 
+ #ifdef ROCKCHIP_GPU_LIB_ENABLE
+ bool HWComposer::hasBlitComposition(int32_t id) const {
+-    if (!mHwc || uint32_t(id)>31 || !mAllocatedDisplayIDs.hasBit(id))
++    if (!mHwc || uint32_t(id)>2 || !mAllocatedDisplayIDs.hasBit(id))
+         return true;
+     return mDisplayData[id].hasBlitComp;
+ }
+ 
+ bool HWComposer::hasLcdComposition(int32_t id) const {
+-    if (uint32_t(id)>31 || !mAllocatedDisplayIDs.hasBit(id))
++    if (uint32_t(id)>2 || !mAllocatedDisplayIDs.hasBit(id))
+         return false;
+     return mDisplayData[id].haslcdComp;
+ }
+diff --git a/sofia_3gr/graphics/source/surfaceflinger/SurfaceFlinger.cpp b/sofia_3gr/graphics/source/surfaceflinger/SurfaceFlinger.cpp
+index 8ee0384..2aca6f1 100644
+--- a/sofia_3gr/graphics/source/surfaceflinger/SurfaceFlinger.cpp
++++ b/sofia_3gr/graphics/source/surfaceflinger/SurfaceFlinger.cpp
+@@ -1211,9 +1211,11 @@ void SurfaceFlinger::setUpHWComposer() {
+                         const HWComposer::LayerListIterator end = hwc.end(id);
+                         for (size_t i=0 ; cur!=end && i<count ; ++i, ++cur) {
+                             const sp<Layer>& layer(currentLayers[i]);
+-                            layer->setGeometry(hw, *cur);
+-                            if (mDebugDisableHWC || mDebugRegion || mDaltonize || mHasColorMatrix) {
+-                                cur->setSkip(true);
++                            HWComposer::HWCLayerInterface *curLayerInterface = &*cur;
++                            if (curLayerInterface) {
++                                layer->setGeometry(hw, *curLayerInterface);
++                                if (mDebugDisableHWC || mDebugRegion || mDaltonize || mHasColorMatrix)
++                                    curLayerInterface->setSkip(true);
+                             }
+                         }
+                     }
+@@ -1237,10 +1239,13 @@ void SurfaceFlinger::setUpHWComposer() {
+                      * and build the transparent region of the FB
+                      */
+                     const sp<Layer>& layer(currentLayers[i]);
++                    HWComposer::HWCLayerInterface *curLayerInterface = &*cur;
++                    if (curLayerInterface) {
+ #ifdef ROCKCHIP_GPU_LIB_ENABLE
+-                    layer->setAcquireFence(hw, *cur);
++                        layer->setAcquireFence(hw, *curLayerInterface);
+ #endif
+-                    layer->setPerFrameData(hw, *cur);
++                        layer->setPerFrameData(hw, *curLayerInterface);
++                    }
+                 }
+             }
+         }
+@@ -1258,7 +1263,9 @@ void SurfaceFlinger::setUpHWComposer() {
+                 for (size_t i=0 ; cur!=end && i<count ; ++i, ++cur) {
+                     const sp<Layer>& layer(currentLayers[i]);
+                     if (layer->isPotentialCursor()) {
+-                        cur->setIsCursorLayerHint();
++                        HWComposer::HWCLayerInterface *curLayerInterface = &*cur;
++                        if (curLayerInterface)
++                            curLayerInterface->setIsCursorLayerHint();
+                         break;
+                     }
+                 }
+@@ -2032,8 +2039,9 @@ bool SurfaceFlinger::doComposeSurfaces(const sp<const DisplayDevice>& hw, const
+         const bool haveBlit = hwc.hasBlitComposition(id);
+         const bool haveLcdc = hwc.hasLcdComposition(id);
+ 
+-        if (id == 1 && cur != end)
+-            ismixVH = cur->getCompositionType() == HWC_MIX_V2;
++        HWComposer::HWCLayerInterface *curLayerInterface = &*cur;
++        if (id == 1 && cur != end && curLayerInterface)
++            ismixVH = (curLayerInterface->getCompositionType() == HWC_MIX_V2);
+         if (bootcnt < 4) {
+             bootcnt++;
+             // do nothing, for kernel->android 3 frames black
+@@ -2114,7 +2122,9 @@ bool SurfaceFlinger::doComposeSurfaces(const sp<const DisplayDevice>& hw, const
+                     case HWC_CURSOR_OVERLAY:
+                     case HWC_OVERLAY: {
+                         const Layer::State& state(layer->getDrawingState());
+-                        if ((cur->getHints() & HWC_HINT_CLEAR_FB)
++                        HWComposer::HWCLayerInterface *curLayerInterface = &*cur;
++                        if (curLayerInterface
++                                && (curLayerInterface->getHints() & HWC_HINT_CLEAR_FB)
+                                 && i
+                                 && layer->isOpaque(state) && (state.alpha == 0xFF)
+                                 && hasGlesComposition) {
+@@ -3517,8 +3527,11 @@ void SurfaceFlinger::renderScreenImplLocked(
+         HWComposer::LayerListIterator end = hwc.end(id);
+         for (;cur!=end;++cur)
+         {
+-            hwc_layer_1_t* hwcLayer = cur->gethwcLayer();
+-            hwc.videoCopyBit(hwcLayer,0);//reset video
++            HWComposer::HWCLayerInterface *curLayerInterface = &*cur;
++            if (curLayerInterface) {
++                hwc_layer_1_t* hwcLayer = curLayerInterface->gethwcLayer();
++                hwc.videoCopyBit(hwcLayer,0);//reset video
++            }
+         }
+     }
+     hw->compositionComplete();

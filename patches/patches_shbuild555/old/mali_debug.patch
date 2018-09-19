@@ -1,0 +1,116 @@
+diff --git a/arch/x86/configs/i386_sofia_defconfig b/arch/x86/configs/i386_sofia_defconfig
+index 0b1a525..d4444f6 100644
+--- a/arch/x86/configs/i386_sofia_defconfig
++++ b/arch/x86/configs/i386_sofia_defconfig
+@@ -2120,7 +2120,7 @@ CONFIG_MEDIA_TUNER_MC44S803=y
+ #
+ CONFIG_MALI400=y
+ CONFIG_MALI450=y
+-# CONFIG_MALI400_DEBUG is not set
++CONFIG_MALI400_DEBUG=y
+ CONFIG_MALI400_PROFILING=y
+ # CONFIG_MALI400_INTERNAL_PROFILING is not set
+ # CONFIG_MALI400_UMP is not set
+diff --git a/drivers/gpu/arm/mali/linux/mali_kernel_linux.c b/drivers/gpu/arm/mali/linux/mali_kernel_linux.c
+index 28b533c..131e707 100644
+--- a/drivers/gpu/arm/mali/linux/mali_kernel_linux.c
++++ b/drivers/gpu/arm/mali/linux/mali_kernel_linux.c
+@@ -77,7 +77,7 @@ EXPORT_TRACEPOINT_SYMBOL_GPL(mali_sw_counters);
+ extern const char *__malidrv_build_info(void);
+ 
+ /* Module parameter to control log level */
+-int mali_debug_level = 1;
++int mali_debug_level = 2;
+ module_param(mali_debug_level, int, S_IRUSR | S_IWUSR | S_IWGRP | S_IRGRP | S_IROTH); /* rw-rw-r-- */
+ MODULE_PARM_DESC(mali_debug_level, "Higher number, more dmesg output");
+ 
+diff --git a/drivers/gpu/arm/mali/linux/mali_memory_os_alloc.c b/drivers/gpu/arm/mali/linux/mali_memory_os_alloc.c
+index 552edeb..b15f2bf 100644
+--- a/drivers/gpu/arm/mali/linux/mali_memory_os_alloc.c
++++ b/drivers/gpu/arm/mali/linux/mali_memory_os_alloc.c
+@@ -172,10 +172,12 @@ static int mali_mem_os_alloc_pages(mali_mem_allocation *descriptor, u32 size)
+ 		array_pages = kmalloc(sizeof(struct pages *) * remaining,
+ 				GFP_KERNEL);
+ 		if (array_pages == NULL) {
+-			pr_err("%s: kmalloc array_pages fail! pagecount=0x%x\n",
+-				__func__, page_count);
+-			pr_err("remaining=0x%x total_alloc_pages=0x%x\n",
+-				remaining, mali_os_alloc_pages);
++			pr_err("%s: kmalloc array_pages fail! pagecount=%d(0x%x)\n",
++				__func__, page_count, page_count);
++			pr_err("%s: remaining=%d total_alloc_pages=%d(0x%x)\n",
++					__func__, remaining,
++					mali_os_alloc_pages,
++					mali_os_alloc_pages);
+ 			/* SJ: return pages back to pool */
+ 			/* Calculate the number of pages actually allocated,
+ 			 * and free them. */
+@@ -208,10 +210,12 @@ static int mali_mem_os_alloc_pages(mali_mem_allocation *descriptor, u32 size)
+ 		new_page = alloc_page(flags);
+ 
+ 		if (unlikely(NULL == new_page)) {
+-			pr_err("%s: alloc_page failed. pagecount=0x%x\n",
+-				__func__, page_count);
+-			pr_err("remaining=0x%x total_alloc_pages=0x%x\n",
+-				remaining, mali_os_alloc_pages);
++			pr_err("%s: alloc_page failed. pagecount=%d(0x%x)\n",
++				__func__, page_count, page_count);
++			pr_err("%s: remaining=%d total_alloc_pages=%d(0x%x)\n",
++					__func__, remaining,
++					mali_os_alloc_pages,
++					mali_os_alloc_pages);
+ 			if (array_pages != NULL) {
+ 				/* prev alloc pages are added into pool in
+ 				 * mali_mem_os_free until after 10s delayed
+@@ -531,11 +535,14 @@ static int mali_mem_os_free_pages_list(struct list_head *pages_list)
+ 	if (array_pages != NULL) {
+ 		/* do 1 shot since we're able */
+ 		list_for_each_entry_safe(page, tmp, pages_list, lru)
+-		array_pages[i++] = page;
++			array_pages[i++] = page;
+ 		set_pages_array_wb(array_pages, nr_items);
+ 		kfree(array_pages);
+ 		i = 0;
++	} else {
++		MALI_PRINT_ERROR(("%s: fail to alloc array_pages in free func\n", __func__));
+ 	}
++
+ #endif
+ 
+ 	list_for_each_entry_safe(page, tmp, pages_list, lru) {
+diff --git a/drivers/gpu/arm/mali/platform/xgold/platform.c b/drivers/gpu/arm/mali/platform/xgold/platform.c
+index 9be2ee9..3a96a38 100644
+--- a/drivers/gpu/arm/mali/platform/xgold/platform.c
++++ b/drivers/gpu/arm/mali/platform/xgold/platform.c
+@@ -130,8 +130,10 @@ static void mali_dev_do_dvfs(struct work_struct *work)
+ 	}
+ 
+ 	mali_dev_pm.curr_pm_state = mali_dev_pm.req_clock_index + 1;
++	/*
+ 	mali_dbg("mali_gpu_set_clock_step(%d) DVFS \t-> Device pm set state to %d\n",
+ 		mali_dev_pm.req_clock_index, mali_dev_pm.curr_pm_state);
++	*/
+ 	mali_dev_pause();
+ 	ret = platform_device_pm_set_state(mali_dev_pm.pdev,
+ 		mali_dev_pm.pm_states[
+@@ -612,7 +614,9 @@ int mali_platform_runtime_suspend(struct platform_device *pdev)
+ {
+ 	int ret;
+ 
++	/*
+ 	mali_dbg("%s() \t-> Device pm set state to 0\n", __func__);
++	*/
+ 
+ 	if (mali_dev_pm.curr_pm_state == 0)
+ 		mali_warn("Already powered down!\n");
+@@ -634,8 +638,10 @@ int mali_platform_runtime_resume(struct platform_device *pdev)
+ {
+ 	int ret;
+ 
++	/*
+ 	mali_dbg("%s() \t-> Device pm set state to %d\n", __func__,
+ 		mali_dev_pm.resume_pm_state);
++	*/
+ 
+ 	if (mali_dev_pm.curr_pm_state > 0)
+ 		mali_warn("Already powered up at level %d!\n",

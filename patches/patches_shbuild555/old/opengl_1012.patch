@@ -1,0 +1,115 @@
+diff --git a/opengl/include/EGL/eglext.h b/opengl/include/EGL/eglext.h
+index 4ed2ba0..b70300a 100644
+--- a/opengl/include/EGL/eglext.h
++++ b/opengl/include/EGL/eglext.h
+@@ -292,6 +292,7 @@ typedef EGLImageKHR (EGLAPIENTRYP PFNEGLCREATEDRMIMAGEMESAPROC) (EGLDisplay dpy,
+ typedef EGLBoolean (EGLAPIENTRYP PFNEGLEXPORTDRMIMAGEMESAPROC) (EGLDisplay dpy, EGLImageKHR image, EGLint *name, EGLint *handle, EGLint *stride);
+ #endif
+ 
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+ #ifndef EGL_ANDROID_get_render_buffer
+ #define EGL_ANDROID_get_render_buffer 1
+ #ifdef EGL_EGLEXT_PROTOTYPES
+@@ -303,6 +304,7 @@ typedef EGLBoolean (EGLAPIENTRYP PFNEGLRENDERBUFFERMODIFYEDANDROIDPROC) (EGLDisp
+ #endif
+ EGLAPI void EGLAPIENTRY eglSetImplementationAndroid(EGLBoolean impl);
+ typedef void (EGLAPIENTRYP PFNEGLSETIMPLEMENTATIONANDROIDPROC) (EGLBoolean impl);
++#endif
+ 
+ #ifndef EGL_NV_post_sub_buffer
+ #define EGL_NV_post_sub_buffer 1
+diff --git a/opengl/libagl/Android.mk b/opengl/libagl/Android.mk
+index 4b08749..09f3257 100644
+--- a/opengl/libagl/Android.mk
++++ b/opengl/libagl/Android.mk
+@@ -26,6 +26,10 @@ LOCAL_CFLAGS += -DLOG_TAG=\"libagl\"
+ LOCAL_CFLAGS += -DGL_GLEXT_PROTOTYPES -DEGL_EGLEXT_PROTOTYPES
+ LOCAL_CFLAGS += -fvisibility=hidden
+ 
++ifeq ($(ROCKCHIP_GPU_LIB_ENABLE), true)
++       LOCAL_CFLAGS += -DROCKCHIP_GPU_LIB_ENABLE
++endif
++
+ LOCAL_SHARED_LIBRARIES := libcutils libhardware libutils liblog libpixelflinger libETC1 libui
+ 
+ LOCAL_SRC_FILES_arm += fixed_asm.S iterators.S
+diff --git a/opengl/libs/Android.mk b/opengl/libs/Android.mk
+index 18ad300..95ba1e9 100644
+--- a/opengl/libs/Android.mk
++++ b/opengl/libs/Android.mk
+@@ -44,6 +44,10 @@ LOCAL_CFLAGS += -DGL_GLEXT_PROTOTYPES -DEGL_EGLEXT_PROTOTYPES
+ LOCAL_CFLAGS += -fvisibility=hidden
+ LOCAL_CFLAGS += -DEGL_TRACE=1
+ 
++ifeq ($(ROCKCHIP_GPU_LIB_ENABLE), true)
++       LOCAL_CFLAGS += -DROCKCHIP_GPU_LIB_ENABLE
++endif
++
+ ifeq ($(BOARD_ALLOW_EGL_HIBERNATION),true)
+   LOCAL_CFLAGS += -DBOARD_ALLOW_EGL_HIBERNATION
+ endif
+diff --git a/opengl/libs/EGL/eglApi.cpp b/opengl/libs/EGL/eglApi.cpp
+index 2f2a4e4..30c6cac 100644
+--- a/opengl/libs/EGL/eglApi.cpp
++++ b/opengl/libs/EGL/eglApi.cpp
+@@ -144,12 +144,14 @@ static const extention_map_t sExtensionMap[] = {
+             (__eglMustCastToProperFunctionPointerType)&eglCreateSyncKHR },
+     { "eglDestroySyncKHR",
+             (__eglMustCastToProperFunctionPointerType)&eglDestroySyncKHR },
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+     { "eglGetRenderBufferANDROID",
+         (__eglMustCastToProperFunctionPointerType)&eglGetRenderBufferANDROID },
+     { "eglRenderBufferModifiedANDROID",
+             (__eglMustCastToProperFunctionPointerType)&eglRenderBufferModifiedANDROID },
+     { "eglSetImplementationAndroid",
+             (__eglMustCastToProperFunctionPointerType)&eglSetImplementationAndroid },
++#endif
+     { "eglClientWaitSyncKHR",
+             (__eglMustCastToProperFunctionPointerType)&eglClientWaitSyncKHR },
+     { "eglSignalSyncKHR",
+@@ -1791,6 +1793,7 @@ EGLint eglWaitSyncKHR(EGLDisplay dpy, EGLSyncKHR sync, EGLint flags) {
+ // ----------------------------------------------------------------------------
+ // ANDROID extensions
+ // ----------------------------------------------------------------------------
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+ EGLClientBuffer eglGetRenderBufferANDROID(EGLDisplay dpy, EGLSurface draw)
+ {
+     clearError();
+@@ -1818,6 +1821,7 @@ EGLBoolean eglRenderBufferModifiedANDROID(EGLDisplay dpy, EGLSurface draw){
+ void eglSetImplementationAndroid(EGLBoolean impl)
+ {
+ }
++#endif
+ 
+ EGLint eglDupNativeFenceFDANDROID(EGLDisplay dpy, EGLSyncKHR sync)
+ {
+diff --git a/opengl/libs/EGL/egl_entries.in b/opengl/libs/EGL/egl_entries.in
+index ae9e7be..0e12d3f 100644
+--- a/opengl/libs/EGL/egl_entries.in
++++ b/opengl/libs/EGL/egl_entries.in
+@@ -81,8 +81,11 @@ EGL_ENTRY(EGLBoolean, eglSetSwapRectangleANDROID, EGLDisplay, EGLSurface, EGLint
+ EGL_ENTRY(EGLClientBuffer, eglGetRenderBufferANDROID, EGLDisplay, EGLSurface)
+ EGL_ENTRY(EGLint, eglDupNativeFenceFDANDROID, EGLDisplay, EGLSyncKHR)
+ 
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+ /* Rockchip extensions */
+ EGL_ENTRY(EGLBoolean, eglRenderBufferModifiedANDROID, EGLDisplay, EGLSurface)
++#endif
++
+ /* NVIDIA extensions */
+ 
+ EGL_ENTRY(EGLuint64NV, eglGetSystemTimeFrequencyNV, void)
+diff --git a/opengl/libs/EGL/egldefs.h b/opengl/libs/EGL/egldefs.h
+index 9a062f5..eee178c 100644
+--- a/opengl/libs/EGL/egldefs.h
++++ b/opengl/libs/EGL/egldefs.h
+@@ -62,7 +62,9 @@ extern char const * const egl_names[];
+ 
+ extern egl_connection_t gEGLImpl;
+ 
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+ extern EGLBoolean gEGLImplSWOnly;
++#endif
+ // ----------------------------------------------------------------------------
+ }; // namespace android
+ // ----------------------------------------------------------------------------

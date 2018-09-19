@@ -1,0 +1,18 @@
+diff --git a/arch/x86/boot/dts/xgold/sofia_3g_soc/sofia_3g_soc.dtsi b/arch/x86/boot/dts/xgold/sofia_3g_soc/sofia_3g_soc.dtsi
+index 047fc29..140ebd3 100644
+--- a/arch/x86/boot/dts/xgold/sofia_3g_soc/sofia_3g_soc.dtsi
++++ b/arch/x86/boot/dts/xgold/sofia_3g_soc/sofia_3g_soc.dtsi
+@@ -84,8 +84,8 @@
+ 				intel,GPU-qos-settings = <
+ 					0x1C8C 0x1      /* GPU mode limiter */
+ 					0x1C88 0x0      /* GPU rw/wr prio 0/0 */
+-					0x1C90 0x120    /* GPU bandwidth 900MB/s */
+-					0x1C94 0x90     /* GPU saturation 400MB/s */
++					0x1C90 0x400    /* GPU bandwidth 900MB/s */
++					0x1C94 0x1EC     /* GPU saturation 400MB/s */
+ 					0x1C98 0x5>;    /* GPU QoSEn */
+ 
+ 				intel,DCC2-qos-settings = <
+-- 
+1.7.9.5
+

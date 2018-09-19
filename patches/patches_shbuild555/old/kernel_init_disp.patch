@@ -1,0 +1,13 @@
+diff --git a/arch/x86/boot/dts/SF_3GR-mrd6-p2.dts b/arch/x86/boot/dts/SF_3GR-mrd6-p2.dts
+index 96a94ee..d05fc84 100644
+--- a/arch/x86/boot/dts/SF_3GR-mrd6-p2.dts
++++ b/arch/x86/boot/dts/SF_3GR-mrd6-p2.dts
+@@ -128,7 +128,7 @@
+ 	fb {
+ 		compatible = "rockchip,fb";
+ 		rockchip,disp-mode = <NO_DUAL>;
+-		rockchip,loader-logo-on = <1>;
++		rockchip,loader-logo-on = <0>;
+ 		rockchip,ion-drv = "rockchip";
+ 	};
+ #ifdef SOFIA3GR_CATALOG_MRD6_DISPLAY

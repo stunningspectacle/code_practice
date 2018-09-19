@@ -1,0 +1,2125 @@
+diff --git a/opengl/include/EGL/eglext.h b/opengl/include/EGL/eglext.h
+index c8d7697..b70300a 100644
+--- a/opengl/include/EGL/eglext.h
++++ b/opengl/include/EGL/eglext.h
+@@ -292,6 +292,7 @@ typedef EGLImageKHR (EGLAPIENTRYP PFNEGLCREATEDRMIMAGEMESAPROC) (EGLDisplay dpy,
+ typedef EGLBoolean (EGLAPIENTRYP PFNEGLEXPORTDRMIMAGEMESAPROC) (EGLDisplay dpy, EGLImageKHR image, EGLint *name, EGLint *handle, EGLint *stride);
+ #endif
+ 
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+ #ifndef EGL_ANDROID_get_render_buffer
+ #define EGL_ANDROID_get_render_buffer 1
+ #ifdef EGL_EGLEXT_PROTOTYPES
+@@ -303,6 +304,8 @@ typedef EGLBoolean (EGLAPIENTRYP PFNEGLRENDERBUFFERMODIFYEDANDROIDPROC) (EGLDisp
+ #endif
+ EGLAPI void EGLAPIENTRY eglSetImplementationAndroid(EGLBoolean impl);
+ typedef void (EGLAPIENTRYP PFNEGLSETIMPLEMENTATIONANDROIDPROC) (EGLBoolean impl);
++#endif
++
+ #ifndef EGL_NV_post_sub_buffer
+ #define EGL_NV_post_sub_buffer 1
+ #define EGL_POST_SUB_BUFFER_SUPPORTED_NV	0x30BE
+diff --git a/opengl/libs/Android.mk b/opengl/libs/Android.mk
+index 036fe0d..a36fca0 100644
+--- a/opengl/libs/Android.mk
++++ b/opengl/libs/Android.mk
+@@ -33,7 +33,6 @@ LOCAL_SRC_FILES:= 	       \
+ #
+ 
+ LOCAL_SHARED_LIBRARIES += libcutils libutils liblog libGLES_trace
+-
+ LOCAL_MODULE:= libEGL
+ LOCAL_LDFLAGS += -Wl,--exclude-libs=ALL
+ LOCAL_SHARED_LIBRARIES += libdl
+@@ -60,9 +59,6 @@ ifneq ($(MAX_EGL_CACHE_SIZE),)
+   LOCAL_CFLAGS += -DMAX_EGL_CACHE_SIZE=$(MAX_EGL_CACHE_SIZE)
+ endif
+ 
+-ifeq ($(strip $(TARGET_BOARD_PLATFORM)),rk3288)
+-	LOCAL_CFLAGS += -DUSE_IN_RK3288
+-endif
+ LOCAL_REQUIRED_MODULES := $(egl.cfg_config_module)
+ egl.cfg_config_module :=
+ 
+diff --git a/opengl/libs/EGL/eglApi.cpp b/opengl/libs/EGL/eglApi.cpp
+index 3daf078..4226499 100644
+--- a/opengl/libs/EGL/eglApi.cpp
++++ b/opengl/libs/EGL/eglApi.cpp
+@@ -143,9 +143,9 @@ static const extention_map_t sExtensionMap[] = {
+     { "eglCreateSyncKHR",
+             (__eglMustCastToProperFunctionPointerType)&eglCreateSyncKHR },
+     { "eglDestroySyncKHR",
+-            (__eglMustCastToProperFunctionPointerType)&eglDestroySyncKHR },
+-	{ "eglGetRenderBufferANDROID",
+-            (__eglMustCastToProperFunctionPointerType)&eglGetRenderBufferANDROID }, 
++        (__eglMustCastToProperFunctionPointerType)&eglDestroySyncKHR },
++    { "eglGetRenderBufferANDROID",
++        (__eglMustCastToProperFunctionPointerType)&eglGetRenderBufferANDROID },
+     { "eglRenderBufferModifiedANDROID",
+             (__eglMustCastToProperFunctionPointerType)&eglRenderBufferModifiedANDROID },
+     { "eglSetImplementationAndroid",
+@@ -250,9 +250,6 @@ static inline void clearError() { egl_tls_t::clearError(); }
+ static inline EGLContext getContext() { return egl_tls_t::getContext(); }
+ 
+ // ----------------------------------------------------------------------------
+-#ifdef USE_IN_RK3288
+-static int gUnNeedSwap = 0;
+-#endif
+ 
+ EGLDisplay eglGetDisplay(EGLNativeDisplayType display)
+ {
+@@ -1090,12 +1087,6 @@ EGLBoolean eglSwapBuffersWithDamageKHR(EGLDisplay dpy, EGLSurface draw,
+     ATRACE_CALL();
+     clearError();
+ 
+-#ifdef USE_IN_RK3288
+-    if(gUnNeedSwap) {
+-        gUnNeedSwap = 0;
+-        return EGL_TRUE;
+-    }
+-#endif
+     const egl_display_ptr dp = validate_display(dpy);
+     if (!dp) return EGL_FALSE;
+ 
+@@ -1808,28 +1799,26 @@ EGLClientBuffer eglGetRenderBufferANDROID(EGLDisplay dpy, EGLSurface draw)
+     egl_surface_t const * const s = get_surface(draw);
+     if (s->cnx->egl.eglGetRenderBufferANDROID) {
+ 	        return s->cnx->egl.eglGetRenderBufferANDROID(
+-		                dp->disp.dpy, s->surface);		                  
++		                dp->disp.dpy, s->surface);
+ 	    }
+ 	    return setError(EGL_BAD_DISPLAY, (EGLClientBuffer*)0);
+ }
++
+ EGLBoolean eglRenderBufferModifiedANDROID(EGLDisplay dpy, EGLSurface draw){
+     clearError();
+-#ifdef USE_IN_RK3288
+-    gUnNeedSwap = 1;
+-#else
+     egl_display_ptr  const dp = get_display(dpy);
+     egl_surface_t const * const s = get_surface(draw);
+     if (s->cnx->egl.eglRenderBufferModifiedANDROID) {
+             return s->cnx->egl.eglRenderBufferModifiedANDROID(
+                         dp->disp.dpy, s->surface);
+     }
+-#endif
+     return EGL_TRUE;
+ }
++
+ void eglSetImplementationAndroid(EGLBoolean impl)
+ {
+-    
+ }
++
+ EGLint eglDupNativeFenceFDANDROID(EGLDisplay dpy, EGLSyncKHR sync)
+ { 
+     clearError();
+diff --git a/opengl/libs/EGL/egl_entries.in b/opengl/libs/EGL/egl_entries.in
+index 113f1b0..ae9e7be 100644
+--- a/opengl/libs/EGL/egl_entries.in
++++ b/opengl/libs/EGL/egl_entries.in
+@@ -81,6 +81,7 @@ EGL_ENTRY(EGLBoolean, eglSetSwapRectangleANDROID, EGLDisplay, EGLSurface, EGLint
+ EGL_ENTRY(EGLClientBuffer, eglGetRenderBufferANDROID, EGLDisplay, EGLSurface)
+ EGL_ENTRY(EGLint, eglDupNativeFenceFDANDROID, EGLDisplay, EGLSyncKHR)
+ 
++/* Rockchip extensions */
+ EGL_ENTRY(EGLBoolean, eglRenderBufferModifiedANDROID, EGLDisplay, EGLSurface)
+ /* NVIDIA extensions */
+ 
+diff --git a/opengl/libs/EGL/egldefs.h b/opengl/libs/EGL/egldefs.h
+index f807acf..9a062f5 100644
+--- a/opengl/libs/EGL/egldefs.h
++++ b/opengl/libs/EGL/egldefs.h
+@@ -61,6 +61,7 @@ extern char const * const gl_names[];
+ extern char const * const egl_names[];
+ 
+ extern egl_connection_t gEGLImpl;
++
+ extern EGLBoolean gEGLImplSWOnly;
+ // ----------------------------------------------------------------------------
+ }; // namespace android
+diff --git a/services/surfaceflinger/Android.mk b/services/surfaceflinger/Android.mk
+index f67b919..4d9bbd0 100644
+--- a/services/surfaceflinger/Android.mk
++++ b/services/surfaceflinger/Android.mk
+@@ -59,33 +59,12 @@ ifneq ($(NUM_FRAMEBUFFER_SURFACE_BUFFERS),)
+     LOCAL_CFLAGS += -DNUM_FRAMEBUFFER_SURFACE_BUFFERS=$(NUM_FRAMEBUFFER_SURFACE_BUFFERS)
+ endif
+ 
+-ifeq ($(TARGET_RUNNING_WITHOUT_SYNC_FRAMEWORK),true)
+-    LOCAL_CFLAGS += -DRUNNING_WITHOUT_SYNC_FRAMEWORK
+-else
+-	ifneq ($(strip $(TARGET_BOARD_PLATFORM)),rk3288)
+-		ifneq ($(strip $(TARGET_BOARD_PLATFORM)),rk3368)
+-			LOCAL_CFLAGS += -DUSE_PREPARE_FENCE
+-		endif
+-	endif
+-endif
+-ifeq ($(strip $(TARGET_BOARD_PLATFORM)),rk3288)
+-	LOCAL_CFLAGS += -DUSE_LCDC_COMPOSER -DFORCE_SCALE_FULLSCREEN
+-endif
+-ifeq ($(strip $(TARGET_BOARD_PLATFORM)),rk3368)
+-	LOCAL_CFLAGS += -DUSE_LCDC_COMPOSER -DFORCE_SCALE_FULLSCREEN
+-endif
+-
+-ifeq ($(strip $(TARGET_BOARD_PLATFORM)),sofia3gr)
+-    LOCAL_CFLAGS += -DUSE_SOFIA3GR
++ifeq ($(ROCKCHIP_GPU_LIB_ENABLE), true)
++	LOCAL_CFLAGS += -DROCKCHIP_GPU_LIB_ENABLE
+ endif
+-LOCAL_CFLAGS += -DUSE_SOFIA3GR
+ 
+-ifeq ($(strip $(TARGET_BOARD_PLATFORM)),rk30xxb)
+-    LOCAL_CFLAGS += -DTARGET_BOARD_PLATFORM_RK30XXB
+-endif
+-
+-ifeq ($(strip $(TARGET_BOARD_PLATFORM_GPU)),G6110)
+-	LOCAL_CFLAGS += -DGPU_G6110
++ifeq ($(TARGET_RUNNING_WITHOUT_SYNC_FRAMEWORK),true)
++    LOCAL_CFLAGS += -DRUNNING_WITHOUT_SYNC_FRAMEWORK
+ endif
+ 
+ # See build/target/board/generic/BoardConfig.mk for a description of this setting.
+@@ -108,16 +87,6 @@ else
+     LOCAL_CFLAGS += -DPRESENT_TIME_OFFSET_FROM_VSYNC_NS=0
+ endif
+ 
+-ifeq ($(strip $(BOARD_USE_LCDC_COMPOSER)),true)
+-    LOCAL_CFLAGS += -DUSE_LCDC_COMPOSER
+-    ifeq ($(strip $(BOARD_LCDC_COMPOSER_LANDSCAPE_ONLY)),false)
+-        LOCAL_CFLAGS += -DLCDC_COMPOSER_FULL_ANGLE
+-    endif
+-endif
+-ifeq ($(strip $(BOARD_ENABLE_WFD_SKIP_FRAME)),true)
+-    LOCAL_CFLAGS += -DENABLE_WFD_SKIP_FRAME
+-endif
+-
+ ifneq ($(MAX_VIRTUAL_DISPLAY_DIMENSION),)
+     LOCAL_CFLAGS += -DMAX_VIRTUAL_DISPLAY_DIMENSION=$(MAX_VIRTUAL_DISPLAY_DIMENSION)
+ else
+diff --git a/services/surfaceflinger/DisplayDevice.cpp b/services/surfaceflinger/DisplayDevice.cpp
+index 1a0da10..862f3fb 100644
+--- a/services/surfaceflinger/DisplayDevice.cpp
++++ b/services/surfaceflinger/DisplayDevice.cpp
+@@ -60,7 +60,9 @@ inline void eglSetSwapRectangleANDROID (EGLDisplay, EGLSurface, EGLint, EGLint,
+  * Initialize the display to the specified values.
+  *
+  */
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+ static PFNEGLRENDERBUFFERMODIFYEDANDROIDPROC _eglRenderBufferModifiedANDROID;
++#endif
+ 
+ DisplayDevice::DisplayDevice(
+         const sp<SurfaceFlinger>& flinger,
+@@ -71,8 +73,13 @@ DisplayDevice::DisplayDevice(
+         const wp<IBinder>& displayToken,
+         const sp<DisplaySurface>& displaySurface,
+         const sp<IGraphicBufferProducer>& producer,
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+         EGLConfig config,
+-        int hardwareOrientation)
++        int hardwareOrientation
++#else
++        EGLConfig config
++#endif
++        )
+     : lastCompositionHadVisibleLayers(false),
+       mFlinger(flinger),
+       mType(type), mHwcDisplayId(hwcId),
+@@ -88,8 +95,12 @@ DisplayDevice::DisplayDevice(
+       mLayerStack(NO_LAYER_STACK),
+       mOrientation(),
+       mPowerMode(HWC_POWER_MODE_OFF),
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+       mActiveConfig(0),
+       mHardwareOrientation(hardwareOrientation)
++#else
++      mActiveConfig(0)
++#endif
+ {
+     mNativeWindow = new Surface(producer, false);
+     ANativeWindow* const window = mNativeWindow.get();
+@@ -125,6 +136,7 @@ DisplayDevice::DisplayDevice(
+     mViewport.makeInvalid();
+     mFrame.makeInvalid();
+ 
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+     if (mFlinger->orientationSwap()) {
+         mViewport.set(Rect(mDisplayHeight, mDisplayWidth));
+         mFrame.set(Rect(mDisplayHeight, mDisplayWidth));
+@@ -132,6 +144,7 @@ DisplayDevice::DisplayDevice(
+         mViewport.set(bounds());
+         mFrame.set(bounds());
+     }
++#endif
+ 
+     // virtual displays are always considered enabled
+     mPowerMode = (mType >= DisplayDevice::DISPLAY_VIRTUAL) ?
+@@ -153,8 +166,10 @@ DisplayDevice::DisplayDevice(
+ 
+     // initialize the display orientation transform.
+     setProjection(DisplayState::eOrientationDefault, mViewport, mFrame);
+-	_eglRenderBufferModifiedANDROID = (PFNEGLRENDERBUFFERMODIFYEDANDROIDPROC)
+-                                    eglGetProcAddress("eglRenderBufferModifiedANDROID");
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
++    _eglRenderBufferModifiedANDROID = (PFNEGLRENDERBUFFERMODIFYEDANDROIDPROC)
++                            eglGetProcAddress("eglRenderBufferModifiedANDROID");
++#endif
+ }
+ 
+ DisplayDevice::~DisplayDevice() {
+@@ -224,11 +239,14 @@ void DisplayDevice::flip(const Region& dirty) const
+     mPageFlipCount++;
+ }
+ 
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+ void DisplayDevice::hwcSwapBuffers() const
+ {
+     _eglRenderBufferModifiedANDROID(mDisplay, mSurface);
+     eglSwapBuffers(mDisplay, mSurface);
+ }
++#endif
++
+ status_t DisplayDevice::beginFrame(bool mustRecompose) const {
+     return mDisplaySurface->beginFrame(mustRecompose);
+ }
+@@ -260,7 +278,7 @@ void DisplayDevice::swapBuffers(HWComposer& hwc) const {
+     //        devices, where HWComposer::commit() handles things); or
+     //    (b) this is a virtual display
+     if (hwc.initCheck() != NO_ERROR ||
+-            ((hwc.hasGlesComposition(mHwcDisplayId)/*|| hwc.hasBlitComposition(mHwcDisplayId)*/) &&
++            ((hwc.hasGlesComposition(mHwcDisplayId)) &&
+              (hwc.supportsFramebufferTarget() || mType >= DISPLAY_VIRTUAL))) {
+         EGLBoolean success = eglSwapBuffers(mDisplay, mSurface);
+         if (!success) {
+@@ -450,27 +468,17 @@ void DisplayDevice::setProjection(int orientation,
+     Rect viewport(newViewport);
+     Rect frame(newFrame);
+ 
+-#ifdef FORCE_SCALE_FULLSCREEN
+-    ALOGV("name =%s",getDisplayName().string());
+-    ALOGV(" viewport [%d %d]",mViewport.getWidth(),mViewport.getHeight());
+-    ALOGV(" frame [%d %d]", frame.getWidth(),frame.getHeight());
+-    ALOGV(" hw [%d %d]", getWidth(),getHeight());
+-    if(strcmp(getDisplayName().string(),"Built-in Screen")
+-        && frame.getWidth() > frame.getHeight())
+-    {
+-        frame = Rect(0,0,getWidth(),getHeight());
+-        ALOGV("update frame [%d,%d]",frame.getWidth(),frame.getHeight());
+-    }
+-#endif
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+     if (mType == DisplayDevice::DISPLAY_PRIMARY) {
+         mClientOrientation = orientation;
+         orientation = (mHardwareOrientation + orientation) % 4;
+     }
++#endif
+ 
+     const int w = mDisplayWidth;
+     const int h = mDisplayHeight;
+ 
+-    Transform R, realR;
++    Transform R;
+     DisplayDevice::orientationToTransfrom(orientation, w, h, &R);
+ 
+     if (!frame.isValid()) {
+@@ -517,10 +525,13 @@ void DisplayDevice::setProjection(int orientation,
+     // physical translation and finally rotate to the physical orientation.
+     mGlobalTransform = R * TP * S * TL;
+ 
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
++    Transform realR;
+     if (DisplayDevice::orientationToTransfrom(
+             mClientOrientation, w, h, &realR) == NO_ERROR) {
+         mRealGlobalTransform = realR * TP * S * TL;
+     }
++#endif
+ 
+     const uint8_t type = mGlobalTransform.getType();
+     mNeedsFiltering = (!mGlobalTransform.preserveRects() ||
+@@ -536,6 +547,7 @@ void DisplayDevice::setProjection(int orientation,
+     mFrame = frame;
+ }
+ 
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+ void DisplayDevice::dump(String8& result) const {
+     const Transform& tr(mGlobalTransform);
+     const Transform& realTR(mRealGlobalTransform);
+@@ -567,3 +579,28 @@ void DisplayDevice::dump(String8& result) const {
+     mDisplaySurface->dumpAsString(surfaceDump);
+     result.append(surfaceDump);
+ }
++#else
++void DisplayDevice::dump(String8& result) const {
++    const Transform& tr(mGlobalTransform);
++    result.appendFormat(
++        "+ DisplayDevice: %s\n"
++        "   type=%x, hwcId=%d, layerStack=%u, (%4dx%4d), ANativeWindow=%p, orient=%2d (type=%08x), "
++        "flips=%u, isSecure=%d, secureVis=%d, powerMode=%d, activeConfig=%d, numLayers=%zu\n"
++        "   v:[%d,%d,%d,%d], f:[%d,%d,%d,%d], s:[%d,%d,%d,%d],"
++        "transform:[[%0.3f,%0.3f,%0.3f][%0.3f,%0.3f,%0.3f][%0.3f,%0.3f,%0.3f]]\n",
++        mDisplayName.string(), mType, mHwcDisplayId,
++        mLayerStack, mDisplayWidth, mDisplayHeight, mNativeWindow.get(),
++        mOrientation, tr.getType(), getPageFlipCount(),
++        mIsSecure, mSecureLayerVisible, mPowerMode, mActiveConfig,
++        mVisibleLayersSortedByZ.size(),
++        mViewport.left, mViewport.top, mViewport.right, mViewport.bottom,
++        mFrame.left, mFrame.top, mFrame.right, mFrame.bottom,
++        mScissor.left, mScissor.top, mScissor.right, mScissor.bottom,
++        tr[0][0], tr[1][0], tr[2][0],
++        tr[0][1], tr[1][1], tr[2][1],
++        tr[0][2], tr[1][2], tr[2][2]);
++
++    String8 surfaceDump;
++    mDisplaySurface->dumpAsString(surfaceDump);
++    result.append(surfaceDump);
++#endif
+diff --git a/services/surfaceflinger/DisplayDevice.h b/services/surfaceflinger/DisplayDevice.h
+index dc466e4..4fa3f85 100644
+--- a/services/surfaceflinger/DisplayDevice.h
++++ b/services/surfaceflinger/DisplayDevice.h
+@@ -72,6 +72,7 @@ public:
+         NO_LAYER_STACK = 0xFFFFFFFF,
+     };
+ 
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+     DisplayDevice(
+             const sp<SurfaceFlinger>& flinger,
+             DisplayType type,
+@@ -83,6 +84,18 @@ public:
+             const sp<IGraphicBufferProducer>& producer,
+             EGLConfig config,
+             int hardwareOrientation);   // orientation_of_pre_rotated_display
++#else
++    DisplayDevice(
++            const sp<SurfaceFlinger>& flinger,
++            DisplayType type,
++            int32_t hwcId,  // negative for non-HWC-composited displays
++            int format,
++            bool isSecure,
++            const wp<IBinder>& displayToken,
++            const sp<DisplaySurface>& displaySurface,
++            const sp<IGraphicBufferProducer>& producer,
++            EGLConfig config);
++#endif
+ 
+     ~DisplayDevice();
+ 
+@@ -114,12 +127,16 @@ public:
+     void                    setDisplaySize(const int newWidth, const int newHeight);
+     void                    setProjection(int orientation, const Rect& viewport, const Rect& frame);
+ 
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+     int                     getOrientation() const { return mClientOrientation; }
+-    int                     getHardwareRotation() const { return mOrientation; };   // .T : 修改 名称
+-    uint32_t                getOrientationTransform() const;
+-    const Transform&        getTransform() const { return mGlobalTransform; }
++    int                     getHardwareRotation() const { return mOrientation; };
+     const Transform&        getTransform(bool shouldTransform) const { return shouldTransform ? mGlobalTransform : mRealGlobalTransform; }
+     const Transform&        getRealTransform() const { return mRealGlobalTransform; }
++#else
++    int                     getOrientation() const { return mOrientation; }
++#endif
++    uint32_t                getOrientationTransform() const;
++    const Transform&        getTransform() const { return mGlobalTransform; }
+     const Rect              getViewport() const { return mViewport; }
+     const Rect              getFrame() const { return mFrame; }
+     const Rect&             getScissor() const { return mScissor; }
+@@ -136,7 +153,9 @@ public:
+     status_t prepareFrame(const HWComposer& hwc) const;
+ 
+     void swapBuffers(HWComposer& hwc) const;
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+     void hwcSwapBuffers() const;
++#endif
+     status_t compositionComplete() const;
+ 
+     // called after h/w composer has completed its set() call
+@@ -218,17 +237,20 @@ private:
+             int w, int h, Transform* tr);
+ 
+     uint32_t mLayerStack;
++    int mOrientation;
+ 
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+     /** 
+-     * 待显示的 layer_stack 以 original_display 为基准的 orientation.
+-     */
+-    int mOrientation;    // 取值诸如 0, 1(顺时针转过 90 度), 2, 3.
+-    /** 
+-     * display_pre_rotation_extension 引入的, 
+-     * 表征 client 请求的 display (display_saw_by_sf_clients) 的 orientation.
+-     * 待显示的 layer_stack 以 display_saw_by_sf_clients 为基准的 orientation.
++     * mOrientation:
++     *      orientation of layer_stack which is based on original_display,
++     * mClientOrientation:
++     *      it's imported by display_pre_rotation_extension, the display (display_saw_by_sf_clients)
++     *      orientation requested by client, it's based on display_saw_by_sf_clients. 
+      */
+     int mClientOrientation;
++    Transform mRealGlobalTransform;
++    int mHardwareOrientation;
++#endif
+     // user-provided visible area of the layer stack
+     Rect mViewport;
+     // user-provided rectangle where mViewport gets mapped to
+@@ -236,27 +258,11 @@ private:
+     // pre-computed scissor to apply to the display
+     Rect mScissor;
+     Transform mGlobalTransform;
+-    Transform mRealGlobalTransform;
+     bool mNeedsFiltering;
+     // Current power mode
+     int mPowerMode;
+     // Current active config
+     int mActiveConfig;
+-
+-    /**
+-     * .DP : orientation_of_pre_rotated_display : 
+-     * display_pre_rotation_extension 引入的, 
+-     * pre_rotated_display 的 default_orientation 相对 original_display 的 coordinate_system 的 orientation.
+-     * 可能的取值诸如 0, 1(顺时针转过 90 度), 2(180 度), 3(270 度).
+-     *
+-     * wms 通过 sf 的 getdisplayconfigs 得到 display_info 都是 pre_rotated_display 的信息, 
+-     * 比如 pre_rotation 是顺时针转过 90 度, 则 pre_rotated_display 的高度是 original_display 的宽度, 宽度是高度. 
+-     * pre_rotated_display 也记为 display_saw_by_sf_clients. 
+-     *
+-     * 默认为 0, 不起任何作用. 
+-     * 只可能在 primary_display 中实际使用. 
+-     */
+-    int mHardwareOrientation;
+ };
+ 
+ }; // namespace android
+diff --git a/services/surfaceflinger/DisplayHardware/FramebufferSurface.cpp b/services/surfaceflinger/DisplayHardware/FramebufferSurface.cpp
+index 76b0d8a..652d378 100644
+--- a/services/surfaceflinger/DisplayHardware/FramebufferSurface.cpp
++++ b/services/surfaceflinger/DisplayHardware/FramebufferSurface.cpp
+@@ -38,7 +38,11 @@
+ #include "HWComposer.h"
+ 
+ #ifndef NUM_FRAMEBUFFER_SURFACE_BUFFERS
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+ #define NUM_FRAMEBUFFER_SURFACE_BUFFERS (3)
++#else
++#define NUM_FRAMEBUFFER_SURFACE_BUFFERS (2)
++#endif
+ #endif
+ 
+ // ----------------------------------------------------------------------------
+@@ -62,15 +66,15 @@ FramebufferSurface::FramebufferSurface(HWComposer& hwc, int disp,
+     mName = "FramebufferSurface";
+     mConsumer->setConsumerName(mName);
+ 
+-    if(disp == 1)
+-    {
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
++    if (disp == 1)
+         mConsumer->setConsumerUsageBits(GRALLOC_USAGE_HW_RENDER |
+                                        GRALLOC_USAGE_HW_COMPOSER);
+-    } else {
++    else
++#endif
+         mConsumer->setConsumerUsageBits(GRALLOC_USAGE_HW_FB |
+                                        GRALLOC_USAGE_HW_RENDER |
+                                        GRALLOC_USAGE_HW_COMPOSER);
+-    }
+ 
+     mConsumer->setDefaultBufferFormat(mHwc.getFormat(disp));
+     mConsumer->setDefaultBufferSize(mHwc.getWidth(disp),  mHwc.getHeight(disp));
+diff --git a/services/surfaceflinger/DisplayHardware/HWComposer.cpp b/services/surfaceflinger/DisplayHardware/HWComposer.cpp
+index a3a47f8..cce9b79 100644
+--- a/services/surfaceflinger/DisplayHardware/HWComposer.cpp
++++ b/services/surfaceflinger/DisplayHardware/HWComposer.cpp
+@@ -113,8 +113,10 @@ HWComposer::HWComposer(
+         // close FB HAL if we don't needed it.
+         // FIXME: this is temporary until we're not forced to open FB HAL
+         // before HWC.
+-        // framebuffer_close(mFbDev);
+-        // mFbDev = NULL;
++#ifndef ROCKCHIP_GPU_LIB_ENABLE
++        framebuffer_close(mFbDev);
++        mFbDev = NULL;
++#endif
+     }
+ 
+     // If we have no HWC, or a pre-1.1 HWC, an FB dev is mandatory.
+@@ -180,17 +182,10 @@ HWComposer::HWComposer(
+         disp.configs.push_back(config);
+         disp.currentConfig = 0;
+     } else if (mHwc) {
+-#ifdef GPU_G6110
+-        // here we're guaranteed to have at least HWC 1.1
+-        for (size_t i =0 ; i<1 ; i++) {
+-            queryDisplayProperties(i);
+-        }
+-#else
+         // here we're guaranteed to have at least HWC 1.1
+         for (size_t i =0 ; i<NUM_BUILTIN_DISPLAYS ; i++) {
+             queryDisplayProperties(i);
+         }
+-#endif
+     }
+ 
+     if (needVSyncThread) {
+@@ -198,7 +193,9 @@ HWComposer::HWComposer(
+         mVSyncThread = new VSyncThread(*this);
+     }
+ 
+-    mRepaintThread  = new RepaintThread(*this);
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
++    mRepaintThread = new RepaintThread(*this);
++#endif
+ }
+ 
+ HWComposer::~HWComposer() {
+@@ -208,9 +205,11 @@ HWComposer::~HWComposer() {
+     if (mVSyncThread != NULL) {
+         mVSyncThread->requestExitAndWait();
+     }
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+     if (mRepaintThread != NULL) {
+         mRepaintThread->requestExitAndWait();
+     }
++#endif
+     if (mHwc) {
+         hwc_close_1(mHwc);
+     }
+@@ -640,22 +639,26 @@ status_t HWComposer::setFramebufferTarget(int32_t id,
+         acquireFenceFd = acquireFence->dup();
+     }
+ 
++    ALOGD("fbPost: handle=%p, fence=%d", buf->handle, acquireFenceFd);
+     disp.fbTargetHandle = buf->handle;
+     disp.framebufferTarget->handle = disp.fbTargetHandle;
+     disp.framebufferTarget->acquireFenceFd = acquireFenceFd;
+     return NO_ERROR;
+ }
+ 
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+ bool gTimeIsUp = false;
+ sp<SurfaceFlinger> gFlinger = NULL;
+ void timer_handler(int sig) {
+-    if(sig == SIGALRM) {
++    if (sig == SIGALRM) {
+         const HWComposer& hwc = gFlinger->getHwComposer();
+         hwc.mRepaintThread->setRepaint(true);
+         gTimeIsUp = true;
+         ALOGV("new:time up, send a refresh msg!");
+     }
+ }
++#endif
++
+ status_t HWComposer::prepare() {
+     Mutex::Autolock _l(mDisplayLock);
+     for (size_t i=0 ; i<mNumDisplays ; i++) {
+@@ -690,11 +693,8 @@ status_t HWComposer::prepare() {
+ 
+     int err = mHwc->prepare(mHwc, mNumDisplays, mLists);
+     ALOGE_IF(err, "HWComposer: prepare failed (%s)", strerror(-err));
+-#if (defined USE_LCDC_COMPOSER) || (defined USE_SOFIA3GR)
+-    if(true)
+-#else
+-    if(mFlinger->mUseLcdcComposer)
+-#endif
++
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+     {
+         DisplayData& disp(mDisplayData[0]);
+         if (disp.list) {
+@@ -711,20 +711,19 @@ status_t HWComposer::prepare() {
+             for (size_t i=0 ; i<disp.list->numHwLayers ; i++) {
+                 hwc_layer_1_t& l = disp.list->hwLayers[i];
+                 hwc_rect_t const * rt = l.visibleRegionScreen.rects;
+-                if (rt == NULL)
+-                {
++                if (rt == NULL) {
+                     return 0;
+                 }
+                 TotalSize += (rt->right - rt->left) * (rt->bottom - rt->top);
+                 if ( l.compositionType == HWC_OVERLAY ||
+                      l.compositionType == HWC_LCDC ||
+-                     l.bufferCount > 1)
+-                {
++                     l.bufferCount > 1) {
+                     NeedRepaint = true;
+                 }
+             }
+             if (NeedRepaint) {
+-                if(TotalSize < ((currentConfig.width * currentConfig.height * 5)/4)) {
++                if (TotalSize <
++                        ((currentConfig.width * currentConfig.height * 5)/4)) {
+                     NeedRepaint = false;
+                 }
+             }
+@@ -752,6 +751,7 @@ status_t HWComposer::prepare() {
+             }
+         }
+     }
++#endif
+     if (err == NO_ERROR) {
+         // here we're just making sure that "skip" layers are set
+         // to HWC_FRAMEBUFFER and we're also counting how many layers
+@@ -764,8 +764,10 @@ status_t HWComposer::prepare() {
+             DisplayData& disp(mDisplayData[i]);
+             disp.hasFbComp = false;
+             disp.hasOvComp = false;
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+             disp.haslcdComp = false;
+             disp.hasBlitComp = false;
++#endif
+             if (disp.list) {
+                 for (size_t i=0 ; i<disp.list->numHwLayers ; i++) {
+                     hwc_layer_1_t& l = disp.list->hwLayers[i];
+@@ -773,25 +775,30 @@ status_t HWComposer::prepare() {
+                     //ALOGD("prepare: %d, type=%d, handle=%p",
+                     //        i, l.compositionType, l.handle);
+ 
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
++                    if (l.compositionType == HWC_BLITTER) {
++                        disp.hasBlitComp = true;
++                    }
++                    if ((l.compositionType == HWC_TOWIN0 ||
++                                l.compositionType == HWC_TOWIN1)) {
++                        if (mFlinger->mUseLcdcComposer)
++                            disp.hasOvComp = true;
++                        disp.haslcdComp = true;
++                    }
++#else
+                     if (l.flags & HWC_SKIP_LAYER) {
+-                        // l.compositionType = HWC_FRAMEBUFFER;
++                        l.compositionType = HWC_FRAMEBUFFER;
+                     }
+-                    if(l.compositionType == HWC_BLITTER)
+-                    {
+-                        disp.hasBlitComp = true;
++                    if (l.compositionType == HWC_CURSOR_OVERLAY) {
++                        disp.hasOvComp = true;
+                     }
++#endif
+                     if (l.compositionType == HWC_FRAMEBUFFER) {
+                         disp.hasFbComp = true;
+                     }
+                     if (l.compositionType == HWC_OVERLAY) {
+                         disp.hasOvComp = true;
+                     }
+-                    if ( (l.compositionType == HWC_TOWIN0 || l.compositionType == HWC_TOWIN1) )
+-                    {
+-                        if( mFlinger->mUseLcdcComposer)
+-                        disp.hasOvComp = true;
+-                        disp.haslcdComp = true;
+-                    }
+                 }
+                 if (disp.list->numHwLayers == (disp.framebufferTarget ? 1 : 0)) {
+                     disp.hasFbComp = true;
+@@ -816,16 +823,20 @@ bool HWComposer::hasGlesComposition(int32_t id) const {
+     return mDisplayData[id].hasFbComp;
+ }
+ 
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+ bool HWComposer::hasBlitComposition(int32_t id) const {
+     if (!mHwc || uint32_t(id)>31 || !mAllocatedDisplayIDs.hasBit(id))
+         return true;
+     return mDisplayData[id].hasBlitComp;
+ }
++
+ bool HWComposer::hasLcdComposition(int32_t id) const {
+     if (uint32_t(id)>31 || !mAllocatedDisplayIDs.hasBit(id))
+         return false;
+     return mDisplayData[id].haslcdComp;
+ }
++#endif
++
+ sp<Fence> HWComposer::getAndResetReleaseFence(int32_t id) {
+     if (uint32_t(id)>31 || !mAllocatedDisplayIDs.hasBit(id))
+         return Fence::NO_FENCE;
+@@ -841,25 +852,9 @@ sp<Fence> HWComposer::getAndResetReleaseFence(int32_t id) {
+     }
+     return fd >= 0 ? new Fence(fd) : Fence::NO_FENCE;
+ }
+-#ifdef TARGET_BOARD_PLATFORM_RK30XXB
+-status_t HWComposer::fbs_post(void)
+-{
+-    static bool bSet=false;
+-    if(!bSet)
+-    {
+-        property_set("sys.gpvr.fbs_post", "1");
+-        bSet=true;
+-    }
+-    if(mFbDev)
+-        return mFbDev->post(mFbDev,NULL);
+-    else
+-    {
+-        ALOGE("%s:mFbDev is null",__func__);
+-        return -1;
+-    }
+-}
+-#endif
+-status_t HWComposer::setSkipFrame(  uint32_t skipflag ) {
++
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
++status_t HWComposer::setSkipFrame(uint32_t skipflag) {
+     int err = NO_ERROR;
+     if (mHwc) {
+         for (size_t i=0 ; i<mNumDisplays ; i++) {
+@@ -871,15 +866,23 @@ status_t HWComposer::setSkipFrame(  uint32_t skipflag ) {
+     }
+     return (status_t)err;
+ }
+-status_t HWComposer::layerRecover( )
+-{
++
++status_t HWComposer::layerRecover() {
+     int err = NO_ERROR;
+-    if (mHwc &&  mHwc->layer_recover ) {
++    if (mHwc && mHwc->layer_recover) {
+         mHwc->layer_recover(mHwc, mNumDisplays, mLists);
+     }
+     return (status_t)err;
+ }
+ 
++status_t HWComposer::videoCopyBit(hwc_layer_1_t* hwcLayer, int flag) {
++    int err = 0;
++    if (mHwc->rkCopybit)
++        err = mHwc->rkCopybit(mHwc, hwcLayer->handle, hwcLayer->handle, flag);
++    return (status_t)err;
++}
++#endif
++
+ status_t HWComposer::commit() {
+     int err = NO_ERROR;
+     if (mHwc) {
+@@ -918,13 +921,6 @@ status_t HWComposer::commit() {
+     return (status_t)err;
+ }
+ 
+-status_t HWComposer::videoCopyBit(hwc_layer_1_t* hwcLayer,int flag)
+-{
+-    int err = 0;
+-    if(mHwc->rkCopybit)
+-        err = mHwc->rkCopybit(mHwc, hwcLayer->handle, hwcLayer->handle, flag);
+-    return (status_t)err;
+-}
+ status_t HWComposer::setPowerMode(int disp, int mode) {
+     LOG_FATAL_IF(disp >= VIRTUAL_DISPLAY_ID_BASE);
+     if (mHwc) {
+@@ -987,27 +983,23 @@ bool HWComposer::supportsFramebufferTarget() const {
+ 
+ int HWComposer::fbPost(int32_t id,
+         const sp<Fence>& acquireFence, const sp<GraphicBuffer>& buffer) {
+-    #ifndef USE_PREPARE_FENCE
+-    bool fbcmp = mFlinger->mUseLcdcComposer ? !hasGlesComposition(id):true;
+-    #endif
+-    if (mHwc && hwcHasApiVersion(mHwc, HWC_DEVICE_API_VERSION_1_1)
+-        #ifndef USE_PREPARE_FENCE
+-        && fbcmp
+-        #endif
+-       ) {
++    if (mHwc && hwcHasApiVersion(mHwc, HWC_DEVICE_API_VERSION_1_1)) {
+         return setFramebufferTarget(id, acquireFence, buffer);
+     } else {
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+         DisplayData& disp(mDisplayData[id]);
+-        if (!mHwc || !disp.list->skipflag)
+-        {
+-          if (acquireFence!=NULL)
+-          {
++        if (!mHwc || !disp.list->skipflag) {
++            if (acquireFence != NULL) {
++                acquireFence->waitForever("HWComposer::fbPost");
++            }
++            return mFbDev->post(mFbDev, buffer->handle);
++        } else {
++            return NO_ERROR;
++        }
++#else
+         acquireFence->waitForever("HWComposer::fbPost");
+-          }
+         return mFbDev->post(mFbDev, buffer->handle);
+-        }
+-        else
+-            return NO_ERROR;
++#endif
+     }
+ }
+ 
+@@ -1106,9 +1098,11 @@ public:
+         getLayer()->releaseFenceFd = -1;
+         return fd >= 0 ? new Fence(fd) : Fence::NO_FENCE;
+     }
+-    virtual hwc_layer_1_t * gethwcLayer()  {
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
++    virtual hwc_layer_1_t * gethwcLayer() {
+         return ( hwc_layer_1_t *)getLayer();
+     }
++#endif
+     virtual void setAcquireFenceFd(int fenceFd) {
+         getLayer()->acquireFenceFd = fenceFd;
+     }
+@@ -1161,27 +1155,24 @@ public:
+     virtual void setTransform(uint32_t transform) {
+         getLayer()->transform = transform;
+     }
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+     virtual void setRealTransform(uint32_t realtransform) {
+         getLayer()->realtransform = realtransform;
+     }
++#endif
+     virtual void setFrame(const Rect& frame) {
+         getLayer()->displayFrame = reinterpret_cast<hwc_rect_t const&>(frame);
+     }
+     virtual void setCrop(const FloatRect& crop) {
+         if (hwcHasApiVersion(mHwc, HWC_DEVICE_API_VERSION_1_3)) {
+-#if 0
+-            getLayer()->sourceCropf = reinterpret_cast<hwc_frect_t const&>(crop);
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+             hwc_rect_t& r = getLayer()->sourceCrop;
+             r.left  = int(ceilf(crop.left));
+             r.top   = int(ceilf(crop.top));
+             r.right = int(floorf(crop.right));
+-            r.bottom= int(floorf(crop.bottom));
++            r.bottom = int(floorf(crop.bottom));
+ #else
+-            hwc_rect_t& r = getLayer()->sourceCrop;
+-            r.left  = int(ceilf(crop.left));
+-            r.top   = int(ceilf(crop.top));
+-            r.right = int(floorf(crop.right));
+-            r.bottom= int(floorf(crop.bottom));
++            getLayer()->sourceCropf = reinterpret_cast<hwc_frect_t const&>(crop);
+ #endif
+         } else {
+             /*
+@@ -1264,13 +1255,15 @@ public:
+             surfaceDamage.rects = NULL;
+         }
+     }
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+     virtual void setLayername(const char *layername) {
+-        int strlens ;
++        int strlens;
+         strlens = strlen(layername);
+-        strlens = strlens > LayerNameLength ? LayerNameLength:strlens;
++        strlens = strlens > LayerNameLength ? LayerNameLength : strlens;
+         memcpy(getLayer()->LayerName,layername,strlens);
+         getLayer()->LayerName[strlens] = 0;
+     }
++#endif
+ };
+ 
+ /*
+@@ -1387,6 +1380,7 @@ void HWComposer::dump(String8& result) const {
+                     }
+ 
+                     static char const* compositionTypeName[] = {
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+                             "GLES",
+                             "HWC",
+                             "BACKGROUND",
+@@ -1400,6 +1394,16 @@ void HWComposer::dump(String8& result) const {
+                             "HWC_MIX",
+                             "HWC_MIX_V2",
+                             "blit"};
++#else
++                            "GLES",
++                            "HWC",
++                            "BKGND",
++                            "FB TARGET",
++                            "SIDEBAND",
++                            "HWC_CURSOR",
++                            "UNKNOWN"};
++
++#endif
+                     if (type >= NELEM(compositionTypeName))
+                         type = NELEM(compositionTypeName) - 1;
+ 
+@@ -1490,6 +1494,7 @@ bool HWComposer::VSyncThread::threadLoop() {
+     return true;
+ }
+ 
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+ void HWComposer::RepaintThread::onFirstRef() {
+     run("RepaintThread", PRIORITY_URGENT_DISPLAY + PRIORITY_MORE_FAVORABLE);
+ }
+@@ -1497,7 +1502,7 @@ void HWComposer::RepaintThread::onFirstRef() {
+ HWComposer::RepaintThread::RepaintThread(HWComposer& hwc)
+     : mRepaint(false)
+ {
+-hwc.getRefreshPeriod(HWC_DISPLAY_PRIMARY);
++    hwc.getRefreshPeriod(HWC_DISPLAY_PRIMARY);
+ }
+ 
+ void HWComposer::RepaintThread::setRepaint(bool isRep) {
+@@ -1519,13 +1524,17 @@ bool HWComposer::RepaintThread::threadLoop() {
+     usleep(50000);
+     return true;
+ }
++#endif
+ 
+ HWComposer::DisplayData::DisplayData()
+ :   configs(),
+     currentConfig(0),
+     format(HAL_PIXEL_FORMAT_RGBA_8888),
+     connected(false),
+-    hasFbComp(false), hasBlitComp(false),hasOvComp(false),
++    hasFbComp(false), hasOvComp(false),
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
++    hasBlitComp(false),
++#endif
+     capacity(0), list(NULL),
+     framebufferTarget(NULL), fbTargetHandle(0),
+     lastRetireFence(Fence::NO_FENCE), lastDisplayFence(Fence::NO_FENCE),
+diff --git a/services/surfaceflinger/DisplayHardware/HWComposer.h b/services/surfaceflinger/DisplayHardware/HWComposer.h
+index ca991a4..9a42847 100644
+--- a/services/surfaceflinger/DisplayHardware/HWComposer.h
++++ b/services/surfaceflinger/DisplayHardware/HWComposer.h
+@@ -21,7 +21,10 @@
+ #include <sys/types.h>
+ 
+ #include <hardware/hwcomposer_defs.h>
++
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+ #include <hardware/hwcomposer.h>
++#endif
+ 
+ #include <ui/Fence.h>
+ 
+@@ -97,10 +100,14 @@ public:
+ 
+     // commits the list
+     status_t commit();
++
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+     status_t layerRecover();
+-    status_t setSkipFrame(  uint32_t skipflag ) ;
++    status_t setSkipFrame(uint32_t skipflag);
++    status_t videoCopyBit(hwc_layer_1_t *hwcLayer, int flag);
++#endif
+ 
+-    status_t videoCopyBit(hwc_layer_1_t* hwcLayer, int flag);
++    // set power mode
+     status_t setPowerMode(int disp, int mode);
+ 
+     // set active config
+@@ -119,15 +126,14 @@ public:
+ 
+     // does this display have layers handled by GLES
+     bool hasGlesComposition(int32_t id) const;
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+     // rk: does this display have layers handled by Blit (rga)
+     bool hasBlitComposition(int32_t id) const;
+     bool hasLcdComposition(int32_t id) const;
++#endif
+     // get the releaseFence file descriptor for a display's framebuffer layer.
+     // the release fence is only valid after commit()
+     sp<Fence> getAndResetReleaseFence(int32_t id);
+-#ifdef TARGET_BOARD_PLATFORM_RK30XXB
+-    status_t fbs_post(void);
+-#endif
+ 
+     // needed forward declarations
+     class LayerListIterator;
+@@ -168,14 +174,17 @@ public:
+         virtual int32_t getCompositionType() const = 0;
+         virtual uint32_t getHints() const = 0;
+         virtual sp<Fence> getAndResetReleaseFence() = 0;
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+         virtual hwc_layer_1_t* gethwcLayer() = 0;
++        virtual void setRealTransform(uint32_t realtransform) = 0;
++        virtual void setLayername( const char *layername) = 0;
++#endif
+         virtual void setDefaultState() = 0;
+         virtual void setSkip(bool skip) = 0;
+         virtual void setIsCursorLayerHint(bool isCursor = true) = 0;
+         virtual void setBlending(uint32_t blending) = 0;
+         virtual void setTransform(uint32_t transform) = 0;
+         virtual void setFrame(const Rect& frame) = 0;
+-        virtual void setRealTransform(uint32_t realtransform) = 0;
+         virtual void setCrop(const FloatRect& crop) = 0;
+         virtual void setVisibleRegionScreen(const Region& reg) = 0;
+         virtual void setSurfaceDamage(const Region& reg) = 0;
+@@ -184,7 +193,6 @@ public:
+         virtual void setAcquireFenceFd(int fenceFd) = 0;
+         virtual void setPlaneAlpha(uint8_t alpha) = 0;
+         virtual void onDisplayed() = 0;
+-        virtual void setLayername( const char *layername) = 0;
+     };
+ 
+     /*
+@@ -307,6 +315,7 @@ public:
+         void setEnabled(bool enabled);
+     };
+ 
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+     class RepaintThread : public Thread {
+         mutable Mutex mRLock;
+         Condition mRtCondition;
+@@ -317,13 +326,15 @@ public:
+         RepaintThread(HWComposer& hwc);
+         void setRepaint(bool isRep);
+     };
+-    
++
++    sp<RepaintThread>   mRepaintThread;
++#endif
++
+     friend class VSyncThread;
+ 
+     // for debugging ----------------------------------------------------------
+     void dump(String8& out) const;
+-    sp<RepaintThread>                 mRepaintThread;
+-    
++
+ private:
+     void loadHwcModule();
+     int loadFbHalModule();
+@@ -355,9 +366,11 @@ private:
+         uint32_t format;    // pixel format from FB hal, for pre-hwc-1.1
+         bool connected;
+         bool hasFbComp;
+-        bool hasBlitComp;
+         bool hasOvComp;
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
++        bool hasBlitComp;
+         bool haslcdComp;
++#endif
+         size_t capacity;
+         hwc_display_contents_1* list;
+         hwc_layer_1* framebufferTarget;
+diff --git a/services/surfaceflinger/Layer.cpp b/services/surfaceflinger/Layer.cpp
+index d7ba186..614d57b 100644
+--- a/services/surfaceflinger/Layer.cpp
++++ b/services/surfaceflinger/Layer.cpp
+@@ -80,7 +80,9 @@ Layer::Layer(SurfaceFlinger* flinger, const sp<Client>& client,
+         mHasSurface(false),
+         mClientRef(client),
+         mPotentialCursor(false),
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+         mDrawingScreenshot(false),
++#endif
+         mQueueItemLock(),
+         mQueueItemCondition(),
+         mQueueItems(),
+@@ -121,7 +123,9 @@ Layer::Layer(SurfaceFlinger* flinger, const sp<Client>& client,
+     nsecs_t displayPeriod =
+             flinger->getHwComposer().getRefreshPeriod(HWC_DISPLAY_PRIMARY);
+     mFrameTracker.setDisplayRefreshPeriod(displayPeriod);
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+     mLastRealtransform = 0;
++#endif
+ }
+ 
+ void Layer::onFirstRef() {
+@@ -144,17 +148,20 @@ void Layer::onFirstRef() {
+ 
+     const sp<const DisplayDevice> hw(mFlinger->getDefaultDisplayDevice());
+     updateTransformHint(hw);
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+     const State& s(getDrawingState());
+     const Transform bufferOrientation(mCurrentTransform);
+-    uint32_t realtransform = (hw->getTransform(false) * s.transform * bufferOrientation).getOrientation();
+-    if(mFlinger->mUseLcdcComposer )
+-    {
+-        if (mFlinger->mUseLcdcComposer && strcmp("com.android.systemui.ImageWallpaper", mName.string())) {
++    uint32_t realtransform = (hw->getTransform(false) *
++                            s.transform * bufferOrientation).getOrientation();
++    if (mFlinger->mUseLcdcComposer) {
++        if (mFlinger->mUseLcdcComposer &&
++                strcmp("com.android.systemui.ImageWallpaper", mName.string())) {
+             realtransform = (hw->getTransform(false)).getOrientation() | 0x08;
+             realtransform = (realtransform << 24) & GRALLOC_USAGE_ROT_MASK;
+             mSurfaceFlingerConsumer->setConsumerUsageBits(getEffectiveUsage(realtransform));
+         }
+     }
++#endif
+ }
+ 
+ Layer::~Layer() {
+@@ -468,8 +475,10 @@ FloatRect Layer::computeCrop(const sp<const DisplayDevice>& hw) const {
+     return crop;
+ }
+ 
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+ static int fd_dvfs = -1;
+ static int dvfs_stat = 0;
++#endif
+ void Layer::setGeometry(
+     const sp<const DisplayDevice>& hw,
+         HWComposer::HWCLayerInterface& layer)
+@@ -485,15 +494,16 @@ void Layer::setGeometry(
+ 
+     // this gives us only the "orientation" component of the transform
+     const State& s(getDrawingState());
+-#ifndef USE_LCDC_COMPOSER
+-    if (s.alpha < 0xFF) {
+-        layer.setSkip(true);   // 32lcdc can support ,so it dont skip
+-    }
+-#endif
+     if (!isOpaque(s) || s.alpha != 0xFF) {
+-        layer.setBlending( (mPremultipliedAlpha ?
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
++        layer.setBlending((mPremultipliedAlpha ?
++                    HWC_BLENDING_PREMULT :
++                    HWC_BLENDING_COVERAGE) | s.alpha<<16);
++#else
++        layer.setBlending(mPremultipliedAlpha ?
+                 HWC_BLENDING_PREMULT :
+-                HWC_BLENDING_COVERAGE) |s.alpha<<16);
++                HWC_BLENDING_COVERAGE);
++#endif
+     }
+ 
+     // apply the layer's transform, followed by the display's global transform
+@@ -565,35 +575,40 @@ void Layer::setGeometry(
+     const uint32_t orientation = transform.getOrientation();
+     if (orientation & Transform::ROT_INVALID) {
+         // we can only handle simple transformation
+-        if(fd_dvfs < 0)
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
++        if (fd_dvfs < 0)
+             fd_dvfs = open("/sys/devices/ffa30000.gpu/dvfs", O_RDWR, 0);
+-        if(fd_dvfs > 0 && dvfs_stat == 0)
+-        {
++        if (fd_dvfs > 0 && dvfs_stat == 0) {
+             write(fd_dvfs,"off",3);
+             dvfs_stat = 1;
+         }
+         layer.setSkip(true);
+     } else {
+-        if(fd_dvfs > 0 && dvfs_stat == 1)
+-        {
++        if (fd_dvfs > 0 && dvfs_stat == 1) {
+             write(fd_dvfs,"on",2);
+             dvfs_stat = 0;
+         }
+-        uint32_t realtransform = (hw->getTransform(false) * s.transform * bufferOrientation).getOrientation();
++        uint32_t realtransform = (hw->getTransform(false) * s.transform *
++                                        bufferOrientation).getOrientation();
+         layer.setTransform(orientation);
+-        if(mFlinger->mUseLcdcComposer )
+-        {
++        if (mFlinger->mUseLcdcComposer) {
+             layer.setRealTransform(tr.getOrientation());
+-            if (mFlinger->mUseLcdcComposer && strcmp("com.android.systemui.ImageWallpaper", mName.string())) {
++            if (mFlinger->mUseLcdcComposer &&
++                    strcmp("com.android.systemui.ImageWallpaper",
++                        mName.string())) {
+                 realtransform = (hw->getTransform(false)).getOrientation() | 0x08;
+                 realtransform = (realtransform << 24) & GRALLOC_USAGE_ROT_MASK;
+-                mSurfaceFlingerConsumer->setConsumerUsageBits(getEffectiveUsage(realtransform));
+-            }
+-            else
+-            {
++                mSurfaceFlingerConsumer->setConsumerUsageBits(
++                                            getEffectiveUsage(realtransform));
++            } else {
+                 layer.setTransform(orientation); // Wallpaper force 0
+             }
+         }
++#else
++        layer.setSkip(true);
++    } else {
++        layer.setTransform(orientation);
++#endif
+     }
+ }
+ 
+@@ -616,7 +631,9 @@ void Layer::setPerFrameData(const sp<const DisplayDevice>& hw,
+         // layer yet, or if we ran out of memory
+         layer.setBuffer(mActiveBuffer);
+     }
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+     layer.setLayername(getName().string());
++#endif
+ }
+ 
+ void Layer::setAcquireFence(const sp<const DisplayDevice>& /* hw */,
+@@ -626,10 +643,12 @@ void Layer::setAcquireFence(const sp<const DisplayDevice>& /* hw */,
+     // TODO: there is a possible optimization here: we only need to set the
+     // acquire fence the first time a new buffer is acquired on EACH display.
+ 
+-    // if (layer.getCompositionType() == HWC_OVERLAY || layer.getCompositionType()==100) {
+-#ifndef USE_PREPARE_FENCE
+-    if (layer.getCompositionType() != HWC_FRAMEBUFFER) {
++#ifdef ROCKCHIP_USE_PREPARE_FENCE
++    if (layer.getCompositionType() != HWC_FRAMEBUFFER)
++#else
++    if (layer.getCompositionType() == HWC_OVERLAY || layer.getCompositionType() == HWC_CURSOR_OVERLAY)
+ #endif
++    {
+         sp<Fence> fence = mSurfaceFlingerConsumer->getCurrentFence();
+         if (fence->isValid()) {
+             fenceFd = fence->dup();
+@@ -637,11 +656,7 @@ void Layer::setAcquireFence(const sp<const DisplayDevice>& /* hw */,
+                 ALOGW("failed to dup layer fence, skipping sync: %d", errno);
+             }
+         }
+-#ifndef USE_PREPARE_FENCE
+     }
+-#else
+-    ALOGV("isValid=%d,fenceFd=%d,name=%s",fence->isValid(),fenceFd,getName().string());
+-#endif
+     layer.setAcquireFenceFd(fenceFd);
+ }
+ 
+@@ -886,9 +901,11 @@ void Layer::computeGeometry(const sp<const DisplayDevice>& hw, Mesh& mesh,
+             hw->getTransform() : hw->getTransform() * s.transform);
+     const uint32_t hw_h = hw->getHeight();
+     Rect win(s.active.w, s.active.h);
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+     if (mDrawingScreenshot) {
+         computeHWGeometry(tr, s.transform, hw);
+     }
++#endif
+     if (!s.active.crop.isEmpty()) {
+         win.intersect(s.active.crop, &win);
+     }
+@@ -905,7 +922,9 @@ void Layer::computeGeometry(const sp<const DisplayDevice>& hw, Mesh& mesh,
+     }
+ }
+ 
+-void Layer::computeHWGeometry(Transform& tr, const Transform& layerTransform, const sp<const DisplayDevice>& hw) const
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
++void Layer::computeHWGeometry(Transform& tr, const Transform& layerTransform,
++                                    const sp<const DisplayDevice>& hw) const
+ {
+     int hwrotation = mFlinger->getHardwareOrientation();
+     int hw_offset = hw->getWidth() - hw->getHeight();
+@@ -950,6 +969,8 @@ void Layer::computeHWGeometry(Transform& tr, const Transform& layerTransform, co
+         }
+     }
+ }
++#endif
++
+ bool Layer::isOpaque(const Layer::State& s) const
+ {
+     // if we don't have a buffer yet, we're translucent regardless of the
+@@ -1571,12 +1592,6 @@ void Layer::updateTransformHint(const sp<const DisplayDevice>& hw) const {
+ // debugging
+ // ----------------------------------------------------------------------------
+ 
+-void Layer::ReleaseOldBuffer()
+-{
+-    //if (mFlinger->mUseLcdcComposer) {
+-       // mSurfaceFlingerConsumer->ReleaseOldBuffer();
+-    //}
+-}
+ void Layer::dump(String8& result, Colorizer& colorizer) const
+ {
+     const Layer::State& s(getDrawingState());
+diff --git a/services/surfaceflinger/Layer.h b/services/surfaceflinger/Layer.h
+index 8e2700f..9ffe335 100644
+--- a/services/surfaceflinger/Layer.h
++++ b/services/surfaceflinger/Layer.h
+@@ -144,13 +144,17 @@ public:
+     void useSurfaceDamage();
+     void useEmptyDamage();
+ 
+-    void setDrawingScreenshot(bool drawScreenshot) { mDrawingScreenshot = drawScreenshot; };
+     uint32_t getTransactionFlags(uint32_t flags);
+     uint32_t setTransactionFlags(uint32_t flags);
+ 
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
++    void setDrawingScreenshot(bool drawScreenshot) {
++                                mDrawingScreenshot = drawScreenshot; };
++    void computeHWGeometry(Transform& tr, const Transform& layerTransform,
++                                    const sp<const DisplayDevice>& hw) const;
++#endif
+     void computeGeometry(const sp<const DisplayDevice>& hw, Mesh& mesh,
+             bool useIdentityTransform) const;
+-    void computeHWGeometry(Transform& tr, const Transform& layerTransform, const sp<const DisplayDevice>& hw) const;
+     Rect computeBounds(const Region& activeTransparentRegion) const;
+     Rect computeBounds() const;
+ 
+@@ -171,7 +175,6 @@ public:
+      * on the layer.  It does not examine the current plane alpha value.
+      */
+     virtual bool isOpaque(const Layer::State& s) const;
+-    virtual void ReleaseOldBuffer();    //rk : for lcdc composer
+ 
+     /*
+      * isSecure - true if this surface is secure, that is if it prevents
+@@ -399,7 +402,6 @@ private:
+     bool mFiltering;
+     // Whether filtering is needed b/c of the drawingstate
+     bool mNeedsFiltering;
+-    uint32_t    mLastRealtransform;
+     // The mesh used to draw the layer in GLES composition mode
+     mutable Mesh mMesh;
+     // The texture used to draw the layer in GLES composition mode
+@@ -416,7 +418,11 @@ private:
+ 
+     // This layer can be a cursor on some displays.
+     bool mPotentialCursor;
++
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
++    uint32_t    mLastRealtransform;
+     bool mDrawingScreenshot;
++#endif
+ 
+     // Local copy of the queued contents of the incoming BufferQueue
+     mutable Mutex mQueueItemLock;
+diff --git a/services/surfaceflinger/RenderEngine/GLES20RenderEngine.cpp b/services/surfaceflinger/RenderEngine/GLES20RenderEngine.cpp
+index f7f6506..26fea9b 100644
+--- a/services/surfaceflinger/RenderEngine/GLES20RenderEngine.cpp
++++ b/services/surfaceflinger/RenderEngine/GLES20RenderEngine.cpp
+@@ -126,8 +126,12 @@ void GLES20RenderEngine::setupLayerBlending(
+ 
+     if (alpha < 0xFF || !opaque) {
+         glEnable(GL_BLEND);
+-       // glBlendFunc(premultipliedAlpha ? GL_ONE : GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+-       glBlendFuncSeparate(premultipliedAlpha ? GL_ONE : GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
++        glBlendFuncSeparate(premultipliedAlpha ? GL_ONE : GL_SRC_ALPHA,
++                       GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
++#else
++        glBlendFunc(premultipliedAlpha ? GL_ONE : GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
++#endif
+ 
+     } else {
+         glDisable(GL_BLEND);
+diff --git a/services/surfaceflinger/SurfaceFlinger.cpp b/services/surfaceflinger/SurfaceFlinger.cpp
+index 05a14bf..c10f0c1 100644
+--- a/services/surfaceflinger/SurfaceFlinger.cpp
++++ b/services/surfaceflinger/SurfaceFlinger.cpp
+@@ -79,7 +79,10 @@
+ #include <cutils/compiler.h>
+ 
+ #define DISPLAY_COUNT       1
++
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+ #define RK_SURFLGR_VERSION "1.000"
++#endif
+ 
+ /*
+  * DEBUG_SCREENSHOTS: set to true to check that screenshots are not all
+@@ -127,8 +130,12 @@ const String16 sDump("android.permission.DUMP");
+ 
+ SurfaceFlinger::SurfaceFlinger()
+     :   BnSurfaceComposer(),
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+         mHardwareOrientation(0),
+         mUseLcdcComposer(0),
++        mSkipFlag(0),
++        mDelayFlag(0),
++#endif
+         mTransactionFlags(0),
+         mTransactionPending(false),
+         mAnimTransactionPending(false),
+@@ -153,8 +160,6 @@ SurfaceFlinger::SurfaceFlinger()
+         mHWVsyncAvailable(false),
+         mDaltonize(false),
+         mHasColorMatrix(false),
+-        mSkipFlag(0),
+-        mDelayFlag(0),
+         mHasPoweredOff(false),
+         mFrameBuckets(),
+         mTotalTime(0),
+@@ -179,36 +184,19 @@ SurfaceFlinger::SurfaceFlinger()
+             mDebugDDMS = 0;
+         }
+     }
+-    property_get("debug.sf.fps", value, "0");
+-    mDebugFPS = atoi(value);
+     ALOGI_IF(mDebugRegion, "showupdates enabled");
+     ALOGI_IF(mDebugDDMS, "DDMS debugging enabled");
+ 
+-    /**
+-     * .DP : original_display : 
+-     *      原始状态的 display, 长度, 高度, orientation 等配置, 由 kernel 层的对应 device 指定. 
+-     *
+-     * .DP : display_pre_rotation_extension; pre_rotation; pre_rotated_display, display_saw_by_sf_clients :
+-     *      display_pre_rotation_extension 是 对 android 框架的扩展, 可以实现对 primary_display 的预旋转 (pre_rotation).  
+-     *      pre_rotation 之后, sf(surface_flinger) 的 client (boot_animation, window_manager_service, ...) 看到的 primary_display, 
+-     *      将是预旋转之后的 display, 记为 pre_rotated_display 或 display_saw_by_sf_clients. 
+-     *      设备开发人员可以通过 属性 "ro.sf.hwrotation", 来配置 pre_rotation 的具体角度, 参见对 property_hwrotation 的说明. 
+-     *      本扩展目前仅对 primary_display 有效. 
+-     */
+-
+-    /**
+-     * .DP : ro.sf.hwrotation, property_hwrotation : 
+-     *      display_pre_rotation_extension 引入的, 系统预定义的 ro property, 定义在文件 /system/build.prop 中. 
+-     *      用来描述希望在 original_display 上执行的 预旋转(pre_rotation) 在 顺时针方向上的 角度.
+-     *      可能的取值是 0, 90, 180, 270.
+-     */
+-    // 读取 property_hwrotation, 并设置 orientation_of_pre_rotated_display.
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
++    property_get("debug.sf.fps", value, "0");
++    mDebugFPS = atoi(value);
+     property_get("ro.sf.hwrotation", value, "0");
+     mHardwareOrientation = atoi(value) / 90;
+ 
+     property_get("ro.sf.lcdc_composer", value, "0");
+     mUseLcdcComposer = atoi(value);
+     property_set("sys.ggsurflgr.version", RK_SURFLGR_VERSION);
++#endif
+ }
+ 
+ void SurfaceFlinger::onFirstRef()
+@@ -507,11 +495,19 @@ void SurfaceFlinger::init() {
+             sp<FramebufferSurface> fbs = new FramebufferSurface(*mHwc, i,
+                     consumer);
+             int32_t hwcId = allocateHwcDisplayId(type);
++
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+             sp<DisplayDevice> hw = new DisplayDevice(this,
+                     type, hwcId, mHwc->getFormat(hwcId), isSecure, token,
+                     fbs, producer,
+                     mRenderEngine->getEGLConfig(),
+                     mHardwareOrientation);
++#else
++            sp<DisplayDevice> hw = new DisplayDevice(this,
++                    type, hwcId, mHwc->getFormat(hwcId), isSecure, token,
++                    fbs, producer,
++                    mRenderEngine->getEGLConfig());
++#endif
+             if (i > DisplayDevice::DISPLAY_PRIMARY) {
+                 // FIXME: currently we don't get blank/unblank requests
+                 // for displays other than the main display, so we always
+@@ -550,10 +546,12 @@ void SurfaceFlinger::init() {
+     // set initial conditions (e.g. unblank default device)
+     initializeDisplays();
+ 
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+     char value[PROPERTY_VALUE_MAX];
+     memset(value,0,PROPERTY_VALUE_MAX);
+     property_get("sys.enable.wfd.optimize", value, "0");
+     mWfdOptimize = atoi(value);
++#endif
+     // start boot animation
+     startBootAnim();
+ }
+@@ -579,8 +577,8 @@ size_t SurfaceFlinger::getMaxViewportDims() const {
+ 
+ // ----------------------------------------------------------------------------
+ 
+-void SurfaceFlinger::debugShowFPS() const
+-{
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
++void SurfaceFlinger::debugShowFPS() const {
+     static int mFrameCount;
+     static int mLastFrameCount = 0;
+     static nsecs_t mLastFpsTime = 0;
+@@ -595,6 +593,7 @@ void SurfaceFlinger::debugShowFPS() const
+         ALOGD("mFps = %2.3f", mFps);
+     }
+  }
++#endif
+ bool SurfaceFlinger::authenticateSurfaceTexture(
+         const sp<IGraphicBufferProducer>& bufferProducer) const {
+     Mutex::Autolock _l(mStateLock);
+@@ -611,7 +610,7 @@ status_t SurfaceFlinger::getDisplayConfigs(const sp<IBinder>& display,
+     if (!display.get())
+         return NAME_NOT_FOUND;
+ 
+-    int32_t type = NAME_NOT_FOUND;  // current_display_type.
++    int32_t type = NAME_NOT_FOUND;
+     for (int i=0 ; i<DisplayDevice::NUM_BUILTIN_DISPLAY_TYPES ; i++) {
+         if (display == mBuiltinDisplays[i]) {
+             type = i;
+@@ -623,7 +622,9 @@ status_t SurfaceFlinger::getDisplayConfigs(const sp<IBinder>& display,
+         return type;
+     }
+ 
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+     const HWComposer& hwc(getHwComposer());
++#endif
+ 
+     // TODO: Not sure if display density should handled by SF any longer
+     class Density {
+@@ -644,12 +645,11 @@ status_t SurfaceFlinger::getDisplayConfigs(const sp<IBinder>& display,
+ 
+     configs->clear();
+ 
+-    const Vector<HWComposer::DisplayConfig>& hwConfigs =        // hwc_display_config_list
++    const Vector<HWComposer::DisplayConfig>& hwConfigs =
+             getHwComposer().getConfigs(type);
+-    for (size_t c = 0; c < hwConfigs.size(); ++c) 
+-    {
+-        const HWComposer::DisplayConfig& hwConfig = hwConfigs[c];   // current_hwc_display_config
+-        DisplayInfo info = DisplayInfo();   // current_display_info
++    for (size_t c = 0; c < hwConfigs.size(); ++c) {
++        const HWComposer::DisplayConfig& hwConfig = hwConfigs[c];
++        DisplayInfo info = DisplayInfo();
+ 
+         float xdpi = hwConfig.xdpi;
+         float ydpi = hwConfig.ydpi;
+@@ -657,10 +657,8 @@ status_t SurfaceFlinger::getDisplayConfigs(const sp<IBinder>& display,
+         info.w = hwConfig.width;
+         info.h = hwConfig.height;
+ 
+-        /* 若当前 display 是 primary_display, 则... */
+         if (type == DisplayDevice::DISPLAY_PRIMARY) {
+-            // The density of the device 
+-            // is provided by a build property
++            // The density of the device is provided by a build property
+             float density = Density::getBuildDensity() / 160.0f;
+             if (density == 0) {
+                 // the build doesn't provide a density -- this is wrong!
+@@ -679,17 +677,15 @@ status_t SurfaceFlinger::getDisplayConfigs(const sp<IBinder>& display,
+             sp<const DisplayDevice> hw(getDefaultDisplayDevice());
+             info.orientation = hw->getOrientation();
+             
+-            /* 若 display_saw_by_sf_clients 和 original_display 的 宽高信息要对调, 则... */
+-            if ( orientationSwap() ) 
+-            {
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
++            if (orientationSwap()) {
+                 xdpi = hwc.getDpiY(type);
+                 ydpi = hwc.getDpiX(type);
+                 info.w = hwc.getHeight(type);
+                 info.h = hwc.getWidth(type);
+             }
+-        } 
+-        /* 否则, 即当前 display "不是" primary_display, ... */
+-        else {
++#endif
++        } else {
+             // TODO: where should this value come from?
+             static const int TV_DENSITY = 213;
+             info.density = TV_DENSITY / 160.0f;
+@@ -951,10 +947,12 @@ void SurfaceFlinger::eventControl(int disp, int event, int enabled) {
+ 
+ void SurfaceFlinger::onMessageReceived(int32_t what) {
+     ATRACE_CALL();
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+     if (mDelayFlag) {
+         usleep(20000);
+         mDelayFlag = 0;
+     }
++#endif
+     switch (what) {
+         case MessageQueue::TRANSACTION: {
+             handleMessageTransaction();
+@@ -993,53 +991,23 @@ bool SurfaceFlinger::handleMessageInvalidate() {
+     return handlePageFlip();
+ }
+ 
+-static int frm_count = 0;
+ void SurfaceFlinger::handleMessageRefresh() {
+     ATRACE_CALL();
+-    // struct timeval tpend1, tpend2;
+-    // long usec1 = 0;
+-    // gettimeofday(&tpend1,NULL);
+-    // ALOGD("sf start");
+     preComposition();
+     rebuildLayerStacks();
+     setUpHWComposer();
+     doDebugFlashRegions();
+     doComposition();
+     postComposition();
+-    if(frm_count++%300==0) {
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
++    static int frm_count = 0;
++    if (frm_count++ % 300 == 0) {
+         frm_count = 1;
+         char value[PROPERTY_VALUE_MAX];
+         property_get("debug.sf.fps", value, "0");
+         mDebugFPS = atoi(value);
+     }
+-
+-    // gettimeofday(&tpend2,NULL);
+-    // usec1 = 1000*(tpend2.tv_sec - tpend1.tv_sec) + (tpend2.tv_usec- tpend1.tv_usec)/1000;
+-    // if((int)usec1 > 5)
+-    // ALOGD("sf use time=%ld ms",usec1);
+-#ifdef ENABLE_WFD_SKIP_FRAME
+-     char value[PROPERTY_VALUE_MAX];
+-     memset(value,0,PROPERTY_VALUE_MAX);
+-     property_get("sys_graphic.wfdstatus", value, "false");
+-     if (!strcmp(value,"true"))
+-     {
+-       memset(value,0,PROPERTY_VALUE_MAX);
+-       property_get("sys_graphic.wfd.videosize", value, "0");
+-       int type = atoi(value);
+-       if (type == 3)
+-       {
+-         usleep(80000);
+-       }
+-       else if (type == 2)
+-       {
+-         usleep(20000);
+-       }
+-       else
+-       {
+-       }
+-     }
+ #endif
+-    //ALOGD("sf end");
+ }
+ 
+ void SurfaceFlinger::doDebugFlashRegions()
+@@ -1272,7 +1240,7 @@ void SurfaceFlinger::setUpHWComposer() {
+                      * and build the transparent region of the FB
+                      */
+                     const sp<Layer>& layer(currentLayers[i]);
+-#ifdef USE_PREPARE_FENCE
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+                     layer->setAcquireFence(hw, *cur);
+ #endif
+                     layer->setPerFrameData(hw, *cur);
+@@ -1302,20 +1270,7 @@ void SurfaceFlinger::setUpHWComposer() {
+ 
+         status_t err = hwc.prepare();
+         ALOGE_IF(err, "HWComposer::prepare failed (%s)", strerror(-err));
+-#ifndef USE_PREPARE_FENCE
+-        if (mUseLcdcComposer) {
+-            for (size_t dpy=0 ; dpy<mDisplays.size() ; dpy++) {
+-                sp<const DisplayDevice> hw(mDisplays[dpy]);
+-                const int32_t id = hw->getHwcDisplayId();
+-                if (id >= 0) {
+-                    const bool hasHwcComposition = hwc.hasHwcComposition(id);
+-                    if(!hasHwcComposition) {
+-                        ReleaseOldBuffer();
+-                    }
+-                }
+-            }
+-        }
+-#endif
++
+         for (size_t dpy=0 ; dpy<mDisplays.size() ; dpy++) {
+             sp<const DisplayDevice> hw(mDisplays[dpy]);
+             hw->prepareFrame(hwc);
+@@ -1351,7 +1306,6 @@ void SurfaceFlinger::postFramebuffer()
+ 
+     const nsecs_t now = systemTime();
+     mDebugInSwapBuffers = now;
+-    int r = 0;
+     HWComposer& hwc(getHwComposer());
+     if (hwc.initCheck() == NO_ERROR) {
+         if (!hwc.supportsFramebufferTarget()) {
+@@ -1360,19 +1314,19 @@ void SurfaceFlinger::postFramebuffer()
+             //    for the current rendering API."
+             getDefaultDisplayDevice()->makeCurrent(mEGLDisplay, mEGLContext);
+         }
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+         hwc.setSkipFrame(mSkipFlag);
+         mSkipFlag = 0;
+-#ifdef TARGET_BOARD_PLATFORM_RK30XXB
+-        hwc.fbs_post();
+-#endif
+-        r = hwc.commit();
++        hwc.commit();
+     }
+-    if (mDebugFPS > 0)
+-    {    //add by qiuen
++    if (mDebugFPS > 0) {
+         debugShowFPS();
+     }
+     if (mUseLcdcComposer) {
+         ReleaseOldBuffer();
++#else
++        hwc.commit();
++#endif
+     }
+ 
+     // make the default display current because the VirtualDisplayDevice code cannot
+@@ -1482,16 +1436,16 @@ void SurfaceFlinger::handleTransactionLocked(uint32_t transactionFlags)
+             for (size_t i=0 ; i<dc ; i++) {
+                 const ssize_t j = curr.indexOfKey(draw.keyAt(i));
+                 if (j < 0) {
+-                    if (draw[i].type == HWC_DISPLAY_VIRTUAL)
+-                    {
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
++                    if (draw[i].type == HWC_DISPLAY_VIRTUAL) {
+                         char value[PROPERTY_VALUE_MAX];
+                         property_get("sys.cts_gts.status", value, "0");
+-                        int IsCTS =  !strcmp(value,"true");
+-                        if(IsCTS)
+-                        {
++                        int IsCTS = !strcmp(value,"true");
++                        if (IsCTS) {
+                             property_set("sys.hwc.compose_policy", "6");
+                         }
+                     }
++#endif
+                     // in drawing state but not in current state
+                     if (!draw[i].isMainDisplay()) {
+                         // Call makeCurrent() on the primary display so we can
+@@ -1566,13 +1520,14 @@ void SurfaceFlinger::handleTransactionLocked(uint32_t transactionFlags)
+                         // Virtual displays without a surface are dormant:
+                         // they have external state (layer stack, projection,
+                         // etc.) but no internal state (i.e. a DisplayDevice).
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+                         char value[PROPERTY_VALUE_MAX];
+                         property_get("sys.cts_gts.status", value, "0");
+-                        int IsCTS =  !strcmp(value,"true");
+-                        if(IsCTS)
+-                        {
++                        int IsCTS = !strcmp(value,"true");
++                        if (IsCTS) {
+                             property_set("sys.hwc.compose_policy", "0");
+                         }
++#endif
+                         if (state.surface != NULL) {
+ 
+                             int width = 0;
+@@ -1613,12 +1568,20 @@ void SurfaceFlinger::handleTransactionLocked(uint32_t transactionFlags)
+ 
+                     const wp<IBinder>& display(curr.keyAt(i));
+                     if (dispSurface != NULL) {
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+                         sp<DisplayDevice> hw = new DisplayDevice(this,
+                                 state.type, hwcDisplayId,
+                                 mHwc->getFormat(hwcDisplayId), state.isSecure,
+                                 display, dispSurface, producer,
+                                 mRenderEngine->getEGLConfig(),
+-                                0); // 'hardwareOrientation', 非 primary_display 不涉及 pre_rotation.
++                                0);
++#else
++                        sp<DisplayDevice> hw = new DisplayDevice(this,
++                                state.type, hwcDisplayId,
++                                mHwc->getFormat(hwcDisplayId), state.isSecure,
++                                display, dispSurface, producer,
++                                mRenderEngine->getEGLConfig());
++#endif
+                         hw->setLayerStack(state.layerStack);
+                         hw->setProjection(state.orientation,
+                                 state.viewport, state.frame);
+@@ -2052,7 +2015,6 @@ bool SurfaceFlinger::doComposeSurfaces(const sp<const DisplayDevice>& hw, const
+     HWComposer& hwc(getHwComposer());
+     HWComposer::LayerListIterator cur = hwc.begin(id);
+     const HWComposer::LayerListIterator end = hwc.end(id);
+-    static int bootcnt = 0;
+     bool hasGlesComposition = hwc.hasGlesComposition(id);
+     if (hasGlesComposition) {
+         if (!hw->makeCurrent(mEGLDisplay, mEGLContext)) {
+@@ -2066,19 +2028,23 @@ bool SurfaceFlinger::doComposeSurfaces(const sp<const DisplayDevice>& hw, const
+         }
+ 
+         // Never touch the framebuffer if we don't have any framebuffer layers
+-        bool  ismixVH = false;
++
+         const bool hasHwcComposition = hwc.hasHwcComposition(id);
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
++        bool  ismixVH = false;
++        static int bootcnt = 0;
+         const bool haveBlit = hwc.hasBlitComposition(id);
+         const bool haveLcdc = hwc.hasLcdComposition(id);
+ 
+-        if(id == 1 && cur != end)
++        if (id == 1 && cur != end)
+             ismixVH = cur->getCompositionType() == HWC_MIX_V2;
+-        if(bootcnt < 4)
+-        {
+-            bootcnt ++;
+-            // do nothing ,for kernel->android 3 frames black
+-        }
+-        else if (hasHwcComposition || haveBlit || haveLcdc || ismixVH)
++        if (bootcnt < 4) {
++            bootcnt++;
++            // do nothing, for kernel->android 3 frames black
++        } else if (hasHwcComposition || haveBlit || haveLcdc || ismixVH)
++#else
++        if (hasHwcComposition)
++#endif
+         {
+             // when using overlays, we assume a fully transparent framebuffer
+             // NOTE: we could reduce how much we need to clear, for instance
+@@ -2132,11 +2098,14 @@ bool SurfaceFlinger::doComposeSurfaces(const sp<const DisplayDevice>& hw, const
+      */
+ 
+     const Vector< sp<Layer> >& layers(hw->getVisibleLayersSortedByZ());
+-    bool wfdOptimize = mWfdOptimize && (hw->getDisplayType()==DisplayDevice::DISPLAY_VIRTUAL) && (mUseLcdcComposer==false);
+-    if (wfdOptimize)
+-    {
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
++    bool wfdOptimize = mWfdOptimize &&
++                    (hw->getDisplayType()==DisplayDevice::DISPLAY_VIRTUAL) &&
++                    (mUseLcdcComposer==false);
++    if (wfdOptimize) {
+         engine.clearWithColor(0, 0, 0, 0);
+     }
++#endif
+     const size_t count = layers.size();
+     const Transform& tr = hw->getTransform();
+     if (cur != end) {
+@@ -2160,14 +2129,15 @@ bool SurfaceFlinger::doComposeSurfaces(const sp<const DisplayDevice>& hw, const
+                         break;
+                     }
+                     case HWC_FRAMEBUFFER: {
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+                         if (!wfdOptimize)
+                         {
+                             layer->draw(hw, clip);
+                         }
+                         break;
+                     }
+-                    case HWC_BLITTER:  {
+-                        if(count==4
++                    case HWC_BLITTER: {
++                        if (count==4
+                         && !strcmp(layers[0]->getName(),"SurfaceView")
+                         && !strcmp(layers[1]->getName(),"com.android.launcher3/com.android.launcher3.WallpaperPickerActivity")
+                         && strstr(layers[2]->getName(),"com.android.")
+@@ -2177,6 +2147,9 @@ bool SurfaceFlinger::doComposeSurfaces(const sp<const DisplayDevice>& hw, const
+                             ALOGW("skip error frame");
+                             return true;
+                         }
++#else
++                        layer->draw(hw, clip);
++#endif
+                         break;
+                     }
+                     case HWC_FRAMEBUFFER_TARGET: {
+@@ -2187,9 +2160,6 @@ bool SurfaceFlinger::doComposeSurfaces(const sp<const DisplayDevice>& hw, const
+                     }
+                 }
+             }
+-#ifndef USE_PREPARE_FENCE
+-            layer->setAcquireFence(hw, *cur);
+-#endif
+         }
+     } else {
+         // we're not using h/w composer
+@@ -2198,10 +2168,10 @@ bool SurfaceFlinger::doComposeSurfaces(const sp<const DisplayDevice>& hw, const
+             const Region clip(dirty.intersect(
+                     tr.transform(layer->visibleRegion)));
+             if (!clip.isEmpty()) {
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+                 if (!wfdOptimize)
+-                {
+-                layer->draw(hw, clip);
+-                }
++#endif
++                    layer->draw(hw, clip);
+             }
+         }
+     }
+@@ -3024,6 +2994,7 @@ SurfaceFlinger::getLayerSortedByZForHwcDisplay(int id) {
+     return getDisplayDevice(dpy)->getVisibleLayersSortedByZ();
+ }
+ 
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+ bool SurfaceFlinger::ReleaseOldBuffer(void)
+ {
+     if (mUseLcdcComposer) {
+@@ -3036,6 +3007,7 @@ bool SurfaceFlinger::ReleaseOldBuffer(void)
+     }
+     return true;
+ }
++#endif
+ bool SurfaceFlinger::startDdmConnection()
+ {
+     void* libddmconnection_dso =
+@@ -3460,23 +3432,28 @@ void SurfaceFlinger::renderScreenImplLocked(
+     RenderEngine& engine(getRenderEngine());
+ 
+     // get screen geometry
+-    uint32_t hw_w = hw->getWidth();
+-    uint32_t hw_h = hw->getHeight();
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
++    int32_t hw_w = hw->getWidth();
++    int32_t hw_h = hw->getHeight();
+     if (orientationSwap()) {
+         hw_w = hw->getHeight();
+         hw_h = hw->getWidth();
+     }
+ 
++    HWComposer& hwc(getHwComposer());
++    if (mUseLcdcComposer)
++    {
++        if (hwc.initCheck() == NO_ERROR) {
++            hwc.layerRecover();
++        }
++    }
++#else
++    const int32_t hw_w = hw->getWidth();
++    const int32_t hw_h = hw->getHeight();
++#endif
+     const bool filtering = static_cast<uint32_t>(reqWidth) != hw_w ||
+                            static_cast<uint32_t>(reqHeight) != hw_h;
+ 
+-    HWComposer& hwc(getHwComposer());
+-   if(mUseLcdcComposer)
+-   {
+-       if (hwc.initCheck() == NO_ERROR) {
+-           hwc.layerRecover();
+-       }
+-   }
+ 
+     // if a default or invalid sourceCrop is passed in, set reasonable values
+     if (sourceCrop.width() == 0 || sourceCrop.height() == 0 ||
+@@ -3512,22 +3489,25 @@ void SurfaceFlinger::renderScreenImplLocked(
+ 
+     const LayerVector& layers( mDrawingState.layersSortedByZ );
+     const size_t count = layers.size();
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+     {
+         const int32_t id = hw->getHwcDisplayId();
+         HWComposer::LayerListIterator cur = hwc.begin(id);
+         HWComposer::LayerListIterator end = hwc.end(id);
+-        for (;cur!=end;++cur)
++        for (; cur!=end; ++cur)
+         {
+             hwc_layer_1_t* hwcLayer = cur->gethwcLayer();
+-            hwc.videoCopyBit(hwcLayer,1);
++            hwc.videoCopyBit(hwcLayer, 1);
+         }
+     }
++#endif
+     for (size_t i=0 ; i<count ; ++i) {
+         const sp<Layer>& layer(layers[i]);
+         const Layer::State& state(layer->getDrawingState());
+         if (state.layerStack == hw->getLayerStack()) {
+             if (state.z >= minLayerZ && state.z <= maxLayerZ) {
+                 if (layer->isVisible()) {
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+                     if (!strcmp("excluded-window", layer->getName().string())) {
+                         continue;
+                     }
+@@ -3535,12 +3515,17 @@ void SurfaceFlinger::renderScreenImplLocked(
+                     layer->setDrawingScreenshot(true);
+                     layer->draw(hw, useIdentityTransform);
+                     layer->setDrawingScreenshot(false);
++#else
++                    if (filtering) layer->setFiltering(true);
++                    layer->draw(hw, useIdentityTransform);
++#endif
+                     if (filtering) layer->setFiltering(false);
+                 }
+             }
+         }
+     }
+ 
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+     {
+         const int32_t id = hw->getHwcDisplayId();
+         HWComposer::LayerListIterator cur = hwc.begin(id);
+@@ -3551,10 +3536,14 @@ void SurfaceFlinger::renderScreenImplLocked(
+             hwc.videoCopyBit(hwcLayer,0);//reset video
+         }
+     }
+-    // compositionComplete is needed for older driver
+     hw->compositionComplete();
+     hw->setViewportAndProjection();
+     mDelayFlag = 1;
++#else
++    // compositionComplete is needed for older driver
++    hw->compositionComplete();
++    hw->setViewportAndProjection();
++#endif
+ }
+ 
+ 
+@@ -3575,6 +3564,7 @@ status_t SurfaceFlinger::captureScreenImplLocked(
+         std::swap(hw_w, hw_h);
+     }
+ 
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+     if (orientationSwap()) {
+         if (reqWidth == 0 && reqHeight == 0) {
+             reqWidth = hw_h;
+@@ -3589,7 +3579,9 @@ status_t SurfaceFlinger::captureScreenImplLocked(
+             reqWidth  = (!reqWidth)  ? hw_h : reqWidth;
+             reqHeight = (!reqHeight) ? hw_w : reqHeight;
+         }
+-    } else {
++    } else
++#endif
++    {
+         if ((reqWidth > hw_w) || (reqHeight > hw_h)) {
+             ALOGE("size mismatch (%d, %d) > (%d, %d)",
+                         reqWidth, reqHeight, hw_w, hw_h);
+diff --git a/services/surfaceflinger/SurfaceFlinger.h b/services/surfaceflinger/SurfaceFlinger.h
+index 69192cb..25ce211 100644
+--- a/services/surfaceflinger/SurfaceFlinger.h
++++ b/services/surfaceflinger/SurfaceFlinger.h
+@@ -78,17 +78,17 @@ enum {
+     eDisplayTransactionNeeded = 0x04,
+     eTransactionMask          = 0x07
+ };
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+ enum
+ {
+     /* NOTE: These enums are unknown to Android.
+      * Android only checks against HWC_FRAMEBUFFER.
+      * This layer is to be drawn into the framebuffer by hwc blitter */
+-    //HWC_TOWIN0 = 0x10,
+-    //HWC_TOWIN1,
+     HWC_BLITTER = 100,
+     HWC_DIM,
+     HWC_CLEAR_HOLE
+ };
++#endif
+ 
+ class SurfaceFlinger : public BnSurfaceComposer,
+                        private IBinder::DeathRecipient,
+@@ -136,7 +136,6 @@ public:
+     // is received
+     // TODO: this should be made accessible only to MessageQueue
+     void onMessageReceived(int32_t what);
+-    void debugShowFPS() const;
+ 
+     // for debugging only
+     // TODO: this should be made accessible only to HWComposer
+@@ -146,24 +145,21 @@ public:
+         return *mRenderEngine;
+     }
+ 
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
++    void debugShowFPS() const;
++
+     // see DisplayDevice::mHardwareOrientation
+     int mHardwareOrientation;
+     // Get hardware orientation
+     int getHardwareOrientation() const { return mHardwareOrientation; }
+-    /** 
+-     * orientation_of_pre_rotated_display 是否是 90 度的整数倍.
+-     * 若是, 则 pre_rotated_display 的 "宽度 和 高度", 将分别是 original_display 的 "高度 和 宽度".
+-     */
+-    bool orientationSwap() const { return mHardwareOrientation % 2; }       // .T : 改名称. 
++    bool orientationSwap() const { return mHardwareOrientation % 2; }
+ 
+     int mUseLcdcComposer;
+-	Mutex  mCaptureScreenLock;
++    Mutex  mCaptureScreenLock;
+     bool ReleaseOldBuffer(void);    //rk : for lcdc composer
+ 
+-    /* ------------------------------------------------------------------------
+-    * H/W composer
+-    */
+     HWComposer& getHwComposer() const { return *mHwc; }
++#endif
+ 
+ private:
+     friend class Client;
+@@ -395,6 +391,14 @@ private:
+     int32_t allocateHwcDisplayId(DisplayDevice::DisplayType type);
+ 
+     /* ------------------------------------------------------------------------
++     * H/W composer
++     */
++
++#ifndef ROCKCHIP_GPU_LIB_ENABLE
++    HWComposer& getHwComposer() const { return *mHwc; }
++#endif
++
++    /* ------------------------------------------------------------------------
+      * Compositing
+      */
+     void invalidateHwcGeometry();
+@@ -500,7 +504,6 @@ private:
+     bool mBootFinished;
+     bool mForceFullDamage;
+ 
+-    int mWfdOptimize;
+     // these are thread safe
+     mutable MessageQueue mEventQueue;
+     FrameTracker mAnimFrameTracker;
+@@ -521,13 +524,16 @@ private:
+ 
+     Daltonizer mDaltonizer;
+     bool mDaltonize;
+-    int mDebugFPS;
+ 
+     mat4 mColorMatrix;
+     bool mHasColorMatrix;
++#ifdef ROCKCHIP_GPU_LIB_ENABLE
+     // add by rk for workwround some display issue.
+     int mSkipFlag;
+     int mDelayFlag;
++    int mWfdOptimize;
++    int mDebugFPS;
++#endif
+ 
+     // Static screen stats
+     bool mHasPoweredOff;

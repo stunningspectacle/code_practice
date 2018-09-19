@@ -1,0 +1,855 @@
+From c4f80ba09cf80ac4ef30ad086fae8f322079f36a Mon Sep 17 00:00:00 2001
+From: Henrik Smiding <henrik.smiding@intel.com>
+Date: Tue, 16 Sep 2014 16:56:47 +0200
+Subject: [PATCH 07/12] Implement SkSetPixelRect16/32 functions
+
+Implements functions to set 16/32-bit pixel values in two dimensions.
+It is an extension of the previous SkSetPixels16/32 functions, with an
+added 'height' parameter.
+
+The following functions were optimized with SkSetPixels16/32:
+* internalErase in SkBitmap
+* blitRect in SkRGB16_Opaque_Blitter
+* fillRect in SkGIFMovie
+* ColorRect32 in SkBlitRow
+
+This has been verified to improve performance in DisplayTester and skia_bench
+benchmarks. Probably many more.
+
+Change-Id: I31b2068b272ac6c7214440e7925cc965c0ccb767
+Old-Change-ID: I44c2c12501831ace45189e7258d56feaea3a01a2
+Ori-Change-ID: I8c0741322e09f3cf875099f24c187c62ddcb7742
+Orig-Change-Id: I3d0b6547ca92c8fba4550b721c68a91cb4d82235
+Category: aosp improvement
+Domain: AOSP-Others
+Origin: internal
+Upstream-Candidate: yes
+Tracked-On: https://jira01.devtools.intel.com/browse/CTEAN-1950
+Orig-Tracked-On: https://jira01.devtools.intel.com/browse/IMINAN-2473
+Signed-off-by: Joakim Landberg <joakim.landberg@intel.com>
+Old-Reviewed-on: https://android.intel.com:443/374227
+Signed-off-by: Xinyun Liu <xinyun.liu@intel.com>
+---
+ include/core/SkUtils.h            |   76 ++++++++++-----
+ src/core/SkBitmap.cpp             |   11 +--
+ src/core/SkBlitter_RGB16.cpp      |    5 +-
+ src/core/SkDraw.cpp               |    4 +-
+ src/core/SkUtils.cpp              |   60 +++++++++---
+ src/images/SkMovie_gif.cpp        |    5 +-
+ src/opts/SkBlitRect_opts_SSE2.cpp |  117 ++----------------------
+ src/opts/SkCacheConfig_x86.h      |   20 ++--
+ src/opts/SkUtils_opts_SSE2.cpp    |  183 ++++++++++++++++++++++++++++++++-----
+ src/opts/SkUtils_opts_SSE2.h      |    8 +-
+ src/opts/SkUtils_opts_arm.cpp     |   40 ++++++--
+ src/opts/SkUtils_opts_none.cpp    |   16 +++-
+ src/opts/opts_check_x86.cpp       |   16 +++-
+ 13 files changed, 346 insertions(+), 215 deletions(-)
+
+diff --git a/include/core/SkUtils.h b/include/core/SkUtils.h
+index 9eabcb0..e9b305d 100644
+--- a/include/core/SkUtils.h
++++ b/include/core/SkUtils.h
+@@ -41,36 +41,70 @@ SkMemcpy32Proc SkMemcpy32GetPlatformProc();
+ 
+ ///////////////////////////////////////////////////////////////////////////////
+ 
+-/** Similar to memset(), but it assigns a 16bit value into the buffer.
+-    @param buffer     The memory to have value copied into it
+-    @param value      The 16bit value to be copied into buffer
+-    @param count      The number of times value should be copied into the buffer.
+-    @param totalCount The total number of times value will be copied into the buffer.
++/** Similar to memset(), but it assigns a 16bit color into the buffer.
++    @param buffer     The memory to have the color copied into it
++    @param color      The 16bit color value to be copied into buffer
++    @param count      The number of times the color should be copied into the buffer.
++    @param totalCount The total number of times the color will be copied into the buffer.
+                       This is used to indicate the total size of all the operations
+                       called in a loop.
+ */
+-void sk_set_pixels16_portable(uint16_t dst[], uint16_t value, int count, int totalCount);
+-typedef void (*SkSetPixels16Proc)(uint16_t dst[], uint16_t value, int count, int totalCount);
+-SkSetPixels16Proc SkSetPixels16GetPlatformProc();
+-
+-/** Similar to memset(), but it assigns a 32bit value into the buffer.
+-    @param buffer     The memory to have value copied into it
+-    @param value      The 32bit value to be copied into buffer
+-    @param count      The number of times value should be copied into the buffer.
+-    @param totalCount The total number of times value will be copied into the buffer.
++void sk_set_pixel_row16_portable(uint16_t dst[], uint16_t color, int count, int totalCount);
++typedef void (*SkSetPixelRow16Proc)(uint16_t dst[], uint16_t color, int count, int totalCount);
++SkSetPixelRow16Proc SkSetPixelRow16GetPlatformProc();
++
++/** Similar to memset(), but it assigns a 32bit color into the buffer.
++    @param buffer     The memory to have the color copied into it
++    @param color      The 32bit color value to be copied into buffer
++    @param count      The number of times the color should be copied into the buffer.
++    @param totalCount The total number of times the color will be copied into the buffer.
+                       This is used to indicate the total size of all the operations
+                       called in a loop.
+ */
+-void sk_set_pixels32_portable(uint32_t dst[], uint32_t value, int count, int totalCount);
+-typedef void (*SkSetPixels32Proc)(uint32_t dst[], uint32_t value, int count, int totalCount);
+-SkSetPixels32Proc SkSetPixels32GetPlatformProc();
++void sk_set_pixel_row32_portable(uint32_t dst[], uint32_t color, int count, int totalCount);
++typedef void (*SkSetPixelRow32Proc)(uint32_t dst[], uint32_t color, int count, int totalCount);
++SkSetPixelRow32Proc SkSetPixelRow32GetPlatformProc();
++
++#ifndef SkSetPixelRow16
++extern SkSetPixelRow16Proc SkSetPixelRow16;
++#endif
++
++#ifndef SkSetPixelRow32
++extern SkSetPixelRow32Proc SkSetPixelRow32;
++#endif
++
++///////////////////////////////////////////////////////////////////////////////
++
++/** An extension of SetPixelRow16(), that sets a rectangular area instead.
++    @param buffer   The memory to have the color copied into it
++    @param color    The 16bit color value to be copied into buffer
++    @param width    The width of the rectangle, in pixels.
++    @param height   The height of the rectangle, in pixels.
++    @param rowBytes The width of one row in the buffer, in bytes. This is the
++                    value that will be added to 'buffer' to get to the next row.
++*/
++void sk_set_pixel_rect16_portable(uint16_t dst[], uint16_t color, int width, int height, int rowBytes);
++typedef void (*SkSetPixelRect16Proc)(uint16_t dst[], uint16_t color, int width, int height, int rowBytes);
++SkSetPixelRect16Proc SkSetPixelRect16GetPlatformProc();
++
++/** An extension of SetPixelRow32(), that sets a rectangular area instead.
++    @param buffer   The memory to have the color copied into it
++    @param color    The 16bit color value to be copied into buffer
++    @param width    The width of the rectangle, in pixels.
++    @param height   The height of the rectangle, in pixels.
++    @param rowBytes The width of one row in the buffer, in bytes. This is the
++                    value that will be added to 'buffer' to get to the next row.
++*/
++void sk_set_pixel_rect32_portable(uint32_t dst[], uint32_t color, int width, int height, int rowBytes);
++typedef void (*SkSetPixelRect32Proc)(uint32_t dst[], uint32_t color, int width, int height, int rowBytes);
++SkSetPixelRect32Proc SkSetPixelRect32GetPlatformProc();
+ 
+-#ifndef SkSetPixels16
+-extern SkSetPixels16Proc SkSetPixels16;
++#ifndef SkSetPixelRect16
++extern SkSetPixelRect16Proc SkSetPixelRect16;
+ #endif
+ 
+-#ifndef SkSetPixels32
+-extern SkSetPixels32Proc SkSetPixels32;
++#ifndef SkSetPixelRect32
++extern SkSetPixelRect32Proc SkSetPixelRect32;
+ #endif
+ 
+ ///////////////////////////////////////////////////////////////////////////////
+diff --git a/src/core/SkBitmap.cpp b/src/core/SkBitmap.cpp
+index 789bf11..56b655f 100644
+--- a/src/core/SkBitmap.cpp
++++ b/src/core/SkBitmap.cpp
+@@ -766,10 +766,8 @@ void SkBitmap::internalErase(const SkIRect& area,
+                                 g >> (8 - SK_G16_BITS),
+                                 b >> (8 - SK_B16_BITS));
+             }
+-            while (--height >= 0) {
+-                sk_memset16(p, v, width);
+-                p = (uint16_t*)((char*)p + rowBytes);
+-            }
++
++            SkSetPixelRect16(p, v, width, height, rowBytes);
+             break;
+         }
+         case kBGRA_8888_SkColorType:
+@@ -784,10 +782,7 @@ void SkBitmap::internalErase(const SkIRect& area,
+             uint32_t v = kRGBA_8888_SkColorType == this->colorType() ?
+                          SkPackARGB_as_RGBA(a, r, g, b) : SkPackARGB_as_BGRA(a, r, g, b);
+ 
+-            while (--height >= 0) {
+-                sk_memset32(p, v, width);
+-                p = (uint32_t*)((char*)p + rowBytes);
+-            }
++            SkSetPixelRect32(p, v, width, height, rowBytes);
+             break;
+         }
+         default:
+diff --git a/src/core/SkBlitter_RGB16.cpp b/src/core/SkBlitter_RGB16.cpp
+index 4503a2a..de159e8 100644
+--- a/src/core/SkBlitter_RGB16.cpp
++++ b/src/core/SkBlitter_RGB16.cpp
+@@ -503,10 +503,7 @@ void SkRGB16_Opaque_Blitter::blitRect(int x, int y, int width, int height) {
+             device = (uint16_t*)((char*)device + deviceRB);
+         }
+     } else {  // no dither
+-        while (--height >= 0) {
+-            sk_memset16(device, color16, width);
+-            device = (uint16_t*)((char*)device + deviceRB);
+-        }
++        SkSetPixelRect16(device, color16, width, height, deviceRB);
+     }
+ }
+ 
+diff --git a/src/core/SkDraw.cpp b/src/core/SkDraw.cpp
+index 16ec807..b3557b9 100644
+--- a/src/core/SkDraw.cpp
++++ b/src/core/SkDraw.cpp
+@@ -140,11 +140,11 @@ static void D_Clear_BitmapXferProc(void* pixels, size_t bytes, uint32_t, size_t)
+ static void D_Dst_BitmapXferProc(void*, size_t, uint32_t, size_t) {}
+ 
+ static void D32_Src_BitmapXferProc(void* pixels, size_t bytes, uint32_t data, size_t totalBytes) {
+-    SkSetPixels32((uint32_t*)pixels, data, bytes >> 2, totalBytes >> 2);
++    SkSetPixelRow32((uint32_t*)pixels, data, bytes >> 2, totalBytes >> 2);
+ }
+ 
+ static void D16_Src_BitmapXferProc(void* pixels, size_t bytes, uint32_t data, size_t totalBytes) {
+-    SkSetPixels16((uint16_t*)pixels, data, bytes >> 1, totalBytes >> 1);
++    SkSetPixelRow16((uint16_t*)pixels, data, bytes >> 1, totalBytes >> 1);
+ }
+ 
+ static void DA8_Src_BitmapXferProc(void* pixels, size_t bytes, uint32_t data, size_t) {
+diff --git a/src/core/SkUtils.cpp b/src/core/SkUtils.cpp
+index 7339422..8217302 100644
+--- a/src/core/SkUtils.cpp
++++ b/src/core/SkUtils.cpp
+@@ -151,29 +151,61 @@ void sk_memcpy32(uint32_t dst[], const uint32_t src[], int count) {
+ 
+ ///////////////////////////////////////////////////////////////////////////////
+ 
+-void sk_set_pixels16_portable(uint16_t dst[], uint16_t value, int count, int) {
+-    sk_memset16_portable(dst, value, count);
++void sk_set_pixel_row16_portable(uint16_t dst[], uint16_t color, int count, int) {
++    sk_memset16_portable(dst, color, count);
+ }
+ 
+-void sk_set_pixels32_portable(uint32_t dst[], uint32_t value, int count, int) {
+-    sk_memset32_portable(dst, value, count);
++void sk_set_pixel_row32_portable(uint32_t dst[], uint32_t color, int count, int) {
++    sk_memset32_portable(dst, color, count);
+ }
+ 
+-static void sk_set_pixels16_stub(uint16_t dst[], uint16_t value, int count, int totalCount) {
+-    SkSetPixels16Proc proc = SkSetPixels16GetPlatformProc();
+-    SkSetPixels16 = proc ? proc : sk_set_pixels16_portable;
+-    SkSetPixels16(dst, value, count, totalCount);
++static void sk_set_pixel_row16_stub(uint16_t dst[], uint16_t color, int count, int totalCount) {
++    SkSetPixelRow16Proc proc = SkSetPixelRow16GetPlatformProc();
++    SkSetPixelRow16 = proc ? proc : sk_set_pixel_row16_portable;
++    SkSetPixelRow16(dst, color, count, totalCount);
+ }
+ 
+-SkSetPixels16Proc SkSetPixels16 = sk_set_pixels16_stub;
++SkSetPixelRow16Proc SkSetPixelRow16 = sk_set_pixel_row16_stub;
+ 
+-static void sk_set_pixels32_stub(uint32_t dst[], uint32_t value, int count, int totalCount) {
+-    SkSetPixels32Proc proc = SkSetPixels32GetPlatformProc();
+-    SkSetPixels32 = proc ? proc : sk_set_pixels32_portable;
+-    SkSetPixels32(dst, value, count, totalCount);
++static void sk_set_pixel_row32_stub(uint32_t dst[], uint32_t color, int count, int totalCount) {
++    SkSetPixelRow32Proc proc = SkSetPixelRow32GetPlatformProc();
++    SkSetPixelRow32 = proc ? proc : sk_set_pixel_row32_portable;
++    SkSetPixelRow32(dst, color, count, totalCount);
+ }
+ 
+-SkSetPixels32Proc SkSetPixels32 = sk_set_pixels32_stub;
++SkSetPixelRow32Proc SkSetPixelRow32 = sk_set_pixel_row32_stub;
++
++///////////////////////////////////////////////////////////////////////////////
++
++void sk_set_pixel_rect16_portable(uint16_t dst[], uint16_t color, int width, int height, int rowBytes) {
++    while (--height >= 0) {
++        sk_memset16_portable(dst, color, width);
++        dst = (uint16_t*)((char*)dst + rowBytes);
++    }
++}
++
++void sk_set_pixel_rect32_portable(uint32_t dst[], uint32_t color, int width, int height, int rowBytes) {
++    while (--height >= 0) {
++        sk_memset32_portable(dst, color, width);
++        dst = (uint32_t*)((char*)dst + rowBytes);
++    }
++}
++
++static void sk_set_pixel_rect16_stub(uint16_t dst[], uint16_t color, int width, int height, int rowBytes) {
++    SkSetPixelRect16Proc proc = SkSetPixelRect16GetPlatformProc();
++    SkSetPixelRect16 = proc ? proc : sk_set_pixel_rect16_portable;
++    SkSetPixelRect16(dst, color, width, height, rowBytes);
++}
++
++SkSetPixelRect16Proc SkSetPixelRect16 = sk_set_pixel_rect16_stub;
++
++static void sk_set_pixel_rect32_stub(uint32_t dst[], uint32_t color, int width, int height, int rowBytes) {
++    SkSetPixelRect32Proc proc = SkSetPixelRect32GetPlatformProc();
++    SkSetPixelRect32 = proc ? proc : sk_set_pixel_rect32_portable;
++    SkSetPixelRect32(dst, color, width, height, rowBytes);
++}
++
++SkSetPixelRect32Proc SkSetPixelRect32 = sk_set_pixel_rect32_stub;
+ 
+ ///////////////////////////////////////////////////////////////////////////////
+ 
+diff --git a/src/images/SkMovie_gif.cpp b/src/images/SkMovie_gif.cpp
+index decefd5..7196a1a 100644
+--- a/src/images/SkMovie_gif.cpp
++++ b/src/images/SkMovie_gif.cpp
+@@ -212,10 +212,7 @@ static void fillRect(SkBitmap* bm, GifWord left, GifWord top, GifWord width, Gif
+         copyHeight = bmHeight - top;
+     }
+ 
+-    for (; copyHeight > 0; copyHeight--) {
+-        sk_memset32(dst, col, copyWidth);
+-        dst += bmWidth;
+-    }
++    SkSetPixelRect32(dst, col, copyWidth, copyHeight, bmWidth * sizeof(uint32_t));
+ }
+ 
+ static void drawFrame(SkBitmap* bm, const SavedImage* frame, const ColorMapObject* cmap)
+diff --git a/src/opts/SkBlitRect_opts_SSE2.cpp b/src/opts/SkBlitRect_opts_SSE2.cpp
+index d65a313..3393752 100644
+--- a/src/opts/SkBlitRect_opts_SSE2.cpp
++++ b/src/opts/SkBlitRect_opts_SSE2.cpp
+@@ -5,127 +5,24 @@
+  * found in the LICENSE file.
+  */
+ 
+-#include <emmintrin.h>
+ #include "SkBlitRect_opts_SSE2.h"
+ #include "SkBlitRow.h"
+ #include "SkColorPriv.h"
+-
+-/* Simple blitting of opaque rectangles less than 31 pixels wide:
+- * inlines and merges sections of Color32_SSE2 and sk_memset32_SSE2.
+- */
+-static void BlitRect32_OpaqueNarrow_SSE2(SkPMColor* SK_RESTRICT destination,
+-                                  int width, int height,
+-                                  size_t rowBytes, uint32_t color) {
+-    SkASSERT(255 == SkGetPackedA32(color));
+-    SkASSERT(width > 0);
+-    SkASSERT(width < 31);
+-
+-    while (--height >= 0) {
+-        SkPMColor* dst = destination;
+-        int count = width;
+-
+-        while (count > 4) {
+-            *dst++ = color;
+-            *dst++ = color;
+-            *dst++ = color;
+-            *dst++ = color;
+-            count -= 4;
+-        }
+-
+-        while (count > 0) {
+-            *dst++ = color;
+-            --count;
+-        }
+-
+-        destination = (uint32_t*)((char*)destination + rowBytes);
+-    }
+-}
++#include "SkUtils.h"
+ 
+ /*
+- * Fast blitting of opaque rectangles at least 31 pixels wide:
+- * inlines and merges sections of Color32_SSE2 and sk_memset32_SSE2.
+- * A 31 pixel rectangle is guaranteed to have at least one
+- * 16-pixel aligned span that can take advantage of mm_store.
++ * Implement ColorRect32 using the SkSetPixels function.
++ * Only applicable if the color's alpha is opaque.
+  */
+-static void BlitRect32_OpaqueWide_SSE2(SkPMColor* SK_RESTRICT destination,
+-                                int width, int height,
+-                                size_t rowBytes, uint32_t color) {
+-    SkASSERT(255 == SkGetPackedA32(color));
+-    SkASSERT(width >= 31);
+-
+-    __m128i color_wide = _mm_set1_epi32(color);
+-    while (--height >= 0) {
+-        // Prefetching one row ahead to L1 cache can equal hardware
+-        // performance for large/tall rects, but never *beats*
+-        // hardware performance.
+-        SkPMColor* dst = destination;
+-        int count = width;
+-
+-        while (((size_t)dst) & 0x0F) {
+-            *dst++ = color;
+-            --count;
+-        }
+-        __m128i *d = reinterpret_cast<__m128i*>(dst);
+-
+-        // Googling suggests _mm_stream is only going to beat _mm_store
+-        // for things that wouldn't fit in L2 cache anyway, typically
+-        // >500kB, and precisely fill cache lines.  For us, with
+-        // arrays > 100k elements _mm_stream is still 100%+ slower than
+-        // mm_store.
+-
+-        // Unrolling to count >= 64 is a break-even for most
+-        // input patterns; we seem to be saturating the bus and having
+-        // low enough overhead at 32.
+-
+-        while (count >= 32) {
+-            _mm_store_si128(d++, color_wide);
+-            _mm_store_si128(d++, color_wide);
+-            _mm_store_si128(d++, color_wide);
+-            _mm_store_si128(d++, color_wide);
+-            _mm_store_si128(d++, color_wide);
+-            _mm_store_si128(d++, color_wide);
+-            _mm_store_si128(d++, color_wide);
+-            _mm_store_si128(d++, color_wide);
+-            count -= 32;
+-        }
+-        if (count >= 16) {
+-            _mm_store_si128(d++, color_wide);
+-            _mm_store_si128(d++, color_wide);
+-            _mm_store_si128(d++, color_wide);
+-            _mm_store_si128(d++, color_wide);
+-            count -= 16;
+-        }
+-        dst = reinterpret_cast<uint32_t*>(d);
+-
+-        // Unrolling the loop in the Narrow code is a significant performance
+-        // gain, but unrolling this loop appears to make no difference in
+-        // benchmarks with either mm_store_si128 or individual sets.
+-
+-        while (count > 0) {
+-            *dst++ = color;
+-            --count;
+-        }
+-
+-        destination = (uint32_t*)((char*)destination + rowBytes);
+-    }
+-}
+-
+ void ColorRect32_SSE2(SkPMColor* destination,
+                       int width, int height,
+                       size_t rowBytes, uint32_t color) {
+-    if (0 == height || 0 == width || 0 == color) {
++    if (0 == color) {
+         return;
+     }
+-    unsigned colorA = SkGetPackedA32(color);
+-    colorA = 0; // skip below if () for now...(has been disabled since this was added in r3423).
+-    if (255 == colorA) {
+-        if (width < 31) {
+-            BlitRect32_OpaqueNarrow_SSE2(destination, width, height,
+-                                         rowBytes, color);
+-        } else {
+-            BlitRect32_OpaqueWide_SSE2(destination, width, height,
+-                                       rowBytes, color);
+-        }
++
++    if (SkGetPackedA32(color) == 0xFF) {
++        SkSetPixelRect32((uint32_t*)destination, color, width, height, rowBytes);
+     } else {
+         SkBlitRow::ColorRect32(destination, width, height, rowBytes, color);
+     }
+diff --git a/src/opts/SkCacheConfig_x86.h b/src/opts/SkCacheConfig_x86.h
+index 8ea5be2..fcaa520 100644
+--- a/src/opts/SkCacheConfig_x86.h
++++ b/src/opts/SkCacheConfig_x86.h
+@@ -8,17 +8,23 @@
+ #ifndef SkCacheConfig_x86_DEFINED
+ #define SkCacheConfig_x86_DEFINED
+ 
+-#if defined(__slm__)
+-/* Values are optimized for Silvermont */
+-#define SHARED_CACHE_SIZE   (1024*1024)         /* Silvermont L2 Cache */
+-#define DATA_CACHE_SIZE     (24*1024)           /* Silvermont L1 Data Cache */
+-#else
++
++/* This is a bit rough, but it doesn't have to be exact.
++ * Might implement using cpuid later.
++ */
++#if defined(__atom__)
+ /* Values are optimized for Atom */
+ #define SHARED_CACHE_SIZE   (512*1024)          /* Atom L2 Cache */
+ #define DATA_CACHE_SIZE     (24*1024)           /* Atom L1 Data Cache */
++#else
++/* Values are optimized for Silvermont */
++#define SHARED_CACHE_SIZE   (1024*1024)         /* Silvermont L2 Cache */
++#define DATA_CACHE_SIZE     (24*1024)           /* Silvermont L1 Data Cache */
+ #endif
+ 
+-#define SHARED_CACHE_SIZE_HALF  (SHARED_CACHE_SIZE / 2)
+-#define DATA_CACHE_SIZE_HALF    (DATA_CACHE_SIZE / 2)
++#define SHARED_CACHE_SIZE_HALF       (SHARED_CACHE_SIZE / 2)
++#define DATA_CACHE_SIZE_HALF         (DATA_CACHE_SIZE / 2)
++#define SHARED_CACHE_SIZE_TWO_THIRDS (SHARED_CACHE_SIZE * 2 / 3)
++#define DATA_CACHE_SIZE_TWO_THIRDS   (DATA_CACHE_SIZE * 2 / 3)
+ 
+ #endif
+diff --git a/src/opts/SkUtils_opts_SSE2.cpp b/src/opts/SkUtils_opts_SSE2.cpp
+index 13f5bf7..2604c98 100644
+--- a/src/opts/SkUtils_opts_SSE2.cpp
++++ b/src/opts/SkUtils_opts_SSE2.cpp
+@@ -11,6 +11,10 @@
+ #include "SkCacheConfig_x86.h"
+ 
+ 
++/*
++ * Function to set memory using a 32-bit value, with a non-temporal hint.
++ * Used when setting more than half the L2 cache. Assumes a count of at least 39.
++ */
+ static void SkNonTemporalMemset16_SSE2(uint16_t *dst, uint16_t value, int count)
+ {
+     while (((size_t)dst) & 0x0F) {
+@@ -45,6 +49,10 @@ static void SkNonTemporalMemset16_SSE2(uint16_t *dst, uint16_t value, int count)
+     }
+ }
+ 
++/*
++ * Function to set memory using a 32-bit value, with a non-temporal hint.
++ * Used when setting more than half the L2 cache. Assumes a count of at least 19.
++ */
+ static void SkNonTemporalMemset32_SSE2(uint32_t *dst, uint32_t value, int count)
+ {
+     while (((size_t)dst) & 0x0F) {
+@@ -90,12 +98,9 @@ void SkMemset16_x86(uint16_t *dst, uint16_t value, int count)
+      * we use a local function with non temporal stores, otherwise we use
+      * the assembly optimized version in libcutils.
+      */
+-    if (count > (SHARED_CACHE_SIZE_HALF >> 1))
+-    {
++    if (count > (SHARED_CACHE_SIZE_TWO_THIRDS >> 1)) {
+         SkNonTemporalMemset16_SSE2(dst, value, count);
+-    }
+-    else
+-    {
++    } else {
+         android_memset16(dst, value, count << 1);
+     }
+ }
+@@ -111,17 +116,14 @@ void SkMemset32_x86(uint32_t *dst, uint32_t value, int count)
+      * we use a local function with non temporal stores, otherwise we use
+      * the assembly optimized version in libcutils.
+      */
+-    if (count > (SHARED_CACHE_SIZE_HALF >> 2))
+-    {
++    if (count > (SHARED_CACHE_SIZE_TWO_THIRDS >> 2)) {
+         SkNonTemporalMemset32_SSE2(dst, value, count);
+-    }
+-    else
+-    {
++    } else {
+         android_memset32(dst, value, count << 2);
+     }
+ }
+ 
+-void SkSetPixels16_x86(uint16_t *dst, uint16_t value, int count, int totalCount)
++void SkSetPixelRow16_x86(uint16_t *dst, uint16_t color, int count, int totalCount)
+ {
+     SkASSERT(dst != NULL && count >= 0);
+ 
+@@ -132,17 +134,14 @@ void SkSetPixels16_x86(uint16_t *dst, uint16_t value, int count, int totalCount)
+      * L2 cache we use a local function with non temporal stores, otherwise
+      * we use the assembly optimized version in libcutils.
+      */
+-    if ((totalCount > (SHARED_CACHE_SIZE_HALF >> 1)) && (count >= 39))
+-    {
+-        SkNonTemporalMemset16_SSE2(dst, value, count);
+-    }
+-    else
+-    {
+-        android_memset16(dst, value, count << 1);
++    if ((totalCount > (SHARED_CACHE_SIZE_TWO_THIRDS >> 1)) && (count >= 39)) {
++        SkNonTemporalMemset16_SSE2(dst, color, count);
++    } else {
++        android_memset16(dst, color, count << 1);
+     }
+ }
+ 
+-void SkSetPixels32_x86(uint32_t *dst, uint32_t value, int count, int totalCount)
++void SkSetPixelRow32_x86(uint32_t *dst, uint32_t color, int count, int totalCount)
+ {
+     SkASSERT(dst != NULL && count >= 0);
+ 
+@@ -153,13 +152,147 @@ void SkSetPixels32_x86(uint32_t *dst, uint32_t value, int count, int totalCount)
+      * L2 cache we use a local function with non temporal stores, otherwise
+      * we use the assembly optimized version in libcutils.
+      */
+-    if ((totalCount > (SHARED_CACHE_SIZE_HALF >> 2)) && (count >= 19))
+-    {
+-        SkNonTemporalMemset32_SSE2(dst, value, count);
++    if ((totalCount > (SHARED_CACHE_SIZE_TWO_THIRDS >> 2)) && (count >= 19)) {
++        SkNonTemporalMemset32_SSE2(dst, color, count);
++    } else {
++        android_memset32(dst, color, count << 2);
+     }
+-    else
+-    {
+-        android_memset32(dst, value, count << 2);
++}
++
++void SkSetPixelRect16_x86(uint16_t *dst, uint16_t color, int width, int height, int rowBytes)
++{
++    SkASSERT(dst != NULL);
++
++    // dst must be 2-byte aligned.
++    SkASSERT((((size_t) dst) & 0x01) == 0);
++
++    if ((width <= 0) || (height <= 0)) {
++        return;
++    }
++
++    // Fast path for low number of pixels.
++    if (width < 16) {
++        if (width == 1) {
++            do {
++                *dst = color;
++                dst = (uint16_t*)((char*)dst + rowBytes);
++            } while (--height > 0);
++        } else if (width == 2) {
++            do {
++                dst[0] = color;
++                dst[1] = color;
++                dst = (uint16_t*)((char*)dst + rowBytes);
++            } while (--height > 0);
++        } else if (width == 3) {
++            do {
++                dst[0] = color;
++                dst[1] = color;
++                dst[2] = color;
++                dst = (uint16_t*)((char*)dst + rowBytes);
++            } while (--height > 0);
++        } else {
++            __m128i color_wide = _mm_set1_epi16(color);
++            const int loop_count = (width - 1) >> 2;
++            const int last_offset = width - 4;
++
++            do {
++                int count = loop_count;
++                __m128i *d = reinterpret_cast<__m128i*>(dst);
++
++                while (--count >= 0) {
++                    _mm_storel_epi64(d, color_wide);
++                    d = reinterpret_cast<__m128i*>(reinterpret_cast<__m64*>(d) + 1);
++                }
++
++                _mm_storel_epi64(reinterpret_cast<__m128i*>(dst + last_offset), color_wide);
++                dst = (uint16_t*)((char*)dst + rowBytes);
++            } while (--height > 0);
++        }
++    } else {
++        /* Check the total size of the operation. If it's more than half the
++         * L2 cache we use a local function with non temporal stores, otherwise
++         * we use the assembly optimized version in libcutils.
++         */
++        if (((width * height) > (SHARED_CACHE_SIZE_TWO_THIRDS >> 1)) && (width >= 39))
++        {
++            do {
++                SkNonTemporalMemset16_SSE2(dst, color, width);
++                dst = (uint16_t*)((char*)dst + rowBytes);
++            } while (--height > 0);
++        } else {
++            do {
++                android_memset16(dst, color, width << 1);
++                dst = (uint16_t*)((char*)dst + rowBytes);
++            } while (--height > 0);
++        }
++    }
++}
++
++void SkSetPixelRect32_x86(uint32_t *dst, uint32_t color, int width, int height, int rowBytes)
++{
++    SkASSERT(dst != NULL);
++
++    // dst must be 4-byte aligned.
++    SkASSERT((((size_t) dst) & 0x03) == 0);
++
++    if ((width <= 0) || (height <= 0)) {
++        return;
++    }
++
++    // Fast path for low number of pixels.
++    if (width < 20) {
++        if (width == 1) {
++            do {
++                *dst = color;
++                dst = (uint32_t*)((char*)dst + rowBytes);
++            } while (--height > 0);
++        } else if (width == 2) {
++            do {
++                dst[0] = color;
++                dst[1] = color;
++                dst = (uint32_t*)((char*)dst + rowBytes);
++            } while (--height > 0);
++        } else if (width == 3) {
++            do {
++                dst[0] = color;
++                dst[1] = color;
++                dst[2] = color;
++                dst = (uint32_t*)((char*)dst + rowBytes);
++            } while (--height > 0);
++        } else {
++            __m128i color_wide = _mm_set1_epi32(color);
++            const int loop_count = (width - 1) >> 2;
++            const int last_offset = width - 4;
++
++            do {
++                int count = loop_count;
++                __m128i *d = reinterpret_cast<__m128i*>(dst);
++
++                while (--count >= 0) {
++                    _mm_storeu_si128(d++, color_wide);
++                }
++
++                _mm_storeu_si128(reinterpret_cast<__m128i*>(dst + last_offset), color_wide);
++                dst = (uint32_t*)((char*)dst + rowBytes);
++            } while (--height > 0);
++        }
++    } else {
++        /* Check the total size of the operation. If it's more than half the
++         * L2 cache we use a local function with non temporal stores, otherwise
++         * we use the assembly optimized version in libcutils.
++         */
++        if ((width * height) > (SHARED_CACHE_SIZE_TWO_THIRDS >> 2))
++        {
++            do {
++                SkNonTemporalMemset32_SSE2(dst, color, width);
++                dst = (uint32_t*)((char*)dst + rowBytes);
++            } while (--height > 0);
++        } else {
++            do {
++                android_memset32(dst, color, width << 2);
++                dst = (uint32_t*)((char*)dst + rowBytes);
++            } while (--height > 0);
++        }
+     }
+ }
+ 
+diff --git a/src/opts/SkUtils_opts_SSE2.h b/src/opts/SkUtils_opts_SSE2.h
+index 6bf34b1..874add6 100644
+--- a/src/opts/SkUtils_opts_SSE2.h
++++ b/src/opts/SkUtils_opts_SSE2.h
+@@ -13,7 +13,11 @@
+ void sk_memcpy32_SSE2(uint32_t *dst, const uint32_t *src, int count);
+ void SkMemset16_x86(uint16_t *dst, uint16_t value, int count);
+ void SkMemset32_x86(uint32_t *dst, uint32_t value, int count);
+-void SkSetPixels16_x86(uint16_t *dst, uint16_t value, int count, int totalCount);
+-void SkSetPixels32_x86(uint32_t *dst, uint32_t value, int count, int totalCount);
++
++void SkSetPixelRow16_x86(uint16_t *dst, uint16_t color, int count, int totalCount);
++void SkSetPixelRow32_x86(uint32_t *dst, uint32_t color, int count, int totalCount);
++
++void SkSetPixelRect16_x86(uint16_t *dst, uint16_t color, int width, int height, int rowBytes);
++void SkSetPixelRect32_x86(uint32_t *dst, uint32_t color, int width, int height, int rowBytes);
+ 
+ #endif
+diff --git a/src/opts/SkUtils_opts_arm.cpp b/src/opts/SkUtils_opts_arm.cpp
+index 3e25bbc..fd9d29b 100644
+--- a/src/opts/SkUtils_opts_arm.cpp
++++ b/src/opts/SkUtils_opts_arm.cpp
+@@ -52,24 +52,44 @@ SkMemset32Proc SkMemset32GetPlatformProc() {
+ #endif
+ }
+ 
+-void sk_set_pixels16_arm(uint32_t dst[], uint32_t value, int count, int totalCount)
+-{
++void sk_set_pixel_row16_arm(uint32_t dst[], uint32_t color, int count, int totalCount) {
+     // Ignore totalCount since ARM doesn't support it yet.
+-    sk_memset16(dst, value, count);
++    sk_memset16(dst, color, count);
+ }
+ 
+-void sk_set_pixels32_arm(uint32_t dst[], uint32_t value, int count, int totalCount)
+-{
++void sk_set_pixel_row32_arm(uint32_t dst[], uint32_t color, int count, int totalCount) {
+     // Ignore totalCount since ARM doesn't support it yet.
+-    sk_memset32(dst, value, count);
++    sk_memset32(dst, color, count);
+ }
+ 
+-SkSetPixels16Proc SkSetPixels16GetPlatformProc() {
+-    return sk_set_pixels16_arm;
++SkSetPixelRow16Proc SkSetPixelRow16GetPlatformProc() {
++    return sk_set_pixel_row16_arm;
+ }
+ 
+-SkSetPixels32Proc SkSetPixels32GetPlatformProc() {
+-    return sk_set_pixels32_arm;
++SkSetPixelRow32Proc SkSetPixelRow32GetPlatformProc() {
++    return sk_set_pixel_row32_arm;
++}
++
++void sk_set_pixel_rect16_arm(uint16_t dst[], uint32_t color, int width, int height, int rowBytes) {
++    while (--height >= 0) {
++        sk_memset16(dst, color, width);
++        dst = (uint16_t*)((char*)dst + rowBytes);
++    }
++}
++
++void sk_set_pixel_rect32_arm(uint32_t dst[], uint32_t color, int width, int height, int rowBytes) {
++    while (--height >= 0) {
++        sk_memset32(dst, color, width);
++        dst = (uint32_t*)((char*)dst + rowBytes);
++    }
++}
++
++SkSetPixelRect16Proc SkSetPixelRect16GetPlatformProc() {
++    return sk_set_pixel_rect16_arm;
++}
++
++SkSetPixelRect32Proc SkSetPixelRect32GetPlatformProc() {
++    return sk_set_pixel_rect32_arm;
+ }
+ 
+ SkMemcpy32Proc SkMemcpy32GetPlatformProc() {
+diff --git a/src/opts/SkUtils_opts_none.cpp b/src/opts/SkUtils_opts_none.cpp
+index cd3fc7e..b395cd9 100644
+--- a/src/opts/SkUtils_opts_none.cpp
++++ b/src/opts/SkUtils_opts_none.cpp
+@@ -17,14 +17,22 @@ SkMemset32Proc SkMemset32GetPlatformProc() {
+     return NULL;
+ }
+ 
+-SkMemcpy32Proc SkMemcpy32GetPlatformProc() {
+-   return NULL;
++SkSetPixels16Proc SkSetPixelRow16GetPlatformProc() {
++    return NULL;
++}
++
++SkSetPixels32Proc SkSetPixelRow32GetPlatformProc() {
++    return NULL;
+ }
+ 
+-SkSetPixels16Proc SkSetPixels16GetPlatformProc() {
++SkSetPixels16Proc SkSetPixelRect16GetPlatformProc() {
+     return NULL;
+ }
+ 
+-SkSetPixels32Proc SkSetPixels32GetPlatformProc() {
++SkSetPixels32Proc SkSetPixelRect32GetPlatformProc() {
+     return NULL;
+ }
++
++SkMemcpy32Proc SkMemcpy32GetPlatformProc() {
++   return NULL;
++}
+diff --git a/src/opts/opts_check_x86.cpp b/src/opts/opts_check_x86.cpp
+index 8a06f9c..76d769b 100644
+--- a/src/opts/opts_check_x86.cpp
++++ b/src/opts/opts_check_x86.cpp
+@@ -290,12 +290,20 @@ SkMemset32Proc SkMemset32GetPlatformProc() {
+     }
+ }
+ 
+-SkSetPixels16Proc SkSetPixels16GetPlatformProc() {
+-    return SkSetPixels16_x86;
++SkSetPixelRow16Proc SkSetPixelRow16GetPlatformProc() {
++    return SkSetPixelRow16_x86;
+ }
+ 
+-SkSetPixels32Proc SkSetPixels32GetPlatformProc() {
+-    return SkSetPixels32_x86;
++SkSetPixelRow32Proc SkSetPixelRow32GetPlatformProc() {
++    return SkSetPixelRow32_x86;
++}
++
++SkSetPixelRect16Proc SkSetPixelRect16GetPlatformProc() {
++    return SkSetPixelRect16_x86;
++}
++
++SkSetPixelRect32Proc SkSetPixelRect32GetPlatformProc() {
++    return SkSetPixelRect32_x86;
+ }
+ 
+ SkMemcpy32Proc SkMemcpy32GetPlatformProc() {
+-- 
+1.7.9.5
+

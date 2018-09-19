@@ -1,0 +1,61 @@
+From 162c00fdfe8b0322491cb9638ccca7ecf7eb4034 Mon Sep 17 00:00:00 2001
+From: "joe,shen" <joe.shen@intel.com>
+Date: Mon, 16 Mar 2015 16:29:30 +0800
+Subject: [PATCH] keep AUX1/AUX2/LMIPI LDO to on state
+
+BZ: 848/961
+
+clk_rate is dcc clk from PLLA caculated 416Mhz,it is
+used for dcc timing caculation.
+keep AUX1/1.8v AUX2/2.8v LMIPI/1.17v on to avoid splash
+screen off while VMM init
+
+Change-Id: I1349cf2b3867052b4cb7fa20d5a46e300f94c925
+Signed-off-by: joe,shen <joe.shen@intel.com>
+---
+ devices/dcc/src/dcc_config_blob_parser.c           |    4 +---
+ .../pmu/src/board_sf_3g/pmu_domain_init_cfg.c      |    4 ++--
+ 2 files changed, 3 insertions(+), 5 deletions(-)
+
+diff --git a/devices/dcc/src/dcc_config_blob_parser.c b/devices/dcc/src/dcc_config_blob_parser.c
+index fdf8059..0589653 100644
+--- a/devices/dcc/src/dcc_config_blob_parser.c
++++ b/devices/dcc/src/dcc_config_blob_parser.c
+@@ -140,11 +140,9 @@ DCC_DISPLAY* dcc_initialize_display_config(unsigned int *blob)
+      parse_blob(blob, dcs_seq, reset_ptr, panel_res, dif, blob_msg, blob_datas);
+ 
+     //the clk_rate should be moved to the blob. TBD
++    /* this clock is DCC-CLK from PLLA 416Mhz fixed */
+     dcc_config_blob.clk_rate = 416000000;
+ 
+-    #if defined (CSP_MRD7_P1_ENABLE)
+-        dcc_config_blob.clk_rate = 260000000;
+-    #endif
+     #if defined CONFIG_XGOLD_LCD_RAYDIUM_RM68180
+         return &rm68180;
+     #else
+diff --git a/devices/pm/power_control/pmu/src/board_sf_3g/pmu_domain_init_cfg.c b/devices/pm/power_control/pmu/src/board_sf_3g/pmu_domain_init_cfg.c
+index 5771ab4..d025bbf 100644
+--- a/devices/pm/power_control/pmu/src/board_sf_3g/pmu_domain_init_cfg.c
++++ b/devices/pm/power_control/pmu/src/board_sf_3g/pmu_domain_init_cfg.c
+@@ -73,7 +73,7 @@ static sPMU_INITIAL_CONFIG_T pmu_initial_config[PMU_NOF_DOMAINS] =
+ /* domain                     pulldown                 mode                     voltage */          
+  { PMU_DOMAIN_LSIM1,          PMU_PULLDOWN_EN,         PMU_MODE_OFF,            PMU_VOLTAGE_2V91    },
+  { PMU_DOMAIN_LSIM2,          PMU_PULLDOWN_EN,         PMU_MODE_OFF,            PMU_VOLTAGE_2V91    },
+- { PMU_DOMAIN_LAUX1,          PMU_PULLDOWN_EN,         PMU_MODE_OFF,            PMU_VOLTAGE_1V80    },
++ { PMU_DOMAIN_LAUX1,          PMU_PULLDOWN_EN,         PMU_MODE_ON,            PMU_VOLTAGE_1V80    },
+  { PMU_DOMAIN_LAUX2,          PMU_PULLDOWN_EN,         PMU_MODE_ON,            PMU_VOLTAGE_2V80    },
+  { PMU_DOMAIN_LMMC1,          PMU_PULLDOWN_EN,         PMU_MODE_OFF,            PMU_VOLTAGE_2V85    },
+  { PMU_DOMAIN_LUSB,           PMU_PULLDOWN_EN,         PMU_MODE_OFF,            PMU_VOLTAGE_3V15    },
+@@ -81,7 +81,7 @@ static sPMU_INITIAL_CONFIG_T pmu_initial_config[PMU_NOF_DOMAINS] =
+  { PMU_DOMAIN_LAIF,           PMU_PULLDOWN_EN,         PMU_MODE_IDLE_STDBY,     PMU_VOLTAGE_1V10    },
+  { PMU_DOMAIN_LCABB,          PMU_PULLDOWN_EN,         PMU_MODE_STANDBYLOWVOLTAGE,PMU_VOLTAGE_1V20    },
+  { PMU_DOMAIN_LMEM,           PMU_PULLDOWN_EN,         PMU_MODE_IDLE_STDBY,     PMU_VOLTAGE_1V226   },
+- { PMU_DOMAIN_LMIPI,          PMU_PULLDOWN_EN,         PMU_MODE_OFF,            PMU_VOLTAGE_1V17    },
++ { PMU_DOMAIN_LMIPI,          PMU_PULLDOWN_EN,         PMU_MODE_ON,            PMU_VOLTAGE_1V17    },
+  { PMU_DOMAIN_LPLL,           PMU_PULLDOWN_EN,         PMU_MODE_OFF_STDBY,      PMU_VOLTAGE_1V20    },
+  { PMU_DOMAIN_SD1,            PMU_PULLDOWN_FIXED,      PMU_MODE_FIXED,          PMU_VOLTAGE_FIXED   },
+  { PMU_DOMAIN_SD2,            PMU_PULLDOWN_FIXED,      PMU_MODE_FIXED,          PMU_VOLTAGE_FIXED   },
+-- 
+1.7.9.5
+

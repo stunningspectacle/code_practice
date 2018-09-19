@@ -1,0 +1,351 @@
+From 1d83086747d2f7c44265e5576dfb0a0263fb348e Mon Sep 17 00:00:00 2001
+From: Bin Yang <bin.yang@intel.com>
+Date: Wed, 24 Feb 2016 19:12:20 +0800
+Subject: [PATCH 1/2] don't merge, for SVB N-1 quick enabling
+
+Change-Id: Ic869faf1b61696ff558cc9ce6312b8246950dade
+Signed-off-by: Bin Yang <bin.yang@intel.com>
+---
+ applications/slb/src/slb_load_logic.c              |  1 -
+ applications/slb/src/slb_mode_management.c         |  5 +-
+ make/cbbe/slb.mk                                   |  2 +-
+ make/configs/sf_3gr.config                         | 54 ++++------------
+ .../src/sf_3gx_soc/board_sf_3gx/platform_cnf.c     | 12 +++-
+ .../src/sf_3gx_soc/board_sf_3gx/platform_power.c   | 74 ++++++++++++++++------
+ 6 files changed, 78 insertions(+), 70 deletions(-)
+
+diff --git a/applications/slb/src/slb_load_logic.c b/applications/slb/src/slb_load_logic.c
+index cc5459d..fc7e2df 100644
+--- a/applications/slb/src/slb_load_logic.c
++++ b/applications/slb/src/slb_load_logic.c
+@@ -157,7 +157,6 @@ static BOOL slb_load_partition_with_secpack(U32 id, U8* buf, BOOL load_to_buf)
+   }
+ 
+ 
+-
+   if(id == FTLE_ID_CODE_IMAGE)
+   {
+     code_image_start_address = secpack_buf.LoadMap[0].StartAddr;
+diff --git a/applications/slb/src/slb_mode_management.c b/applications/slb/src/slb_mode_management.c
+index eb8ba13..2e5b4fd 100644
+--- a/applications/slb/src/slb_mode_management.c
++++ b/applications/slb/src/slb_mode_management.c
+@@ -159,6 +159,7 @@ static BOOL slb_mode_transition_to(T_ENUM_BOOT_MODE mode)
+   T_ENUM_SELECT_IMG sel_img;
+   U32 oem_offmode_charge;
+ 
++
+   if(slb_internal_mode_info.boot_mode != ENUM_BOOT_MODE_POWER_OFF)
+   {
+     return FALSE;
+@@ -405,8 +406,8 @@ static BOOL slb_mode_detect_by_bcb(void)
+   *                   - set/clear NVM flag
+   *                   - clear IRAM info
+   ***************************************************************/
+-#define SLB_BOOT_MODE_ALWAYS FALSE  //disable always boot in xmm6321 later
+-//#define SLB_BOOT_MODE_ALWAYS TRUE
++//#define SLB_BOOT_MODE_ALWAYS FALSE  //disable always boot in xmm6321 later
++#define SLB_BOOT_MODE_ALWAYS TRUE
+ 
+ BOOL slb_mode_management(T_ENUM_BOOT_REASON reason)
+ {
+diff --git a/make/cbbe/slb.mk b/make/cbbe/slb.mk
+index 03879bc..64637fa 100644
+--- a/make/cbbe/slb.mk
++++ b/make/cbbe/slb.mk
+@@ -93,7 +93,7 @@ ifeq ($(ANDROID_M_FEATURE), true)
+ endif
+ 
+ ifeq ($(GVB_FEATURE_ENABLE), true)
+-  CC_DEFS += GOOGLE_VERIFIED_BOOT
++#  CC_DEFS += GOOGLE_VERIFIED_BOOT
+   include $(BOOTSYSTEMS)/make/cbbe/gvb.mk
+ endif
+ 
+diff --git a/make/configs/sf_3gr.config b/make/configs/sf_3gr.config
+index 7e90469..cdc06af 100644
+--- a/make/configs/sf_3gr.config
++++ b/make/configs/sf_3gr.config
+@@ -34,35 +34,18 @@ BOOT_DEVICE 	= emmc
+ ######################################
+ 
+ # Default board
+-CPU             = SF_3GR_SOC
+-PROJECTNAME     = SF_3GR
+-PLATFORM        = SF_3GR_SB_EMMC_ONLY_REV_1.0
++CPU             = SF_3GX_SOC
++PROJECTNAME     = SF_3GX
++PLATFORM        = SF_3GX_EMMC_ONLY_REV_1.0
+ PROJECTFOLDER   = $(call lowercase,$(PROJECTNAME))
+ PLATFORMFOLDER  = $(call lowercase,$(PROJECTNAME))
+ CHIPID          = $(call lowercase,$(CPU))
+ REF_CHIPID      = sf_3g_soc
+ 
+ ACHIPID         = agold620
+-BOARDID         = board_sf_3gr
++BOARDID         = board_sf_3gx
+ BOARD_REV       = rev_1_0
+ CHIP_REV        = es_1_0
+-PRG_FILE        = $(CONFIGSDIR)/$(PROJECTFOLDER)/prg/modem_cfg_emmc.prg
+-
+-ifeq '$(findstring _GARNET,${PLATFORM})' '_GARNET'
+-BOARDID         = board_sf_3gr_garnet
+-endif
+-
+-ifeq '$(findstring _REV_1.0,${PLATFORM})' '_REV_1.0'
+-BOARD_REV = rev_1_0
+-endif
+-
+-ifeq '$(findstring _REV_2.0,${PLATFORM})' '_REV_2.0'
+-BOARD_REV = rev_2_0
+-endif
+-
+-ifeq '$(findstring _REV_3.0,${PLATFORM})' '_REV_3.0'
+-BOARD_REV = rev_3_0
+-endif
+ 
+ include ${CONFIGSDIR}/sofia.config
+ 
+@@ -70,33 +53,18 @@ include ${CONFIGSDIR}/sofia.config
+ FEATURE += FEAT_BOOTSYSTEM_KEYPAD_DRIVER_SUPPORT
+ 
+ # Trace debug driver
+-FEATURE += FEAT_BOOTSYSTEM_USIF_TRACE_ENABLE
++#FEATURE += FEAT_BOOTSYSTEM_USIF_TRACE_ENABLE
++#FEATURE += FEAT_BOOTSYSTEM_TRACE_USIF1
++#FEATURE += FEAT_BOOTSYSTEM_USIF1
+ 
+-ifeq '$(findstring _GARNET,${PLATFORM})' '_GARNET'
+-  FEATURE += FEAT_BOOTSYSTEM_TRACE_USIF1
+-  FEATURE += FEAT_BOOTSYSTEM_USIF1
+-  FEATURE += FEAT_BOOTSYSTEM_VALIDATE_RDC_BY_MKEY
+-  FEATURE += FEAT_BOOTSYSTEM_DISPLAY_DRIVER_SUPPORT
+-  CC_DEFS += SF3GR_EVB_GARNET_EMMC_WA
+-  CC_DEFS += SF3GR_EVB_GARNET
+-else
+-  FEATURE += FEAT_BOOTSYSTEM_TRACE_USIF2
+-  # Flashing
+-  FEATURE += FEAT_BOOTSYSTEM_USIF2
+-  # Display driver
+-  FEATURE += FEAT_BOOTSYSTEM_DISPLAY_DRIVER_SUPPORT
+-  CC_DEFS += SF3GR_EVB_GARNET_EMMC_WA
+-endif
++# Usif flashing 
++FEATURE += FEAT_BOOTSYSTEM_USIF2
+ 
+-# Storage
++#
+ FEATURE += FEAT_BOOTSYSTEM_EMMC_TAP_DELAY_IN_STMON
+ 
+-ifeq '$(findstring _EMMC_ON_NAND,${PLATFORM})' '_EMMC_ON_NAND'
+-  FEATURE += FEAT_BOOTSYSTEM_EMMC_ON_NAND
+-endif
+-
+-#follow platform in code 
+ CC_DEFS += SF_3G_SOC 
+ 
+ CC_DEFS += FEAT_SOFIA_AGOLD620_BOOTROM_PATCH
+ 
++#CC_DEFS += SF3GR_EVB_GARNET_EMMC_WA
+diff --git a/platforms/src/sf_3gx_soc/board_sf_3gx/platform_cnf.c b/platforms/src/sf_3gx_soc/board_sf_3gx/platform_cnf.c
+index 136946a..9ae0cf4 100644
+--- a/platforms/src/sf_3gx_soc/board_sf_3gx/platform_cnf.c
++++ b/platforms/src/sf_3gx_soc/board_sf_3gx/platform_cnf.c
+@@ -24,6 +24,7 @@
+ #include <mmu_bootcore.h>
+ #include <trace_bootcore.h>
+ #include <pcl_bootsystem.h>
++#include <power_bootsystem.h>
+ 
+ 
+ /****************************************************************************************
+@@ -71,6 +72,7 @@ void platform_psi_setup(void)
+ 
+   stm_bootcore_init();
+ 
++  platform_power_cpu_thermal_management();
+   platform_power_setup();
+ 
+ #if defined(BOOTSYSTEM_EMMC_ON_NAND)
+@@ -83,6 +85,9 @@ void platform_psi_setup(void)
+ 
+   platform_scu_clear_stop_bit();
+ 
++  platform_scu_set_usb_trim(0x538352);
++
++  platform_scu_do_module_reset();
+   /* service watch dog */
+   platform_clock();
+ }
+@@ -175,7 +180,7 @@ U32 platform_get_extram_base(void)
+ 
+ U32 platform_get_extram_size(void)
+ {
+-  return EXTERNAL_RAM_SIZE;
++  return EMIC_GetRAMSize();
+ }
+ 
+ void platform_clock(void)
+@@ -192,7 +197,10 @@ void platform_set_debug_enable(BOOL enable)
+ 
+ void platform_display_init(void)
+ {
+-
++  power_bootsystem_set(POWER_BOOTSYSTEM_DISPLAY_POWER, 1);
++  power_bootsystem_set(POWER_BOOTSYSTEM_DISPLAY_CLOCK, 1);
++  power_bootsystem_set(POWER_BOOTSYSTEM_BACKLIGHT, 1);
++  slb_linux_append_cmdline("panelsource=1"); 
+ }
+ 
+ 
+diff --git a/platforms/src/sf_3gx_soc/board_sf_3gx/platform_power.c b/platforms/src/sf_3gx_soc/board_sf_3gx/platform_power.c
+index 6d7f2d4..3ca887e 100644
+--- a/platforms/src/sf_3gx_soc/board_sf_3gx/platform_power.c
++++ b/platforms/src/sf_3gx_soc/board_sf_3gx/platform_power.c
+@@ -90,26 +90,29 @@ U32 platform_power_get_battery_status(void)
+ 
+ U32 platform_power_get_power_reset_source(void)
+ {
+-  return 0;
++  return PMU_read_RESET_SOURCE();
+ }
+ 
+ U32 platform_power_get_power_shutdown_source(void)
+ {
+-  return 0;
++  return PMU_read_SHUTDWN_SOURCE();
+ }
+ 
+ BOOL platform_power_enable_display_power(void)
+ {
++  pmu_bootcore_display_power_enable();
+   return TRUE;
+ }
+ 
+ BOOL platform_power_enable_display_clock(void)
+ {
++  cgu_dcc_clk_enable();
+   return TRUE;
+ }
+ 
+ BOOL platform_power_disable_display_phy_isolation(void)
+ {
++  spcu_phy_isolation_disable();
+   return TRUE;
+ }
+ 
+@@ -120,7 +123,7 @@ BOOL platform_power_set_backlight(U32 value)
+ 
+ BOOL platform_power_feed_power_watch_dog(void)
+ {
+-  //platform_PMU_reset_hw_watchdog(127);
++  platform_PMU_reset_hw_watchdog(127);
+   return TRUE;
+ }
+ 
+@@ -184,6 +187,7 @@ BOOL platform_power_enable_charger(void)
+ BOOL platform_power_set_cpu_high(void)
+ {
+   pow_bootcore_set_cpu_clock_high();
++
+   return TRUE;
+ }
+ 
+@@ -195,6 +199,21 @@ BOOL platform_power_set_cpu_low(void)
+ 
+ BOOL platform_power_set_vibrator(U32 on)
+ {
++  U32 val = 0, intensity = VIBRA_INTENSITY;
++
++  val = PMU_read_vibrator_control();
++  PMU_write_vibrator_control_register(VIBRA_OFF);
++
++  if (on) {
++      val = PMU_read_vibrator_control();
++      intensity = VIBRA_ON | ((((intensity)*127)/100) & 0x7F);
++      PMU_write_vibrator_control_register(intensity);
++      val = PMU_read_vibrator_control();
++      //TRACE_BC_PRINTF("Turn ON Vibrator");
++  } else {
++      //TRACE_BC_PRINTF("Turn OFF Vibrator");
++  }
++
+   return TRUE;
+ }
+ 
+@@ -210,41 +229,54 @@ BOOL platform_power_is_dedicated_charger_type(void)
+ 
+ BOOL platform_power_over_battery_threshold(void)
+ {
++  U32 regval = PMU_read_RESET_SOURCE();
++  U32 cur_vol, ret;
++  U8 cnt = 0;
++  TRACE_BC_PRINTF("batmon =0x%x,rst_source=0x%x", PMU_read_BAT_MONITORING(), regval);
++
++  if(PMU_read_poweron_reset_CMP_ON()) return TRUE;
++/* For factory rom only
++  if(PMU_OK == PMU_get_RESET_SOURCE_READ_FC())
++  {
++    //SYSONLEV default is 3.2v, boot up due to battery insert in factory rom
++    TRACE_BC_PRINTF("boot up due to FC");
++    return TRUE;
++  }
++*/
++
++  ret = meas_get_vbat_mv(&cur_vol,1);
++  TRACE_BC_PRINTF("vbat:%d, ret=%d", cur_vol, ret);
++
++  //check battery voltage over 3.4V
++  if(cur_vol <= 3400)
++    return FALSE;
++  else
+     return TRUE;
+ }
+ 
+ BOOL platform_power_rtc_alarm_up(void)
+ {
++  U32 regval = PMU_read_RESET_SOURCE();
++  TRACE_BC_PRINTF("reset_source=0x%x", regval);
++
++  if((regval & 0x2))
++    return TRUE;
++  else
+     return FALSE;
+ }
+ 
+ void platform_power_cpu_thermal_management(void)
+ {
+-
+ }
+ 
+ void platform_power_setup(void)
+ {
+-	U8 vdd_cpu[2] = {0x08, 0xB7};
+-	U8 vdd_core[2] = {0x08, 0xB7};
+-
+-	/* SR board */
+ 	platform_pcl_set_i2c2();
+-
+-	/* Init I2C2 */
+ 	i2c_bus_bootsystem_init(1, 0xE1500000, 0x3E, 0x1);
+ 
+-	/* Setup VDD_CPU */
+-	i2c_bus_bootsystem_write(1, 0x10, vdd_cpu, 2);
+-	
+-	/* Setup VDD_CORE */
+-	i2c_bus_bootsystem_write(1, 0x12, vdd_core, 2);
+-	
+-	/* VDD_DDR: via AG620 SD1 at default 1.0V (need to up to 1.2V) */
+-	platform_iowrite32(0xE6500310, 0x63636337);
+-	platform_iowrite32(0xE650031C, 0x202);
+-
++	PMU_init_volt_src();
+ 	pow_pre_init_bootcore();
+-
+ 	platform_power_set_cpu_low();
+ }
++
++
+-- 
+1.9.1
+

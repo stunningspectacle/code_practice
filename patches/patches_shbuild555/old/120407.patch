@@ -1,0 +1,27 @@
+From 036784e94c54b308e2c4f8fb9c59544a19e7eabb Mon Sep 17 00:00:00 2001
+From: Yaoxin Shi <yaoxin.shi@intel.com>
+Date: Fri, 24 Jul 2015 11:27:16 +0800
+Subject: [PATCH] gpu, mali: change dvfs control timer's first timeout to 10ms
+
+Change-Id: Ia31279b43a1f8b6172fccd18f5e3813992c2e10f
+UTP-Id: SMS07809322
+---
+ .../gpu/arm/mali/common/mali_kernel_utilization.c  |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/arm/mali/common/mali_kernel_utilization.c b/drivers/gpu/arm/mali/common/mali_kernel_utilization.c
+index 8f72774..3854ede 100644
+--- a/drivers/gpu/arm/mali/common/mali_kernel_utilization.c
++++ b/drivers/gpu/arm/mali/common/mali_kernel_utilization.c
+@@ -42,7 +42,7 @@ static u32 last_utilization_pp = 0 ;
+ void (*mali_utilization_callback)(struct mali_gpu_utilization_data *data) = NULL;
+ 
+ /* Define the first timer control timer timeout in milliseconds */
+-static u32 mali_control_first_timeout = 100;
++static u32 mali_control_first_timeout = 10;
+ static struct mali_gpu_utilization_data mali_util_data = {0, };
+ 
+ struct mali_gpu_utilization_data *mali_utilization_calculate(u64 *start_time, u64 *time_period)
+-- 
+1.7.9.5
+

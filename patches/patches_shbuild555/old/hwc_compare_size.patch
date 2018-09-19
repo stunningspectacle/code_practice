@@ -1,0 +1,15 @@
+diff --git a/libhwcomposer/hwcomposer.cpp b/libhwcomposer/hwcomposer.cpp
+index d346c5d..de5b59d 100644
+--- a/libhwcomposer/hwcomposer.cpp
++++ b/libhwcomposer/hwcomposer.cpp
+@@ -401,7 +401,9 @@ public:
+     }
+ 
+     bool compareSizes(const hwc_rect_t& r1, const hwc_rect_t& r2) {
+-        return (r1.bottom - r1.top) == (r2.bottom - r2.top);
++        return ((r1.bottom - r1.top) == (r2.bottom - r2.top)) &&
++                ((r1.right - r1.left) == (r2.right - r2.left));
++
+     }
+ 
+     bool isFormatSupportedAsOverlay(int hal_pix_fmt, bool allowYCbCr = false) {

@@ -1,0 +1,22 @@
+diff --git a/libhwcomposer/hwcomposer.cpp b/libhwcomposer/hwcomposer.cpp
+index fed65d1..096484b 100644
+--- a/libhwcomposer/hwcomposer.cpp
++++ b/libhwcomposer/hwcomposer.cpp
+@@ -434,7 +434,7 @@ public:
+     SingleLayerConfigurator() : IConfigurator("single") {}
+     bool configure(hwc_display_contents_1_t* display, LayerConfiguration& conf) {
+         // 1 layer only (plus FBT)
+-        if (display->numHwLayers != 2)
++        //if (display->numHwLayers != 2)
+             return false;
+         hwc_layer_1_t* l = &display->hwLayers[0];
+         hwc_layer_1_t* fbt_l = &display->hwLayers[conf.fbt_index];
+@@ -462,7 +462,7 @@ public:
+         LayerConfiguration::AddOvResult res;
+         size_t id, last_id;
+ 
+-        if (display->numHwLayers != 3)
++        //if (display->numHwLayers != 3)
+             return false;
+         for (id = 0; id < display->numHwLayers; id++) {
+             l = &display->hwLayers[id];

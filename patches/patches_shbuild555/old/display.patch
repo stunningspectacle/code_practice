@@ -1,0 +1,391 @@
+From 503ad77bef27f7696b1ca73cf92bb4a08b4a16ae Mon Sep 17 00:00:00 2001
+From: genshen li <genshen.li@intel.com>
+Date: Wed, 28 Jan 2015 05:50:29 +0800
+Subject: [PATCH] Fix vbt.bin size issue on MRD
+
+Align vbtgen tool with OC6 branch
+Adding SPLASH image header creation/extraction support in the tool
+Fix vbt.bin size not correct issue on MRD
+
+BZ: 732
+
+Change-Id: Ie6242e5df5ce8a9584fbc7eb16925eb11a7be508
+Signed-off-by: genshen li <genshen.li@intel.com>
+Signed-off-by: xihua.chen <xihua.chen@intel.com>
+---
+ src/tools/vbtgen/splash_img_hdr.h |    5 ++-
+ src/tools/vbtgen/vbtgen.c         |   70 ++++++++++++++++++++++++++-----------
+ src/tools/vbtgen/vbtgen.h         |    6 ++--
+ tools/vbtgen                      |  Bin 26631 -> 26789 bytes
+ 4 files changed, 57 insertions(+), 24 deletions(-)
+
+diff --git a/src/tools/vbtgen/splash_img_hdr.h b/src/tools/vbtgen/splash_img_hdr.h
+index e65e59f..ee9c3bf 100644
+--- a/src/tools/vbtgen/splash_img_hdr.h
++++ b/src/tools/vbtgen/splash_img_hdr.h
+@@ -18,7 +18,10 @@ typedef struct {
+     U32     height;
+     U32     width;
+     U32     bytes_per_pixel;
+-    U8      padding[512 - ( 8 + 3*4) ]; //total size should be 512 bytes
++    U32     font_height;  //small font height
++    U32     font_width;   //small font width
++    U32     font_character_count; //total characters in the font database
++    U8      padding[512 - ( 8 + 3*4 + 3*4 ) ]; //total size should be 512 bytes
+ 
+ } SPLASH_IMAGE_HDR;
+ 
+diff --git a/src/tools/vbtgen/vbtgen.c b/src/tools/vbtgen/vbtgen.c
+index 720101a..34148bf 100644
+--- a/src/tools/vbtgen/vbtgen.c
++++ b/src/tools/vbtgen/vbtgen.c
+@@ -23,6 +23,9 @@
+ #include "dcc_if_config.h"
+ #include "splash_img_hdr.h"
+ 
++int font_height=0;
++int font_width=0;
++int font_chr_cnt=0;
+ 
+ int main( int argc, char *argv[])
+ {
+@@ -55,7 +58,21 @@ int main( int argc, char *argv[])
+             printf("%s:  could not open %s ,  errno = %d\n", argv[0], argv[6], errno);
+             return -1;
+         }
+-
++        if (argc > 12)
++        {
++            if ( 0 == strncmp(argv[7], "-font_h", strlen ("-font_h") ) )
++            {
++                 font_height=atoi(argv[8]);
++            }
++            if ( 0 == strncmp(argv[9], "-font_w", strlen ("-font_w") ) )
++            {
++                 font_width=atoi(argv[10]);
++            }
++            if ( 0 == strncmp(argv[11], "-font_chr_cnt", strlen ("-font_chr_cnt") ) )
++            {
++                 font_chr_cnt=atoi(argv[12]);
++            }
++        }
+     }
+     if ( vbt_bin_file != NULL && dts_file != NULL) {
+         init_vbt(vbt_bin_file);
+@@ -100,8 +117,10 @@ void exit_vbt(FILE * b_fd)
+ {
+ 
+     VBT_HEADER vbt_hdr;
+-    unsigned int cmd;
++    unsigned int cmd, pad_length;
++    unsigned char padding[VBT_MAX_SIZE];
+ 
++    memset((void*) &padding, 0x0,VBT_MAX_SIZE);
+     //seek to the end
+     fseek(b_fd, 0L, SEEK_END);
+ 
+@@ -146,6 +165,13 @@ void exit_vbt(FILE * b_fd)
+         //rewrite the header back
+         fseek(b_fd, 0L, SEEK_SET);
+         fwrite((void*)&vbt_hdr, sizeof(VBT_HEADER), (size_t)1, b_fd);
++        //fill the padding
++        pad_length = VBT_MAX_SIZE - vbt_hdr.vbt_size;
++        if( pad_length >0 ) {
++               // seek to the end
++              fseek(b_fd, 0L, SEEK_END);
++              fwrite((void*)&padding[0], sizeof(char), (size_t)pad_length, b_fd);
++        }
+ 
+         //re-read the header back
+         fseek(b_fd, 0L, SEEK_SET);
+@@ -164,6 +190,9 @@ void create_splash_img_hdr(FILE* fd)
+     strcpy((char*) img_hdr.magic, (const char*)  SPLASH_IMAGE_MAGIC );
+     img_hdr.height = panel_resolution.yres;
+     img_hdr.width = panel_resolution.xres;
++    img_hdr.font_height=font_height;
++    img_hdr.font_width=font_width;
++    img_hdr.font_character_count=font_chr_cnt;
+     fwrite((void*)&img_hdr, sizeof(img_hdr), (size_t)1, fd);
+ }
+ void init_vbt(FILE* out_bin_file)
+@@ -336,22 +365,23 @@ void write_kvp_mipi_dsi(char* key, char*value)
+ 
+     if (  0 == strcmp(key, VBT_DISPLAY_IF_TYPE) )
+     {
+-    	//ignore this here, because the value is assigned from the node name syntax
++        //ignore this here, because the value is assigned from the node name syntax
+ 
+     }
+ 
+     if (  0 == strncmp(key, VBT_DISPLAY_RAMLESS_MODE, strlen (VBT_DISPLAY_RAMLESS_MODE) ) )
+     {
+-    	int ramless = 0x0;
++         int ramless = 0x0;
+          get_value(key, value, &ramless);
+-		 if(ramless) {
+-		 	//ramless is true => video mode.
+-		 	mipi_dsi->mode = DSI_VIDEO;
+-		 }else {
+-		 	mipi_dsi->mode = DSI_CMD;
+-		 }
+-
+-          //printf("key = %s, value = %s , mipi_dsi->mode = %d ", key, value, mipi_dsi->mode );
++         if(ramless) {
++             //ramless is true => video mode.
++             mipi_dsi->mode = DSI_VIDEO;
++         }
++         else
++         {
++             mipi_dsi->mode = DSI_CMD;
++         }
++         //printf("key = %s, value = %s , mipi_dsi->mode = %d ", key, value, mipi_dsi->mode );
+     }
+     if (  0 == strncmp(key, VBT_DISPLAY_IF_MIN, strlen (VBT_DISPLAY_IF_MIN) ) )
+     {
+@@ -600,13 +630,13 @@ void parse_dts(FILE* dts_file, FILE* outFile)
+ 
+         if (token_find(buf, VBT_DISPALY_IF_VALUE_DSI) != -1 )
+         {
+-        	//if node name mipi-dsi exists means it is using the  DSI interface.
+-        	display_if.type = DCC_IF_MIPI_DSI;
++                //if node name mipi-dsi exists means it is using the  DSI interface.
++                display_if.type = DCC_IF_MIPI_DSI;
+         }
+ 
+         if (token_find(buf, VBT_DISPALY_IF_VALUE_DBI) != -1 )
+         {
+-        	display_if.type = DCC_IF_MIPI_DBI;
++                display_if.type = DCC_IF_MIPI_DBI;
+         }
+         write_kvp_to_binvbt(NULL, key, value, 0x0);
+      }
+@@ -649,8 +679,8 @@ void get_key_and_value(char *buf, char *key, char *value)
+ void print_usage(char * argv[])
+ {
+     printf("%s : version =%d.%d \n\n", argv[0], DTS_GEN_VERSION_MAJOR, DTS_GEN_VERSION_MINOR);
+-    printf("usage: %s -i input_DTS file_name  -o output_display_blob_name.bin\n", argv[0]);
+-    printf("       %s  -i input_DTS file_name  -o output_display_blob_name.bin -splash splash_hdr_file_name\n", argv[0]);
++    printf("usage: %s -i input_DTS file_name  -o output_display_blob_name.bin\n", argv[0]);
++    printf("       %s -i input_DTS file_name  -o output_display_blob_name.bin -splash splash_hdr_file_name -font_h font_height -font_w font_width -font_chr_cnt font_chacters_count\n", argv[0]);
+     printf("       %s  -x display_blob_name.bin  -> Extracts the binary Blob into fields\n", argv[0]);
+     printf("       %s  -x splash_img_hdr_file.bin -> Extracts the image header into fields \n", argv[0]);
+ 
+@@ -896,9 +926,9 @@ void log_dis_if(struct dcc_display_if *dif)
+ int  extract_bin(char * file_name)
+ {
+ 
+- FILE *b_fd;
+- VBT_HEADER vbt_hdr;
+- SPLASH_IMAGE_HDR *splash_hdr;
++    FILE *b_fd;
++    VBT_HEADER vbt_hdr;
++    SPLASH_IMAGE_HDR *splash_hdr;
+ 
+     b_fd = fopen(file_name, "rb");
+     if (b_fd== NULL )
+diff --git a/src/tools/vbtgen/vbtgen.h b/src/tools/vbtgen/vbtgen.h
+index 0371da7..d7a5fb6 100644
+--- a/src/tools/vbtgen/vbtgen.h
++++ b/src/tools/vbtgen/vbtgen.h
+@@ -17,11 +17,11 @@
+ 
+ #define DTS_GEN_VERSION_MAJOR   1
+ #define DTS_GEN_VERSION_MINOR   0
+-
++#define VBT_MAX_SIZE           (7*1024)
+ 
+ //Typedefs
+-typedef uint8_t 	U8;
+-typedef uint32_t	U32;
++typedef uint8_t         U8;
++typedef uint32_t        U32;
+ void parse_dts(FILE* dts_file, FILE* outFile);
+ void init_vbt(FILE* out_bin_file);
+ 
+diff --git a/tools/vbtgen b/tools/vbtgen
+index 1bd3ea831357ec2a4c4758805d8e8443fb9802d4..4392af61707f4dee50b8bb3ab89ee77c8a5b5ff0 100755
+GIT binary patch
+delta 9037
+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
+LDJHu8frkGBj<tT*
+
+delta 8662
+zcmaKy3wRS%_P}q_rcFzMr1TMJX;aIiAX56GPhqgM29*+M%S#>wE0kUTy9h<9f7yVw
+zN{C?ez;1DU0H3b-M(XNVu~cA*4`e}kR0J#nYp|$Q(T%z?d(NGkNe1?FzOQrVoZmU;
+zp8J?PcQSqEu;IZ&2CvO(F-wdN^~~6gM@Bpwn?I53SpLLEPK-9xL5$(yc$=`WN$Q17
+zg69n<5*B7JI~4cOW9)Lp)4Mm9E_?gB-qIz|Y79V8qz$%5c)=O@A{b2hFxF&;nI>Dt
+z-!QZV{}Prg>C0FI+acr?gO<cFW@PPckC+}bxE#$F&HhpYWB&K)bo;f8IhyyG_bLS^
+z9CoG*J&EW3=@MR%+<-yYg>D6pp&yZqKJ3CFF27H*k>pM;?;$yY<Q-gYCpnVjEnMD7
+zvdcsYFIPNIiYSs-b9o!d(IhYB@?#{MNv`Aaqa??W?Bwz~l4D7hxO^YUeMla|<$Fku
+zBiYX7WhhrQVCS$47Owam8T2EWp`7#8B=_NY4)^Dd=5xKynn}LSx?G7leD55}p~80w
+zN7TO<4KI1U)Qb*}X)|mz54VoNFl@!mZ%I{k43#4taKM~dU_z~u@Q)%@`R^O;%u(F6
+z?DPGmvv_HsKEHMD-bITRjqaa*Kc>KN7_MImLt^TTow<+}n>l<h)$XY{<Y?}+I6TbZ
+zKIU-y{Hrc2io;#ucQmi^vlRvYm*7y0&Gs(Yx_vUm@qh8FqR7<13w<7qO*MYa!@0f<
+zg|mmkokv>?*NfqLDO@7T9&8$~7VWTRy!4Ebbu~=UYFLgFqIuOxQ~wPcs0pfH7LUJ2
+z{sF6elLi!XhwXimUAMM}Wicj{#bh;$0A>-OELQy|EDN;z-&wqYR%$yxr8=kujZ1mI
+zG%mqRda1jtI3XRL+Fq3X4zt>Yi{rr=mo(Xd?p%##WpquIH`-7YAWxdw!Rx_P6V}0c
+z>anqgKTSqJ<ANQ9ZQCRNN?n`*N8&85%1p*oQ!6*ZNXHXUMK{iSdutu;^Eh{wI^3&T
+z>m8oRp;?r<yCRU&iPo*{bUSt69}TAen_m>gSMj0&T^;KyUc_d!I^2ibDN+aBS7g(J
+zHZogYM~x)vQn5|o57iLSzZK#+3ei1H3!#tTQ6rdtE5c%mU{{j}%kedl#3VI@@>?N>
+zq7Cl>^a<;MpGjNW3f_K+u4!DjvXgcREp>($uiX{$)p7npM(Znf=(>>BV)A+{7*|(y
+zJ=bDu$c=g(HusBj`F`SQ2I?Jo>ew}!{2!xE8(9mEY`|wqDYvtXYUeFJQzBkXsCH!R
+zH^t)>^O!6ZcIGxkq2Mtwetr1{JCnPed;oCji4n#no2PdvEIgE1Qq3FD+-GW^2z8c<
+z$Qx0h-bq^YKQj9$07op7j7mAATN9)GSf$MJpwya@^khI$ngfQ$c#r8VR5$w#Zqv?k
+zxWjsn5iR`IbmLe5hM4%Z#*cplh?f%0c@j^?{iC9^bgoFlW$yBL@W*E+W(hJiMD~vd
+z`+&?uhadw(WW#uviDa=LXMWJ4O&<?lB+Y_6r;-e;Cv7~uJ78GiQ-b^<M9z+bh=gIT
+zw*<-Kq<_m{8dtpiJ3bQN8(dwQ14?5OM%yqBJ8$(`8frW)JcB20`-!mKD{Kd#?Ly6#
+zZn>U&xnZ|3d@N|_Ld#;!5(ka-RCCKOgyo$<OEk1-h7n{qQtl-qTA%pRq^{p@U7|^5
+zI(L0ARYlD*(4LGJ9Vz+hSWHB-md^gJP=oUXVPOq^ibr_}9q9-)xJ=j{!KIBlhZ?+G
+zvkhx-g)n>}%<v}7(8yd`gC`5i`@$?UG)uL?SW7=mMeUMjlGl|z@O{`VWyf2}?{Kf^
+zcKA#O%j_(RFEqHE<HCD?z7)aUw8GbY1|?vp``Z&SWXC3vh~;~jo;13s4xN0|de+ky
+z>z~R+Y9aT)#hG=yAUyv5oi-y!mcg#1%*0MXR)xrSrEm$!F+nOqq`eeIC1)n~2+}u1
+z?kk1*Fmm);t)81o;c+C91?s3i5hC%Wa0E%3Ah(Cei4usjWhP33To)qSN?;<A20?!4
+z)#~|O3EYdsE6Cd+l3N0=A&~`X36Y<R;UbbQK_-XDo?;j>Ff%bANMeYrD~35pY-82-
+zoccz~U|KP3L?Q|DOo$9Bh66|%1o^)Z`Md}s2W2L%6{H|Uo-cwjBs&E8^=qx3Wkt}4
+zq)U*0gh)vdyoe+q$odd57Qwke6)sz$nsuH^rmkLfgf*snOrI9pnd7!YzQ|3ix{euf
+z@-%nilDQAnJ)=CPT{;{Y#LuAGW13Nj3oKbz;f2TKz;jDy<5-XB0mOJU%HipIGe;{@
+z)i^R$qCMgpFc+U`dNJ%v8Rp6m2`>AJH@CoJvg_(L1?!F>wP$h{&hhSc)$1TV?VjU{
+z3+ia!+mR!}WoqFL7lpSpA{efn)Sk&^HC|33+?kr}l7#n>i#!?JI*IyJ!0XEj)<+xh
+zjw!-po9cn-J9YI%1?wwT>r<;!y?D4!aAn|48o*c_>zE_rRbPYwgU`E`3bDS2Cv=m~
+z6jflydKum7T^(x$9)vm3niuOc{VU(j_+E<m!-D^el?c8cIj!luPAgt?{8<<=wT@7u
+z&rO4sY4OJGh2Tk>7yFJdTmB_{pSFDT>zD_QbvBOm|L4&(cm@?Xqx3`F`XvqZ0|l@#
+zz0qhZgjo9+D$49O<Hv<C-9FrSv=ChOvDGwB{S$DD;%o6^vb=@sTYB-b<G84J0WJ!n
+z5p!!qBZNt}Fc}vzDX9T-#`WVK_G9<rL#1T{y=LG}IDDgX143=1Ge%pL-L*7I{*DWU
+zZOs{z46YuG{w8I_H<CE#WD@*`|D{I6-Mnlrl5jgg?=vd<dl++G!8V66`3klwjG2qo
+zn66;Z1qiQB*Ij$EeHNM03xWDR&`MEo53as_q{wqPt`%6#Fad3PhI=Yb;+Wwy572zj
+z?oi)((KNijJ}{hz4>I4L{znWF*22MP;;DU2_UP47TrJB_>($?!BkNsqr(WH4uI==Y
+zmyOY1pxS@-48ZUc(F$D~&p=~VRdi|zUcb~0?`0h|Ms>rM5vkD<soFk+y(6x3)!{X!
+z?xq__ZPm`tc;dbNUzZI1Uq2+TzRJQYEIiIgdCOIFnMTd>?yG2xM&smDCDN!XDj%!i
+zNck6Z4(qLy&)}~kud&9I>a_mTaByUSal&ahaBaHFg3y2SX|?BZP7T)^-x(yBc&Q#u
+z*N|Cu>QSkN;^cZgvTMj9-(4z=2+!A~u>^U&-tEg%Jlk!k_1}L=%l37>)$>7u*&fuR
+zhc#rD&+1X5hT`O(^k|lbEOP%ceYWE?mLLx;({*v?DS%Pex=K;&fAu8K){lKVLvM9F
+zNHE(5J=&$B06N{RC)<Jqo!05mgBmi+k0Wx0O@%u&7AL=~cblpqi`=P4V>Of@AJL-}
+z4cX+gdc*{Bd7P>84|;a~Q!#c<yBu-7uG8Mv&=A?GN3UooOTI>rHfm^;oUcc&yEQgO
+zo~&o{G?Xtd(xY+>70E6=%F<Ao{AWGtt075#Nk!Tc`rV0OqbJJy^lryB<d9G6(Jl?$
+zBLAdETQ%gAE#q{(_<)9LTymD4{a#};Wl4{m8k!?d(W3$l)ya$XXpn~L<v;0>@`>W&
+zk3NsHLEfNe=ROJc#~t!kJ$g?=OXXMf=w%HxUWq_MO<~BzADB%VyI0<)k2p7oysObv
+zKBA}NHF`hMb9$PgQF;rOFX?Fn(HZ#Q_ju`@QSLKdH%RBZL<e}iL^Ji&r_qf>i}m!m
+zF6f(+Ss)(1_+u6SJ@Y8}xGT2c!*>f?kr{mW3M^wB=AYUHx91G)_w#XH`4-y7UOo=3
+zIXTtSunH0Z5&kZLFR>Nq>GPLT{p8z|CfAV-|8*?1;b=p9S-}GV?Qs(L4{`Wo&bs4}
+znmcTQnq*7Yuaq3mvy&=!xA;lZ{5BPAMTW?BQ^-zDIPW+#=MHmydW<SieK4t$DDG~-
+zZ2UX%O8zV5wSH5tR)^|)44G$B0JZXKXc4v)?&9P>L_XA$ZJe;nNc<sEM18jw5%!91
+zBUg_)u`^n8(LNyqyYTHm$7yAEtc1xW9fP_&Z<<#e4)+~Hx^8jT59xNSzpgyh&Td&h
+zv@8{(@~<_XJpy_8ON`r7;K}@K<10tupZQZFo7m8%wi^m=G+7hqw|U0w>M?Y=9j4+7
+z*x{1FZH1*PqFsUgiqebx<hzPu!+rnu4-};c%fEc6C^NDA5z8hlTMsHqE0#C^6Pt(S
+zuUK|rdG{ej31GSVWAw*8`fi*_MOe;1h5lG(;r^lt%cgGh$8z8q^vCjHEW3=XoYjAU
+z0Z?%O_q8_sc>*qA04!(YE_^1INASg~3CnJL>1@R^3b)HLmNJ%ISUSFgKa`I&F>D8e
+zC(1Jy?D8qf0Sw3{^s_u*Ebki?;WNfXn^`KV>hZ7PeMR{OGY;`D4M9$~YT*GznUAH$
+zjk5`J|EE!X7i3IKHw0h;o;|Q&VtU44?3;Ua9xFAEA=F2(6>Xn_ckt|jGk8|OP?2uf
+z4jFjvf(aGr8MAQna+fZ~omz}YY|SgM25swME1qA3chI96H^ck~m0&xKdo+*x(c@<@
+zRHiSe!55@BU2CJY*6u?q3Eu&S>3D|5&mphGchcu{c|FZ*8G^b<?EWrTQ#sru;UF2?
+zUaedi-PT$8kP)(~r1(ITM1G7u_0X|B7w)M_GdN*$Rk~q6yjeBg&;UPGrCYrwi5t*2
+z3Obr##FT795zLyBZb$;d>;ceOIS2exY$?N{C2lcRl$D~K9xcHyQ|7`kgQd;uTx&G6
+z!occmt20tHcSdqAwjU-`CBxEcn>9&PnPgJQHL$rlJEllz@%E@LjA;^56Ig2swIsd5
+zqXA~sWXA^E7>I&LYsSV}L_U^i$e5M{{u+CH@C&2`XAm8&BVkbO=-BPK5*M*krqzzM
+z%0iTLxt7g?&9&LFVILzusvR5KE2%!cQd|7=2Mh);Y@U%F(}X`+)6oQnXN)(j1?x;Y
+zPsQ_2cx2}Im@%_BW_I{wW?_u;HdT592F`i|$Kvp;WZuV#5oT6|eVuG*!gFFoEb~In
+z?Bs#L2C81_IRfALEwEsA^1@)_^t2xiwG^)6*Ac8g3pO(xM&S3-U_<qKE9;fu#O%Le
+zN^5St(NG5O-MSJ#*G`yoqw$a#*3GFjj+qD_%^7W6nhVCcqYXPCXKu1FR)U-6-es)I
+zg*{ljFak>Ejm8K|=G}T-JkG_O42jpm?=`&o8t1-+eXFb$-55;a2QbV_UJ!$K0C`F2
+zs+W`Q6g*OdzF$9y%iH*wu_0W4bq9<@y_F4Q^nr&C8$UBv3Tx&k8)ndX!S6-Pi=!n@
+z`CW@wD}_ESN7eJY5%tX!(>Q?92hZ@sE9~zbE^#&gT8vkZ^Sa)mbIw6wvqR+HCIZkM
+zkHf)&lS-)Bx7;@pw$>%P2H;(9HQLzfD|*aM`mjM3Hyz7HJ@w(TkrEGgj{qe?pJ-9_
+zd<8{|3ZZ{Q=qpjCW4@{%$>>Wk9d3SR?2p3X*$jzmj*46K9$2s-dD14NG{9ZU>x8{p
+zJSM!ZoWom%{#=&C4SmAvRf^`?C+KbcRk~BqgQAuzr_l*vPoJ&n;14D&KNI>uwnS>i
+zmtZWv6Z%*BN~C7|L4>6lJ1rg`j&Cfq8d6}*!sMK6uIbB;i+^3%BD%F4OPXo{G1Y{c
+z-2!J8CJ(F;UMmMn6rQ~&CiFabbz$<PWx|&}WzrFxrhgJ%Uc1EgTltx>bwc0SN7eJk
+zDl&jOZ%e-BNlyE)E7y>xh1c-`@ceC`CFB>f`SUAltIBI8O{tnce{^1MK@mJrufVgn
+SLtEvd$p+Z6*abNajsFGf+s<<U
+
+-- 
+1.7.9.5
+

@@ -1,0 +1,46 @@
+From a4f4503b273873aabf40a1eea0c802e611fb8c25 Mon Sep 17 00:00:00 2001
+From: Leo Yan <leo.yan@intel.com>
+Date: Tue, 10 Apr 2012 15:13:01 +0800
+Subject: [PATCH] mfld_gi/als: Multiply the ALS raw data by glass light transmittance
+
+BZ: 30035
+
+We need to multiply ALS device raw data by the glass light
+transmittance value to get the right lux value.
+
+Change-Id: I7e8f0be33ca6afb5335ffd60d937ed63091883b9
+Signed-off-by: Leo Yan <leo.yan@intel.com>
+---
+ ctp_pr0/LightSensor.cpp |    3 ++-
+ ctp_pr0/LightSensor.h   |    1 +
+ 2 files changed, 3 insertions(+), 1 deletions(-)
+
+diff --git a/ctp_pr0/LightSensor.cpp b/ctp_pr0/LightSensor.cpp
+index 8ce3139..e1913df 100644
+--- a/ctp_pr0/LightSensor.cpp
++++ b/ctp_pr0/LightSensor.cpp
+@@ -92,7 +92,8 @@ int LightSensor::readEvents(sensors_event_t* data, int count)
+     data->version = sizeof(sensors_event_t);
+ 
+     read(data_fd, &val, sizeof(unsigned int));
+-    data->light = (float)val / APDS9900_LUX_OUTPUT_SCALE;
++    data->light = (float)val /
++                    (APDS9900_LUX_OUTPUT_SCALE * APDS9900_LIGHT_TRANS);
+     D("LightSensor - read data val = %f ",data->light);
+ 
+     return 1;
+diff --git a/ctp_pr0/LightSensor.h b/ctp_pr0/LightSensor.h
+index f4495f6..4443e3e 100644
+--- a/ctp_pr0/LightSensor.h
++++ b/ctp_pr0/LightSensor.h
+@@ -27,6 +27,7 @@
+ #include "InputEventReader.h"
+ 
+ #define APDS9900_LUX_OUTPUT_SCALE 10.0
++#define APDS9900_LIGHT_TRANS 0.3
+ 
+ /*****************************************************************************/
+ 
+-- 
+1.7.1
+

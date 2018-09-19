@@ -1,0 +1,18 @@
+diff --git a/driver/src/egl/egl_platform_android.cpp b/driver/src/egl/egl_platform_android.cpp
+index 0d4713c..c19c217 100644
+--- a/driver/src/egl/egl_platform_android.cpp
++++ b/driver/src/egl/egl_platform_android.cpp
+@@ -662,6 +662,10 @@ void __egl_platform_cancel_buffers(egl_surface *surface, mali_bool cancel_frameb
+ 					mali_bool buffer_released = MALI_FALSE;
+ 					native_buf = MALI_REINTERPRET_CAST(android_native_buffer_t *)surface->buffer[i].data;
+ 
++					/* Temporary add this NULL pointer check to avoid crash, actually it should NOT happen*/
++					if(native_buf == NULL)
++                   {
++						surface->buffer[i].flags = BUFFER_EMPTY;
++						continue;
++					}
++
+ 					if (MALI_FALSE == IS_FRAMEBUFFER(native_buf))
+ 					{
+ 						ADBG(2, "cancel UMP/dma_buf buffer at index %i buffer 0x%pn (flags: %i)\n", i, surface->buffer[i].data, surface->buffer[i].flags);

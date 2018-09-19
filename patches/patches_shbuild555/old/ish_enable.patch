@@ -1,0 +1,238 @@
+From 4b53a1cbaf90486571bc46f9399e81c194ade9b2 Mon Sep 17 00:00:00 2001
+From: Michael Yuniverg <michael.yuniverg@intel.com>
+Date: Tue, 18 Feb 2014 08:53:58 +0200
+Subject: [PATCH] Enable ISH support on CHT RVP
+
+BZ: 196516
+
+1. Enable ISH build.
+2. Change ownership on IIO sysfs entries to system:system
+3. Remove unused entries for byt
+
+Change-Id: Icce86ce49594d719cb5b8e46c1b2886007011116
+Signed-off-by: Andriy Naborskyy <andriy.naborskyy@intel.com>
+Signed-off-by: Even Xu <even.xu@intel.com>
+---
+ BoardConfig.mk                 |    6 ++
+ cherrytrail.mk                 |    4 ++
+ cht_rvp/config/init.cht_rvp.rc |  154 +++++++++++++++++++++++++++++++++++++---
+ 3 files changed, 154 insertions(+), 10 deletions(-)
+
+diff --git a/BoardConfig.mk b/BoardConfig.mk
+index 308422e..4c21b6d 100644
+--- a/BoardConfig.mk
++++ b/BoardConfig.mk
+@@ -31,6 +31,12 @@ endif
+ ADDITIONAL_BUILD_PROPERTIES += \
+     debug.rs.default-CPU-driver=1
+ 
++# enable libsensorhub
++ENABLE_SENSOR_HUB_ISH := true
++
++# enable scalable sensor HAL
++ENABLE_SCALABLE_SENSOR_HAL_ISH := true
++
+ ifneq ($(TARGET_NO_RECOVERY),true)
+ TARGET_RECOVERY_UI_LIB := libintel_recovery_ui
+ TARGET_RECOVERY_PIXEL_FORMAT := "BGRA_8888"
+diff --git a/cherrytrail.mk b/cherrytrail.mk
+index 1ed97c6..400ea06 100644
+--- a/cherrytrail.mk
++++ b/cherrytrail.mk
+@@ -84,6 +84,10 @@ PRODUCT_PACKAGES += \
+ PRODUCT_PACKAGES += \
+     rfid_monzaxd
+ 
++# sensorhub
++PRODUCT_PACKAGES += \
++    sensorhubd
++
+ # Identity Protection Technology (IPT)
+ PRODUCT_PACKAGES += \
+     libiha \
+diff --git a/cht_rvp/config/init.cht_rvp.rc b/cht_rvp/config/init.cht_rvp.rc
+index 22a30b2..3902bc3 100644
+--- a/cht_rvp/config/init.cht_rvp.rc
++++ b/cht_rvp/config/init.cht_rvp.rc
+@@ -219,6 +219,22 @@ on boot
+     #set dirty background bytes to 24MB to reduce USB MTP write latencies
+     write /proc/sys/vm/dirty_background_bytes 25165824
+ 
++    insmod /lib/modules/heci.ko
++    insmod /lib/modules/heci-ish.ko
++    insmod /lib/modules/sens-col-core.ko
++    insmod /lib/modules/mfd-core.ko
++    insmod /lib/modules/industrialio.ko
++    insmod /lib/modules/kfifo_buf.ko
++    insmod /lib/modules/industrialio-triggered-buffer.ko
++    insmod /lib/modules/hid-sensor-hub.ko
++    insmod /lib/modules/hid-heci-ish.ko
++    insmod /lib/modules/hid-sensor-iio-common.ko
++    insmod /lib/modules/hid-sensor-trigger.ko
++    insmod /lib/modules/hid-sensor-accel-3d.ko
++    insmod /lib/modules/hid-sensor-gyro-3d.ko
++    insmod /lib/modules/hid-sensor-als.ko
++    insmod /lib/modules/hid-sensor-magn-3d.ko
++
+ on post-fs-data
+     # we will remap this as /mnt/sdcard with the sdcard fuse tool
+     mkdir /data/media 0770 media_rw media_rw
+@@ -262,16 +278,6 @@ on post-fs
+     # Insert touchscreen module
+     insmod /lib/modules/atmel_mxt_ts.ko
+ 
+-    #  Permissions for pshfw update tool
+-    chown system system /dev/i2c-5
+-    chown system system /sys/class/gpio/gpio59/value
+-    chown system system /sys/class/gpio/gpio95/value
+-
+-    #  Permissions for Sensor Hub
+-    chown system system /sys/bus/i2c/devices/5-0040/control
+-    chown system system /sys/bus/i2c/devices/5-0040/data
+-    chown system system /sys/bus/i2c/devices/5-0040/data_size
+-
+     chown 3700 3700 /dev/sep_sec_driver
+     chmod 0660 /dev/sep_sec_driver
+ 
+@@ -288,6 +294,14 @@ on post-fs
+     symlink /sys/bus/platform/devices/crystal_cove_bcu/msic_voltage /dev/bcu
+ 
+ # additional cherrytrail initialization
++
++service sensorhubd /system/bin/sensorhubd
++    class main
++    user system
++    group system
++    socket sensorhubd stream 600 system system
++    oneshot
++
+ service hdcpd /system/bin/hdcpd
+     class main
+     user root
+@@ -369,3 +383,123 @@ on charger
+ 
+     insmod /lib/modules/atomisp-css2400b0_v21.ko
+ 
++#####################
++#  Permissions for ISH
++
++on device-removed-/dev/iio:device1
++    setprop iio.device0.removed 1
++
++on device-removed-/dev/iio:device2
++    setprop iio.device1.removed 1
++
++on device-removed-/dev/iio:device3
++    setprop iio.device2.removed 1
++
++on device-removed-/dev/iio:device4
++    setprop iio.device3.removed 1
++
++on device-added-/dev/iio:device1
++    setprop iio.device0.removed 0
++    chown system system /dev/iio:device1
++#    chown system system /sys/bus/iio/devices/iio:device1/*
++    chown system system /sys/bus/iio/devices/iio:device1/dev
++    chown system system /sys/bus/iio/devices/iio:device1/in_accel_hysteresis
++    chown system system /sys/bus/iio/devices/iio:device1/in_accel_offset
++    chown system system /sys/bus/iio/devices/iio:device1/in_accel_sampling_frequency
++    chown system system /sys/bus/iio/devices/iio:device1/in_accel_scale
++    chown system system /sys/bus/iio/devices/iio:device1/in_accel_name
++    chown system system /sys/bus/iio/devices/iio:device1/name
++    chown system system /sys/bus/iio/devices/iio:device1/uevent
++#    chown system system /sys/bus/iio/devices/iio:device1/buffer/*
++    chown system system /sys/bus/iio/devices/iio:device1/buffer/enable
++    chown system system /sys/bus/iio/devices/iio:device1/buffer/length
++#    chown system system /sys/bus/iio/devices/iio:device1/scan_elements/*
++    chown system system /sys/bus/iio/devices/iio:device1/scan_elements/in_accel_x_en
++    chown system system /sys/bus/iio/devices/iio:device1/scan_elements/in_accel_x_index
++    chown system system /sys/bus/iio/devices/iio:device1/scan_elements/in_accel_x_type
++    chown system system /sys/bus/iio/devices/iio:device1/scan_elements/in_accel_y_en
++    chown system system /sys/bus/iio/devices/iio:device1/scan_elements/in_accel_y_index
++    chown system system /sys/bus/iio/devices/iio:device1/scan_elements/in_accel_y_type
++    chown system system /sys/bus/iio/devices/iio:device1/scan_elements/in_accel_z_en
++    chown system system /sys/bus/iio/devices/iio:device1/scan_elements/in_accel_z_index
++    chown system system /sys/bus/iio/devices/iio:device1/scan_elements/in_accel_z_type
++#    chown system system /sys/bus/iio/devices/iio:device1/trigger/*
++    chown system system /sys/bus/iio/devices/iio:device1/trigger/current_trigger
++
++on device-added-/dev/iio:device2
++    setprop iio.device1.removed 0
++    chown system system /dev/iio:device2
++#    chown system system /sys/bus/iio/devices/iio:device2/*
++    chown system system /sys/bus/iio/devices/iio:device2/dev
++    chown system system /sys/bus/iio/devices/iio:device2/in_anglvel_hysteresis
++    chown system system /sys/bus/iio/devices/iio:device2/in_anglvel_offset
++    chown system system /sys/bus/iio/devices/iio:device2/in_anglvel_sampling_frequency
++    chown system system /sys/bus/iio/devices/iio:device2/in_anglvel_scale
++    chown system system /sys/bus/iio/devices/iio:device2/name
++    chown system system /sys/bus/iio/devices/iio:device2/uevent
++#    chown system system /sys/bus/iio/devices/iio:device2/buffer/*
++    chown system system /sys/bus/iio/devices/iio:device2/buffer/enable
++    chown system system /sys/bus/iio/devices/iio:device2/buffer/length
++#    chown system system /sys/bus/iio/devices/iio:device2/scan_elements/*
++    chown system system /sys/bus/iio/devices/iio:device2/scan_elements/in_anglvel_x_en
++    chown system system /sys/bus/iio/devices/iio:device2/scan_elements/in_anglvel_x_index
++    chown system system /sys/bus/iio/devices/iio:device2/scan_elements/in_anglvel_x_type
++    chown system system /sys/bus/iio/devices/iio:device2/scan_elements/in_anglvel_y_en
++    chown system system /sys/bus/iio/devices/iio:device2/scan_elements/in_anglvel_y_index
++    chown system system /sys/bus/iio/devices/iio:device2/scan_elements/in_anglvel_y_type
++    chown system system /sys/bus/iio/devices/iio:device2/scan_elements/in_anglvel_z_en
++    chown system system /sys/bus/iio/devices/iio:device2/scan_elements/in_anglvel_z_index
++    chown system system /sys/bus/iio/devices/iio:device2/scan_elements/in_anglvel_z_type
++#    chown system system /sys/bus/iio/devices/iio:device2/trigger/*
++    chown system system /sys/bus/iio/devices/iio:device2/trigger/current_trigger
++
++on device-added-/dev/iio:device3
++    setprop iio.device2.removed 0
++    chown system system /dev/iio:device3
++#    chown system system /sys/bus/iio/devices/iio:device3/*
++    chown system system /sys/bus/iio/devices/iio:device3/dev
++    chown system system /sys/bus/iio/devices/iio:device3/in_intensity_hysteresis
++    chown system system /sys/bus/iio/devices/iio:device3/in_intensity_offset
++    chown system system /sys/bus/iio/devices/iio:device3/in_intensity_sampling_frequency
++    chown system system /sys/bus/iio/devices/iio:device3/in_intensity_scale
++    chown system system /sys/bus/iio/devices/iio:device3/name
++    chown system system /sys/bus/iio/devices/iio:device3/uevent
++#    chown system system /sys/bus/iio/devices/iio:device3/buffer/*
++    chown system system /sys/bus/iio/devices/iio:device3/buffer/enable
++    chown system system /sys/bus/iio/devices/iio:device3/buffer/length
++#    chown system system /sys/bus/iio/devices/iio:device3/scan_elements/*
++    chown system system /sys/bus/iio/devices/iio:device3/scan_elements/in_intensity_both_en
++    chown system system /sys/bus/iio/devices/iio:device3/scan_elements/in_intensity_both_index
++    chown system system /sys/bus/iio/devices/iio:device3/scan_elements/in_intensity_both_type
++#    chown system system /sys/bus/iio/devices/iio:device3/trigger/*
++    chown system system /sys/bus/iio/devices/iio:device3/trigger/current_trigger
++
++on device-added-/dev/iio:device4
++    setprop iio.device3.removed 0
++    chown system system /dev/iio:device4
++#    chown system system /sys/bus/iio/devices/iio:device4/*
++    chown system system /sys/bus/iio/devices/iio:device4/dev
++    chown system system /sys/bus/iio/devices/iio:device4/in_magn_hysteresis
++    chown system system /sys/bus/iio/devices/iio:device4/in_magn_offset
++    chown system system /sys/bus/iio/devices/iio:device4/in_magn_sampling_frequency
++    chown system system /sys/bus/iio/devices/iio:device4/in_magn_scale
++    chown system system /sys/bus/iio/devices/iio:device4/name
++    chown system system /sys/bus/iio/devices/iio:device4/uevent
++#    chown system system /sys/bus/iio/devices/iio:device4/buffer/*
++    chown system system /sys/bus/iio/devices/iio:device4/buffer/enable
++    chown system system /sys/bus/iio/devices/iio:device4/buffer/length
++#    chown system system /sys/bus/iio/devices/iio:device4/scan_elements/*
++    chown system system /sys/bus/iio/devices/iio:device4/scan_elements/in_magn_x_en
++    chown system system /sys/bus/iio/devices/iio:device4/scan_elements/in_magn_x_index
++    chown system system /sys/bus/iio/devices/iio:device4/scan_elements/in_magn_x_type
++    chown system system /sys/bus/iio/devices/iio:device4/scan_elements/in_magn_y_en
++    chown system system /sys/bus/iio/devices/iio:device4/scan_elements/in_magn_y_index
++    chown system system /sys/bus/iio/devices/iio:device4/scan_elements/in_magn_y_type
++    chown system system /sys/bus/iio/devices/iio:device4/scan_elements/in_magn_z_en
++    chown system system /sys/bus/iio/devices/iio:device4/scan_elements/in_magn_z_index
++    chown system system /sys/bus/iio/devices/iio:device4/scan_elements/in_magn_z_type
++#    chown system system /sys/bus/iio/devices/iio:device4/trigger/*
++    chown system system /sys/bus/iio/devices/iio:device4/trigger/current_trigger
++
++
++
+-- 
+1.7.9.5
+

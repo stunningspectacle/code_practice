@@ -1,0 +1,1662 @@
+From c07d9ee3312b84eec1370d20884f2bfc039b858a Mon Sep 17 00:00:00 2001
+From: Chee Leong Ng <chee.leong.ng@intel.com>
+Date: Mon, 22 Dec 2014 16:28:44 +0800
+Subject: [PATCH 2/2] Remove file open op in LoadDeviceRSAKey. Add mutex
+ control.
+
+BZ: 553
+
+[PATCH 2/26]
+
+Change-Id: I3b9a64d57fad7548b90d87fbafdf8d7e95f7f0ff
+UTP-Id: SMS06126136
+Reviewed-on: https://opticm6.rds.intel.com/r/49158
+Reviewed-by: Fabrizio Iannetti <fabrizio.iannetti@intel.com>
+Tested-by: TCloud Jenkins
+Reviewed-by: UTP Service
+---
+ wv_modular_L1/src/oemcrypto.cpp |  659 +++++++++++++++++++++++++--------------
+ 1 file changed, 426 insertions(+), 233 deletions(-)
+
+diff --git a/wv_modular_L1/src/oemcrypto.cpp b/wv_modular_L1/src/oemcrypto.cpp
+index 9c40f5e..73e7a74 100644
+--- a/wv_modular_L1/src/oemcrypto.cpp
++++ b/wv_modular_L1/src/oemcrypto.cpp
+@@ -24,6 +24,7 @@
+ #include <sys/ioctl.h>
+ #include "log.h"
+ #include "openssl/sha.h"
++#include <pthread.h>
+ 
+ #include <fstream> //used for VBPIPE
+ #include <errno.h>
+@@ -42,6 +43,8 @@
+ const char vbpipe_dev_oemcrypt[] = "/dev/vbpipe6";
+ int fd_oemcrypt_vbpipe = 0;
+ int fd_oemcrypt_vrpc  = 0;
++
++pthread_mutex_t g_mutex;
+   
+ //#define PERFORMANCE_CHECK
+ #if defined(PERFORMANCE_CHECK)
+@@ -194,27 +197,42 @@ extern "C" OEMCryptoResult OEMCrypto_Initialize(void)
+ 		return OEMCrypto_ERROR_INIT_FAILED;
+ 	}
+ 
+-  // Invoke RPC call
++	if (0 != pthread_mutex_init(&g_mutex, NULL)){
++		LOGE("%s: Cannot init mutex %s", __func__, strerror(errno));
++		return OEMCrypto_ERROR_INIT_FAILED;
++	}
++	pthread_mutex_lock(&g_mutex);
++
++	// Invoke RPC call
+ 	// ioctl call triggers vrpc call
+ 	if (ioctl(fd_oemcrypt_vrpc, VOEMC_IOCTL_INIT, 0) < 0)
+   {
+ 		LOGE("%s: ioctl failed - %s", __func__, strerror(errno));
+ 		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
+ 		return OEMCrypto_ERROR_INIT_FAILED;
+ 	}
+ 
+ 	// Read data from shared memory
+ 	size = read(fd_oemcrypt_vrpc, &req, sizeof(req)); /* get return result */
++	if (size <= 0){
++		LOGE("%s: Read failed - %s", __func__, strerror(errno));
++		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
++		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
++	}
+ 	LOGD("%s: Read size %d, result %d", __func__, size, req.result);
+ 
+ #ifdef ION_BUFFERS
+     data_in = new MemBuffer(gra, CRYPTO_IONBUF_SIZE/2, 1, HAL_PIXEL_FORMAT_RGB_565);
+-	phy_addr_in = data_in->getBusAddress();
++    phy_addr_in = data_in->getBusAddress();
+     data_out = new MemBuffer(gra, CRYPTO_IONBUF_SIZE/2, 1, HAL_PIXEL_FORMAT_RGB_565);
+-	phy_addr_out = data_out->getBusAddress();
++    phy_addr_out = data_out->getBusAddress();
+     LOGE("OEMCrypto_Initialize phy_addr_in: 0x%x data_in->ptr 0x%x \n",phy_addr_in, (uint32_t*)data_in->ptr);
+     LOGE("OEMCrypto_Initialize phy_addr_out: 0x%x data_out->ptr 0x%x \n",phy_addr_out, (uint32_t*)data_out->ptr);
+-#endif	
++#endif
++
++	pthread_mutex_unlock(&g_mutex);
+ 	return (OEMCryptoResult)req.result;
+ }
+ 
+@@ -222,25 +240,38 @@ extern "C"
+ OEMCryptoResult OEMCrypto_Terminate(void) {
+ 	size_t size;
+ 	voemc_term_t req;
+-  
++
++	pthread_mutex_lock(&g_mutex);
++
+ 	// ioctl call triggers vrpc call
+ 	if (ioctl(fd_oemcrypt_vrpc, VOEMC_IOCTL_TERM, 0) < 0)
+-  {
++	{
+ 		LOGE("%s: ioctl failed - %s", __func__, strerror(errno));
+ 		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
+ 		return OEMCrypto_ERROR_INIT_FAILED;
+ 	}
+ 
+ 	// read data from shared memory
+ 	size = read(fd_oemcrypt_vrpc, &req, sizeof(req)); /* get return result */
++	if (size <= 0){
++		LOGE("%s: Read failed - %s", __func__, strerror(errno));
++		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
++		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
++	}
+ 	LOGD("%s: Read size %d, result %d", __func__, size, req.result);
+ 
+ #ifdef ION_BUFFERS
+-	  delete data_in;
+-    delete data_out;
+-    LOGE("OEMCrypto_Terminate data_in and data_out deleted! \n");
++	delete data_in;
++	delete data_out;
++	LOGE("OEMCrypto_Terminate data_in and data_out deleted! \n");
+ #endif
++
+ 	close(fd_oemcrypt_vrpc);
++	pthread_mutex_unlock(&g_mutex);
++	pthread_mutex_destroy(&g_mutex);
++
+ 	return (OEMCryptoResult)req.result;
+ }
+ 
+@@ -249,11 +280,14 @@ OEMCryptoResult OEMCrypto_OpenSession(OEMCrypto_SESSION* session) {
+ 	size_t size;
+ 	voemc_open_t req;
+ 
++	pthread_mutex_lock(&g_mutex);
++
+ 	// ioctl call triggers vrpc call
+ 	if (ioctl(fd_oemcrypt_vrpc, VOEMC_IOCTL_OPEN, 0) < 0)
+-  {
++	{
+ 		LOGE("%s: ioctl failed - %s", __func__, strerror(errno));
+ 		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
+ 		return OEMCrypto_ERROR_INIT_FAILED;
+ 	}
+ 
+@@ -264,27 +298,39 @@ OEMCryptoResult OEMCrypto_OpenSession(OEMCrypto_SESSION* session) {
+ 	*session = (OEMCrypto_SESSION)req.session;
+ 	LOGD("%s: SID=%08x", __func__, req.session);
+ 
++	pthread_mutex_unlock(&g_mutex);
++
+ 	return (OEMCryptoResult)req.result;
+ }
+ 
+ extern "C"
+ OEMCryptoResult OEMCrypto_CloseSession(OEMCrypto_SESSION session) {
+ 	size_t size;
+-  voemc_close_t req;
++	voemc_close_t req;
++
++	pthread_mutex_lock(&g_mutex);
+ 
+ 	// ioctl call triggers vrpc call
+ 	if (ioctl(fd_oemcrypt_vrpc, VOEMC_IOCTL_CLOSE, session) < 0) {
+ 		LOGE("%s: ioctl failed - %s", __func__, strerror(errno));
+ 		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
+ 		return OEMCrypto_ERROR_CLOSE_SESSION_FAILED;
+ 	}
+ 
+ 	// read data from shared memory
+ 	size = read(fd_oemcrypt_vrpc, &req, sizeof(req)); /* get return result */
++	if (size <= 0){
++		LOGE("%s: Read failed - %s", __func__, strerror(errno));
++		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
++		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
++	}
+ 	LOGD("%s: Read size %d, result %d", __func__, size, req.result);
+-
+ 	LOGD("%s: SID=%08x", __func__, session);
+ 
++	pthread_mutex_unlock(&g_mutex);
++
+ 	return (OEMCryptoResult)req.result;
+ }
+ 
+@@ -294,20 +340,31 @@ OEMCryptoResult OEMCrypto_GenerateNonce(OEMCrypto_SESSION session,
+ 	size_t size;
+ 	voemc_gennonce_t req;
+ 
++	pthread_mutex_lock(&g_mutex);
++
+ 	// ioctl call triggers vrpc call
+ 	if (ioctl(fd_oemcrypt_vrpc, VOEMC_IOCTL_GENNONCE, session) < 0) {
+ 		LOGE("%s: ioctl failed - %s", __func__, strerror(errno));
+ 		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
+ 		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
+ 	}
+ 
+ 	// read data from shared memory
+ 	size = read(fd_oemcrypt_vrpc, &req, sizeof(req)); /* get return result */
++	if (size <= 0){
++		LOGE("%s: Read failed - %s", __func__, strerror(errno));
++		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
++		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
++	}
+ 	LOGD("%s: Read size %d, result %d", __func__, size, req.result);
+ 
+ 	*nonce = req.nonce;  /* return nonce */
+ 	LOGD("%s: nonce=%08x", __func__, *nonce);
+ 
++	pthread_mutex_unlock(&g_mutex);
++
+ 	return (OEMCryptoResult)req.result;
+ }
+ 
+@@ -327,17 +384,20 @@ OEMCryptoResult OEMCrypto_GenerateDerivedKeys(OEMCrypto_SESSION session,
+                                               uint32_t enc_key_context_length) {
+ 	size_t size;
+ 	voemc_genderivedkeys_t req;
+-	
++
++	pthread_mutex_lock(&g_mutex);
++
+ 	req.session                 = session;
+ 	req.mac_key_context         = mac_key_context;
+ 	req.mac_key_context_length  = mac_key_context_length;
+ 	req.enc_key_context         = enc_key_context;
+ 	req.enc_key_context_length  = enc_key_context_length;
+-	
++
+ 	size = write(fd_oemcrypt_vrpc, &req, sizeof(req));
+-	if (size == 0){
++	if (size <= 0){
+ 		LOGE("%s: Write failed - %s", __func__, strerror(errno));
+ 		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
+ 		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
+ 	}
+ 
+@@ -345,13 +405,22 @@ OEMCryptoResult OEMCrypto_GenerateDerivedKeys(OEMCrypto_SESSION session,
+ 	if (ioctl(fd_oemcrypt_vrpc, VOEMC_IOCTL_GENDERIVEDKEYS, size) < 0) {
+ 		LOGE("%s: ioctl failed - %s", __func__, strerror(errno));
+ 		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
+ 		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
+ 	}
+ 
+ 	// read data from shared memory
+ 	size = read(fd_oemcrypt_vrpc, &req, sizeof(req)); /* get return result */
++	if (size <= 0){
++		LOGE("%s: Read failed - %s", __func__, strerror(errno));
++		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
++		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
++	}
+ 	LOGD("%s: Read size %d, result %d", __func__, size, req.result);
+ 
++	pthread_mutex_unlock(&g_mutex);
++
+ 	return (OEMCryptoResult)req.result;
+ }
+ 
+@@ -373,6 +442,8 @@ OEMCryptoResult OEMCrypto_GenerateSignature(
+ 	size_t size;
+ 	voemc_gensign_t req;
+ 
++	pthread_mutex_lock(&g_mutex);
++
+ 	req.session           = session;
+ 	req.message           = message;
+ 	req.message_length    = message_length;
+@@ -380,9 +451,10 @@ OEMCryptoResult OEMCrypto_GenerateSignature(
+ 	req.signature_length  = signature_length;
+   
+ 	size = write(fd_oemcrypt_vrpc, &req, sizeof(req));
+-	if (size == 0){
++	if (size <= 0){
+ 		LOGE("%s: Write failed - %s", __func__, strerror(errno));
+ 		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
+ 		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
+ 	}
+ 
+@@ -390,24 +462,23 @@ OEMCryptoResult OEMCrypto_GenerateSignature(
+ 	if (ioctl(fd_oemcrypt_vrpc, VOEMC_IOCTL_GENSIGN, size) < 0) {
+ 		LOGE("%s: ioctl failed - %s", __func__, strerror(errno));
+ 		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
+ 		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
+ 	}
+ 
+ 	// read data from shared memory
+ 	size = read(fd_oemcrypt_vrpc, &req, sizeof(req)); /* get return result */
++	if (size <= 0){
++		LOGE("%s: Read failed - %s", __func__, strerror(errno));
++		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
++		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
++	}
+ 	LOGD("%s: Read size %d, result %d", __func__, size, req.result);
+ 
+ 	*signature_length = *req.signature_length;  /* return signature size */
+-	
+-	if (*signature_length > 0)
+-  {
+-    LOGD("%s: success sign len=%08x", __func__, *signature_length);
+-    // signature already copied to user buffer
+-  }
+-	else
+-  { 
+-		LOGD("%s: failed", __func__);
+-  }
++
++	pthread_mutex_unlock(&g_mutex);
+ 
+ 	return (OEMCryptoResult)req.result;
+ }
+@@ -445,22 +516,25 @@ OEMCryptoResult OEMCrypto_LoadKeys(OEMCrypto_SESSION session,
+ 		return OEMCrypto_ERROR_INVALID_CONTEXT;
+ 	}
+ 
++	pthread_mutex_lock(&g_mutex);
++
+ 	// format into struct
+ 	req.session           = session;
+ 	req.message           = message;
+ 	req.message_length    = message_length;
+ 	req.signature         = signature;
+ 	req.signature_length  = signature_length;
+-  req.enc_mac_key_iv    = enc_mac_key_iv;
+-  req.enc_mac_keys      = enc_mac_keys;
++	req.enc_mac_key_iv    = enc_mac_key_iv;
++	req.enc_mac_keys      = enc_mac_keys;
+ 	req.num_keys          = num_keys;
+ 	req.key_array         = (voemc_OEMCrypto_KeyObject*)key_array;
+ 
+ 	// write into kernel space
+ 	size = write(fd_oemcrypt_vrpc, &req, sizeof(req));
+-	if (size == 0){
++	if (size <= 0){
+ 		LOGE("%s: Write failed - %s", __func__, strerror(errno));
+ 		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
+ 		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
+ 	}
+ 
+@@ -468,13 +542,22 @@ OEMCryptoResult OEMCrypto_LoadKeys(OEMCrypto_SESSION session,
+ 	if (ioctl(fd_oemcrypt_vrpc, VOEMC_IOCTL_LOADKEYS, size) < 0) {
+ 		LOGE("%s: ioctl failed - %s", __func__, strerror(errno));
+ 		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
+ 		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
+ 	}
+ 
+ 	// read data from shared memory
+ 	size = read(fd_oemcrypt_vrpc, &req, sizeof(req)); /* get return result */
++	if (size <= 0){
++		LOGE("%s: Read failed - %s", __func__, strerror(errno));
++		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
++		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
++	}
+ 	LOGD("%s: Read size %d, result %d", __func__, size, req.result);
+ 
++	pthread_mutex_unlock(&g_mutex);
++
+ 	return (OEMCryptoResult)req.result;
+ }
+ 
+@@ -497,7 +580,7 @@ OEMCryptoResult OEMCrypto_RefreshKeys(OEMCrypto_SESSION session,
+                                       size_t num_keys,
+                                       const OEMCrypto_KeyRefreshObject* key_array) {
+ 	size_t size;
+-  voemc_refreshkeys_t req;
++	voemc_refreshkeys_t req;
+ 
+ 	if (message == NULL || message_length == 0 ||
+ 		signature == NULL || signature_length == 0 || num_keys == 0) {
+@@ -505,6 +588,8 @@ OEMCryptoResult OEMCrypto_RefreshKeys(OEMCrypto_SESSION session,
+ 		return OEMCrypto_ERROR_INVALID_CONTEXT;
+ 	}
+ 
++	pthread_mutex_lock(&g_mutex);
++
+ 	// format into struct
+ 	req.session           = session;
+ 	req.message           = message;
+@@ -515,9 +600,10 @@ OEMCryptoResult OEMCrypto_RefreshKeys(OEMCrypto_SESSION session,
+ 	req.key_array         = (voemc_OEMCrypto_KeyRefreshObject *)key_array;
+ 
+ 	size = write(fd_oemcrypt_vrpc, &req, sizeof(req));
+-	if (size == 0){
++	if (size <= 0){
+ 		LOGE("%s: Write failed - %s", __func__, strerror(errno));
+ 		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
+ 		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
+ 	}
+ 
+@@ -525,13 +611,22 @@ OEMCryptoResult OEMCrypto_RefreshKeys(OEMCrypto_SESSION session,
+ 	if (ioctl(fd_oemcrypt_vrpc, VOEMC_IOCTL_REFRESHKEYS, size) < 0) {
+ 		LOGE("%s: ioctl failed - %s", __func__, strerror(errno));
+ 		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
+ 		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
+ 	}
+ 
+ 	// read data from shared memory
+ 	size = read(fd_oemcrypt_vrpc, &req, sizeof(req)); /* get return result */
++	if (size <= 0){
++		LOGE("%s: Read failed - %s", __func__, strerror(errno));
++		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
++		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
++	}
+ 	LOGD("%s: Read size %d, result %d", __func__, size, req.result);
+ 
++	pthread_mutex_unlock(&g_mutex);
++
+ 	return (OEMCryptoResult)req.result;
+ }
+ 
+@@ -547,21 +642,24 @@ OEMCryptoResult OEMCrypto_SelectKey(const OEMCrypto_SESSION session,
+                                     const uint8_t* key_id,
+                                     size_t key_id_length) {
+ 	size_t size;
+-  voemc_selectkey_t req;
+-  
++	voemc_selectkey_t req;
++
+ 	if (key_id == NULL || key_id_length == 0) {
+ 		LOGE("OEMCrypto_SelectKey(): Invalid parameters");
+ 		return OEMCrypto_ERROR_INVALID_CONTEXT;
+ 	}
+ 
++	pthread_mutex_lock(&g_mutex);
++
+ 	req.session       = session;
+ 	req.key_id        = key_id;
+ 	req.key_id_length = key_id_length;
+ 
+ 	size = write(fd_oemcrypt_vrpc, &req, sizeof(req));
+-	if (size == 0){
++	if (size <= 0){
+ 		LOGE("%s: Write failed - %s", __func__, strerror(errno));
+ 		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
+ 		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
+ 	}
+ 
+@@ -569,13 +667,22 @@ OEMCryptoResult OEMCrypto_SelectKey(const OEMCrypto_SESSION session,
+ 	if (ioctl(fd_oemcrypt_vrpc, VOEMC_IOCTL_SELECTKEY, size) < 0) {
+ 		LOGE("%s: ioctl failed - %s", __func__, strerror(errno));
+ 		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
+ 		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
+ 	}
+ 
+ 	// read data from shared memory
+ 	size = read(fd_oemcrypt_vrpc, &req, sizeof(req)); /* get return result */
++	if (size <= 0){
++		LOGE("%s: Read failed - %s", __func__, strerror(errno));
++		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
++		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
++	}
+ 	LOGD("%s: Read size %d, result %d", __func__, size, req.result);
+ 
++	pthread_mutex_unlock(&g_mutex);
++
+ 	return (OEMCryptoResult)req.result;
+ }
+ 
+@@ -604,45 +711,42 @@ bool OEMcrypto_openpipe(void)
+   fd_oemcrypt_vbpipe = open(vbpipe_dev_oemcrypt, O_RDWR);
+   if(-1 == fd_oemcrypt_vbpipe)
+   {
+-  	LOGE("OEMCrypto_openpipe failed to open fd %fd. Errno %d. Cause %s, ",fd_oemcrypt_vbpipe, errno, strerror(errno));
++    LOGE("OEMCrypto_openpipe failed to open fd %fd. Errno %d. Cause %s, ",fd_oemcrypt_vbpipe, errno, strerror(errno));
+     return false;
+   }
+-  
++
+   return true;
+ }
+-  
++
+ bool OEMcrypto_write(int fd,  const void *buf, size_t count)
+ {
+ #define RETRY_CNT 3
+   int i;
+   size_t size;
+   for(i = 0; i < RETRY_CNT; i++)
++  {
++    size = write(fd_oemcrypt_vbpipe, buf, count);
++    if(count == size)
+     {
+-      size = write(fd_oemcrypt_vbpipe, buf, count);
+-      if(count == size)
+-        {
+-          return true;
+-        }
+-      LOGE("OEMCrypto_DecryptCTR Write failed after %d tries. Errno %d. Size is %d. Cause %s, ",i ,errno , size, strerror(errno));
++      return true;
+     }
+-  
++    LOGE("OEMCrypto_DecryptCTR Write failed after %d tries. Errno %d. Size is %d. Cause %s, ",i ,errno , size, strerror(errno));
++  }
++
+   //We tried RETRY_CNT times, before we give up lets close and open the pipe again..
+   OEMcrypto_closepipe();
+-
+   OEMcrypto_openpipe();
+ 
+-  
+   for(i = 0; i < RETRY_CNT; i++)
++  {
++    size = write(fd_oemcrypt_vbpipe, buf, count);
++    if(count == size)
+     {
+-      size = write(fd_oemcrypt_vbpipe, buf, count);
+-      if(count == size)
+-        {
+-          return true;
+-        }
+-      LOGE("OEMCrypto_DecryptCTR Write failed after %d tries. Errno %d. Size is %d. Cause %s, ",i, errno, size, strerror(errno));
++      return true;
+     }
+-  
+-  
++    LOGE("OEMCrypto_DecryptCTR Write failed after %d tries. Errno %d. Size is %d. Cause %s, ",i, errno, size, strerror(errno));
++  }
++
+   LOGE("OEMCrypto_DecryptCTR Write I GIVE UP!!");
+   return false;
+ }
+@@ -652,32 +756,29 @@ bool OEMcrypto_read(int fd, void *buf, size_t count)
+   int i;
+   size_t size;
+   for(i = 0; i < RETRY_CNT; i++)
++  {
++    size = read(fd, buf, count);
++    if(count == size)
+     {
+-      size = read(fd, buf, count);
+-      if(count == size)
+-        {
+-          return true;
+-        }
+-      LOGE("OEMCrypto_DecryptCTR Read failed after %d tries. Errno %d. Size is %d. Cause %s, ",i, errno, size, strerror(errno));
++      return true;
+     }
+-  
++    LOGE("OEMCrypto_DecryptCTR Read failed after %d tries. Errno %d. Size is %d. Cause %s, ",i, errno, size, strerror(errno));
++  }
++
+   //We tried RETRY_CNT times, before we give up lets close and open the pipe again..
+   OEMcrypto_closepipe();
+-
+   OEMcrypto_openpipe();
+ 
+-  
+   for(i = 0; i < RETRY_CNT; i++)
++  {
++    size = read(fd_oemcrypt_vbpipe, buf, count);
++    if(count == size)
+     {
+-      size = read(fd_oemcrypt_vbpipe, buf, count);
+-      if(count == size)
+-        {
+-          return true;
+-        }
+-      LOGE("OEMCrypto_DecryptCTR Read failed after %d tries. Errno %d. Size is %d. Cause %s, ",i, errno, size, strerror(errno));
++      return true;
+     }
+-  
+-  
++    LOGE("OEMCrypto_DecryptCTR Read failed after %d tries. Errno %d. Size is %d. Cause %s, ",i, errno, size, strerror(errno));
++  }
++
+   LOGE("OEMCrypto_DecryptCTR Read I GIVE UP!!");
+   return false;
+ }
+@@ -708,7 +809,7 @@ OEMCryptoResult OEMCrypto_DecryptCTR(OEMCrypto_SESSION session,
+   //#define USE_PHY_INPUT
+   #define USE_SEC_PHY_OUTPUT
+   int secure_buffer = out_buffer->type; //0 = unsecure, 1 = secure, 2 = direct (dont know what to do with 'direct'...)
+-  
++
+   voemc_decryptctr_transfer_struct_t struct_ctr; //fortunately the struct is 64 bytes :-)
+ 
+   if (data_addr == NULL || data_length == 0 || iv == NULL || out_buffer == NULL)
+@@ -722,19 +823,19 @@ OEMCryptoResult OEMCrypto_DecryptCTR(OEMCrypto_SESSION session,
+     //No idea what to do, as we dont have an output buffer!
+     return OEMCrypto_ERROR_INVALID_CONTEXT;
+   }
+-    
+ 
+   if (!is_encrypted && !secure_buffer)
+   {
+-	  memcpy(out_buffer->buffer.clear.address, data_addr, data_length);
+-	  return OEMCrypto_SUCCESS;
++    memcpy(out_buffer->buffer.clear.address, data_addr, data_length);
++    return OEMCrypto_SUCCESS;
+   }
+-  #if defined(PERFORMANCE_CHECK)
++
++#if defined(PERFORMANCE_CHECK)
+   performance_decryptCTR[performance_decryptCTR_index].frame_nr = performance_decryptCTR_frame_nr;
+   performance_decryptCTR[performance_decryptCTR_index].bytes = (unsigned int)data_length;
+   performance_decryptCTR[performance_decryptCTR_index].duration_total = getNowUs();
+-  #endif
+-  
++#endif
++
+   //----- input buffers
+   if(is_encrypted || secure_buffer)
+   { 
+@@ -744,12 +845,12 @@ OEMCryptoResult OEMCrypto_DecryptCTR(OEMCrypto_SESSION session,
+     int getaddr_err = 1; //mean error from VOEMC_IOCTL_GETADDR
+ 
+     performance_decryptCTR[performance_decryptCTR_index].duration_USE_PHY_INPUT = getNowUs();
+-  
++
+     ib.size = data_length;
+     ib.baddr = (uint32_t)data_addr;
+     ib.phys = 0;
+     ib.phys_size = 0;
+-  
++
+     LOGE("OEMCrypto_DecryptCTR(): input to phy_addr: ib.baddr= 0x%x ib.size= %d",ib.baddr, ib.size);
+ 
+     // ioctl call triggers vrpc call
+@@ -759,7 +860,7 @@ OEMCryptoResult OEMCrypto_DecryptCTR(OEMCrypto_SESSION session,
+     {
+       LOGE("%s: ioctl failed - %s", __func__, strerror(errno));
+     }
+-  
++
+     LOGE("OEMCrypto_DecryptCTR(): output to phy_addr: ib.phys= 0x%x ib.size= %d,(err=%d) ",ib.phys, ib.phys_size, err);
+ 
+     performance_decryptCTR[performance_decryptCTR_index].duration_USE_PHY_INPUT = getNowUs()-performance_decryptCTR[performance_decryptCTR_index].duration_USE_PHY_INPUT;
+@@ -783,19 +884,19 @@ OEMCryptoResult OEMCrypto_DecryptCTR(OEMCrypto_SESSION session,
+     memcpy(data_in->ptr, data_addr,data_length); 
+   #endif //  #if defined(USE_PHY_INPUT)
+   }
+-  
++
+   OEMcrypto_openpipe();
+-  
++
+   memcpy(&struct_ctr.DestBufferDesc, out_buffer, sizeof(voemc_OEMCrypto_DestBufferDesc));
+-  
++
+   // --- output buffers
+   if(secure_buffer && !is_encrypted)
+   {
+-	  #if defined(USE_SEC_PHY_OUTPUT)
++    #if defined(USE_SEC_PHY_OUTPUT)
+       //Output buffer has physical address and data is not encrypted.
+       //Will send to secvm, because output buffer has physical address. In secvm we will make a memcpy without decryption.
+-	    //We should optimize this! -> no need to send to secvm, just for a memcpy!!
+-      //Outputbuffer is already given in the out_buffer! 
++      //We should optimize this! -> no need to send to secvm, just for a memcpy!!
++      //Outputbuffer is already given in the out_buffer!
+     #else
+       //Output buffer has virtual address and data is not encrypted.
+       //Simply copy from input to output
+@@ -803,13 +904,13 @@ OEMCryptoResult OEMCrypto_DecryptCTR(OEMCrypto_SESSION session,
+       return OEMCrypto_SUCCESS;
+     #endif
+   }
+-   
++
+   if(secure_buffer && is_encrypted)
+-  {  
++  {
+     #if defined(USE_SEC_PHY_OUTPUT)
+       //Output buffer has physical address and data is encrypted.
+       //Will send to secvm for decryption of data.
+- 	    //Outputbuffer is already given in the out_buffer! 
++      //Outputbuffer is already given in the out_buffer! 
+     #else
+       //Output buffer has virtual address and data is encrypted.
+       //Will send to secvm for decryption of data.
+@@ -818,22 +919,22 @@ OEMCryptoResult OEMCrypto_DecryptCTR(OEMCrypto_SESSION session,
+       struct_ctr.DestBufferDesc.buffer.secure.offset = 0;
+     #endif
+   }
+-  
++
+   if(!secure_buffer && !is_encrypted)
+   {
+     //Output buffer has virtual address and data is not secure
+     //We will just make a local memcpy and return.
+-	  memcpy(out_buffer->buffer.clear.address, data_addr, out_buffer->buffer.clear.max_length);
++    memcpy(out_buffer->buffer.clear.address, data_addr, out_buffer->buffer.clear.max_length);
+     return OEMCrypto_SUCCESS;
+   }
+-  
++
+   if(!secure_buffer && is_encrypted)
+   {
+     //Output buffer has virtual address and data is encrypted
+     //We will use a local gralloc buffer and parse this to the secvm in order to decrypt data
+     struct_ctr.DestBufferDesc.buffer.clear.address = (uint8_t*)phy_addr_out;
+   }
+-  
++
+   struct_ctr.req.cmd             = VOEMCRYPTO_CMD_DECRYPT_CTR;
+   struct_ctr.req.session         = session;
+   #if defined(USE_PHY_INPUT)
+@@ -854,46 +955,48 @@ OEMCryptoResult OEMCrypto_DecryptCTR(OEMCrypto_SESSION session,
+ 
+   memcpy(struct_ctr.req.iv,iv,16);
+ 
+-  //SEEND STRUCT AND START DECRYPTION
+-  #if defined(PERFORMANCE_CHECK)
++  //SEND STRUCT AND START DECRYPTION
++#if defined(PERFORMANCE_CHECK)
+   performance_decryptCTR[performance_decryptCTR_index].duration_write = getNowUs();
+-  #endif
++#endif
++
+   if(!OEMcrypto_write(fd_oemcrypt_vbpipe, &struct_ctr, sizeof(voemc_decryptctr_transfer_struct_t)))
+   {
+     return OEMCrypto_ERROR_UNKNOWN_FAILURE;
+   }
+-  #if defined(PERFORMANCE_CHECK)
+-  performance_decryptCTR[performance_decryptCTR_index].duration_write = getNowUs()-performance_decryptCTR[performance_decryptCTR_index].duration_write;
+ 
++#if defined(PERFORMANCE_CHECK)
++  performance_decryptCTR[performance_decryptCTR_index].duration_write = getNowUs()-performance_decryptCTR[performance_decryptCTR_index].duration_write;
+   performance_decryptCTR[performance_decryptCTR_index].duration_read = getNowUs();
+-  #endif
++#endif
++
+   if(!OEMcrypto_read(fd_oemcrypt_vbpipe, (void*)&struct_ctr, sizeof(voemc_decryptctr_transfer_struct_t)))
+   {
+     return OEMCrypto_ERROR_UNKNOWN_FAILURE;
+   }
+-  #if defined(PERFORMANCE_CHECK)
++
++#if defined(PERFORMANCE_CHECK)
+   performance_decryptCTR[performance_decryptCTR_index].duration_read = getNowUs()-performance_decryptCTR[performance_decryptCTR_index].duration_read;
+-  #endif
+-  
++#endif
++
+   if(OEMCrypto_SUCCESS != struct_ctr.req.result)
+   {
+     LOGE("DecryptCTR: failed! Result from secure vm=%d", struct_ctr.req.result);
+     return OEMCrypto_ERROR_DECRYPT_FAILED;
+   }
+-  
++
+ #if defined(PERFORMANCE_CHECK)
+   performance_decryptCTR[performance_decryptCTR_index].duration_memcpy_out = getNowUs();
+ #endif
+ 
+-
+   if(secure_buffer && !is_encrypted)
+   {
+     #if defined(USE_SEC_PHY_OUTPUT)
+       //Output buffer has physical address and data is not encrypted.
+       //Will send to secvm, because output buffer has physical address. In secvm we will make a memcpy without decryption.
+-	    //We should optimize this! -> no need to send to secvm, just for a memcpy!!
+-	
+-	    //Outputbuffer is already given in the out_buffer! 
++      //We should optimize this! -> no need to send to secvm, just for a memcpy!!
++
++      //Outputbuffer is already given in the out_buffer! 
+     #else
+       //The function has already returned, we should not enter here.
+     #endif
+@@ -910,22 +1013,22 @@ OEMCryptoResult OEMCrypto_DecryptCTR(OEMCrypto_SESSION session,
+       memcpy((uint8_t*)(out_buffer->buffer.secure.handle) + out_buffer->buffer.secure.offset,(uint8_t*)data_out->ptr, data_length);
+     #endif
+   }
+-  
++
+   if(!secure_buffer && !is_encrypted)
+   {
+     //Output buffer has virtual address and data is not secure
+     //We will just make a local memcpy and return.
+-	
+-	  // Do not enter here! Code has already returned!
++
++    // Do not enter here! Code has already returned!
+   }
+-  
++
+   if(!secure_buffer && is_encrypted)
+   {
+     //Output buffer has virtual address and data is encrypted
+     //We will use a local gralloc buffer and parse this to the secvm in order to decrypt data
+-    
+-	  //Now copy decrypted data from gralloc buffer to virtual buffer.
+-	  memcpy(out_buffer->buffer.clear.address, (uint8_t*)data_out->ptr, data_length);	
++
++    //Now copy decrypted data from gralloc buffer to virtual buffer.
++    memcpy(out_buffer->buffer.clear.address, (uint8_t*)data_out->ptr, data_length);
+   }
+ 
+ #if defined(PERFORMANCE_CHECK)
+@@ -947,8 +1050,7 @@ OEMCryptoResult OEMCrypto_DecryptCTR(OEMCrypto_SESSION session,
+        out_buffer->type,
+        block_offset);
+   performance_decryptCTR_frame_nr++;
+-
+-  #endif
++#endif
+   return (OEMCryptoResult)struct_ctr.req.result;
+ }
+ 
+@@ -975,7 +1077,7 @@ OEMCryptoResult OEMCrypto_DecryptCTR(OEMCrypto_SESSION session,
+                                      const OEMCrypto_DestBufferDesc* out_buffer,
+                                      uint8_t subsample_flags) {
+ 	size_t size;
+-  voemc_decryptctr_t req;
++	voemc_decryptctr_t req;
+ 
+ 	if (data_addr == NULL || data_length == 0 ||
+ 		iv == NULL || out_buffer == NULL) {
+@@ -990,10 +1092,10 @@ OEMCryptoResult OEMCrypto_DecryptCTR(OEMCrypto_SESSION session,
+ 	req.block_offset    = block_offset;
+ 	req.out_buffer      = (voemc_OEMCrypto_DestBufferDesc *)out_buffer;
+ 	req.subsample_flags = subsample_flags;
+-  memcpy(req.iv,iv,sizeof(req.iv));
+-  
++	memcpy(req.iv,iv,sizeof(req.iv));
++
+ 	size = write(fd_oemcrypt_vrpc, &req, sizeof(req));
+-	if (size == 0){
++	if (size <= 0){
+ 		LOGE("%s: Write failed - %s", __func__, strerror(errno));
+ 		close(fd_oemcrypt_vrpc);
+ 		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
+@@ -1008,6 +1110,11 @@ OEMCryptoResult OEMCrypto_DecryptCTR(OEMCrypto_SESSION session,
+ 
+ 	// read data from shared memory
+ 	size = read(fd_oemcrypt_vrpc, &req, sizeof(req)); /* get return result */
++	if (size <= 0){
++		LOGE("%s: Read failed - %s", __func__, strerror(errno));
++		close(fd_oemcrypt_vrpc);
++		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
++	}
+ 	LOGD("%s: Read size %d, result %d", __func__, size, req.result);
+ 
+ 	return (OEMCryptoResult)req.result;
+@@ -1024,20 +1131,23 @@ extern "C"
+ OEMCryptoResult OEMCrypto_InstallKeybox(const uint8_t* keybox,
+                                         size_t keyBoxLength) {
+ 	size_t size;
+-  voemc_installkeybox_t req;
++	voemc_installkeybox_t req;
+ 
+ 	if (keybox == NULL || keyBoxLength == 0) {
+ 		LOGE("OEMCrypto_InstallKeybox(): Invalid parameters");
+ 		return OEMCrypto_ERROR_INVALID_CONTEXT;
+ 	}
+ 
++	pthread_mutex_lock(&g_mutex);
++
+ 	req.keybox        = keybox;
+ 	req.keyBoxLength  = keyBoxLength;
+-	
++
+ 	size = write(fd_oemcrypt_vrpc, &req, sizeof(req));
+-	if (size == 0){
++	if (size <= 0){
+ 		LOGE("%s: Write failed - %s", __func__, strerror(errno));
+ 		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
+ 		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
+ 	}
+ 
+@@ -1045,32 +1155,52 @@ OEMCryptoResult OEMCrypto_InstallKeybox(const uint8_t* keybox,
+ 	if (ioctl(fd_oemcrypt_vrpc, VOEMC_IOCTL_INSTALLKEYBOX, size) < 0) {
+ 		LOGE("%s: ioctl failed - %s", __func__, strerror(errno));
+ 		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
+ 		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
+ 	}
+ 
+ 	// read data from shared memory
+ 	size = read(fd_oemcrypt_vrpc, &req, sizeof(req)); /* get return result */
++	if (size <= 0){
++		LOGE("%s: Read failed - %s", __func__, strerror(errno));
++		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
++		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
++	}
+ 	LOGD("%s: Read size %d, result %d", __func__, size, req.result);
+ 
++	pthread_mutex_unlock(&g_mutex);
++
+ 	return (OEMCryptoResult)req.result;
+ }
+ 
+ extern "C"
+ OEMCryptoResult OEMCrypto_IsKeyboxValid(void) {
+ 	size_t size;
+-  voemc_iskeyboxvalid_t req;
++	voemc_iskeyboxvalid_t req;
++
++	pthread_mutex_lock(&g_mutex);
+ 
+ 	// ioctl call triggers vrpc call
+ 	if (ioctl(fd_oemcrypt_vrpc, VOEMC_IOCTL_ISKEYBOXVALID, 0) < 0) {
+ 		LOGE("%s: ioctl failed - %s", __func__, strerror(errno));
+ 		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
+ 		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
+ 	}
+ 
+ 	// read data from shared memory
+ 	size = read(fd_oemcrypt_vrpc, &req, sizeof(req)); /* get return result */
++	if (size <= 0){
++		LOGE("%s: Read failed - %s", __func__, strerror(errno));
++		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
++		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
++	}
+ 	LOGD("%s: Read size %d, result %d", __func__, size, req.result);
+ 
++	pthread_mutex_unlock(&g_mutex);
++
+ 	return (OEMCryptoResult)req.result;
+ }
+ 
+@@ -1082,20 +1212,23 @@ extern "C"
+ OEMCryptoResult OEMCrypto_GetDeviceID(uint8_t* deviceID,
+                                       size_t* idLength) {
+ 	size_t size;
+-  voemc_getdevid_t req;
++	voemc_getdevid_t req;
+ 
+ 	if (deviceID == NULL || idLength == NULL || *idLength == 0) {
+ 		LOGE("OEMCrypto_GetDeviceID(): Invalid parameters");
+ 		return OEMCrypto_ERROR_INVALID_CONTEXT;
+ 	}
+ 
++	pthread_mutex_lock(&g_mutex);
++
+ 	req.deviceID  = deviceID;
+ 	req.idLength  = *idLength;
+ 
+ 	size = write(fd_oemcrypt_vrpc, &req, sizeof(req));
+-	if (size == 0){
++	if (size <= 0){
+ 		LOGE("%s: Write failed - %s", __func__, strerror(errno));
+ 		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
+ 		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
+ 	}
+ 
+@@ -1103,26 +1236,26 @@ OEMCryptoResult OEMCrypto_GetDeviceID(uint8_t* deviceID,
+ 	if (ioctl(fd_oemcrypt_vrpc, VOEMC_IOCTL_GETDEVICEID, size) < 0) {
+ 		LOGE("%s: ioctl failed - %s", __func__, strerror(errno));
+ 		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
+ 		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
+ 	}
+ 
+ 	// read data from shared memory
+ 	size = read(fd_oemcrypt_vrpc, &req, sizeof(req)); /* get return result */
++	if (size <= 0){
++		LOGE("%s: Read failed - %s", __func__, strerror(errno));
++		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
++		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
++	}
+ 	LOGD("%s: Read size %d, result %d", __func__, size, req.result);
+ 
+-  LOGD("req.idLength = %d",req.idLength);
++	LOGD("req.idLength = %d",req.idLength);
+ 
+-  *idLength = req.idLength; /* return length of deviceID */
+-  // deviceID already copied to user buffer
++	*idLength = req.idLength; /* return length of deviceID */
++	// deviceID already copied to user buffer
+ 
+-	if (req.result == OEMCrypto_SUCCESS)
+-  {
+-		LOGD("%s: success", __func__);
+-	}
+-	else
+-  {
+-		LOGD("%s: failed 0x%x", __func__, req.result);
+-	}
++	pthread_mutex_unlock(&g_mutex);
+ 
+ 	return (OEMCryptoResult)req.result;
+ }
+@@ -1135,20 +1268,23 @@ extern "C"
+ OEMCryptoResult OEMCrypto_GetKeyData(uint8_t* keyData,
+                                      size_t* keyDataLength) {
+ 	size_t size;
+-  voemc_getkeydata_t req;
++	voemc_getkeydata_t req;
+ 
+ 	if (keyData == NULL || keyDataLength == NULL || *keyDataLength == 0) {
+ 		LOGE("OEMCrypto_GetKeyData(): Invalid parameters");
+ 		return OEMCrypto_ERROR_INVALID_CONTEXT;
+ 	}
+ 
++	pthread_mutex_lock(&g_mutex);
++
+ 	req.keyData       = keyData;
+ 	req.keyDataLength = *keyDataLength;
+ 
+ 	size = write(fd_oemcrypt_vrpc, &req, sizeof(req));
+-	if (size == 0){
++	if (size <= 0){
+ 		LOGE("%s: Write failed - %s", __func__, strerror(errno));
+ 		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
+ 		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
+ 	}
+ 
+@@ -1156,21 +1292,26 @@ OEMCryptoResult OEMCrypto_GetKeyData(uint8_t* keyData,
+ 	if (ioctl(fd_oemcrypt_vrpc, VOEMC_IOCTL_GETKEYDATA, size) < 0) {
+ 		LOGE("%s: ioctl failed - %s", __func__, strerror(errno));
+ 		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
+ 		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
+ 	}
+ 
+ 	// read data from shared memory
+ 	size = read(fd_oemcrypt_vrpc, &req, sizeof(req)); /* get return result */
++	if (size <= 0){
++		LOGE("%s: Read failed - %s", __func__, strerror(errno));
++		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
++		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
++	}
+ 	LOGD("%s: Read size %d, result %d", __func__, size, req.result);
+ 
+ 	if (req.result == OEMCrypto_SUCCESS) {
+-		LOGD("%s: success", __func__);
+ 		*keyDataLength = req.keyDataLength; /* return length of keyData */
+ 		// keydata already copied to user buffer
+ 	}
+-	else {
+-		LOGD("%s: failed 0x%x", __func__, req.result);
+-	}
++
++	pthread_mutex_unlock(&g_mutex);
+ 
+ 	return (OEMCryptoResult)req.result;
+ }
+@@ -1185,20 +1326,23 @@ OEMCryptoResult OEMCrypto_GetKeyData(uint8_t* keyData,
+ extern "C"
+ OEMCryptoResult OEMCrypto_GetRandom(uint8_t* randomData, size_t dataLength) {
+ 	size_t size;
+-  voemc_getrandom_t req;
++	voemc_getrandom_t req;
+ 
+ 	if (randomData == NULL || dataLength == 0) {
+ 		LOGE("OEMCrypto_GetRandom(): Invalid parameters");
+ 		return OEMCrypto_ERROR_INVALID_CONTEXT;
+ 	}
+ 
++	pthread_mutex_lock(&g_mutex);
++
+ 	req.randomData  = randomData;
+ 	req.dataLength  = dataLength;
+ 
+ 	size = write(fd_oemcrypt_vrpc, &req, sizeof(req));
+-	if (size == 0){
++	if (size <= 0){
+ 		LOGE("%s: Write failed - %s", __func__, strerror(errno));
+ 		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
+ 		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
+ 	}
+ 
+@@ -1206,20 +1350,21 @@ OEMCryptoResult OEMCrypto_GetRandom(uint8_t* randomData, size_t dataLength) {
+ 	if (ioctl(fd_oemcrypt_vrpc, VOEMC_IOCTL_GETRANDOM, size) < 0) {
+ 		LOGE("%s: ioctl failed - %s", __func__, strerror(errno));
+ 		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
+ 		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
+ 	}
+ 
+ 	// read data from shared memory
+ 	size = read(fd_oemcrypt_vrpc, &req, sizeof(req)); /* get return result */
++	if (size <= 0){
++		LOGE("%s: Read failed - %s", __func__, strerror(errno));
++		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
++		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
++	}
+ 	LOGD("%s: Read size %d, result %d", __func__, size, req.result);
+ 
+-	if (req.result == OEMCrypto_SUCCESS) {
+-		LOGD("%s: success", __func__);
+-		// data already copied to user buffer
+-	}
+-	else {
+-		LOGD("%s: failed 0x%x", __func__, req.result);
+-	}
++	pthread_mutex_unlock(&g_mutex);
+ 
+ 	return (OEMCryptoResult)req.result;
+ }
+@@ -1243,7 +1388,7 @@ OEMCryptoResult OEMCrypto_WrapKeybox(const uint8_t* keybox,
+                                      const uint8_t* transportKey,
+                                      size_t transportKeyLength) {
+ 	size_t size;
+-  voemc_wrapkeybox_t req;
++	voemc_wrapkeybox_t req;
+   
+ 	if (!keybox || !wrappedKeybox || !wrappedKeyBoxLength
+ 		|| !keyBoxLength) {
+@@ -1251,6 +1396,8 @@ OEMCryptoResult OEMCrypto_WrapKeybox(const uint8_t* keybox,
+ 		return OEMCrypto_ERROR_INVALID_CONTEXT;
+ 	}
+ 
++	pthread_mutex_lock(&g_mutex);
++
+ 	req.keybox              = keybox;
+ 	req.keyboxLength        = keyBoxLength;
+ 	req.wrappedKeybox       = wrappedKeybox;
+@@ -1259,9 +1406,10 @@ OEMCryptoResult OEMCrypto_WrapKeybox(const uint8_t* keybox,
+ 	req.transportKeyLength  = transportKeyLength;
+ 
+ 	size = write(fd_oemcrypt_vrpc, &req, sizeof(req));
+-	if (size == 0){
++	if (size <= 0){
+ 		LOGE("%s: Write failed - %s", __func__, strerror(errno));
+ 		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
+ 		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
+ 	}
+ 
+@@ -1269,22 +1417,26 @@ OEMCryptoResult OEMCrypto_WrapKeybox(const uint8_t* keybox,
+ 	if (ioctl(fd_oemcrypt_vrpc, VOEMC_IOCTL_WRAPKEYBOX, size) < 0) {
+ 		LOGE("%s: ioctl failed - %s", __func__, strerror(errno));
+ 		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
+ 		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
+ 	}
+ 
+ 	// read data from shared memory
+ 	size = read(fd_oemcrypt_vrpc, &req, sizeof(req)); /* get return result */
++	if (size <= 0){
++		LOGE("%s: Read failed - %s", __func__, strerror(errno));
++		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
++		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
++	}
+ 	LOGD("%s: Read size %d, result %d", __func__, size, req.result);
+ 
+ 	if (req.result == OEMCrypto_SUCCESS) {
+-		LOGD("%s: success", __func__);
+ 		*wrappedKeyBoxLength = req.keyboxLength;
+ 		// data already copied to user buffer
+ 	}
+-	else
+-  {
+-		LOGD("%s: failed 0x%x", __func__, req.result);
+-	}
++
++	pthread_mutex_unlock(&g_mutex);
+ 
+ 	return (OEMCryptoResult)req.result;
+ }
+@@ -1316,7 +1468,7 @@ OEMCryptoResult OEMCrypto_RewrapDeviceRSAKey(OEMCrypto_SESSION session,
+                                              uint8_t* wrapped_rsa_key,
+                                              size_t*  wrapped_rsa_key_length) {
+ 	size_t size;
+-  voemc_rewrapdevrsakey_t req;
++	voemc_rewrapdevrsakey_t req;
+ 
+ 	if (wrapped_rsa_key_length == NULL) {
+ 		LOGE("[OEMCrypto_RewrapDeviceRSAKey(): OEMCrypto_ERROR_INVALID_CONTEXT]");
+@@ -1329,6 +1481,8 @@ OEMCryptoResult OEMCrypto_RewrapDeviceRSAKey(OEMCrypto_SESSION session,
+ 		return OEMCrypto_ERROR_INVALID_CONTEXT;
+ 	}
+ 
++	pthread_mutex_lock(&g_mutex);
++
+ 	req.session                 = session;
+ 	req.message                 = message;
+ 	req.message_length          = message_length;
+@@ -1342,9 +1496,10 @@ OEMCryptoResult OEMCrypto_RewrapDeviceRSAKey(OEMCrypto_SESSION session,
+ 	req.wrapped_rsa_key_length  = wrapped_rsa_key_length;
+ 
+ 	size = write(fd_oemcrypt_vrpc, &req, sizeof(req));
+-	if (size == 0){
++	if (size <= 0){
+ 		LOGE("%s: Write failed - %s", __func__, strerror(errno));
+ 		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
+ 		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
+ 	}
+ 
+@@ -1352,22 +1507,21 @@ OEMCryptoResult OEMCrypto_RewrapDeviceRSAKey(OEMCrypto_SESSION session,
+ 	if (ioctl(fd_oemcrypt_vrpc, VOEMC_IOCTL_REWRAPDEVRSAKEY, size) < 0) {
+ 		LOGE("%s: ioctl failed - %s", __func__, strerror(errno));
+ 		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
+ 		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
+ 	}
+ 
+ 	// read data from shared memory
+ 	size = read(fd_oemcrypt_vrpc, &req, sizeof(req)); /* get return result */
++	if (size <= 0){
++		LOGE("%s: Read failed - %s", __func__, strerror(errno));
++		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
++		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
++	}
+ 	LOGD("%s: Read size %d, result %d", __func__, size, req.result);
+ 
+-	if (req.result == OEMCrypto_SUCCESS)
+-	{
+-		LOGD("%s: success", __func__);
+-		// data already copied to user buffer
+-	}
+-	else
+-	{
+-		LOGD("%s: failed 0x%x", __func__, req.result);
+-	}
++	pthread_mutex_unlock(&g_mutex);
+ 
+ 	return (OEMCryptoResult)req.result;
+ }
+@@ -1377,28 +1531,24 @@ OEMCryptoResult OEMCrypto_LoadDeviceRSAKey(OEMCrypto_SESSION session,
+                                            const uint8_t* wrapped_rsa_key,
+                                            size_t wrapped_rsa_key_length) {
+ 	size_t size;
+-  voemc_loaddevrsakey_t req;
+-	
++	voemc_loaddevrsakey_t req;
++
+ 	if (wrapped_rsa_key == NULL) {
+ 		LOGE("[OEMCrypto_LoadDeviceRSAKey(): OEMCrypto_ERROR_INVALID_CONTEXT]");
+ 		return OEMCrypto_ERROR_INVALID_CONTEXT;
+ 	}
+ 
+-	fd_oemcrypt_vrpc = open(voemcrypto_dev, O_RDWR);
+-	if (fd_oemcrypt_vrpc < 0){
+-		LOGE("%s: Cannot open file %s, %s", __func__, voemcrypto_dev,
+-			strerror(errno));
+-		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
+-	}
++	pthread_mutex_lock(&g_mutex);
+ 
+ 	req.session                 = session;
+ 	req.wrapped_rsa_key         = wrapped_rsa_key;
+ 	req.wrapped_rsa_key_length  = wrapped_rsa_key_length;
+ 
+ 	size = write(fd_oemcrypt_vrpc, &req, sizeof(req));
+-	if (size == 0){
++	if (size <= 0){
+ 		LOGE("%s: Write failed - %s", __func__, strerror(errno));
+ 		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
+ 		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
+ 	}
+ 
+@@ -1406,20 +1556,21 @@ OEMCryptoResult OEMCrypto_LoadDeviceRSAKey(OEMCrypto_SESSION session,
+ 	if (ioctl(fd_oemcrypt_vrpc, VOEMC_IOCTL_LOADDEVRSAKEY, size) < 0) {
+ 		LOGE("%s: ioctl failed - %s", __func__, strerror(errno));
+ 		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
+ 		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
+ 	}
+ 
+ 	// read data from shared memory
+ 	size = read(fd_oemcrypt_vrpc, &req, sizeof(req)); /* get return result */
++	if (size <= 0){
++		LOGE("%s: Read failed - %s", __func__, strerror(errno));
++		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
++		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
++	}
+ 	LOGD("%s: Read size %d, result %d", __func__, size, req.result);
+ 
+-	if (req.result == OEMCrypto_SUCCESS) {
+-		LOGD("%s: success", __func__);
+-		// data already copied to user buffer
+-	}
+-	else {
+-		LOGD("%s: failed 0x%x", __func__, req.result);
+-	}
++	pthread_mutex_unlock(&g_mutex);
+ 
+ 	return (OEMCryptoResult)req.result;
+ }
+@@ -1439,13 +1590,15 @@ OEMCryptoResult OEMCrypto_GenerateRSASignature(OEMCrypto_SESSION session,
+                                                uint8_t* signature,
+                                                size_t* signature_length) {
+ 	size_t size;
+-  voemc_genrsasign_t req;
++	voemc_genrsasign_t req;
+ 
+ 	if (message == NULL || message_length == 0 || signature_length == 0) {
+ 		LOGE("[OEMCrypto_GenerateRSASignature(): OEMCrypto_ERROR_INVALID_CONTEXT]");
+ 		return OEMCrypto_ERROR_INVALID_CONTEXT;
+ 	}
+ 
++	pthread_mutex_lock(&g_mutex);
++
+ 	req.session           = session;
+ 	req.message           = message;
+ 	req.message_length    = message_length;
+@@ -1453,9 +1606,10 @@ OEMCryptoResult OEMCrypto_GenerateRSASignature(OEMCrypto_SESSION session,
+ 	req.signature_length  = *signature_length;
+ 
+ 	size = write(fd_oemcrypt_vrpc, &req, sizeof(req));
+-	if (size == 0){
++	if (size <= 0){
+ 		LOGE("%s: Write failed - %s", __func__, strerror(errno));
+ 		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
+ 		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
+ 	}
+ 
+@@ -1463,36 +1617,37 @@ OEMCryptoResult OEMCrypto_GenerateRSASignature(OEMCrypto_SESSION session,
+ 	if (ioctl(fd_oemcrypt_vrpc, VOEMC_IOCTL_GENRSASIGN, size) < 0) {
+ 		LOGE("%s: ioctl failed - %s", __func__, strerror(errno));
+ 		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
+ 		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
+ 	}
+ 
+ 	// read data from shared memory
+ 	size = read(fd_oemcrypt_vrpc, &req, sizeof(req)); /* get return result */
++	if (size <= 0){
++		LOGE("%s: Read failed - %s", __func__, strerror(errno));
++		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
++		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
++	}
+ 	LOGD("%s: Read size %d, result %d", __func__, size, req.result);
+ 
+-   *signature_length = req.signature_length;
+-	if (req.result == OEMCrypto_SUCCESS) {
+-		LOGD("%s: success", __func__);
+-		// data already copied to user buffer
+-	}
+-	else
+-  {
+-		LOGD("%s: failed 0x%x", __func__, req.result);
+-	}
++	*signature_length = req.signature_length;
++
++	pthread_mutex_unlock(&g_mutex);
+ 
+ 	return (OEMCryptoResult)req.result;
+ }
+ 
+ extern "C"
+ OEMCryptoResult OEMCrypto_DeriveKeysFromSessionKey(OEMCrypto_SESSION session,
+-											const uint8_t* enc_session_key,
+-											size_t enc_session_key_length,
+-											const uint8_t* mac_key_context,
+-											size_t mac_key_context_length,
+-											const uint8_t* enc_key_context,
+-											size_t enc_key_context_length) {
++                                            const uint8_t* enc_session_key,
++                                            size_t enc_session_key_length,
++                                            const uint8_t* mac_key_context,
++                                            size_t mac_key_context_length,
++                                            const uint8_t* enc_key_context,
++                                            size_t enc_key_context_length) {
+ 	size_t size;
+-  voemc_derkeysfrsessionkey_t req;
++	voemc_derkeysfrsessionkey_t req;
+ 
+ 	if (enc_session_key == NULL || enc_session_key_length == 0 ||
+ 		mac_key_context == NULL || mac_key_context_length == 0 ||
+@@ -1501,6 +1656,8 @@ OEMCryptoResult OEMCrypto_DeriveKeysFromSessionKey(OEMCrypto_SESSION session,
+ 		return OEMCrypto_ERROR_INVALID_CONTEXT;
+ 	}
+ 
++	pthread_mutex_lock(&g_mutex);
++
+ 	req.session                 = session;
+ 	req.enc_session_key         = enc_session_key;
+ 	req.enc_session_key_length  = enc_session_key_length;
+@@ -1510,9 +1667,10 @@ OEMCryptoResult OEMCrypto_DeriveKeysFromSessionKey(OEMCrypto_SESSION session,
+ 	req.enc_key_context_length  = enc_key_context_length;
+ 
+ 	size = write(fd_oemcrypt_vrpc, &req, sizeof(req));
+-	if (size == 0){
++	if (size <= 0){
+ 		LOGE("%s: Write failed - %s", __func__, strerror(errno));
+ 		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
+ 		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
+ 	}
+ 
+@@ -1520,17 +1678,21 @@ OEMCryptoResult OEMCrypto_DeriveKeysFromSessionKey(OEMCrypto_SESSION session,
+ 	if (ioctl(fd_oemcrypt_vrpc, VOEMC_IOCTL_DERKEYSFROMSESSIONKEY, size) < 0) {
+ 		LOGE("%s: ioctl failed - %s", __func__, strerror(errno));
+ 		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
+ 		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
+ 	}
+ 
+ 	// read data from shared memory
+ 	size = read(fd_oemcrypt_vrpc, &req, sizeof(req)); /* get return result */
++	if (size <= 0){
++		LOGE("%s: Read failed - %s", __func__, strerror(errno));
++		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
++		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
++	}
+ 	LOGD("%s: Read size %d, result %d", __func__, size, req.result);
+ 
+-	if (req.result == OEMCrypto_SUCCESS)
+-		LOGD("%s: success", __func__);
+-	else
+-		LOGD("%s: failed 0x%x", __func__, req.result);
++	pthread_mutex_unlock(&g_mutex);
+ 
+ 	return (OEMCryptoResult)req.result;
+ }
+@@ -1562,7 +1724,7 @@ OEMCryptoResult OEMCrypto_Generic_Encrypt(OEMCrypto_SESSION session,
+                                           OEMCrypto_Algorithm algorithm,
+                                           uint8_t* out_buffer) {
+ 	size_t size;
+-  voemc_genencrypt_t req;
++	voemc_genencrypt_t req;
+ 
+ 	if (in_buffer == NULL || buffer_length == 0 ||
+ 		iv == NULL || out_buffer == NULL) {
+@@ -1570,6 +1732,8 @@ OEMCryptoResult OEMCrypto_Generic_Encrypt(OEMCrypto_SESSION session,
+ 		return OEMCrypto_ERROR_INVALID_CONTEXT;
+ 	}
+ 
++	pthread_mutex_lock(&g_mutex);
++
+ 	req.session       = session;
+ 	req.in_buffer     = in_buffer;
+ 	req.buffer_length = buffer_length;
+@@ -1578,9 +1742,10 @@ OEMCryptoResult OEMCrypto_Generic_Encrypt(OEMCrypto_SESSION session,
+ 	memcpy(req.iv, iv, sizeof(req.iv));
+   
+ 	size = write(fd_oemcrypt_vrpc, &req, sizeof(req));
+-	if (size == 0){
++	if (size <= 0){
+ 		LOGE("%s: Write failed - %s", __func__, strerror(errno));
+ 		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
+ 		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
+ 	}
+ 
+@@ -1588,17 +1753,21 @@ OEMCryptoResult OEMCrypto_Generic_Encrypt(OEMCrypto_SESSION session,
+ 	if (ioctl(fd_oemcrypt_vrpc, VOEMC_IOCTL_GENENCRYPT, size) < 0) {
+ 		LOGE("%s: ioctl failed - %s", __func__, strerror(errno));
+ 		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
+ 		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
+ 	}
+ 
+ 	// read data from shared memory
+ 	size = read(fd_oemcrypt_vrpc, &req, sizeof(req)); /* get return result */
++	if (size <= 0){
++		LOGE("%s: Read failed - %s", __func__, strerror(errno));
++		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
++		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
++	}
+ 	LOGD("%s: Read size %d, result %d", __func__, size, req.result);
+ 
+-	if (req.result == OEMCrypto_SUCCESS)
+-		LOGD("%s: success", __func__);
+-	else
+-		LOGD("%s: failed 0x%x", __func__, req.result);
++	pthread_mutex_unlock(&g_mutex);
+ 
+ 	return (OEMCryptoResult)req.result;
+ 
+@@ -1621,7 +1790,7 @@ OEMCryptoResult OEMCrypto_Generic_Decrypt(OEMCrypto_SESSION session,
+                                           OEMCrypto_Algorithm algorithm,
+                                           uint8_t* out_buffer) {
+ 	size_t size;
+-    voemc_gendecrypt_t req;
++	voemc_gendecrypt_t req;
+ 
+ 	if (in_buffer == NULL || buffer_length == 0 ||
+ 		iv == NULL || out_buffer == NULL) {
+@@ -1629,6 +1798,8 @@ OEMCryptoResult OEMCrypto_Generic_Decrypt(OEMCrypto_SESSION session,
+ 		return OEMCrypto_ERROR_INVALID_CONTEXT;
+ 	}
+ 
++	pthread_mutex_lock(&g_mutex);
++
+ 	req.session       = session;
+ 	req.in_buffer     = in_buffer;
+ 	req.buffer_length = buffer_length;
+@@ -1637,9 +1808,10 @@ OEMCryptoResult OEMCrypto_Generic_Decrypt(OEMCrypto_SESSION session,
+ 	memcpy(req.iv, iv, sizeof(req.iv));
+ 
+ 	size = write(fd_oemcrypt_vrpc, &req, sizeof(req));
+-	if (size == 0){
++	if (size <= 0){
+ 		LOGE("%s: Write failed - %s", __func__, strerror(errno));
+ 		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
+ 		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
+ 	}
+ 
+@@ -1647,17 +1819,21 @@ OEMCryptoResult OEMCrypto_Generic_Decrypt(OEMCrypto_SESSION session,
+ 	if (ioctl(fd_oemcrypt_vrpc, VOEMC_IOCTL_GENDECRYPT, size) < 0) {
+ 		LOGE("%s: ioctl failed - %s", __func__, strerror(errno));
+ 		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
+ 		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
+ 	}
+ 
+ 	// read data from shared memory
+ 	size = read(fd_oemcrypt_vrpc, &req, sizeof(req)); /* get return result */
++	if (size <= 0){
++		LOGE("%s: Read failed - %s", __func__, strerror(errno));
++		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
++		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
++	}
+ 	LOGD("%s: Read size %d, result %d", __func__, size, req.result);
+ 
+-	if (req.result == OEMCrypto_SUCCESS)
+-		LOGD("%s: success", __func__);
+-	else
+-		LOGD("%s: failed 0x%x", __func__, req.result);
++	pthread_mutex_unlock(&g_mutex);
+ 
+ 	return (OEMCryptoResult)req.result; 
+ }
+@@ -1670,7 +1846,7 @@ OEMCryptoResult OEMCrypto_Generic_Sign(OEMCrypto_SESSION session,
+                                        uint8_t* signature,
+                                        size_t* signature_length) {
+ 	size_t size;
+-    voemc_genericsign_t req;
++	voemc_genericsign_t req;
+ 
+ 	if (*signature_length < SHA256_DIGEST_LENGTH) {
+ 		*signature_length = SHA256_DIGEST_LENGTH;
+@@ -1681,6 +1857,8 @@ OEMCryptoResult OEMCrypto_Generic_Sign(OEMCrypto_SESSION session,
+ 		return OEMCrypto_ERROR_INVALID_CONTEXT;
+ 	}
+ 
++	pthread_mutex_lock(&g_mutex);
++
+ 	req.session           = session;
+ 	req.in_buffer         = in_buffer;
+ 	req.buffer_length     = buffer_length;
+@@ -1689,9 +1867,10 @@ OEMCryptoResult OEMCrypto_Generic_Sign(OEMCrypto_SESSION session,
+ 	req.signature_length  = *signature_length;
+ 
+ 	size = write(fd_oemcrypt_vrpc, &req, sizeof(req));
+-	if (size == 0){
++	if (size <= 0){
+ 		LOGE("%s: Write failed - %s", __func__, strerror(errno));
+ 		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
+ 		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
+ 	}
+ 
+@@ -1699,19 +1878,25 @@ OEMCryptoResult OEMCrypto_Generic_Sign(OEMCrypto_SESSION session,
+ 	if (ioctl(fd_oemcrypt_vrpc, VOEMC_IOCTL_GENERICSIGN, size) < 0) {
+ 		LOGE("%s: ioctl failed - %s", __func__, strerror(errno));
+ 		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
+ 		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
+ 	}
+ 
+ 	// read data from shared memory
+ 	size = read(fd_oemcrypt_vrpc, &req, sizeof(req)); /* get return result */
++	if (size <= 0){
++		LOGE("%s: Read failed - %s", __func__, strerror(errno));
++		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
++		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
++	}
+ 	LOGD("%s: Read size %d, result %d", __func__, size, req.result);
+ 
+ 	if (req.result == OEMCrypto_SUCCESS) {
+-		LOGD("%s: success", __func__);
+ 		*signature_length = req.signature_length;
+ 	}
+-	else
+-		LOGD("%s: failed 0x%x", __func__, req.result);
++
++	pthread_mutex_unlock(&g_mutex);
+ 
+ 	return (OEMCryptoResult)req.result;
+ }
+@@ -1727,6 +1912,7 @@ OEMCryptoResult OEMCrypto_Generic_Verify(OEMCrypto_SESSION session,
+ 	voemc_genverify_t req;
+ 
+ 	if (signature_length != SHA256_DIGEST_LENGTH) {
++		LOGE("[OEMCrypto_Generic_Verify(): incorrect signature length]");
+ 		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
+ 	}
+ 	if (in_buffer == NULL || buffer_length == 0 || signature == NULL) {
+@@ -1734,6 +1920,8 @@ OEMCryptoResult OEMCrypto_Generic_Verify(OEMCrypto_SESSION session,
+ 		return OEMCrypto_ERROR_INVALID_CONTEXT;
+ 	}
+ 
++	pthread_mutex_lock(&g_mutex);
++
+ 	req.session           = session;
+ 	req.in_buffer         = in_buffer;
+ 	req.buffer_length     = buffer_length;
+@@ -1742,9 +1930,10 @@ OEMCryptoResult OEMCrypto_Generic_Verify(OEMCrypto_SESSION session,
+ 	req.signature_length  = signature_length;
+ 
+ 	size = write(fd_oemcrypt_vrpc, &req, sizeof(req));
+-	if (size == 0){
++	if (size <= 0){
+ 		LOGE("%s: Write failed - %s", __func__, strerror(errno));
+ 		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
+ 		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
+ 	}
+ 
+@@ -1752,19 +1941,23 @@ OEMCryptoResult OEMCrypto_Generic_Verify(OEMCrypto_SESSION session,
+ 	if (ioctl(fd_oemcrypt_vrpc, VOEMC_IOCTL_GENVERIFY, size) < 0) {
+ 		LOGE("%s: ioctl failed - %s", __func__, strerror(errno));
+ 		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
+ 		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
+ 	}
+ 
+ 	// read data from shared memory
+ 	size = read(fd_oemcrypt_vrpc, &req, sizeof(req)); /* get return result */
++	if (size <= 0){
++		LOGE("%s: Read failed - %s", __func__, strerror(errno));
++		close(fd_oemcrypt_vrpc);
++		pthread_mutex_unlock(&g_mutex);
++		return OEMCrypto_ERROR_UNKNOWN_FAILURE;
++	}
+ 	LOGD("%s: Read size %d, result %d", __func__, size, req.result);
+ 
+-	if (req.result == OEMCrypto_SUCCESS)
+-		LOGD("%s: success", __func__);
+-	else
+-		LOGD("%s: failed 0x%x", __func__, req.result);
++	pthread_mutex_unlock(&g_mutex);
+ 
+-	return (OEMCryptoResult)req.result; 
++	return (OEMCryptoResult)req.result;
+ }
+ 
+ };  // namespace wvoec_mock
+-- 
+1.7.9.5
+

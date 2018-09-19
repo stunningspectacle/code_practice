@@ -1,0 +1,1887 @@
+diff --git a/arch/x86/boot/dts/xgold/display/auo_b070atn02.dtsi b/arch/x86/boot/dts/xgold/display/auo_b070atn02.dtsi
+index 698dbd1..45c6ce2 100644
+--- a/arch/x86/boot/dts/xgold/display/auo_b070atn02.dtsi
++++ b/arch/x86/boot/dts/xgold/display/auo_b070atn02.dtsi
+@@ -3,7 +3,7 @@
+  */
+ 
+ 
+-auo_b070atn02 {
++display-panel@auo_b070atn02 {
+ 	compatible = "intel,display";
+ 	intel,display-dc-clkrate = <297000000>;
+ 	intel,display-preinit = <0>;
+@@ -14,6 +14,26 @@ auo_b070atn02 {
+ 	intel,display-if-nblanes = <4>;
+ 	intel,display-eot = <1>;
+ 	intel,display-gate = <1>;
++	intel,display-if = <&mipi_dsi_auo_b070atn02>;
++	mipi_dsi_auo_b070atn02:mipi-dsi {
++		intel,display-if-rate = <255000000>;
++		intel,display-if-nblanes = <4>;
++		intel,display-if-phy-pwup = <6>;
++		intel,display-if-phy-calib = <3>;
++		intel,display-if-phy-to_lp_hs_req = <24>;
++		intel,display-if-phy-to_lp_hs_dis = <25>;
++		intel,display-if-phy-to_lp_hs_eot = <60>;
++		intel,display-if-phy-to_hs_zero = <8>;
++		intel,display-if-phy-to_hs_flip = <24>;
++		intel,display-if-phy-lp_clk_div = <31>;
++		intel,display-if-phy-to_hs_clk_pre = <36>;
++		intel,display-if-phy-to_hs_clk_post = <42>;
++		intel,display-if-phy-data_delay = <7>;
++		intel,display-if-phy-clock_delay = <7>;
++		intel,display-if-phy-lp_tx_tfall = <2>;
++		intel,display-if-phy-lp_tx_rise = <2>;
++		intel,display-if-phy-lp_tx_vref = <31>;
++	};
+ 
+ 	display-timings {
+ 		native-mode = <&auo_b070atn02_timing>;
+@@ -47,6 +67,19 @@ auo_b070atn02 {
+ 		intel,id-verification = <0 0>;
+ 	};
+ 
++	cmd-init{
++		sleep-out{
++			intel,cmd-type = <0x05>;
++			intel,cmd-data = <0x11>;
++			intel,cmd-lp = <1>;
++		};
++		display-on{
++			intel,cmd-type = <0x05>;
++			intel,cmd-data = <0x29>;
++			intel,cmd-delay = <130>;
++			intel,cmd-lp = <1>;
++		};
++	};
+ 	gpio-power-on {
+ 		power_en {
+ 			intel,gpio-type = "vhigh";
+diff --git a/arch/x86/boot/dts/xgold/display/boe_tv070wsm.dtsi b/arch/x86/boot/dts/xgold/display/boe_tv070wsm.dtsi
+index ebe18e2..2cb628b 100644
+--- a/arch/x86/boot/dts/xgold/display/boe_tv070wsm.dtsi
++++ b/arch/x86/boot/dts/xgold/display/boe_tv070wsm.dtsi
+@@ -3,7 +3,7 @@
+  */
+ 
+ 
+-boe_tv070wsm {
++display-panel@boe_tv070wsm {
+ 	compatible = "intel,display";
+ 	intel,display-dc-clkrate = <297000000>;
+ 	intel,display-preinit = <0>;
+@@ -14,6 +14,26 @@ boe_tv070wsm {
+ 	intel,display-if-nblanes = <4>;
+ 	intel,display-eot = <1>;
+ 	intel,display-gate = <1>;
++	intel,display-if = <&mipi_dsi_boe_tv070wsm>;
++	mipi_dsi_boe_tv070wsm:mipi-dsi {
++		intel,display-if-rate = <255000000>;
++		intel,display-if-nblanes = <4>;
++		intel,display-if-phy-pwup = <6>;
++		intel,display-if-phy-calib = <3>;
++		intel,display-if-phy-to_lp_hs_req = <24>;
++		intel,display-if-phy-to_lp_hs_dis = <25>;
++		intel,display-if-phy-to_lp_hs_eot = <60>;
++		intel,display-if-phy-to_hs_zero = <8>;
++		intel,display-if-phy-to_hs_flip = <24>;
++		intel,display-if-phy-lp_clk_div = <31>;
++		intel,display-if-phy-to_hs_clk_pre = <36>;
++		intel,display-if-phy-to_hs_clk_post = <42>;
++		intel,display-if-phy-data_delay = <7>;
++		intel,display-if-phy-clock_delay = <7>;
++		intel,display-if-phy-lp_tx_tfall = <2>;
++		intel,display-if-phy-lp_tx_rise = <2>;
++		intel,display-if-phy-lp_tx_vref = <31>;
++	};
+ 
+ 	display-timings {
+ 		native-mode = <&boe_tv070wsm_timing>;
+@@ -23,13 +43,13 @@ boe_tv070wsm {
+ 			color-mode = <COLOR_RGB>;
+ 			width = <89>;
+ 			height = <152>;
+-			clock-frequency = <42432000>;
++			clock-frequency = <49768320>;
+ 			hactive = <600>;
+ 			vactive = <1024>;
+-			hback-porch = <36>;
+-			hfront-porch = <20>;
+-			vback-porch = <8>;
+-			vfront-porch = <6>;
++			hback-porch = <60>;
++			hfront-porch = <100>;
++			vback-porch = <10>;
++			vfront-porch = <22>;
+ 			hsync-len = <24>;
+ 			vsync-len = <2>;
+ 			hsync-active = <0>;
+@@ -541,6 +561,18 @@ boe_tv070wsm {
+ 			intel,cmd-lp = <1>;
+ 		};
+ 	*/
++		sleep-out{
++			intel,cmd-type = <0x05>;
++			intel,cmd-data = <0x11>;
++			intel,cmd-delay = <130>;
++			intel,cmd-lp = <1>;
++		};
++		display-on{
++			intel,cmd-type = <0x05>;
++			intel,cmd-data = <0x29>;
++			intel,cmd-delay = <32>;
++			intel,cmd-lp = <1>;
++		};
+ 	};
+ 	gpio-power-on {
+ 		power_en {
+diff --git a/drivers/video/rockchip/rga/rga_api.c b/drivers/video/rockchip/rga/rga_api.c
+index 8cb7b30..5a55916 100644
+--- a/drivers/video/rockchip/rga/rga_api.c
++++ b/drivers/video/rockchip/rga/rga_api.c
+@@ -171,7 +171,7 @@ int32_t rga_gen_two_pro(struct rga_req *msg, struct rga_req *msg1)
+ 	msg->dst.vir_h = dah;
+ 	msg->dst.x_offset = 0;
+ 	msg->dst.y_offset = 0;
+-	msg->dst.yrgb_addr = (u32)(uintptr_t)rga_service.pre_scale_buf;
++	msg->dst.yrgb_addr = (u32)rga_service.pre_scale_buf;
+ 	msg->dst.uv_addr = msg->dst.yrgb_addr + stride * dah;
+ 	msg->dst.v_addr = msg->dst.uv_addr + ((stride * dah) >> 1);
+ 	msg->render_mode = pre_scaling_mode;
+diff --git a/drivers/video/rockchip/rga/rga_drv.c b/drivers/video/rockchip/rga/rga_drv.c
+old mode 100755
+new mode 100644
+index 8647b43..19b586f
+--- a/drivers/video/rockchip/rga/rga_drv.c
++++ b/drivers/video/rockchip/rga/rga_drv.c
+@@ -51,12 +51,11 @@
+ #endif
+ 
+ #if defined(CONFIG_MOBILEVISOR_VDRIVER_PIPE) && defined(CONFIG_SECURE_PLAYBACK)
+-#define RGA_SECURE_ACCESS
++//#define RGA_SECURE_ACCESS
+ #endif
+ 
+ #if defined(RGA_SECURE_ACCESS)
+ #include <sofia/mv_svc_hypercalls.h>
+-#include <sofia/reg_access/mv_svc_reg_access.h>
+ #include <sofia/vrga_fe.h>
+ #endif /* RGA_SECURE_ACCESS */
+ 
+@@ -243,11 +242,13 @@ static void rga_dump(void)
+ 		pr_info("task_running %d\n", running);
+ 		list_for_each_entry_safe(reg, reg_tmp,
+ 					 &session->waiting, session_link) {
+-			pr_info("waiting register set 0x%p\n", reg);
++			pr_info("waiting register set 0x%.8x\n",
++				(unsigned int)reg);
+ 		}
+ 		list_for_each_entry_safe(reg, reg_tmp,
+ 					 &session->running, session_link) {
+-			pr_info("running register set 0x%p\n", reg);
++			pr_info("running register set 0x%.8x\n",
++				(unsigned int)reg);
+ 		}
+ 	}
+ }
+@@ -261,6 +262,7 @@ static inline void rga_queue_power_off_work(void)
+ /* Caller must hold rga_service.lock */
+ static void rga_power_on(void)
+ {
++        int ret = 0, retry_times = 3;
+ 	static ktime_t last;
+ 	ktime_t now = ktime_get();
+ 
+@@ -273,9 +275,22 @@ static void rga_power_on(void)
+ 		return;
+ 
+ #ifdef CONFIG_PLATFORM_DEVICE_PM
+-	device_state_pm_set_state_by_name(drvdata->dev,
++retry:
++	ret = device_state_pm_set_state_by_name(drvdata->dev,
+ 					  drvdata->pm_platdata->
+ 					  pm_state_D0_name);
++	if (ret < 0) {
++		pr_info("Device pm set state failed (%d)\n", ret);
++		retry_times--;
++		if (retry_times > 0) {
++			WARNING("RGA Timeout waiting for PRH setting,try again\n");
++			goto retry;
++		} else {
++                        ERR("RGA failed to power on after 3 times \n");
++			BUG();
++			return;
++		}
++	}
+ #else
+ 	clk_prepare_enable(struct clk *clk)(drvdata->aclk_rga);
+ 	clk_prepare_enable(drvdata->hclk_rga);
+@@ -698,13 +713,9 @@ static void rga_try_set_reg(void)
+ 					pr_info("error wait for src fence\n");
+ 			}
+ 			atomic_set(&reg->session->done, 0);
+-			if (atomic_read(
+-				&rga_service.delay_work_already_queue)) {
+-				cancel_delayed_work(
+-					&rga_service.fence_delayed_work);
+-				atomic_set(
+-					&rga_service.delay_work_already_queue,
+-					0);
++			if (atomic_read(&rga_service.delay_work_already_queue)) {
++				cancel_delayed_work(&rga_service.fence_delayed_work);
++				atomic_set(&rga_service.delay_work_already_queue, 0);
+ 			}
+ 
+ 			rga_int_f_num++;
+@@ -826,12 +837,9 @@ static void rga_del_running_list_timeout(struct work_struct *work)
+ 		rga_end_0 = ktime_sub(rga_end_0, rga_start);
+ 
+ 		/* whether is a fake Timeout */
+-		/*if (atomic_read(&rga_service.interrupt_flag)) */
+-		    pr_info("%.8x INT %.8x F %d B %d end %d end_0 %d\n",
+-				    rga_read(0xc), rga_read(0x10),
+-				    rga_int_f_num, rga_int_b_num,
+-				    (int)ktime_to_us(rga_end),
+-				    (int)ktime_to_us(rga_end_0));
++		//if (atomic_read(&rga_service.interrupt_flag))
++		    pr_info("RGA STATUS %.8x INT %.8x F %d B %d end %d end_0 %d\n", rga_read(0xc), rga_read(0x10),
++		    rga_int_f_num, rga_int_b_num, (int)ktime_to_us(rga_end), (int)ktime_to_us(rga_end_0));
+ 
+ 		rga_soft_reset();
+ 
+@@ -1217,83 +1225,6 @@ static long rga_ioctl(struct file *file, uint32_t cmd, unsigned long arg)
+ 	return ret;
+ }
+ 
+-#ifdef CONFIG_COMPAT
+-static long compat_rga_ioctl(struct file *file, uint32_t cmd, unsigned long arg)
+-{
+-	struct rga_req req, *req_p;
+-	int ret = 0;
+-	struct rga_session *session;
+-
+-	req_p = (struct rga_req *)arg;
+-
+-	mutex_lock(&rga_service.mutex);
+-
+-	session = (struct rga_session *)file->private_data;
+-	rga_service.dst_fence_fd = -1;
+-
+-	if (NULL == session) {
+-		pr_info("%s [%d] rga thread session is null\n",
+-			__func__, __LINE__);
+-		mutex_unlock(&rga_service.mutex);
+-		return -EINVAL;
+-	}
+-
+-	memset(&req, 0x0, sizeof(req));
+-
+-	switch (cmd) {
+-	case RGA_BLIT_SYNC:
+-		if (unlikely(copy_from_user(&req,
+-					    (struct rga_req *)arg,
+-					    sizeof(struct rga_req)))) {
+-			ERR("copy_from_user failed\n");
+-			ret = RGA_DMA_BUF_COPY_ERROR;
+-			break;
+-		}
+-		ret = rga_blit_sync(session, &req);
+-		break;
+-	case RGA_BLIT_ASYNC:
+-		if (unlikely
+-		    (copy_from_user
+-		     (&req, (struct rga_req *)arg, sizeof(struct rga_req)))) {
+-			ERR("copy_from_user failed\n");
+-			ret = RGA_DMA_BUF_COPY_ERROR;
+-			break;
+-		}
+-
+-		if ((atomic_read(&rga_service.total_running) >= 16))
+-			ret = rga_blit_sync(session, &req);
+-		else
+-			ret = rga_blit_async(session, &req);
+-		break;
+-	case RGA_FLUSH:
+-		ret = rga_flush(session, arg);
+-		break;
+-	case RGA_GET_RESULT:
+-		ret = rga_get_result(session, arg);
+-		break;
+-	case RGA_GET_VERSION:
+-		ret = copy_to_user((void *)arg,
+-				   RGA_VERSION, sizeof(RGA_VERSION));
+-		break;
+-	default:
+-		ERR("unknown ioctl cmd!\n");
+-		ret = RGA_UNKONW_CMD_ERROR;
+-		break;
+-	}
+-
+-	copy_to_user
+-		(&req_p->line_draw_info.end_point.x,
+-	     &rga_service.dst_fence_fd, sizeof(short));
+-	copy_to_user
+-		(&req_p->line_draw_info.start_point.x,
+-	     &rga_service.timeout_num, sizeof(short));
+-	mutex_unlock(&rga_service.mutex);
+-
+-	return ret;
+-}
+-#endif
+-
+-
+ /*
+ static void rga_update_regs_handler(struct kthread_work *work)
+ {
+@@ -1373,7 +1304,7 @@ static irqreturn_t rga_irq_thread(int irq, void *dev_id)
+ {
+ 	mutex_lock(&rga_service.lock);
+ 	if (atomic_read(&rga_service.interrupt_timeout_flag)) {
+-		pr_info("rga timeout double in\n");
++        pr_info("rga timeout double in\n");
+ 		mutex_unlock(&rga_service.lock);
+ 		return IRQ_HANDLED;
+ 	}
+@@ -1413,9 +1344,6 @@ static const struct file_operations rga_fops = {
+ 	.open = rga_open,
+ 	.release = rga_release,
+ 	.unlocked_ioctl = rga_ioctl,
+-#ifdef CONFIG_COMPAT
+-	.compat_ioctl	= compat_rga_ioctl,
+-#endif
+ };
+ 
+ struct miscdevice rga_dev = {
+@@ -1678,8 +1606,8 @@ static int __init rga_init(void)
+ 		goto free_mmu_buf;
+ 
+ 	rga_mmu_buf.buf_virtual = buf_p;
+-	i = (virt_to_phys(buf_p));
+-	rga_mmu_buf.buf = (uint32_t *)(uintptr_t)i;
++	i = (virt_to_phys((void *)((uint32_t)buf_p)));
++	rga_mmu_buf.buf = (unsigned int *)i;
+ 	rga_mmu_buf.front = 0;
+ 	rga_mmu_buf.back = 128*1024;
+ 	rga_mmu_buf.size = 128*1024;
+@@ -1863,7 +1791,7 @@ static void rga_test_0(void)
+ 
+ #endif
+ 
+-static ssize_t show_rga_info(struct device *dev,
++static int show_rga_info(struct device *dev,
+ 			 struct device_attribute *attr, char *buf)
+ {
+ 	return snprintf(buf,
+diff --git a/drivers/video/rockchip/rga/rga_mmu_info.c b/drivers/video/rockchip/rga/rga_mmu_info.c
+index 5c314d6..704841d 100644
+--- a/drivers/video/rockchip/rga/rga_mmu_info.c
++++ b/drivers/video/rockchip/rga/rga_mmu_info.c
+@@ -280,7 +280,7 @@ static uint32_t rga_map_pte(uint32_t memory, uint32_t i)
+ 	pmd_t *pmd;
+ 
+ 	do {
+-		pgd = pgd_offset(current->mm, (uintptr_t)(memory + i) <<
++		pgd = pgd_offset(current->mm, (memory + i) <<
+ 				PAGE_SHIFT);
+ 		if (!pgd_present(*pgd))
+ 			break;
+@@ -475,7 +475,7 @@ static int rga_mmu_info_bitblt_mode(struct rga_reg *reg,
+ 		} else {
+ 			mmu_p = mmu_base;
+ 			if (req->src.yrgb_addr ==
+-			      (uintptr_t)rga_service.pre_scale_buf) {
++			      (uint32_t)rga_service.pre_scale_buf) {
+ 				for (i = 0; i < src_mem_size; i++)
+ 					mmu_p[i] =
+ 					    rga_service.pre_scale_buf[i];
+@@ -592,7 +592,7 @@ static int rga_mmu_info_color_palette_mode(struct rga_reg *reg,
+ 		if (dst_mem_size == 0)
+ 			return -EINVAL;
+ 		cmd_mem_size =
+-		    rga_mem_size_cal((uintptr_t)rga_service.cmd_buff,
++		    rga_mem_size_cal((uint32_t)rga_service.cmd_buff,
+ 				     RGA_CMD_BUF_SIZE, &cmd_start);
+ 		if (cmd_mem_size == 0)
+ 			return -EINVAL;
+@@ -632,7 +632,7 @@ static int rga_mmu_info_color_palette_mode(struct rga_reg *reg,
+ 			for (i = 0; i < src_mem_size; i++) {
+ 				mmu_p[i] =
+ 				    (uint32_t)virt_to_phys(
+-					(uint32_t *)((uintptr_t)(src_start + i) <<
++					(uint32_t *)((src_start + i) <<
+ 								 PAGE_SHIFT));
+ 			}
+ 		}
+@@ -655,7 +655,7 @@ static int rga_mmu_info_color_palette_mode(struct rga_reg *reg,
+ 			for (i = 0; i < dst_mem_size; i++) {
+ 				mmu_p[i] =
+ 				    (uint32_t)virt_to_phys(
+-						(uint32_t *)((uintptr_t)(dst_start + i) <<
++						(uint32_t *)((dst_start + i) <<
+ 								 PAGE_SHIFT));
+ 			}
+ 		}
+@@ -900,7 +900,7 @@ static int rga_mmu_info_pre_scale_mode(struct rga_reg *reg,
+ 			/* kernel space */
+ 			mmu_p = mmu_base + src_mem_size;
+ 			if (req->dst.yrgb_addr ==
+-			      (uintptr_t)rga_service.pre_scale_buf) {
++			      (uint32_t)rga_service.pre_scale_buf) {
+ 				for (i = 0; i < dst_mem_size; i++)
+ 					mmu_p[i] =
+ 					    rga_service.pre_scale_buf[i];
+@@ -989,7 +989,7 @@ static int rga_mmu_info_update_palette_table_mode(struct rga_reg *reg,
+ 
+ 		    /* cal cmd buf mmu info */
+ 		cmd_mem_size =
+-		    rga_mem_size_cal((uintptr_t)rga_service.cmd_buff,
++		    rga_mem_size_cal((uint32_t)rga_service.cmd_buff,
+ 				     RGA_CMD_BUF_SIZE, &cmd_start);
+ 		if (cmd_mem_size == 0)
+ 			return -EINVAL;
+@@ -1013,7 +1013,7 @@ static int rga_mmu_info_update_palette_table_mode(struct rga_reg *reg,
+ 
+ 		for (i = 0; i < cmd_mem_size; i++)
+ 			mmu_base[i] =
+-			    virt_to_phys((uint32_t *)((uintptr_t)(cmd_start + i) <<
++			    virt_to_phys((uint32_t *)((cmd_start + i) <<
+ 							PAGE_SHIFT));
+ 		if (req->src.yrgb_addr < KERNEL_SPACE_VALID) {
+ 			ret =
+@@ -1028,7 +1028,7 @@ static int rga_mmu_info_update_palette_table_mode(struct rga_reg *reg,
+ 			mmu_p = mmu_base + cmd_mem_size;
+ 			for (i = 0; i < src_mem_size; i++)
+ 				mmu_p[i] = (uint32_t)virt_to_phys(
+-						(uint32_t *)((uintptr_t)(src_start + i) <<
++						(uint32_t *)((src_start + i) <<
+ 						PAGE_SHIFT));
+ 		}
+ 
+@@ -1086,7 +1086,7 @@ static int rga_mmu_info_update_patten_buff_mode(struct rga_reg *reg,
+ 
+ 		    /* cal cmd buf mmu info */
+ 		    cmd_mem_size =
+-		    rga_mem_size_cal((uintptr_t)rga_service.cmd_buff,
++		    rga_mem_size_cal((uint32_t)rga_service.cmd_buff,
+ 				     RGA_CMD_BUF_SIZE, &cmd_start);
+ 		if (cmd_mem_size == 0)
+ 			return -EINVAL;
+@@ -1110,7 +1110,7 @@ static int rga_mmu_info_update_patten_buff_mode(struct rga_reg *reg,
+ 
+ 		for (i = 0; i < cmd_mem_size; i++) {
+ 			mmu_base[i] =
+-			    virt_to_phys((uint32_t *)((uintptr_t)(cmd_start + i) <<
++			    virt_to_phys((uint32_t *)((cmd_start + i) <<
+ 							PAGE_SHIFT));
+ 		}
+ 		if (req->src.yrgb_addr < KERNEL_SPACE_VALID) {
+@@ -1127,7 +1127,7 @@ static int rga_mmu_info_update_patten_buff_mode(struct rga_reg *reg,
+ 			mmu_p = mmu_base + cmd_mem_size;
+ 			for (i = 0; i < src_mem_size; i++)
+ 				mmu_p[i] = (uint32_t)virt_to_phys(
+-						(uint32_t *)((uintptr_t)(src_start + i) <<
++						(uint32_t *)((src_start + i) <<
+ 						PAGE_SHIFT));
+ 		}
+ 
+diff --git a/drivers/video/rockchip/rga/vrga_fe.c b/drivers/video/rockchip/rga/vrga_fe.c
+index d0cbbda..4286b98 100644
+--- a/drivers/video/rockchip/rga/vrga_fe.c
++++ b/drivers/video/rockchip/rga/vrga_fe.c
+@@ -139,7 +139,7 @@ static int vrga_fe_init_int(struct device *dev, int locked)
+ 		set_fs(old_fs);
+ 
+ 		if (IS_ERR(fp)) {
+-			ret = PTR_ERR(fp);
++			ret = (int)fp;
+ 
+ 			/* only log error if called from internal this module */
+ 			if (locked != 0)
+diff --git a/drivers/video/rockchip/rockchip_disp_drv.c b/drivers/video/rockchip/rockchip_disp_drv.c
+index 99ae532..af0abc0a 100644
+--- a/drivers/video/rockchip/rockchip_disp_drv.c
++++ b/drivers/video/rockchip/rockchip_disp_drv.c
+@@ -26,7 +26,6 @@
+  */
+ 
+ #include <linux/platform_device.h>
+-#include <linux/i2c.h>
+ #include "rockchip_disp_drv.h"
+ #ifdef CONFIG_OF
+ #include <linux/of.h>
+@@ -35,9 +34,6 @@
+ #ifdef CONFIG_ROCKCHIP_IOMMU
+ #include <linux/rockchip_iovmm.h>
+ #endif
+-#ifdef CONFIG_RK_HDMI
+-#include <linux/display-sys.h>
+-#endif
+ 
+ /* platform device pointer for rockchip display device. */
+ static struct platform_device *rockchip_disp_pdev;
+@@ -110,10 +106,6 @@ static int __init rockchip_disp_init(void)
+ {
+ 	int ret;
+ 
+-#ifdef CONFIG_RK_HDMI
+-	rk_display_class_init();
+-#endif
+-
+ #ifdef CONFIG_FB_ROCKCHIP
+ 	ret = platform_driver_register(&rockchip_fb_driver);
+ 	if (ret < 0)
+@@ -130,8 +122,8 @@ static int __init rockchip_disp_init(void)
+ 		goto out_lvds;
+ #endif
+ 
+-#ifdef CONFIG_ROCKCHIP_VOP_TRANSMITTER_XGOLD_DSI
+-	ret = platform_driver_register(&xgold_dsi_transmitter_driver);
++#ifdef CONFIG_XGOLD_MIPI_DSI
++	ret = platform_driver_register(&xgold_mipi_dsi_driver);
+ 	if (ret < 0)
+ 		goto out_mipi_dsi;
+ #endif
+@@ -142,12 +134,6 @@ static int __init rockchip_disp_init(void)
+ 		goto out_vop;
+ #endif
+ 
+-#ifdef CONFIG_HDMI_CAT66121
+-	ret = i2c_add_driver(&cat66121_hdmi_i2c_driver);
+-	if (ret < 0)
+-		goto out_hdmi;
+-#endif
+-
+ 	ret = platform_driver_register(&rockchip_disp_platform_driver);
+ 	if (ret < 0)
+ 		goto out_disp;
+@@ -171,13 +157,8 @@ out_disp:
+ out_vop:
+ #endif
+ 
+-#ifdef CONFIG_HDMI_CAT66121
+-	platform_driver_unregister(&cat66121_hdmi_i2c_driver);
+-out_hdmi:
+-#endif
+-
+-#ifdef CONFIG_ROCKCHIP_VOP_TRANSMITTER_XGOLD_DSI
+-	platform_driver_unregister(&xgold_dsi_transmitter_driver);
++#ifdef CONFIG_XGOLD_MIPI_DSI
++	platform_driver_unregister(&xgold_mipi_dsi_driver);
+ out_mipi_dsi:
+ #endif
+ 
+@@ -205,8 +186,8 @@ static void __exit rockchip_disp_exit(void)
+ 	platform_driver_unregister(&rockchip_vop_driver);
+ #endif
+ 
+-#ifdef CONFIG_ROCKCHIP_VOP_TRANSMITTER_XGOLD_DSI
+-	platform_driver_unregister(&xgold_dsi_transmitter_driver);
++#ifdef CONFIG_XGOLD_MIPI_DSI
++	platform_driver_unregister(&xgold_mipi_dsi_driver);
+ #endif
+ 
+ #ifdef CONFIG_LVDS_NANOSILICON
+diff --git a/drivers/video/rockchip/rockchip_disp_drv.h b/drivers/video/rockchip/rockchip_disp_drv.h
+index 2050462..1799758 100644
+--- a/drivers/video/rockchip/rockchip_disp_drv.h
++++ b/drivers/video/rockchip/rockchip_disp_drv.h
+@@ -29,16 +29,11 @@
+ extern struct platform_driver rockchip_fb_driver;
+ extern struct platform_driver rockchip_screen_driver;
+ extern struct platform_driver nanosilicon_lvds_driver;
+-#ifdef CONFIG_ROCKCHIP_VOP_TRANSMITTER_XGOLD_DSI
+-extern struct platform_driver xgold_dsi_transmitter_driver;
++#ifdef CONFIG_XGOLD_MIPI_DSI
++extern struct platform_driver xgold_mipi_dsi_driver;
+ #endif
+ extern struct platform_driver rockchip_vop_driver;
+-#ifdef CONFIG_HDMI_CAT66121
+-extern struct i2c_driver cat66121_hdmi_i2c_driver;
+-#endif
+-#ifdef CONFIG_RK_HDM
+-int __init rk_display_class_init(void);
+-#endif
++
+ #ifdef CONFIG_ROCKCHIP_IOMMU
+ struct device *rockchip_disp_get_sysmmu_device(const char *compt);
+ void rockchip_disp_platform_set_sysmmu(struct device *sysmmu,
+diff --git a/drivers/video/rockchip/rockchip_fb.c b/drivers/video/rockchip/rockchip_fb.c
+index c3f4db4..5abcec2 100644
+--- a/drivers/video/rockchip/rockchip_fb.c
++++ b/drivers/video/rockchip/rockchip_fb.c
+@@ -422,45 +422,6 @@ static void rockchip_fb_fence_wait(struct rockchip_vop_driver *dev_drv,
+ 		dev_err(dev_drv->dev, "error waiting on fence\n");
+ }
+ 
+-static int rockchip_fb_fence_create(struct rockchip_vop_driver *dev_drv,
+-				    const char *name)
+-{
+-	int fd = get_unused_fd_flags(0);
+-	int err;
+-	struct sync_pt *pt;
+-	struct sync_fence *fence;
+-
+-	if (unlikely(!dev_drv) || unlikely(!name))
+-		return -EINVAL;
+-
+-	if (fd < 0) {
+-		pr_err("%s: get %s fd falied, fd=%d\n", __func__, name, fd);
+-		return fd;
+-	}
+-
+-	pt = sw_sync_pt_create(dev_drv->timeline, dev_drv->timeline_max);
+-	if (pt == NULL) {
+-		pr_err("%s: create sync pt falied!\n", __func__);
+-		err = -ENOMEM;
+-		goto err;
+-	}
+-
+-	fence = sync_fence_create(name, pt);
+-	if (fence == NULL) {
+-		pr_err("%s: create %s fence falied!\n", __func__, name);
+-		sync_pt_free(pt);
+-		err = -ENOMEM;
+-		goto err;
+-	}
+-
+-	sync_fence_install(fence, fd);
+-	return fd;
+-
+-err:
+-	put_unused_fd(fd);
+-	return err;
+-}
+-
+ static int rockchip_fb_check_config_var(struct rockchip_fb_area_par *area_par,
+ 				    struct rockchip_screen *screen)
+ {
+@@ -673,8 +634,8 @@ static int rockchip_fb_set_win_par(struct fb_info *info,
+ 		if (win_par->area_par[i].phy_addr != 0) {
+ 			vop_win->area[i].buff_len = xvir *
+ 					vop_win->area[i].yact * pixel_width;
+-			vop_win->area[i].buff_len = PAGE_ALIGN(
+-					vop_win->area[i].buff_len);
++			vop_win->area[i].buff_len = ALIGN_N_TIMES(
++					vop_win->area[i].buff_len, PAGE_SIZE);
+ 			vaddr = rockchip_iovmm_map_oto(dev_drv->dev,
+ 						win_par->area_par[i].phy_addr,
+ 						vop_win->area[i].buff_len);
+@@ -832,8 +793,8 @@ static int rockchip_fb_set_win_buffer(struct fb_info *info,
+ 			hdl = ion_import_dma_buf(sfb_info->ion_client,
+ 						 ion_fd);
+ 			if (IS_ERR(hdl)) {
+-				pr_info("%s: Could not import handle: %p\n",
+-					__func__, hdl);
++				pr_info("%s: Could not import handle: %d\n",
++					__func__, (int)hdl);
+ 				/*return -EINVAL; */
+ 				break;
+ 			}
+@@ -887,77 +848,6 @@ static int rockchip_fb_set_win_buffer(struct fb_info *info,
+ 	return 0;
+ }
+ 
+-/**
+- * rockchip_fb_wait_reg_effect - sleep until new register take effect or timeout
+- * @dev_drv: the vop driver point
+- * @timeout: timeout, in msec
+- * @count: retry wait count
+- *
+- * Retruns:
+- * 0 if VOP frame start and register take effect before the @timeout elapsed.
+- * or -ETIMEDOUT if wait the @count times timeout.
+- */
+-static int rockchip_fb_wait_reg_effect(struct rockchip_vop_driver *dev_drv,
+-				       unsigned int timeout,
+-				       unsigned int count)
+-{
+-	int i = 0;
+-	int max_count = count + 1;
+-	long ret = 0;
+-	ktime_t timestamp;
+-	bool wait_for_vsync = false;
+-	unsigned int dsp_addr[4] = {0};
+-	u32 new_start = 0, reg_start = 0;
+-	int win_state = 0;
+-
+-	if (unlikely(!dev_drv) || timeout <= 0 || count <= 0)
+-		return -EINVAL;
+-
+-	do {
+-		timestamp = dev_drv->vsync_info.timestamp;
+-		ret = wait_event_interruptible_timeout(
+-			dev_drv->vsync_info.wait,
+-			ktime_compare(
+-				dev_drv->vsync_info.timestamp, timestamp) > 0,
+-			msecs_to_jiffies(timeout));
+-
+-		dev_drv->ops->get_dsp_addr(dev_drv, dsp_addr);
+-		wait_for_vsync = false;
+-		for (i = 0; i < dev_drv->num_win; i++) {
+-			if (dev_drv->win[i]->state == 1) {
+-				new_start =
+-					dev_drv->win[i]->area[0].smem_start +
+-					dev_drv->win[i]->area[0].y_offset;
+-				reg_start = dsp_addr[i];
+-
+-				if (unlikely(new_start != reg_start)) {
+-					wait_for_vsync = true;
+-					dev_info(dev_drv->dev,
+-						 "win%d:new_addr:0x%08x cur_addr:0x%08x--%d\n",
+-						 i,
+-						 new_start,
+-						 reg_start,
+-						 max_count - count);
+-
+-					break;
+-				}
+-			} else if (dev_drv->win[i]->state == 0) {
+-				win_state =
+-					dev_drv->ops->get_win_state(dev_drv, i);
+-				if (win_state) {
+-					wait_for_vsync = true;
+-					break;
+-				}
+-			}
+-		}
+-	} while (wait_for_vsync && --count);
+-
+-	if (count <= 0)
+-		return -ETIMEDOUT;
+-
+-	return 0;
+-}
+-
+ static int rockchip_fb_get_win_from_regs(struct rockchip_fb_reg_data *regs,
+ 				     struct rockchip_vop_win *vop_win)
+ {
+@@ -985,8 +875,14 @@ static void rockchip_fb_update_reg(struct rockchip_vop_driver *dev_drv,
+ 			       struct rockchip_fb_reg_data *regs)
+ {
+ 	int i, j, ret;
+-	int timeout;
+ 	struct rockchip_vop_win *win;
++	ktime_t timestamp = dev_drv->vsync_info.timestamp;
++	bool wait_for_vsync;
++	int count = 100;
++	unsigned int dsp_addr[4];
++	long timeout = 0;
++	u32 new_start, reg_start;
++	int win_state = 0;
+ 
+ 	/* acq_fence wait */
+ 	for (i = 0; i < regs->win_num; i++) {
+@@ -1020,9 +916,46 @@ static void rockchip_fb_update_reg(struct rockchip_vop_driver *dev_drv,
+ 
+ 	dev_drv->ops->ovl_mgr(dev_drv, 0, 1);
+ 	dev_drv->ops->cfg_done(dev_drv);
+-	timeout = rockchip_fb_wait_reg_effect(dev_drv, 25, 60);
+-	if (timeout < 0)
+-		pr_err("%s: wait reg effect timeout!\n", __func__);
++
++	do {
++		timestamp = dev_drv->vsync_info.timestamp;
++		timeout = wait_event_interruptible_timeout(
++				dev_drv->vsync_info.wait,
++				ktime_compare(
++					dev_drv->vsync_info.timestamp,
++					timestamp) > 0,
++				msecs_to_jiffies(25));
++
++		dev_drv->ops->get_dsp_addr(dev_drv, dsp_addr);
++		wait_for_vsync = false;
++		for (i = 0; i < dev_drv->num_win; i++) {
++			if (dev_drv->win[i]->state == 1) {
++				new_start =
++					dev_drv->win[i]->area[0].smem_start +
++					dev_drv->win[i]->area[0].y_offset;
++				reg_start = dsp_addr[i];
++
++				if (unlikely(new_start != reg_start)) {
++					wait_for_vsync = true;
++					dev_dbg(dev_drv->dev,
++						 "win%d:new_addr:0x%08x cur_addr:0x%08x--%d\n",
++						 i,
++						 new_start,
++						 reg_start,
++						 101 - count);
++
++					break;
++				}
++			} else if (dev_drv->win[i]->state == 0) {
++				win_state =
++					dev_drv->ops->get_win_state(dev_drv, i);
++				if (win_state) {
++					wait_for_vsync = true;
++					break;
++				}
++			}
++		}
++	} while (wait_for_vsync && count--);
+ 
+ #ifdef H_USE_FENCE
+ 	sw_sync_timeline_inc(dev_drv->timeline, 1);
+@@ -1037,7 +970,7 @@ static void rockchip_fb_update_reg(struct rockchip_vop_driver *dev_drv,
+ 					dev_drv->ops->mmu_en(dev_drv, true);
+ 			}
+ 			freed_index = 0;
+-			g_last_timeout = !!timeout;
++			g_last_timeout = timeout;
+ 		}
+ #endif
+ 		rockchip_fb_free_reg_data(dev_drv, dev_drv->last_regs);
+@@ -1077,8 +1010,7 @@ static void rockchip_fb_update_regs_handler(struct kthread_work *work)
+ }
+ 
+ static void rockchip_fb_free_update_reg(struct rockchip_vop_driver *dev_drv,
+-					struct rockchip_fb_reg_data *regs,
+-					bool timeline_inc)
++				    struct rockchip_fb_reg_data *regs)
+ {
+ 	int i = 0, j = 0;
+ 	struct rockchip_vop_win *win;
+@@ -1093,11 +1025,10 @@ static void rockchip_fb_free_update_reg(struct rockchip_vop_driver *dev_drv,
+ 		}
+ 	}
+ 
+-	if (timeline_inc) {
++	dev_drv->timeline_max++;
+ #ifdef H_USE_FENCE
+-		sw_sync_timeline_inc(dev_drv->timeline, 1);
++	sw_sync_timeline_inc(dev_drv->timeline, 1);
+ #endif
+-	}
+ 
+ #if defined(CONFIG_ROCKCHIP_IOMMU)
+ 	if (dev_drv->iommu_enabled) {
+@@ -1106,6 +1037,7 @@ static void rockchip_fb_free_update_reg(struct rockchip_vop_driver *dev_drv,
+ 	}
+ #endif
+ 	rockchip_fb_free_reg_data(dev_drv, regs);
++
+ }
+ 
+ static int rockchip_fb_update_win_config(struct fb_info *info,
+@@ -1120,7 +1052,11 @@ static int rockchip_fb_update_win_config(struct fb_info *info,
+ 	int list_is_empty = 0;
+ 
+ #ifdef H_USE_FENCE
+-	char fence_name[20] = {0};
++	struct sync_fence *release_fence[SFA_MAX_BUF_NUM];
++	struct sync_fence *retire_fence;
++	struct sync_pt *release_sync_pt[SFA_MAX_BUF_NUM];
++	struct sync_pt *retire_sync_pt;
++	char fence_name[20];
+ #endif
+ 
+ 	regs = kzalloc(sizeof(*regs), GFP_KERNEL);
+@@ -1145,8 +1081,7 @@ static int rockchip_fb_update_win_config(struct fb_info *info,
+ 
+ 		ret = rockchip_fb_set_win_par(info, win_par, vop_win);
+ 		if (ret < 0) {
+-			dev_drv->timeline_max++;
+-			rockchip_fb_free_update_reg(dev_drv, regs, true);
++			rockchip_fb_free_update_reg(dev_drv, regs);
+ 			return ret;
+ 		}
+ 
+@@ -1158,31 +1093,51 @@ static int rockchip_fb_update_win_config(struct fb_info *info,
+ 	}
+ 
+ 	mutex_lock(&dev_drv->cfg_lock);
++	if (!(dev_drv->suspend_flag == 0)) {
++		rockchip_fb_free_update_reg(dev_drv, regs);
++		pr_info("%s: error update frame when suspend!!!\n", __func__);
++		goto err_out;
++	}
+ 
+ 	dev_drv->timeline_max++;
+ #ifdef H_USE_FENCE
+ 	for (i = 0; i < SFA_MAX_BUF_NUM; i++) {
+ 		if (i < regs->buf_num) {
+ 			sprintf(fence_name, "fence%d", i);
+-			win_data->rel_fence_fd[i] =
+-				rockchip_fb_fence_create(dev_drv, fence_name);
++			win_data->rel_fence_fd[i] = get_unused_fd_flags(0);
+ 			if (win_data->rel_fence_fd[i] < 0) {
+-				dev_drv->timeline_max--;
++				pr_info("get fence fd failed,rel_fence_fd=%d\n",
++					win_data->rel_fence_fd[i]);
+ 				ret = -EFAULT;
+ 				goto err_out;
+ 			}
++			release_sync_pt[i] =
++			    sw_sync_pt_create(dev_drv->timeline,
++					      dev_drv->timeline_max);
++			release_fence[i] =
++			    sync_fence_create(fence_name, release_sync_pt[i]);
++			sync_fence_install(release_fence[i],
++					   win_data->rel_fence_fd[i]);
+ 		} else {
+ 			win_data->rel_fence_fd[i] = -1;
+ 		}
+ 	}
+ 
+-	win_data->ret_fence_fd =
+-		rockchip_fb_fence_create(dev_drv, "ret_fence");
++	win_data->ret_fence_fd = get_unused_fd_flags(0);
+ 	if (win_data->ret_fence_fd < 0) {
+-		dev_drv->timeline_max--;
++		pr_info("ret_fence_fd=%d\n", win_data->ret_fence_fd);
++		ret = -EFAULT;
++		goto err_out;
++	}
++	retire_sync_pt =
++	    sw_sync_pt_create(dev_drv->timeline, dev_drv->timeline_max);
++	retire_fence = sync_fence_create("ret_fence", retire_sync_pt);
++	if (retire_fence == NULL) {
++		pr_info("ret_fence pointer is NULL\n");
+ 		ret = -EFAULT;
+ 		goto err_out;
+ 	}
++	sync_fence_install(retire_fence, win_data->ret_fence_fd);
+ #else
+ 	for (i = 0; i < SFA_MAX_BUF_NUM; i++)
+ 		win_data->rel_fence_fd[i] = -1;
+@@ -1190,13 +1145,6 @@ static int rockchip_fb_update_win_config(struct fb_info *info,
+ 	win_data->ret_fence_fd = -1;
+ #endif
+ 
+-	if (!(dev_drv->suspend_flag == 0)) {
+-		pr_debug("%s: error update frame when suspend!!!\n", __func__);
+-		rockchip_fb_free_update_reg(dev_drv, regs, true);
+-		mutex_unlock(&dev_drv->cfg_lock);
+-		return ret;
+-	}
+-
+ 	if (dev_drv->wait_fs == 0) {
+ 		mutex_lock(&dev_drv->update_regs_list_lock);
+ 		list_add_tail(&regs->list, &dev_drv->update_regs_list);
+@@ -1221,11 +1169,7 @@ static int rockchip_fb_update_win_config(struct fb_info *info,
+ 		}
+ 	}
+ 
+-	mutex_unlock(&dev_drv->cfg_lock);
+-	return 0;
+-
+ err_out:
+-	rockchip_fb_free_update_reg(dev_drv, regs, false);
+ 	mutex_unlock(&dev_drv->cfg_lock);
+ 	return ret;
+ }
+@@ -1699,10 +1643,8 @@ static int rockchip_fb_pan_display(struct fb_var_screeninfo *var,
+ 
+ 	dev_drv->ops->pan_display(dev_drv, win_id);
+ 	/* if not want the config effect,set reserved[3] as 1 */
+-	if (likely((var->reserved[3] & 0x1) == 0)) {
++	if (likely((var->reserved[3] & 0x1) == 0))
+ 		dev_drv->ops->cfg_done(dev_drv);
+-		rockchip_fb_wait_reg_effect(dev_drv, 30, 1);
+-	}
+ 
+ 	return 0;
+ }
+@@ -1914,9 +1856,6 @@ static struct fb_ops fb_ops = {
+ 	.fb_set_par = rockchip_fb_set_par,
+ 	.fb_blank = rockchip_fb_blank,
+ 	.fb_ioctl = rockchip_fb_ioctl,
+-#ifdef CONFIG_COMPAT
+-	.fb_compat_ioctl = rockchip_fb_ioctl,
+-#endif
+ 	.fb_pan_display = rockchip_fb_pan_display,
+ 	.fb_read = rockchip_fb_read,
+ 	.fb_write = rockchip_fb_write,
+@@ -2037,13 +1976,7 @@ int rockchip_fb_switch_screen(struct rockchip_screen *screen,
+ 	pr_info("hdmi %s vop%d\n", enable ? "connect to" : "remove from",
+ 		dev_drv->id);
+ 
+-	if (enable) {
+-		memcpy(&dev_drv->screen1, screen, sizeof(*screen));
+-
+-		dev_drv->cur_screen = &dev_drv->screen1;
+-	} else {
+-		dev_drv->cur_screen = dev_drv->screen0;
+-	}
++	memcpy(dev_drv->cur_screen, screen, sizeof(struct rockchip_screen));
+ 
+ 	/* the main fb of vop */
+ 	info = sfb_info->fb[dev_drv->fb_index_base];
+@@ -2394,12 +2327,10 @@ static int rockchip_fb_show_copy_from_loader(struct fb_info *info)
+ 		 win->area[0].xact, win->area[0].yact, src,
+ 		 (u32)info->fix.smem_start);
+ 
+-	offset = src % PAGE_SIZE;
+-	if ((size + offset) % PAGE_SIZE)
+-		nr_pages =  (size >> PAGE_SHIFT) + 1;
+-	else
+-		nr_pages =  size >> PAGE_SHIFT;
+-
++	nr_pages = size >> PAGE_SHIFT;
++	offset = src & (~PAGE_MASK);
++	if (offset > 0)
++		nr_pages += 1;
+ 	pages = kcalloc(nr_pages, sizeof(*pages), GFP_KERNEL);
+ 	if (!pages) {
+ 		pr_err("failed to alloc %d pages\n", nr_pages);
+@@ -2588,11 +2519,6 @@ int rockchip_fb_register(struct rockchip_vop_driver *dev_drv,
+ 		if (support_loader_display()) {
+ 			if (dev_drv->iommu_enabled)
+ 				rockchip_fb_show_copy_from_loader(main_fbi);
+-
+-			/* disable frame done(line flag) interrupt */
+-			dev_drv->intr_en &= ~VOP_INTR_LF;
+-			if (dev_drv->ops->setup_intr)
+-				dev_drv->ops->setup_intr(dev_drv);
+ 			return 0;
+ 		}
+ 
+diff --git a/drivers/video/rockchip/rockchip_fb_sysfs.c b/drivers/video/rockchip/rockchip_fb_sysfs.c
+index d89b43a..6123139 100644
+--- a/drivers/video/rockchip/rockchip_fb_sysfs.c
++++ b/drivers/video/rockchip/rockchip_fb_sysfs.c
+@@ -521,7 +521,7 @@ static ssize_t set_dsp_lut(struct device *dev, struct device_attribute *attr,
+ 			index++;
+ 			start++;
+ 			space_max--;
+-		} while ((*start != ' ') && space_max && (index < 20));
++		} while ((*start != ' ') && space_max);
+ 		strncpy(curr1, curr, index);
+ 		curr1[index] = '\0';
+ 		kstrtoul(curr1, 16, (unsigned long *)&temp1);
+diff --git a/drivers/video/rockchip/rockchip_screen.c b/drivers/video/rockchip/rockchip_screen.c
+index 91a0b2e..f215b15 100644
+--- a/drivers/video/rockchip/rockchip_screen.c
++++ b/drivers/video/rockchip/rockchip_screen.c
+@@ -435,24 +435,20 @@ rockchip_prase_screen_dt(struct device_node *np,
+ 
+ 	dt = display_timings_get(disp_timing, disp_timing->native_mode);
+ 	if (!dt)
+-		goto fail;
++		return NULL;
+ 
+ 	screen = devm_kzalloc(&pdev->dev,
+ 			sizeof(struct rockchip_screen), GFP_KERNEL);
+ 	if (!screen) {
+ 		dev_err(&pdev->dev, "kmalloc for rockchip screen fail!\n");
+-		goto fail;
++		return NULL;
+ 	}
+ 	screen->dev = &pdev->dev;
+ 	rockchip_fb_videomode_from_timing(dt, screen);
+ 	rockchip_disp_pwr_ctr_parse_dt(np, screen);
+-	kfree(disp_timing);
+-	return screen;
+-
+-fail:
+-	kfree(disp_timing);
+-	return NULL;
++	display_timings_release(disp_timing);
+ 
++	return screen;
+ }
+ 
+ static int rockchip_screen_probe(struct platform_device *pdev)
+diff --git a/drivers/video/rockchip/vop/Kconfig b/drivers/video/rockchip/vop/Kconfig
+index 28485f7..281be55 100644
+--- a/drivers/video/rockchip/vop/Kconfig
++++ b/drivers/video/rockchip/vop/Kconfig
+@@ -6,5 +6,3 @@ config ROCKCHIP_VOP
+ 	  It is used on sofia 3gr platform.
+ 	  Please select Y to enable the
+ 	  rockchip vop driver
+-
+-source "drivers/video/rockchip/vop/transmitter/Kconfig"
+diff --git a/drivers/video/rockchip/vop/Makefile b/drivers/video/rockchip/vop/Makefile
+index f2f66cc..239c618 100644
+--- a/drivers/video/rockchip/vop/Makefile
++++ b/drivers/video/rockchip/vop/Makefile
+@@ -1,2 +1 @@
+ obj-$(CONFIG_ROCKCHIP_VOP) += rockchip_vop.o
+-obj-$(CONFIG_ROCKCHIP_VOP) += transmitter/
+diff --git a/drivers/video/rockchip/vop/rockchip_vop.c b/drivers/video/rockchip/vop/rockchip_vop.c
+index eb983c0..46c09da 100644
+--- a/drivers/video/rockchip/vop/rockchip_vop.c
++++ b/drivers/video/rockchip/vop/rockchip_vop.c
+@@ -1,7 +1,6 @@
+ /*
+  * rockchip VOP(Video Output Processer) hardware driver.
+  *
+- * Copyright (C) 2014-2015 Rockchip Electronics Co., Ltd.
+  * Copyright (C) 2014-2015 Intel Mobile Communications GmbH
+  *
+  * This software is licensed under the terms of the GNU General Public
+@@ -96,39 +95,10 @@ static void rockchip_vop_clk_disable(struct vop_device *vop_dev)
+ 	}
+ }
+ 
+-static void rockchip_vop_setup_intr(struct rockchip_vop_driver *dev_drv)
+-{
+-	u32 intr_reg_val;
+-	u32 intr_en = 0, intr_en_status = 0;
+-	struct vop_device *vop_dev =
+-		container_of(dev_drv, struct vop_device, driver);
+-
+-	if (unlikely(!vop_dev->clk_on))
+-		return;
+-
+-	if (dev_drv->intr_en & VOP_INTR_HS)
+-		intr_en |= M_HS_INT_EN;
+-	if (dev_drv->intr_en & VOP_INTR_FS)
+-		intr_en |= M_FS_INT_EN;
+-	if (dev_drv->intr_en & VOP_INTR_LF)
+-		intr_en |= M_LF_INT_EN;
+-	if (dev_drv->intr_en & VOP_INTR_BUSERR)
+-		intr_en |= M_BUS_ERR_INT_EN;
+-
+-	intr_reg_val = vop_readl(vop_dev, VOP_INT_STATUS);
+-	intr_en_status = intr_reg_val & INT_EN_MSK;
+-	if (intr_en != intr_en_status) {
+-		intr_reg_val &= ~INT_EN_MSK;
+-		/* update intr enable and clear */
+-		intr_reg_val |= intr_en | (intr_en << 4);
+-		vop_writel(vop_dev, VOP_INT_STATUS, intr_reg_val);
+-	}
+-}
+-
+ static irqreturn_t rockchip_vop_isr(int irq, void *dev_id)
+ {
+ 	struct vop_device *vop_dev = (struct vop_device *)dev_id;
+-	ktime_t timestamp;
++	ktime_t timestamp = ktime_get();
+ 	u32 int_reg = vop_readl(vop_dev, VOP_INT_STATUS);
+ 	u32 irq_active = 0;
+ 
+@@ -156,7 +126,6 @@ static irqreturn_t rockchip_vop_isr(int irq, void *dev_id)
+ 	}
+ 
+ #ifdef VOP_IRQ_EMPTY_DEBUG
+-	irq_active = int_reg & (M_WIN0_EMPTY_INT_STA | M_WIN1_EMPTY_INT_STA);
+ 	if (int_reg & M_WIN0_EMPTY_INT_STA) {
+ 		vop_msk_reg(vop_dev, VOP_INT_STATUS, M_WIN0_EMPTY_INT_CLEAR,
+ 			    V_WIN0_EMPTY_INT_CLEAR(1));
+@@ -168,26 +137,32 @@ static irqreturn_t rockchip_vop_isr(int irq, void *dev_id)
+ 	}
+ #endif
+ 
+-	if (irq_active)
+-		return IRQ_HANDLED;
+-	else
+-		return IRQ_NONE;
++	return IRQ_HANDLED;
+ }
+ 
+ static int rockchip_vop_enable_irq(struct rockchip_vop_driver *dev_drv)
+ {
++	u32 mask, val;
+ 	struct vop_device *vop_dev =
+ 	    container_of(dev_drv, struct vop_device, driver);
+ 
+ 	spin_lock(&vop_dev->reg_lock);
+ 	if (likely(vop_dev->clk_on)) {
+-		rockchip_vop_setup_intr(dev_drv);
++		mask = M_FS_INT_CLEAR | M_FS_INT_EN |
++		    M_LF_INT_CLEAR | M_LF_INT_EN |
++		    M_HS_INT_CLEAR | M_HS_INT_EN |
++		    M_BUS_ERR_INT_CLEAR | M_BUS_ERR_INT_EN;
++		val = V_FS_INT_CLEAR(1) | V_FS_INT_EN(1) |
++		    V_LF_INT_CLEAR(1) | V_LF_INT_EN(1) |
++		    V_HS_INT_CLEAR(1) | V_HS_INT_EN(1) |
++		    V_BUS_ERR_INT_CLEAR(1) | V_BUS_ERR_INT_EN(0);
+ 
+ #ifdef VOP_IRQ_EMPTY_DEBUG
+-		vop_msk_reg(vop_dev, VOP_INT_STATUS,
+-			    M_WIN0_EMPTY_INT_EN | M_WIN1_EMPTY_INT_EN,
+-			    V_WIN0_EMPTY_INT_EN(1) | V_WIN1_EMPTY_INT_EN(1);
++		mask |= M_WIN0_EMPTY_INT_EN | M_WIN1_EMPTY_INT_EN;
++		val |= V_WIN0_EMPTY_INT_EN(1) | V_WIN1_EMPTY_INT_EN(1);
+ #endif
++
++		vop_msk_reg(vop_dev, VOP_INT_STATUS, mask, val);
+ 		spin_unlock(&vop_dev->reg_lock);
+ 	} else {
+ 		spin_unlock(&vop_dev->reg_lock);
+@@ -196,21 +171,26 @@ static int rockchip_vop_enable_irq(struct rockchip_vop_driver *dev_drv)
+ 	return 0;
+ }
+ 
+-static int rockchip_vop_disable_irq(struct rockchip_vop_driver *dev_drv)
++static int rockchip_vop_disable_irq(struct vop_device *vop_dev)
+ {
+-	struct vop_device *vop_dev =
+-		container_of(dev_drv, struct vop_device, driver);
++	u32 mask, val;
+ 
+ 	spin_lock(&vop_dev->reg_lock);
+ 	if (likely(vop_dev->clk_on)) {
+-		dev_drv->intr_en = 0;
+-		rockchip_vop_setup_intr(dev_drv);
+-
++		mask = M_FS_INT_CLEAR | M_FS_INT_EN |
++		    M_LF_INT_CLEAR | M_LF_INT_EN |
++		    M_HS_INT_CLEAR | M_HS_INT_EN |
++		    M_BUS_ERR_INT_CLEAR | M_BUS_ERR_INT_EN;
++		val = V_FS_INT_CLEAR(0) | V_FS_INT_EN(0) |
++		    V_LF_INT_CLEAR(0) | V_LF_INT_EN(0) |
++		    V_HS_INT_CLEAR(0) | V_HS_INT_EN(0) |
++		    V_BUS_ERR_INT_CLEAR(0) | V_BUS_ERR_INT_EN(0);
+ #ifdef VOP_IRQ_EMPTY_DEBUG
+-		vop_msk_reg(vop_dev, VOP_INT_STATUS,
+-			    M_WIN0_EMPTY_INT_EN | M_WIN1_EMPTY_INT_EN,
+-			    V_WIN0_EMPTY_INT_EN(0) | V_WIN1_EMPTY_INT_EN(0));
++		mask |= M_WIN0_EMPTY_INT_EN | M_WIN1_EMPTY_INT_EN;
++		val |= V_WIN0_EMPTY_INT_EN(0) | V_WIN1_EMPTY_INT_EN(0);
+ #endif
++
++		vop_msk_reg(vop_dev, VOP_INT_STATUS, mask, val);
+ 		spin_unlock(&vop_dev->reg_lock);
+ 	} else {
+ 		spin_unlock(&vop_dev->reg_lock);
+@@ -723,25 +703,13 @@ static int rockchip_vop_set_dclk(struct rockchip_vop_driver *dev_drv)
+ 	struct vop_device *vop_dev =
+ 	    container_of(dev_drv, struct vop_device, driver);
+ 	struct rockchip_screen *screen = dev_drv->cur_screen;
++#if !defined(CONFIG_PLATFORM_DEVICE_PM)
+ 	int ret = 0;
++#endif
+ 
+ #ifdef CONFIG_PLATFORM_DEVICE_PM
+ 	vop_dev->pixclock =
+ 		div_u64(1000000000000llu, screen->mode.pixclock);
+-	if (screen->mode.pixclock == 148500000)
+-		ret = device_state_pm_set_state_by_name(vop_dev->dev,
+-							"high_perf");
+-	else if (screen->mode.pixclock == 74250000)
+-		ret = device_state_pm_set_state_by_name(vop_dev->dev,
+-							"mid_perf");
+-	else if (screen->mode.pixclock == 27000000)
+-		ret = device_state_pm_set_state_by_name(vop_dev->dev,
+-							"low_perf");
+-	else
+-		ret = device_state_pm_set_state_by_name(vop_dev->dev,
+-					vop_dev->pm_platdata->pm_state_D0_name);
+-	if (ret)
+-		dev_err(dev_drv->dev, "set vop%d dclk failed\n", vop_dev->id);
+ #else
+ 	ret = clk_set_rate(vop_dev->dclk, screen->mode.pixclock);
+ 	if (ret)
+@@ -752,61 +720,33 @@ static int rockchip_vop_set_dclk(struct rockchip_vop_driver *dev_drv)
+ 	vop_dev->driver.pixclock = vop_dev->pixclock;
+ 
+ 	fps = rockchip_fb_calc_fps(screen, vop_dev->pixclock);
+-	if (fps)
+-		screen->ft = 1000 / fps;
+-	dev_info(vop_dev->dev, "%s: dclk:%lu>>fps:%d pixclock %d",
+-		 vop_dev->driver.name, clk_get_rate(vop_dev->dclk), fps,
+-		 vop_dev->pixclock);
++	screen->ft = 1000 / fps;
++	dev_info(vop_dev->dev, "%s: dclk:%lu>>fps:%d ",
++		 vop_dev->driver.name, clk_get_rate(vop_dev->dclk), fps);
+ 	return 0;
+ }
+ 
+-static int rockchip_vop_standby(struct rockchip_vop_driver *dev_drv,
+-				bool enable)
++static int rockchip_vop_standby(struct rockchip_vop_driver *dev_drv)
+ {
+ 	struct vop_device *vop_dev =
+ 		container_of(dev_drv, struct vop_device, driver);
+ 	int timeout;
+ 	unsigned long flags;
+ 
+-	if (unlikely(!vop_dev->clk_on))
+-		return 0;
+-
+-	if (!enable) {
+-		spin_lock(&vop_dev->reg_lock);
+-		/* Recovery EDPI halt en */
+-		if (dev_drv->cur_screen->type == SCREEN_MIPI) {
+-			vop_msk_reg(vop_dev, VOP_MIPI_EDPI_CTRL,
+-				    M_EDPI_HALT_EN, V_EDPI_HALT_EN(1));
+-			vop_cfg_done(vop_dev);
+-		}
+-
+-		vop_msk_reg(vop_dev, VOP_SYS_CTRL, M_LCDC_STANDBY,
+-			    V_LCDC_STANDBY(0));
+-		spin_unlock(&vop_dev->reg_lock);
+-	} else {
++	if (vop_dev->clk_on) {
+ 		spin_lock_irqsave(&dev_drv->cpl_lock, flags);
+ 		reinit_completion(&dev_drv->frame_done);
+ 		spin_unlock_irqrestore(&dev_drv->cpl_lock, flags);
+ 
+-		spin_lock(&vop_dev->reg_lock);
+-		/* Disable EDPI halt to avoid vop standby time out */
+-		if (dev_drv->cur_screen->type == SCREEN_MIPI) {
+-			vop_msk_reg(vop_dev, VOP_MIPI_EDPI_CTRL,
+-				    M_EDPI_HALT_EN, V_EDPI_HALT_EN(0));
+-			vop_cfg_done(vop_dev);
+-		}
+-
+ 		vop_msk_reg(vop_dev, VOP_SYS_CTRL, M_LCDC_STANDBY,
+ 			    V_LCDC_STANDBY(1));
+-		spin_unlock(&vop_dev->reg_lock);
+-
+ 		/* wait for standby hold valid */
+ 		timeout = wait_for_completion_timeout(&dev_drv->frame_done,
+ 						      msecs_to_jiffies(25));
+ 
+ 		if (!timeout && (!dev_drv->frame_done.done)) {
+ 			dev_info(dev_drv->dev,
+-				 "wait for standby hold valid start time out!\n");
++				 "wait for standy hold valid start time out!\n");
+ 			return -ETIMEDOUT;
+ 		}
+ 	}
+@@ -882,16 +822,28 @@ static int rockchip_vop_pre_init(struct rockchip_vop_driver *dev_drv)
+ 
+ static void rockchip_vop_deinit(struct vop_device *vop_dev)
+ {
+-	struct rockchip_vop_driver *dev_drv = &vop_dev->driver;
++	u32 mask, val;
+ 
+-	rockchip_vop_standby(dev_drv, true);
+-	rockchip_vop_disable_irq(dev_drv);
+-	rockchip_vop_mmu_en(dev_drv, false);
+-	/* rockchip_vop_clk_disable(vop_dev); */
++	spin_lock(&vop_dev->reg_lock);
++	if (likely(vop_dev->clk_on)) {
++		mask = M_FS_INT_CLEAR | M_FS_INT_EN |
++		    M_LF_INT_CLEAR | M_LF_INT_EN |
++		    M_BUS_ERR_INT_CLEAR | M_BUS_ERR_INT_EN;
++		val = V_FS_INT_CLEAR(0) | V_FS_INT_EN(0) |
++		    V_LF_INT_CLEAR(0) | V_LF_INT_EN(0) |
++		    V_BUS_ERR_INT_CLEAR(0) | V_BUS_ERR_INT_EN(0);
++		vop_msk_reg(vop_dev, VOP_INT_STATUS, mask, val);
++		vop_set_bit(vop_dev, VOP_SYS_CTRL, M_LCDC_STANDBY);
++		vop_cfg_done(vop_dev);
++		spin_unlock(&vop_dev->reg_lock);
++	} else {
++		spin_unlock(&vop_dev->reg_lock);
++	}
++	mdelay(1);
+ }
+ 
+ static void rockchip_vop_select_bcsh(struct rockchip_vop_driver *dev_drv,
+-				     struct vop_device *vop_dev, bool bcsh_en)
++				     struct vop_device *vop_dev)
+ {
+ 	if (dev_drv->overlay_mode == VOP_YUV_DOMAIN) {
+ 		if (dev_drv->output_color == COLOR_YCBCR)	/* bypass */
+@@ -906,25 +858,17 @@ static void rockchip_vop_select_bcsh(struct rockchip_vop_driver *dev_drv,
+ 				    V_BCSH_Y2R_CSC_MODE(VOP_Y2R_CSC_MPEG) |
+ 				    V_BCSH_R2Y_EN(0));
+ 	} else {		/* overlay_mode=VOP_RGB_DOMAIN */
+-		if (dev_drv->output_color == COLOR_RGB) {
+-			if (bcsh_en)
+-				vop_msk_reg(vop_dev, VOP_BCSH_CTRL,
+-					    M_BCSH_R2Y_EN | M_BCSH_Y2R_EN,
+-					    V_BCSH_R2Y_EN(1) |
+-					    V_BCSH_Y2R_EN(1));
+-			else
+-				vop_msk_reg(vop_dev, VOP_BCSH_CTRL,
+-					    M_BCSH_R2Y_EN | M_BCSH_Y2R_EN,
+-					    V_BCSH_R2Y_EN(0) |
+-					    V_BCSH_Y2R_EN(0));
+-		} else { /* RGB2YUV */
++		if (dev_drv->output_color == COLOR_RGB)	/* bypass */
++			vop_msk_reg(vop_dev, VOP_BCSH_CTRL,
++				    M_BCSH_R2Y_EN | M_BCSH_Y2R_EN,
++				    V_BCSH_R2Y_EN(1) | V_BCSH_Y2R_EN(1));
++		else		/* RGB2YUV */
+ 			vop_msk_reg(vop_dev, VOP_BCSH_CTRL,
+ 				    M_BCSH_R2Y_EN |
+ 				    M_BCSH_R2Y_CSC_MODE | M_BCSH_Y2R_EN,
+ 				    V_BCSH_R2Y_EN(1) |
+ 				    V_BCSH_R2Y_CSC_MODE(VOP_Y2R_CSC_MPEG) |
+ 				    V_BCSH_Y2R_EN(0));
+-		}
+ 	}
+ }
+ 
+@@ -987,10 +931,7 @@ static int rockchip_vop_load_screen(struct rockchip_vop_driver *dev_drv,
+ 			    M_EDPI_HALT_EN, V_EDPI_HALT_EN(1));
+ 		break;
+ 	case SCREEN_HDMI:
+-		mask = M_RGB_DCLK_EN | M_RGB_DCLK_INVERT;
+-		val = V_RGB_DCLK_EN(1) | V_RGB_DCLK_INVERT(0);
+-		vop_msk_reg(vop_dev, VOP_BUS_INTF_CTRL, mask, val);
+-		rockchip_vop_select_bcsh(dev_drv, vop_dev, 1);
++		rockchip_vop_select_bcsh(dev_drv, vop_dev);
+ 		break;
+ 	default:
+ 		dev_err(vop_dev->dev, "un supported interface!\n");
+@@ -1160,7 +1101,6 @@ static int rockchip_vop_open(struct rockchip_vop_driver *dev_drv, int win_id,
+ 			rockchip_vop_set_dclk(dev_drv);
+ 			rockchip_vop_enable_irq(dev_drv);
+ 		} else {
+-			dev_drv->intr_en &= ~VOP_INTR_LF;
+ 			rockchip_vop_mmu_en(dev_drv, open);
+ 			if (dev_drv->trsm_ops &&
+ 			    dev_drv->trsm_ops->detect_panel) {
+@@ -1188,9 +1128,12 @@ static int rockchip_vop_open(struct rockchip_vop_driver *dev_drv, int win_id,
+ 		dev_err(vop_dev->dev, "invalid win id:%d\n", win_id);
+ 
+ 	/* when all layer closed,disable clk */
+-	if ((!open) && (!vop_dev->atv_layer_cnt))
+-		rockchip_vop_deinit(vop_dev);
+-
++	if ((!open) && (!vop_dev->atv_layer_cnt)) {
++		rockchip_vop_standby(dev_drv);
++		rockchip_vop_disable_irq(vop_dev);
++		rockchip_vop_mmu_en(dev_drv, open);
++		rockchip_vop_clk_disable(vop_dev);
++	}
+ 	return 0;
+ }
+ 
+@@ -1505,7 +1448,7 @@ static int rockchip_vop_early_suspend(struct rockchip_vop_driver *dev_drv)
+ 		return 0;
+ 	}
+ 
+-	rockchip_vop_standby(dev_drv, true);
++	rockchip_vop_standby(dev_drv);
+ 	rockchip_vop_mmu_en(dev_drv, false);
+ 	rockchip_vop_clk_disable(vop_dev);
+ 	rockchip_disp_pwr_disable(screen);
+@@ -1564,7 +1507,11 @@ static int rockchip_vop_early_resume(struct rockchip_vop_driver *dev_drv)
+ 		dev_drv->trsm_ops->enable();
+ 
+ 	/* VOP leave standby mode after DSI enable */
+-	rockchip_vop_standby(dev_drv, false);
++	spin_lock(&vop_dev->reg_lock);
++	vop_msk_reg(vop_dev, VOP_SYS_CTRL, M_LCDC_STANDBY,
++		V_LCDC_STANDBY(0));
++	spin_unlock(&vop_dev->reg_lock);
++
+ 	return 0;
+ }
+ 
+@@ -1772,7 +1719,7 @@ rockchip_vop_open_bcsh(struct rockchip_vop_driver *dev_drv, bool open)
+ 	}
+ 	spin_lock(&vop_dev->reg_lock);
+ 	if (vop_dev->clk_on) {
+-		rockchip_vop_select_bcsh(dev_drv, vop_dev, open);
++		rockchip_vop_select_bcsh(dev_drv, vop_dev);
+ 		if (open) {
+ 			vop_msk_reg(vop_dev,
+ 				    VOP_BCSH_CTRL, M_BCSH_EN | M_BCSH_OUT_MODE,
+@@ -1845,8 +1792,7 @@ static int rockchip_vop_fps_mgr(struct rockchip_vop_driver *dev_drv, int fps,
+ 	dev_drv->pixclock = pixclock;
+ 	vop_dev->pixclock = pixclock;
+ 	fps = rockchip_fb_calc_fps(vop_dev->screen, pixclock);
+-	if (fps)
+-		screen->ft = 1000 / fps;	/* one frame time in ms */
++	screen->ft = 1000 / fps;	/*one frame time in ms */
+ 
+ 	if (set)
+ 		dev_info(dev_drv->dev, "%s:dclk:%lu,fps:%d\n", __func__,
+@@ -1915,7 +1861,7 @@ static ssize_t rockchip_vop_get_disp_info(struct rockchip_vop_driver *dev_drv,
+ 	u32 fmt_id, act_info, dsp_info, dsp_st, factor;
+ 	u16 xvir_w0, x_act_w0, y_act_w0, x_dsp_w0, y_dsp_w0, x_st_w0, y_st_w0;
+ 	u16 xvir_w1, x_act_w1, y_act_w1, x_dsp_w1, y_dsp_w1, x_st_w1, y_st_w1;
+-	u16 x_factor, y_factor, x_scale = 100, y_scale = 100;
++	u16 x_factor, y_factor, x_scale, y_scale;
+ 	u16 ovl;
+ 	u32 win1_dsp_yaddr = 0;
+ 
+@@ -1976,10 +1922,8 @@ static ssize_t rockchip_vop_get_disp_info(struct rockchip_vop_driver *dev_drv,
+ 		factor = vop_readl(vop_dev, VOP_WIN0_SCL_FACTOR_YRGB);
+ 		x_factor = factor & M_X_SCL_FACTOR;
+ 		y_factor = (factor & M_Y_SCL_FACTOR) >> 16;
+-		if (x_factor)
+-			x_scale = 4096 * 100 / x_factor;
+-		if (y_factor)
+-			y_scale = 4096 * 100 / y_factor;
++		x_scale = 4096 * 100 / x_factor;
++		y_scale = 4096 * 100 / y_factor;
+ 
+ 		/* dsp addr */
+ 		win1_dsp_yaddr = vop_readl(vop_dev, VOP_WIN1_MST);
+@@ -2118,7 +2062,6 @@ static struct rockchip_vop_drv_ops vop_drv_ops = {
+ 	.mmu_en = rockchip_vop_mmu_en,
+ 	.reg_writel = rockchip_vop_reg_writel,
+ 	.reg_readl = rockchip_vop_reg_readl,
+-	.setup_intr = rockchip_vop_setup_intr,
+ };
+ 
+ #if defined(CONFIG_OF)
+@@ -2201,8 +2144,6 @@ static int rockchip_vop_probe(struct platform_device *pdev)
+ 	dev_drv->id = vop_dev->id;
+ 	dev_drv->ops = &vop_drv_ops;
+ 	dev_drv->num_win = ARRAY_SIZE(vop_win);
+-	dev_drv->intr_en = VOP_INTR_HS | VOP_INTR_FS | VOP_INTR_LF |
+-			VOP_INTR_BUSERR;
+ 	spin_lock_init(&vop_dev->reg_lock);
+ 
+ 	vop_dev->irq = platform_get_irq(pdev, 0);
+@@ -2291,7 +2232,10 @@ static void rockchip_vop_shutdown(struct platform_device *pdev)
+ 	    dev_drv->trsm_ops && dev_drv->trsm_ops->disable)
+ 		dev_drv->trsm_ops->disable();
+ 
++	rockchip_vop_standby(dev_drv);
+ 	rockchip_vop_deinit(vop_dev);
++	rockchip_vop_mmu_en(dev_drv, false);
++	/* rockchip_vop_clk_disable(vop_dev); */
+ 	rockchip_disp_pwr_disable(vop_dev->driver.cur_screen);
+ }
+ 
+diff --git a/drivers/video/rockchip/vop/rockchip_vop.h b/drivers/video/rockchip/vop/rockchip_vop.h
+index 7084350..c5b6ea3 100644
+--- a/drivers/video/rockchip/vop/rockchip_vop.h
++++ b/drivers/video/rockchip/vop/rockchip_vop.h
+@@ -607,12 +607,9 @@ enum _vop_overlay_mode {
+ 	VOP_YUV_DOMAIN
+ };
+ 
+-#define CALSCALE(x, y)	(1 == y ?					\
+-			 0x1000 : ((((u32)(x - 1)) * 0x1000) / (y - 1)))
++#define CALSCALE(x, y)	             ((((u32)(x - 1)) * 0x1000) / (y - 1))
+ #define INT_STA_MSK	(M_HS_INT_STA | M_FS_INT_STA |		\
+ 			 M_LF_INT_STA | M_BUS_ERR_INT_STA)
+-#define INT_EN_MSK	(M_HS_INT_EN | M_FS_INT_EN |		\
+-				 M_LF_INT_EN | M_BUS_ERR_INT_EN)
+ #define INT_CLR_SHIFT	8
+ 
+ struct vop_device {
+@@ -637,7 +634,7 @@ struct vop_device {
+ 	bool clk_on;		/* if vop clk on */
+ 	u8 atv_layer_cnt;	/* active layer counter,
+ 				 * when atv_layer_cnt = 0,vop is disable */
+-	int irq;
++	unsigned int irq;
+ 
+ 	struct clk *dclk;	/* vop dclk */
+ 	u32 pixclock;
+diff --git a/drivers/video/rockchip/vop/transmitter/Kconfig b/drivers/video/rockchip/vop/transmitter/Kconfig
+deleted file mode 100644
+index c8e53f9..0000000
+--- a/drivers/video/rockchip/vop/transmitter/Kconfig
++++ /dev/null
+@@ -1,9 +0,0 @@
+-config ROCKCHIP_VOP_TRANSMITTER_XGOLD_DSI
+-        tristate "xgold mipi dsi transmitter for vop"
+-        depends on ROCKCHIP_VOP && XGOLD_MIPI_DSI
+-        help
+-          XGOLD DSI transmitter driver for
+-	  rockchip vop controller.
+-	  It is used on sofia 3gr platform.
+-	  Please select Y to enable the
+-	  dsi transmitter driver.
+diff --git a/drivers/video/rockchip/vop/transmitter/Makefile b/drivers/video/rockchip/vop/transmitter/Makefile
+deleted file mode 100644
+index b9ffd47..0000000
+--- a/drivers/video/rockchip/vop/transmitter/Makefile
++++ /dev/null
+@@ -1 +0,0 @@
+-obj-$(CONFIG_ROCKCHIP_VOP_TRANSMITTER_XGOLD_DSI) += xgold_dsi_transmitter.o
+diff --git a/drivers/video/rockchip/vop/transmitter/xgold_dsi_transmitter.c b/drivers/video/rockchip/vop/transmitter/xgold_dsi_transmitter.c
+deleted file mode 100644
+index aa45e2e..0000000
+--- a/drivers/video/rockchip/vop/transmitter/xgold_dsi_transmitter.c
++++ /dev/null
+@@ -1,114 +0,0 @@
+-/*
+- *******************************************************************************
+- *
+- *  Component: XGold MIPI DSI transmitter driver for vop
+- *
+- *  Copyright (C) 2016, Intel Mobile Communications GmbH.
+- *
+- *  This program is free software: you can redistribute it and/or modify
+- *  it under the terms of the GNU General Public License Version 2
+- *  as published by the Free Software Foundation.
+- *
+- *  This program is distributed in the hope that it will be useful,
+- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+- *
+- *  You should have received a copy of the GNU General Public License Version 2
+- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+- *
+- *******************************************************************************
+- */
+-
+-#include <linux/kernel.h>
+-#include <linux/init.h>
+-#include <linux/platform_device.h>
+-#include <linux/rockchip_fb.h>
+-#include <linux/xgold_dsi.h>
+-
+-static struct xgold_dsi_trsm_ops *xgold_dsi_ops;
+-
+-static int xgold_dsi_transmitter_enable(void)
+-{
+-	xgold_dsi_ops->enable();
+-	return 0;
+-}
+-
+-static int xgold_dsi_transmitter_disable(void)
+-{
+-	xgold_dsi_ops->disable();
+-	return 0;
+-}
+-
+-static int xgold_dsi_transmitter_detect_panel(void)
+-{
+-	return xgold_dsi_ops->detect_panel();
+-}
+-
+-static struct rockchip_fb_trsm_ops trsm_mipi_dsi_ops = {
+-	.enable = xgold_dsi_transmitter_enable,
+-	.disable = xgold_dsi_transmitter_disable,
+-	.detect_panel = xgold_dsi_transmitter_detect_panel,
+-};
+-
+-static int xgold_dsi_transmitter_probe(struct platform_device *pdev)
+-{
+-	struct rockchip_screen screen;
+-	struct xgold_dsi_init_parms init_parms;
+-	int ret;
+-
+-	rockchip_get_prmry_screen(&screen);
+-	if (screen.type != SCREEN_MIPI) {
+-		dev_err(&pdev->dev, "screen is not SCREEN MIPI!\n");
+-		return -EINVAL;
+-	}
+-
+-	dev_set_name(&pdev->dev, "xgold-mipi_dsi");
+-
+-	rockchip_fb_trsm_ops_register(&trsm_mipi_dsi_ops, SCREEN_MIPI);
+-
+-	if (support_loader_display())
+-		init_parms.bootloader_init = true;
+-	else
+-		init_parms.bootloader_init = false;
+-	init_parms.default_panel_index = screen.index;
+-	ret = xgold_mipi_dsi_init(pdev, &init_parms, &xgold_dsi_ops);
+-	if (ret) {
+-		dev_err(&pdev->dev, "DSI driver init failed!\n");
+-		return ret;
+-	}
+-
+-	dev_info(&pdev->dev, "XGold MIPI DSI driver probe success\n");
+-
+-	return 0;
+-}
+-
+-static int xgold_dsi_transmitter_remove(struct platform_device *pdev)
+-{
+-	xgold_mipi_dsi_deinit(pdev);
+-	return 0;
+-}
+-
+-static void xgold_dsi_transmitter_shutdown(struct platform_device *pdev)
+-{
+-}
+-
+-#ifdef CONFIG_OF
+-static const struct of_device_id xgold_mipi_dsi_dt_ids[] = {
+-	{.compatible = "intel,xgold-mipi_dsi",},
+-	{}
+-};
+-#endif
+-
+-struct platform_driver xgold_dsi_transmitter_driver = {
+-	.probe = xgold_dsi_transmitter_probe,
+-	.remove = xgold_dsi_transmitter_remove,
+-	.shutdown = xgold_dsi_transmitter_shutdown,
+-	.driver = {
+-		.name = "xgold-mipi_dsi",
+-		.owner = THIS_MODULE,
+-#ifdef CONFIG_OF
+-		.of_match_table = of_match_ptr(xgold_mipi_dsi_dt_ids),
+-#endif
+-	},
+-};
+-
+diff --git a/drivers/video/xgold/dsi/Kconfig b/drivers/video/xgold/dsi/Kconfig
+index d18290d..8ca98ed 100644
+--- a/drivers/video/xgold/dsi/Kconfig
++++ b/drivers/video/xgold/dsi/Kconfig
+@@ -1,9 +1,10 @@
+ 
+ config XGOLD_MIPI_DSI
+-	bool "XGold MIPI DSI driver"
++	bool "XGold MIPI DSI transmitter support"
+ 	depends on X86_INTEL_XGOLD
+ 	default y
+ 	help
+-	  XGold MIPI DSI driver
++	  XGold MIPI DSI transmitter support
++	  It is used by rockchip framebuffer driver.
+ 	  Say y to use
+-	  XGold MIPI DSI driver.
++	  XGold MIPI DSI transmitter.
+diff --git a/drivers/video/xgold/dsi/dsi_device.c b/drivers/video/xgold/dsi/dsi_device.c
+index 4071dfe..70c920b 100644
+--- a/drivers/video/xgold/dsi/dsi_device.c
++++ b/drivers/video/xgold/dsi/dsi_device.c
+@@ -24,9 +24,9 @@
+ #include <linux/platform_device.h>
+ #include <linux/io.h>
+ #include <linux/delay.h>
++#include <linux/rockchip_fb.h>
+ #include <linux/reset.h>
+ #include <linux/gpio.h>
+-#include <linux/xgold_dsi.h>
+ 
+ #include "dsi_device.h"
+ #include "dsi_hwregs.h"
+@@ -153,18 +153,22 @@ static int xgold_mipi_dsi_detect_panel(void)
+ 	return panel_id;
+ }
+ 
+-static struct xgold_dsi_trsm_ops trsm_mipi_dsi_ops = {
++static struct rockchip_fb_trsm_ops trsm_mipi_dsi_ops = {
+ 	.enable = xgold_mipi_dsi_enable,
+ 	.disable = xgold_mipi_dsi_disable,
+ 	.detect_panel = xgold_mipi_dsi_detect_panel,
+ };
+ 
+-int xgold_mipi_dsi_init(struct platform_device *pdev,
+-			struct xgold_dsi_init_parms *parms,
+-			struct xgold_dsi_trsm_ops **ops)
++static int xgold_mipi_dsi_probe(struct platform_device *pdev)
+ {
+ 	struct xgold_mipi_dsi_device *mipi_dsi;
+ 	struct resource *res;
++	struct device_node *np = pdev->dev.of_node;
++
++	if (!np) {
++		dev_err(&pdev->dev, "Don't find xgold mipi dsi device tree node.\n");
++		return -EINVAL;
++	}
+ 
+ 	mipi_dsi = devm_kzalloc(&pdev->dev,
+ 				sizeof(struct xgold_mipi_dsi_device),
+@@ -175,6 +179,16 @@ int xgold_mipi_dsi_init(struct platform_device *pdev,
+ 	}
+ 
+ 	mipi_dsi->dev = &pdev->dev;
++	rockchip_get_prmry_screen(&mipi_dsi->screen);
++	if (mipi_dsi->screen.type != SCREEN_MIPI) {
++		dev_err(&pdev->dev, "screen is not SCREEN MIPI!\n");
++		devm_kfree(&pdev->dev, mipi_dsi);
++		mipi_dsi = NULL;
++		return -EINVAL;
++	}
++
++	platform_set_drvdata(pdev, mipi_dsi);
++	dev_set_name(mipi_dsi->dev, "xgold-mipi_dsi");
+ 
+ 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
+ 					   "mipi_dsi_phy");
+@@ -191,11 +205,11 @@ int xgold_mipi_dsi_init(struct platform_device *pdev,
+ 	}
+ 
+ 	xgold_mipi_dsi = mipi_dsi;
+-	if (parms->bootloader_init)
++	rockchip_fb_trsm_ops_register(&trsm_mipi_dsi_ops, SCREEN_MIPI);
++	if (support_loader_display())
+ 		mipi_dsi->sys_state = true;
+-	mipi_dsi->panel_index = parms->default_panel_index;
+-	*ops = &trsm_mipi_dsi_ops;
+ 
++	dev_info(&pdev->dev, "XGold MIPI DSI driver probe success\n");
+ 	dsi_of_parse_display(pdev, mipi_dsi);
+ 	dsi_probe(mipi_dsi);
+ 	dsi_irq_probe(mipi_dsi);
+@@ -203,7 +217,7 @@ int xgold_mipi_dsi_init(struct platform_device *pdev,
+ 	return 0;
+ }
+ 
+-int xgold_mipi_dsi_deinit(struct platform_device *pdev)
++static int xgold_mipi_dsi_remove(struct platform_device *pdev)
+ {
+ 	struct dsi_display *display_curr;
+ 
+@@ -218,3 +232,28 @@ int xgold_mipi_dsi_deinit(struct platform_device *pdev)
+ 
+ 	return 0;
+ }
++
++static void xgold_mipi_dsi_shutdown(struct platform_device *pdev)
++{
++}
++
++#ifdef CONFIG_OF
++static const struct of_device_id xgold_mipi_dsi_dt_ids[] = {
++	{.compatible = "intel,xgold-mipi_dsi",},
++	{}
++};
++#endif
++
++struct platform_driver xgold_mipi_dsi_driver = {
++	.probe = xgold_mipi_dsi_probe,
++	.remove = xgold_mipi_dsi_remove,
++	.shutdown = xgold_mipi_dsi_shutdown,
++	.driver = {
++		.name = "xgold-mipi_dsi",
++		.owner = THIS_MODULE,
++#ifdef CONFIG_OF
++		.of_match_table = of_match_ptr(xgold_mipi_dsi_dt_ids),
++#endif
++	},
++};
++
+diff --git a/drivers/video/xgold/dsi/dsi_device.h b/drivers/video/xgold/dsi/dsi_device.h
+index 90df107..118478d 100644
+--- a/drivers/video/xgold/dsi/dsi_device.h
++++ b/drivers/video/xgold/dsi/dsi_device.h
+@@ -23,6 +23,7 @@
+ #define __XGOLD_MIPI_DSI_H__
+ 
+ #include <linux/completion.h>
++#include <linux/rockchip_screen.h>
+ #include "dsi_display.h"
+ 
+ struct dsi_irq {
+@@ -49,7 +50,7 @@ static inline int dsi_completion_timeout_ms(struct completion *comp, int to)
+ 
+ struct xgold_mipi_dsi_device {
+ 	struct device *dev;
+-	int panel_index;
++	struct rockchip_screen screen;
+ 	bool sys_state;
+ 	int gpio_vhigh;
+ 	int gpio_vlow;
+diff --git a/drivers/video/xgold/dsi/dsi_dts.c b/drivers/video/xgold/dsi/dsi_dts.c
+index 4468ec8..c03af88 100644
+--- a/drivers/video/xgold/dsi/dsi_dts.c
++++ b/drivers/video/xgold/dsi/dsi_dts.c
+@@ -19,17 +19,15 @@
+  *******************************************************************************
+  */
+ 
+-#include <linux/slab.h>
+ #include <linux/device.h>
+-#include <linux/platform_device.h>
+ #include <linux/of.h>
+ #include <linux/of_gpio.h>
+ #include <linux/of_irq.h>
+ #include <linux/of_address.h>
++#include <linux/rockchip_fb.h>
+ #include <linux/reset.h>
+ #include <video/display_timing.h>
+ #include <video/of_display_timing.h>
+-#include <dt-bindings/sofiafb/sofia_fb.h>
+ 
+ #include "dsi_device.h"
+ #include "dsi_hwregs.h"
+@@ -614,13 +612,11 @@ int dsi_of_parse_display(struct platform_device *pdev,
+ 
+ 
+ 	list_for_each_entry(display_curr, &(mipi_dsi)->display_list, list) {
+-		if (mipi_dsi->panel_index < 0 ||
+-		    mipi_dsi->panel_index == index) {
+-			mipi_dsi->panel_index = index;
++		if (mipi_dsi->screen.index < 0 ||
++		    mipi_dsi->screen.index == index++) {
+ 			mipi_dsi->cur_display = display_curr;
+ 			break;
+ 		}
+-		index++;
+ 	}
+ 	return 0;
+ }

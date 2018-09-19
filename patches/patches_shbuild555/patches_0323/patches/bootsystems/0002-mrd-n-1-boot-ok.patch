@@ -1,0 +1,50 @@
+From 7ef4dcad31de9093bab599e4257b3cf646731cf5 Mon Sep 17 00:00:00 2001
+From: Jing Xiang <jing.xiang@intel.com>
+Date: Tue, 22 Mar 2016 11:39:55 +0800
+Subject: [PATCH 2/2] mrd n-1 boot ok
+
+Change-Id: I78927f99f389d508b25f5b5c8b012c80a00f59f3
+Tracked-On:
+Signed-off-by: Jing Xiang <jing.xiang@intel.com>
+---
+ make/configs/sf_3gx.config                             | 8 ++++----
+ platforms/src/sf_3gx_soc/board_sf_3gx/platform_power.c | 2 +-
+ 2 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/make/configs/sf_3gx.config b/make/configs/sf_3gx.config
+index cdc06af..0b401ae 100644
+--- a/make/configs/sf_3gx.config
++++ b/make/configs/sf_3gx.config
+@@ -53,12 +53,12 @@ include ${CONFIGSDIR}/sofia.config
+ FEATURE += FEAT_BOOTSYSTEM_KEYPAD_DRIVER_SUPPORT
+ 
+ # Trace debug driver
+-#FEATURE += FEAT_BOOTSYSTEM_USIF_TRACE_ENABLE
+-#FEATURE += FEAT_BOOTSYSTEM_TRACE_USIF1
+-#FEATURE += FEAT_BOOTSYSTEM_USIF1
++FEATURE += FEAT_BOOTSYSTEM_USIF_TRACE_ENABLE
++FEATURE += FEAT_BOOTSYSTEM_TRACE_USIF1
++FEATURE += FEAT_BOOTSYSTEM_USIF1
+ 
+ # Usif flashing 
+-FEATURE += FEAT_BOOTSYSTEM_USIF2
++#FEATURE += FEAT_BOOTSYSTEM_USIF2
+ 
+ #
+ FEATURE += FEAT_BOOTSYSTEM_EMMC_TAP_DELAY_IN_STMON
+diff --git a/platforms/src/sf_3gx_soc/board_sf_3gx/platform_power.c b/platforms/src/sf_3gx_soc/board_sf_3gx/platform_power.c
+index 3ca887e..734080c 100644
+--- a/platforms/src/sf_3gx_soc/board_sf_3gx/platform_power.c
++++ b/platforms/src/sf_3gx_soc/board_sf_3gx/platform_power.c
+@@ -186,7 +186,7 @@ BOOL platform_power_enable_charger(void)
+ 
+ BOOL platform_power_set_cpu_high(void)
+ {
+-  pow_bootcore_set_cpu_clock_high();
++  //pow_bootcore_set_cpu_clock_high();
+ 
+   return TRUE;
+ }
+-- 
+1.9.1
+

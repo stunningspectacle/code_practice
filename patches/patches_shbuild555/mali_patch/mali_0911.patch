@@ -1,0 +1,146 @@
+diff --git a/arch/x86/boot/dts/xgold/sofia_3g_soc/sofia_3g_soc.dtsi b/arch/x86/boot/dts/xgold/sofia_3g_soc/sofia_3g_soc.dtsi
+index 047fc29..de02863 100644
+--- a/arch/x86/boot/dts/xgold/sofia_3g_soc/sofia_3g_soc.dtsi
++++ b/arch/x86/boot/dts/xgold/sofia_3g_soc/sofia_3g_soc.dtsi
+@@ -86,14 +86,14 @@
+ 					0x1C88 0x0      /* GPU rw/wr prio 0/0 */
+ 					0x1C90 0x120    /* GPU bandwidth 900MB/s */
+ 					0x1C94 0x90     /* GPU saturation 400MB/s */
+-					0x1C98 0x5>;    /* GPU QoSEn */
++					0x1C98 0x0>;    /* GPU QoSEn */
+ 
+ 				intel,DCC2-qos-settings = <
+ 					0x1E08 0xE      /* DCC2 prio 2/3 */
+ 					0x1E0C 0x3      /* DCC2 mode regulator*/
+ 					0x1E10 0x9F     /* DCC2 bandwidth */
+ 					0x1E14 0x90     /* DCC2 saturation */
+-					0x1E18 0x5>;    /* DCC2 QoSEn */
++					0x1E18 0x0>;    /* DCC2 QoSEn */
+ 
+ #endif
+ 				#include "xgold/sofia_3g_soc/NoC.dtsi"
+diff --git a/arch/x86/configs/i386_SF-3G_defconfig b/arch/x86/configs/i386_SF-3G_defconfig
+index 2526e06..9449760 100644
+--- a/arch/x86/configs/i386_SF-3G_defconfig
++++ b/arch/x86/configs/i386_SF-3G_defconfig
+@@ -1900,7 +1900,7 @@ CONFIG_MEDIA_TUNER_MC44S803=y
+ # CONFIG_DRM is not set
+ CONFIG_MALI400=y
+ # CONFIG_MALI450 is not set
+-# CONFIG_MALI400_DEBUG is not set
++CONFIG_MALI400_DEBUG=y
+ # CONFIG_MALI400_PROFILING is not set
+ # CONFIG_MALI400_UMP is not set
+ # CONFIG_MALI400_POWER_PERFORMANCE_POLICY is not set
+diff --git a/drivers/gpu/arm/mali/common/mali_group.c b/drivers/gpu/arm/mali/common/mali_group.c
+index 922f012..3035066 100644
+--- a/drivers/gpu/arm/mali/common/mali_group.c
++++ b/drivers/gpu/arm/mali/common/mali_group.c
+@@ -27,6 +27,10 @@
+ #endif
+ 
+ 
++#define MALI400_L2_CACHE_REGISTER_STATUS 0x0008
++#define MALI400_L2_CACHE_STATUS_COMMAND_BUSY 0x01
++#define MALI400_L2_CACHE_STATUS_DATA_BUSY    0x02
++
+ static void mali_group_bottom_half_mmu(void *data);
+ static void mali_group_bottom_half_gp(void *data);
+ static void mali_group_bottom_half_pp(void *data);
+@@ -651,6 +655,8 @@ struct mali_pp_core *mali_group_get_pp_core(struct mali_group *group)
+ void mali_group_start_gp_job(struct mali_group *group, struct mali_gp_job *job)
+ {
+ 	struct mali_session_data *session;
++	struct mali_l2_cache_core *l2_cache;
++	u32 value;
+ 
+ 	MALI_ASSERT_GROUP_LOCKED(group);
+ 	MALI_DEBUG_ASSERT(MALI_GROUP_STATE_IDLE == group->state);
+@@ -658,6 +664,10 @@ void mali_group_start_gp_job(struct mali_group *group, struct mali_gp_job *job)
+ 	session = mali_gp_job_get_session(job);
+ 
+ 	if (NULL != group->l2_cache_core[0]) {
++		l2_cache = group->l2_cache_core[0];
++		value = mali_hw_core_register_read(&l2_cache->hw_core, MALI400_L2_CACHE_REGISTER_STATUS);
++		if (value & (MALI400_L2_CACHE_STATUS_COMMAND_BUSY || MALI400_L2_CACHE_STATUS_DATA_BUSY))
++			MALI_DEBUG_PRINT(1, ("%s: loooooooong Mali L2 cache core 0 is busy: 0x%x\n", __func__, value));
+ 		mali_l2_cache_invalidate_conditional(group->l2_cache_core[0], mali_gp_job_get_cache_order(job));
+ 	}
+ 
+@@ -702,6 +712,9 @@ void mali_group_start_gp_job(struct mali_group *group, struct mali_gp_job *job)
+ static void mali_group_start_pp_job(struct mali_group *group, struct mali_pp_job *job, u32 sub_job)
+ {
+ 	struct mali_session_data *session;
++	struct mali_l2_cache_core *l2_cache;
++	static int a = 0, b = 0;
++	u32 value;
+ 
+ 	MALI_ASSERT_GROUP_LOCKED(group);
+ 	MALI_DEBUG_ASSERT(MALI_GROUP_STATE_IDLE == group->state);
+@@ -709,10 +722,26 @@ static void mali_group_start_pp_job(struct mali_group *group, struct mali_pp_job
+ 	session = mali_pp_job_get_session(job);
+ 
+ 	if (NULL != group->l2_cache_core[0]) {
++		if (a == 0) {
++			a = 1;
++			MALI_DEBUG_PRINT(1, ("%s: loooooooong yes cache core 0\n", __func__));
++		}
++		l2_cache = group->l2_cache_core[0];
++		value = mali_hw_core_register_read(&l2_cache->hw_core, MALI400_L2_CACHE_REGISTER_STATUS);
++		if (value & (MALI400_L2_CACHE_STATUS_COMMAND_BUSY || MALI400_L2_CACHE_STATUS_DATA_BUSY))
++			MALI_DEBUG_PRINT(1, ("%s: loooooooong Mali L2 cache core 0 is busy: 0x%x\n", __func__, value));
+ 		mali_l2_cache_invalidate_conditional(group->l2_cache_core[0], mali_pp_job_get_cache_order(job));
+ 	}
+ 
+ 	if (NULL != group->l2_cache_core[1]) {
++		if (b == 0) {
++			b = 1;
++			MALI_DEBUG_PRINT(1, ("%s: loooooooong yes cache core 1\n", __func__));
++		}
++		l2_cache = group->l2_cache_core[1];
++		value = mali_hw_core_register_read(&l2_cache->hw_core, MALI400_L2_CACHE_REGISTER_STATUS);
++		if (value & (MALI400_L2_CACHE_STATUS_COMMAND_BUSY || MALI400_L2_CACHE_STATUS_DATA_BUSY))
++			MALI_DEBUG_PRINT(1, ("%s: loooooooong Mali L2 cache core 1 is busy: 0x%x\n", __func__, value));
+ 		mali_l2_cache_invalidate_conditional(group->l2_cache_core[1], mali_pp_job_get_cache_order(job));
+ 	}
+ 
+diff --git a/drivers/misc/noc/noc.c b/drivers/misc/noc/noc.c
+index 56ab242..8e63852 100644
+--- a/drivers/misc/noc/noc.c
++++ b/drivers/misc/noc/noc.c
+@@ -1260,6 +1260,7 @@ void xgold_noc_qos_set(char *name)
+ 	struct regcfg *reg;
+ 	struct xgold_noc_device *noc_dev = noc_dev_glob[0];
+ 	int found = 0;
++	u32 val;
+ 
+ 	if (!noc_dev->qos)
+ 		return;
+@@ -1267,12 +1268,25 @@ void xgold_noc_qos_set(char *name)
+ 	list_for_each_entry(qos, &noc_dev->qos->list, list) {
+ 
+ 		if (strcmp(qos->name, name) == 0) {
+-			if (qos->config) {
++			if (strcmp(qos->name, "GPU") == 0) {
++				if (qos->config) {
++					list_for_each_entry(reg,
++							&qos->config->list, list) {
++						   iowrite32(reg->value,
++						   noc_dev->hw_base + reg->offset);
++
++						val = ioread32(noc_dev->hw_base + reg->offset);
++						pr_info("looooooong Set QoS config %s, noc_dev->hw_base=0x%x, offset=0x%x, value=0x%x\n",
++								qos->name, noc_dev->hw_base, reg->offset, val);
++						found = 1;
++					}
++				}
++			} else if (qos->config) {
+ 				pr_debug("Set QoS config %s\n", qos->name);
+ 				list_for_each_entry(reg,
+ 						&qos->config->list, list) {
+ 					iowrite32(reg->value,
+-						noc_dev->hw_base + reg->offset);
++							noc_dev->hw_base + reg->offset);
+ 					found = 1;
+ 				}
+ 			}

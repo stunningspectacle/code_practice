@@ -1,0 +1,16 @@
+#
+# Copyright (C) 2014 Intel Mobile Communications GmbH
+#
+# This program is free software and is provided to you under the terms of the
+# GNU General Public License version 2 as published by the Free Software
+# Foundation, and any use by you of this program is subject to the terms
+# of such GNU licence.
+#
+#
+config MALI_MIDGARD_XGOLD_THERMAL
+	bool "Enable Thermal Throttling"
+	depends on  MALI_MIDGARD
+	default n
+	help
+	  Choose this option to enable Thermal throttling in the Mali Midgard DDK
+	  platform adaptation.

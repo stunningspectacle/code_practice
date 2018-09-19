@@ -1,0 +1,37 @@
+From 8ad1ade356c3fad80de1fbc4d2b238729cf95146 Mon Sep 17 00:00:00 2001
+From: Fabrizio Iannetti <fabrizio.iannetti@intel.com>
+Date: Wed, 10 Dec 2014 18:59:00 +0100
+Subject: [PATCH 1/2] enable use of physical pointers for decryption output
+
+BZ: 553
+
+[PATCH 1/26]
+
+Change-Id: Iaaa5083a5d2ef9000cd299b6d037866234ba1214
+UTP-Id: SMS06105195
+Reviewed-on: https://opticm6.rds.intel.com/r/46143
+Reviewed-by: Morten Koch <morten.koch@intel.com>
+Reviewed-by: Chee Leong Ng <chee.leong.ng@intel.com>
+Tested-by: TCloud Jenkins
+Reviewed-by: Thomas D Rasmussen <thomas.d.rasmussen@intel.com>
+Reviewed-by: UTP Service
+---
+ wv_modular_L1/src/oemcrypto.cpp |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/wv_modular_L1/src/oemcrypto.cpp b/wv_modular_L1/src/oemcrypto.cpp
+index 9b2053f..9c40f5e 100644
+--- a/wv_modular_L1/src/oemcrypto.cpp
++++ b/wv_modular_L1/src/oemcrypto.cpp
+@@ -706,7 +706,7 @@ OEMCryptoResult OEMCrypto_DecryptCTR(OEMCrypto_SESSION session,
+                                      uint8_t subsample_flags)
+ {
+   //#define USE_PHY_INPUT
+-  //#define USE_SEC_PHY_OUTPUT
++  #define USE_SEC_PHY_OUTPUT
+   int secure_buffer = out_buffer->type; //0 = unsecure, 1 = secure, 2 = direct (dont know what to do with 'direct'...)
+   
+   voemc_decryptctr_transfer_struct_t struct_ctr; //fortunately the struct is 64 bytes :-)
+-- 
+1.7.9.5
+

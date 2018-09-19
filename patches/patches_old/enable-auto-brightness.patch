@@ -1,0 +1,49 @@
+diff --git a/core/res/res/values/config.xml b/core/res/res/values/config.xml
+index 9762d77..42caf63 100644
+--- a/core/res/res/values/config.xml
++++ b/core/res/res/values/config.xml
+@@ -148,7 +148,7 @@
+     
+     <!-- Flag indicating whether the we should enable the automatic brightness in Settings.
+          Software implementation will be used if config_hardware_auto_brightness_available is not set -->
+-    <bool name="config_automatic_brightness_available">false</bool>
++    <bool name="config_automatic_brightness_available">true</bool>
+ 
+     <!-- Don't name config resources like this.  It should look like config_annoyDianne -->
+     <bool name="config_annoy_dianne">true</bool>
+@@ -287,6 +287,10 @@
+ 
+          Must be overridden in platform specific overlays -->
+     <integer-array name="config_autoBrightnessLevels">
++        <item>40</item>
++        <item>80</item>
++        <item>120</item>
++        <item>160</item>
+     </integer-array>
+ 
+     <!-- Array of output values for LCD backlight corresponding to the LUX values
+@@ -294,6 +298,11 @@
+          than the size of the config_autoBrightnessLevels array.
+          This must be overridden in platform specific overlays -->
+     <integer-array name="config_autoBrightnessLcdBacklightValues">
++        <item>20</item>
++        <item>80</item>
++        <item>120</item>
++        <item>160</item>
++        <item>250</item>
+     </integer-array>
+ 
+     <!-- Array of output values for button backlight corresponding to the LUX values
+diff --git a/services/java/com/android/server/PowerManagerService.java b/services/java/com/android/server/PowerManagerService.java
+index a6daaef..6c8f484 100644
+--- a/services/java/com/android/server/PowerManagerService.java
++++ b/services/java/com/android/server/PowerManagerService.java
+@@ -2374,7 +2374,7 @@ class PowerManagerService extends IPowerManager.Stub
+                 // we only do this if we are undocked, since lighting should be stable when
+                 // stationary in a dock.
+                 int lcdValue = getAutoBrightnessValue(
+-                        (mIsDocked ? value : mHighestLightSensorValue),
++                        (!mIsDocked ? value : mHighestLightSensorValue),
+                         mLcdBacklightValues);
+                 int buttonValue = getAutoBrightnessValue(value, mButtonBacklightValues);
+                 int keyboardValue;

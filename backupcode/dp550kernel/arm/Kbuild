@@ -1,0 +1,32 @@
+#
+# (C) COPYRIGHT ARM Limited. All rights reserved.
+#
+# This program is free software and is provided to you under the terms of the
+# GNU General Public License version 2 as published by the Free Software
+# Foundation, and any use by you of this program is subject to the terms
+# of such GNU licence.
+#
+# A copy of the licence is included with the program, and can also be obtained
+# from Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+# Boston, MA  02110-1301, USA.
+#
+#
+
+mali-dp-y += malidp_drv.o \
+		malidp_sysfs.o \
+		malidp_se_device.o \
+		malidp_de_device.o \
+		malidp_adf.o \
+		malidp_adf_overlay.o \
+		malidp_adf_interface.o \
+		malidp_adf_format.o \
+		malidp_hw.o \
+		malidp_iommu.o \
+		malidp_of_graph.o \
+		product/malidp_product_dp500.o \
+		product/malidp_product_dp550.o
+
+ccflags-y += -Idrivers/staging/android  -I$(src) -I$(src)/product
+
+ccflags-$(CONFIG_MALI_DP_DEBUG) += -DDEBUG
+obj-$(CONFIG_MALI_DP) += mali-dp.o

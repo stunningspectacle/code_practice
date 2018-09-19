@@ -1,0 +1,40 @@
+diff --git a/arch/x86/boot/dts/Sf3gr_mrd_n1.dts b/arch/x86/boot/dts/Sf3gr_mrd_n1.dts
+index 3885111..c92e29d 100644
+--- a/arch/x86/boot/dts/Sf3gr_mrd_n1.dts
++++ b/arch/x86/boot/dts/Sf3gr_mrd_n1.dts
+@@ -115,7 +115,7 @@
+                 pm,state-D3 = "disable";
+                 intel,display-gpio-vhigh = <&xgold_pmx_gpio 18 0>;
+                 intel,display-gpio-reset = <&xgold_pmx_gpio 62 0>;
+-                #include "xgold/display/NT35596-3gr.dtsi"
++                #include "xgold/display/ili7807b.dtsi"
+                 #include "xgold/display/HX8394-3gr.dtsi"
+         };
+ 
+diff --git a/drivers/video/xgold/dsi/dsi_display.c b/drivers/video/xgold/dsi/dsi_display.c
+index 638659e..81bdbbb 100644
+--- a/drivers/video/xgold/dsi/dsi_display.c
++++ b/drivers/video/xgold/dsi/dsi_display.c
+@@ -517,7 +517,7 @@ static void dsi_set_phy(struct xgold_mipi_dsi_device *mipi_dsi, int on)
+ 	       BITFLDS(EXR_DSI_PHY3_LPTX_VREF,
+ 		       mipi_dsi->cur_display->dif.dsi.lp_tx_vref);
+ 
+-	DSI_DBG2("MIPI-DSI @%d bps (%d,%d): 0x%08x 0x%08x 0x%08x 0x%08x)\n",
++	pr_err("MIPI-DSI @%d bps (%d,%d): 0x%08x 0x%08x 0x%08x 0x%08x)\n",
+ 		 mipi_dsi->cur_display->dif.dsi.bitrate,
+ 		 mipi_dsi->cur_display->dif.dsi.n,
+ 		 mipi_dsi->cur_display->dif.dsi.m,
+@@ -809,8 +809,13 @@ static void dsi_rate_calculation(struct dsi_display *display)
+ 		}
+ 	}
+ 
++	display->dif.dsi.n = 160;
++	display->dif.dsi.m = 9;
++
+ 	display->dif.dsi.bitrate = DSI_RATE(display->dif.dsi.n,
+ 					    display->dif.dsi.m);
++
++	pr_err("bitrate = %d\n", display->dif.dsi.bitrate);
+ }
+ 
+ int dsi_probe(struct xgold_mipi_dsi_device *mipi_dsi)

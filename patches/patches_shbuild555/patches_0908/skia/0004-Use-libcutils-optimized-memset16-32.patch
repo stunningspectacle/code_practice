@@ -1,0 +1,110 @@
+From ea0f048c1ef3127336df7ac96f8cceba0867ff9e Mon Sep 17 00:00:00 2001
+From: Henrik Smiding <henrik.smiding@intel.com>
+Date: Wed, 15 Jan 2014 17:57:48 +0100
+Subject: [PATCH 04/12] Use libcutils optimized memset16/32.
+
+Switch to the optimizations in system/core/libcutils for the functions
+sk_memset16 and sk_memset32. They are faster than the intrinsic versions.
+
+Change-Id: I7320808051ffe25146945427b9e8f128347afd40
+Old-Change-ID: Ic30188df10e0068f7bf21a3670c0c0989d34eafc
+Ori-Change-ID: Ia5f62a0bfe02565b8361bc11dc3513edcb54a8d2
+Orig-Change-Id: I93edd1dc513d3681aaeef49387313d35080764d3
+Category: aosp improvement
+Domain: AOSP-Others
+Origin: internal
+Upstream-Candidate: yes
+Tracked-On: https://jira01.devtools.intel.com/browse/CTEAN-1950
+Orig-Tracked-On: https://jira01.devtools.intel.com/browse/IMINAN-2473
+Signed-off-by: Joakim Landberg  <joakim.landberg@intel.com>
+Old-Reviewed-on: https://android.intel.com:443/374224
+Signed-off-by: Xinyun Liu <xinyun.liu@intel.com>
+---
+ Android.mk                     |    1 +
+ src/opts/SkUtils_opts_SSE2.cpp |   21 +++++++++++++++++++++
+ src/opts/SkUtils_opts_SSE2.h   |    2 ++
+ src/opts/opts_check_x86.cpp    |    4 ++--
+ 4 files changed, 26 insertions(+), 2 deletions(-)
+
+diff --git a/Android.mk b/Android.mk
+index 74d3dd6..7ac328b 100644
+--- a/Android.mk
++++ b/Android.mk
+@@ -515,6 +515,7 @@ LOCAL_SRC_FILES := \
+ 
+ LOCAL_SHARED_LIBRARIES := \
+ 	liblog \
++	libcutils \
+ 	libGLESv2 \
+ 	libEGL \
+ 	libz \
+diff --git a/src/opts/SkUtils_opts_SSE2.cpp b/src/opts/SkUtils_opts_SSE2.cpp
+index bd2f9b2..698f5d3 100644
+--- a/src/opts/SkUtils_opts_SSE2.cpp
++++ b/src/opts/SkUtils_opts_SSE2.cpp
+@@ -7,6 +7,27 @@
+ 
+ #include <emmintrin.h>
+ #include "SkUtils_opts_SSE2.h"
++#include "cutils/memory.h"
++
++void sk_memset16_libcutils(uint16_t *dst, uint16_t value, int count)
++{
++    SkASSERT(dst != NULL && count >= 0);
++
++    // dst must be 2-byte aligned.
++    SkASSERT((((size_t) dst) & 0x01) == 0);
++
++    android_memset16(dst, value, count << 1);
++}
++
++void sk_memset32_libcutils(uint32_t *dst, uint32_t value, int count)
++{
++    SkASSERT(dst != NULL && count >= 0);
++
++    // dst must be 4-byte aligned.
++    SkASSERT((((size_t) dst) & 0x03) == 0);
++
++    android_memset32(dst, value, count << 2);
++}
+ 
+ void sk_memset16_SSE2(uint16_t *dst, uint16_t value, int count)
+ {
+diff --git a/src/opts/SkUtils_opts_SSE2.h b/src/opts/SkUtils_opts_SSE2.h
+index 009f018..8af47bc 100644
+--- a/src/opts/SkUtils_opts_SSE2.h
++++ b/src/opts/SkUtils_opts_SSE2.h
+@@ -10,6 +10,8 @@
+ 
+ #include "SkTypes.h"
+ 
++void sk_memset16_libcutils(uint16_t *dst, uint16_t value, int count);
++void sk_memset32_libcutils(uint32_t *dst, uint32_t value, int count);
+ void sk_memset16_SSE2(uint16_t *dst, uint16_t value, int count);
+ void sk_memset32_SSE2(uint32_t *dst, uint32_t value, int count);
+ void sk_memcpy32_SSE2(uint32_t *dst, const uint32_t *src, int count);
+diff --git a/src/opts/opts_check_x86.cpp b/src/opts/opts_check_x86.cpp
+index d90dca3..1604b6a 100644
+--- a/src/opts/opts_check_x86.cpp
++++ b/src/opts/opts_check_x86.cpp
+@@ -276,7 +276,7 @@ SkBlitMask::RowProc SkBlitMask::PlatformRowProcs(SkColorType, SkMask::Format, Ro
+ 
+ SkMemset16Proc SkMemset16GetPlatformProc() {
+     if (supports_simd(SK_CPU_SSE_LEVEL_SSE2)) {
+-        return sk_memset16_SSE2;
++        return sk_memset16_libcutils;
+     } else {
+         return NULL;
+     }
+@@ -284,7 +284,7 @@ SkMemset16Proc SkMemset16GetPlatformProc() {
+ 
+ SkMemset32Proc SkMemset32GetPlatformProc() {
+     if (supports_simd(SK_CPU_SSE_LEVEL_SSE2)) {
+-        return sk_memset32_SSE2;
++        return sk_memset32_libcutils;
+     } else {
+         return NULL;
+     }
+-- 
+1.7.9.5
+

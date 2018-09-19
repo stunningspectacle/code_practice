@@ -1,0 +1,51 @@
+diff --git a/LightSensor_ltr301.cpp b/LightSensor_ltr301.cpp
+index 16dd14a..8f6c6d2 100644
+--- a/LightSensor_ltr301.cpp
++++ b/LightSensor_ltr301.cpp
+@@ -97,7 +97,7 @@ int LightSensor::readEvents(sensors_event_t* data, int count)
+         int type = event->type;
+         D("LightSensor::%s, in while - type = %d, code = %d", __FUNCTION__, type, event->code);
+         if (type == EV_ABS) {
+-            float value = event->value;
++            float value = event->value < RANGE_L ? event->value : RANGE_L;
+             if (event->code == ABS_MISC) {
+                 mPendingEvent.light = value;
+             }
+diff --git a/sensors.cpp b/sensors.cpp
+index 1dbbf05..9e8d44f 100644
+--- a/sensors.cpp
++++ b/sensors.cpp
+@@ -79,12 +79,12 @@ static const struct sensor_t sSensorList[] = {
+ 	{ "LTR301ALS-01 Ambient Light Sensor",
+ 	  "Lite-on",
+ 	  1, SENSORS_LIGHT_HANDLE,
+-          SENSOR_TYPE_LIGHT, 50000.0f, 1.0f, 0.75f, 0, { } },
++          SENSOR_TYPE_LIGHT, RANGE_L, RESOLUTION_L, 0.3f, 0, { } },
+ #else
+         { "LTR-502ALS-01 Light sensor",
+           "Lite-on",
+           1, SENSORS_LIGHT_HANDLE,
+-          SENSOR_TYPE_LIGHT, 50000.0f, 1.0f, 0.35f, 0, { } },
++          SENSOR_TYPE_LIGHT, RANGE_L, RESOLUTION_L, 0.35f, 0, { } },
+         { "LTR-502ALS-01 Proximity sensor",
+           "Lite-on",
+           1, SENSORS_PROXIMITY_HANDLE,
+diff --git a/sensors.h b/sensors.h
+index 1d01560..0372cdc 100644
+--- a/sensors.h
++++ b/sensors.h
+@@ -151,6 +151,14 @@ static inline int64_t timespec_to_ns(const struct timespec *ts)
+ 
+ #define SENSOR_STATE_MASK           (0x7FFF)
+ 
++/* conversion of light data to lux */
++#ifdef TARGET_MFLD_DV10
++#define RANGE_L                     (64000.0f)
++#define RESOLUTION_L                (1.0f)
++#else
++#define RANGE_L                     (100000.0f)
++#define RESOLUTION_L                (1.0f)
++#endif
+ /*****************************************************************************/
+ 
+ __END_DECLS

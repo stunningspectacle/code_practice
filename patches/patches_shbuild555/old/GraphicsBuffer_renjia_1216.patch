@@ -1,0 +1,61 @@
+diff --git a/libs/gui/Surface.cpp b/libs/gui/Surface.cpp
+index 4b76f98..61d8e65 100644
+--- a/libs/gui/Surface.cpp
++++ b/libs/gui/Surface.cpp
+@@ -244,16 +244,25 @@ int Surface::dequeueBuffer(android_native_buffer_t** buffer, int* fenceFd) {
+     // this should never happen
+     ALOGE_IF(fence == NULL, "Surface::dequeueBuffer: received null Fence! buf=%d", buf);
+ 
+-    if (result & IGraphicBufferProducer::RELEASE_ALL_BUFFERS) {
+-        freeAllBuffers();
+-    }
+-
+-    if ((result & IGraphicBufferProducer::BUFFER_NEEDS_REALLOCATION) || gbuf == 0) {
++    if (result & IGraphicBufferProducer::RELEASE_ALL_BUFFERS && result & IGraphicBufferProducer::BUFFER_NEEDS_REALLOCATION) {
+         result = mGraphicBufferProducer->requestBuffer(buf, &gbuf);
+-        if (result != NO_ERROR) {
+-            ALOGE("dequeueBuffer: IGraphicBufferProducer::requestBuffer failed: %d", result);
+-            mGraphicBufferProducer->cancelBuffer(buf, fence);
+-            return result;
++        for (int i = 0; i < NUM_BUFFER_SLOTS; i++) {
++            if (i != buf) {
++                mSlots[i].buffer = 0;
++            }
++        }
++    } else {
++        if (result & IGraphicBufferProducer::RELEASE_ALL_BUFFERS) {
++            freeAllBuffers();
++        }
++
++        if ((result & IGraphicBufferProducer::BUFFER_NEEDS_REALLOCATION) || gbuf == 0) {
++            result = mGraphicBufferProducer->requestBuffer(buf, &gbuf);
++            if (result != NO_ERROR) {
++                ALOGE("dequeueBuffer: IGraphicBufferProducer::requestBuffer failed: %d", result);
++                mGraphicBufferProducer->cancelBuffer(buf, fence);
++                return result;
++            }
+         }
+     }
+ 
+diff --git a/libs/ui/GraphicBufferMapper.cpp b/libs/ui/GraphicBufferMapper.cpp
+index 90a1c11..cfbfa17 100644
+--- a/libs/ui/GraphicBufferMapper.cpp
++++ b/libs/ui/GraphicBufferMapper.cpp
+@@ -87,7 +87,7 @@ status_t GraphicBufferMapper::lock(buffer_handle_t handle,
+             bounds.left, bounds.top, bounds.width(), bounds.height(),
+             vaddr);
+ 
+-    ALOGW_IF(err, "lock(...) failed %d (%s)", err, strerror(-err));
++    ALOGW_IF(true, "xxxxxxxxxx lock(...) failed %d (%s)", err, strerror(-err));
+     return err;
+ }
+ 
+@@ -116,7 +116,7 @@ status_t GraphicBufferMapper::unlock(buffer_handle_t handle)
+ 
+     err = mAllocMod->unlock(mAllocMod, handle);
+ 
+-    ALOGW_IF(err, "unlock(...) failed %d (%s)", err, strerror(-err));
++    ALOGW_IF(true, "xxxxxxxxx unlock(...) failed %d (%s)", err, strerror(-err));
+     return err;
+ }
+ 

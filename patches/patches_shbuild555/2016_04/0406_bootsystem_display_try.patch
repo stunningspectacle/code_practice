@@ -1,0 +1,65 @@
+diff --git a/applications/slb/src/slb_main.c b/applications/slb/src/slb_main.c
+index e822703..4ea7e74 100644
+--- a/applications/slb/src/slb_main.c
++++ b/applications/slb/src/slb_main.c
+@@ -77,11 +77,13 @@ int main(void)
+   extern unsigned int g_cgu_dcc_clk_rate;
+   g_cgu_dcc_clk_rate = 297000000;
+ 
++  /*
+   *((volatile int *)0xe4700a3c) = 0x1c;
+   power_bootsystem_set(POWER_BOOTSYSTEM_DISPLAY_POWER, 1);
+   power_bootsystem_set(POWER_BOOTSYSTEM_DISPLAY_CLOCK, 1);
+   *((volatile int *)0xe4700a3c) = 0x10;
+   power_bootsystem_set(POWER_BOOTSYSTEM_BACKLIGHT, 1);
++  */
+ #endif
+ 
+   /* If charger plug in, we start charging, charger detection inside below power function */
+diff --git a/drivers/display/src/display_drv.c b/drivers/display/src/display_drv.c
+index cc5fde9..97b6ff0 100644
+--- a/drivers/display/src/display_drv.c
++++ b/drivers/display/src/display_drv.c
+@@ -246,6 +246,7 @@ void display_drv_apply_screen(T_ENUM_SELECT_IMG img)
+   if(buf_ptr == NULL)
+     return;
+ #if defined(DISPLAY_DRIVER_SUPPORT)
++  asdf;
+   /* Show image */
+   error = bl_dcc_show_image(p_config_header->width,
+                             p_config_header->height,
+diff --git a/make/configs/sf_3gr.config b/make/configs/sf_3gr.config
+index 7e90469..e29861e 100644
+--- a/make/configs/sf_3gr.config
++++ b/make/configs/sf_3gr.config
+@@ -76,7 +76,6 @@ ifeq '$(findstring _GARNET,${PLATFORM})' '_GARNET'
+   FEATURE += FEAT_BOOTSYSTEM_TRACE_USIF1
+   FEATURE += FEAT_BOOTSYSTEM_USIF1
+   FEATURE += FEAT_BOOTSYSTEM_VALIDATE_RDC_BY_MKEY
+-  FEATURE += FEAT_BOOTSYSTEM_DISPLAY_DRIVER_SUPPORT
+   CC_DEFS += SF3GR_EVB_GARNET_EMMC_WA
+   CC_DEFS += SF3GR_EVB_GARNET
+ else
+@@ -84,7 +83,6 @@ else
+   # Flashing
+   FEATURE += FEAT_BOOTSYSTEM_USIF2
+   # Display driver
+-  FEATURE += FEAT_BOOTSYSTEM_DISPLAY_DRIVER_SUPPORT
+   CC_DEFS += SF3GR_EVB_GARNET_EMMC_WA
+ endif
+ 
+diff --git a/platforms/src/sf_3gx_soc/board_sf_3gx/platform_cnf.c b/platforms/src/sf_3gx_soc/board_sf_3gx/platform_cnf.c
+index 9ae0cf4..0acd266 100644
+--- a/platforms/src/sf_3gx_soc/board_sf_3gx/platform_cnf.c
++++ b/platforms/src/sf_3gx_soc/board_sf_3gx/platform_cnf.c
+@@ -197,8 +197,10 @@ void platform_set_debug_enable(BOOL enable)
+ 
+ void platform_display_init(void)
+ {
++  *((volatile int *)0xe4700a3c) = 0x1c;
+   power_bootsystem_set(POWER_BOOTSYSTEM_DISPLAY_POWER, 1);
+   power_bootsystem_set(POWER_BOOTSYSTEM_DISPLAY_CLOCK, 1);
++  *((volatile int *)0xe4700a3c) = 0x10;
+   power_bootsystem_set(POWER_BOOTSYSTEM_BACKLIGHT, 1);
+   slb_linux_append_cmdline("panelsource=1"); 
+ }

@@ -1,0 +1,78 @@
+diff --git a/libhwcomposer/hwcomposer.cpp b/libhwcomposer/hwcomposer.cpp
+index d13e4a5..ab6972c 100644
+--- a/libhwcomposer/hwcomposer.cpp
++++ b/libhwcomposer/hwcomposer.cpp
+@@ -450,6 +450,48 @@ public:
+ };
+ 
+ /**
++ * The DCC was not designed for big displays and does not support the data
++ * bandwidth required by 2 RGB32 overlays, so we do two layers overlay only
++ * at least one of them is not in small pixel format
++ */
++class TwoLayerConfigurator : public IConfigurator {
++public:
++    TwoLayerConfigurator() : IConfigurator("Two") {}
++    bool configure(hwc_display_contents_1_t* display, LayerConfiguration& conf) {
++        hwc_layer_1_t *l;
++        LayerConfiguration::AddOvResult res;
++        size_t id, last_id;
++
++        if (display->numHwLayers != 3)
++            return false;
++        for (id = 0; id < display->numHwLayers; id++) {
++            l = &display->hwLayers[id];
++            if (l->compositionType == HWC_FRAMEBUFFER_TARGET)
++                continue;
++            private_handle_t const *h = getHandle(l);
++            if (h && to_bpp_hal_fmt(h->fmt) <=
++                    to_bpp_hal_fmt(HAL_PIXEL_FORMAT_RGB_565)) {
++                res = conf.addOverlay(display, id);
++                if (res == LayerConfiguration::ADDOV_RES_OK)
++                    break;
++            }
++        }
++        // No layer is avaiable
++        if (conf.overlay_count == 0)
++            return false;
++        last_id = (id == 0 ? 1 : 0);
++        res = conf.addOverlay(display, last_id);
++        if (res == LayerConfiguration::ADDOV_RES_OK)
++            return true;
++
++        // last chance: add FBT as second overlay,
++        // if this fails we give up this configuration
++        res = conf.addOverlay(display, conf.fbt_index);
++        return res == LayerConfiguration::ADDOV_RES_OK;
++    }
++};
++
++/**
+  * This configurator can render a display that has:
+  * - a video layer (currently identified by the RGB565 format)
+  * - if only another layer is present it is rendered using a second overlay
+@@ -583,7 +625,7 @@ class Updater {
+     };
+ 
+     enum {
+-        HWC_COMPOSITOR_NUM = 3
++        HWC_COMPOSITOR_NUM = 4
+     };
+ 
+ public:
+@@ -602,6 +644,7 @@ public:
+     IConfigurator compNull;
+     VideoOverlayConfigurator compVideo;
+     SingleLayerConfigurator compSL;
++    TwoLayerConfigurator compTwo;
+     GenOverlayConfigurator compGen;
+ 
+     // post-processor, used to adapt buffers to a format suitable to DCC
+@@ -634,6 +677,7 @@ public:
+ 
+         configurators[0] = &compSL;
+         configurators[1] = &compVideo;
++        configurators[2] = &compTwo;
+ //        configurators[2] = &compGen;
+     }
+ 

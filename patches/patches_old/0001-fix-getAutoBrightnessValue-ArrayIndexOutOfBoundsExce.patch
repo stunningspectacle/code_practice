@@ -1,0 +1,41 @@
+From 758e22df2389ee723f66164022ae903fff045324 Mon Sep 17 00:00:00 2001
+From: Leo Yan <leo.yan@intel.com>
+Date: Tue, 10 May 2011 17:51:37 +0800
+Subject: [PATCH] fix getAutoBrightnessValue ArrayIndexOutOfBoundsException
+
+Change-Id: I58f704133ede0dd77fa87e87bd661b04b9718d60
+---
+ core/res/res/values/config.xml |   10 ++++++++++
+ 1 files changed, 10 insertions(+), 0 deletions(-)
+
+diff --git a/core/res/res/values/config.xml b/core/res/res/values/config.xml
+index d1817c4..37d8ef2 100644
+--- a/core/res/res/values/config.xml
++++ b/core/res/res/values/config.xml
+@@ -314,6 +314,11 @@
+          than the size of the config_autoBrightnessLevels array.
+          This must be overridden in platform specific overlays -->
+     <integer-array name="config_autoBrightnessButtonBacklightValues">
++        <item>20</item>
++        <item>80</item>
++        <item>120</item>
++        <item>160</item>
++        <item>250</item>
+     </integer-array>
+ 
+     <!-- Array of output values for keyboard backlight corresponding to the LUX values
+@@ -321,6 +326,11 @@
+          than the size of the config_autoBrightnessLevels array.
+          This must be overridden in platform specific overlays -->
+     <integer-array name="config_autoBrightnessKeyboardBacklightValues">
++        <item>20</item>
++        <item>80</item>
++        <item>120</item>
++        <item>160</item>
++        <item>250</item>
+     </integer-array>
+ 
+     <!-- Amount of time it takes for the light sensor to warm up in milliseconds.
+-- 
+1.7.1
+

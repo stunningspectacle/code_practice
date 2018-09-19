@@ -1,0 +1,521 @@
+From a8eed220be48130c22a69e17948b1fe8a23653ef Mon Sep 17 00:00:00 2001
+From: Henrik Smiding <henrik.smiding@intel.com>
+Date: Tue, 12 Aug 2014 18:47:33 +0200
+Subject: [PATCH 06/12] Implement SkSetPixels16/32 functions
+
+Implements a new set of functions to set 16/32-bit pixel values.
+It's similar to the existing memset16/32 functions, with the addition of a
+fourth parameter which specifies the total number of pixels that will be set.
+This allows us to use non temporal writes, that bypasses the CPU caches, for
+operations that would otherwise flood the cache over and over again.
+The existing unused memset16/32 functions in skia were modified to use these
+non temporal 'streaming' write ops.
+
+The new functions were initially implemented in the SkDraw::drawPaint function,
+when using xfermodes. This improves performance in Fps2D benchmark.
+
+Change-Id: Ia6bf0eb6405b182a9422696e8560182e9b3ddf78
+Old-Change-ID: I0760e87c49fe89d67617cb69d9a424382299ab17
+Ori-Change-ID: If91f556f2d0d6c1bab5625afcb9a7de718d6fbd8
+Orig-Change-Id: I11f621066452826f0bbad01c4836123cd67d1d48
+Category: aosp improvement
+Domain: AOSP-Others
+Origin: internal
+Upstream-Candidate: yes
+Tracked-On: https://jira01.devtools.intel.com/browse/CTEAN-1950
+Orig-Tracked-On: https://jira01.devtools.intel.com/browse/IMINAN-2473
+Signed-off-by: Joakim Landberg <joakim.landberg@intel.com>
+Old-Reviewed-on: https://android.intel.com:443/374226
+Signed-off-by: Xinyun Liu <xinyun.liu@intel.com>
+---
+ include/core/SkUtils.h         |   34 +++++++++
+ src/core/SkDraw.cpp            |   21 +++---
+ src/core/SkUtils.cpp           |   26 +++++++
+ src/opts/SkCacheConfig_x86.h   |   24 ++++++
+ src/opts/SkUtils_opts_SSE2.cpp |  162 +++++++++++++++++++++++++++++-----------
+ src/opts/SkUtils_opts_SSE2.h   |    8 +-
+ src/opts/SkUtils_opts_arm.cpp  |   20 +++++
+ src/opts/SkUtils_opts_none.cpp |    8 ++
+ src/opts/opts_check_x86.cpp    |   12 ++-
+ 9 files changed, 255 insertions(+), 60 deletions(-)
+ create mode 100644 src/opts/SkCacheConfig_x86.h
+
+diff --git a/include/core/SkUtils.h b/include/core/SkUtils.h
+index d522ae0..9eabcb0 100644
+--- a/include/core/SkUtils.h
++++ b/include/core/SkUtils.h
+@@ -41,6 +41,40 @@ SkMemcpy32Proc SkMemcpy32GetPlatformProc();
+ 
+ ///////////////////////////////////////////////////////////////////////////////
+ 
++/** Similar to memset(), but it assigns a 16bit value into the buffer.
++    @param buffer     The memory to have value copied into it
++    @param value      The 16bit value to be copied into buffer
++    @param count      The number of times value should be copied into the buffer.
++    @param totalCount The total number of times value will be copied into the buffer.
++                      This is used to indicate the total size of all the operations
++                      called in a loop.
++*/
++void sk_set_pixels16_portable(uint16_t dst[], uint16_t value, int count, int totalCount);
++typedef void (*SkSetPixels16Proc)(uint16_t dst[], uint16_t value, int count, int totalCount);
++SkSetPixels16Proc SkSetPixels16GetPlatformProc();
++
++/** Similar to memset(), but it assigns a 32bit value into the buffer.
++    @param buffer     The memory to have value copied into it
++    @param value      The 32bit value to be copied into buffer
++    @param count      The number of times value should be copied into the buffer.
++    @param totalCount The total number of times value will be copied into the buffer.
++                      This is used to indicate the total size of all the operations
++                      called in a loop.
++*/
++void sk_set_pixels32_portable(uint32_t dst[], uint32_t value, int count, int totalCount);
++typedef void (*SkSetPixels32Proc)(uint32_t dst[], uint32_t value, int count, int totalCount);
++SkSetPixels32Proc SkSetPixels32GetPlatformProc();
++
++#ifndef SkSetPixels16
++extern SkSetPixels16Proc SkSetPixels16;
++#endif
++
++#ifndef SkSetPixels32
++extern SkSetPixels32Proc SkSetPixels32;
++#endif
++
++///////////////////////////////////////////////////////////////////////////////
++
+ #define kMaxBytesInUTF8Sequence     4
+ 
+ #ifdef SK_DEBUG
+diff --git a/src/core/SkDraw.cpp b/src/core/SkDraw.cpp
+index 4a121b7..16ec807 100644
+--- a/src/core/SkDraw.cpp
++++ b/src/core/SkDraw.cpp
+@@ -131,23 +131,23 @@ bool SkDraw::computeConservativeLocalClipBounds(SkRect* localBounds) const {
+ 
+ ///////////////////////////////////////////////////////////////////////////////
+ 
+-typedef void (*BitmapXferProc)(void* pixels, size_t bytes, uint32_t data);
++typedef void (*BitmapXferProc)(void* pixels, size_t bytes, uint32_t data, size_t totalBytes);
+ 
+-static void D_Clear_BitmapXferProc(void* pixels, size_t bytes, uint32_t) {
++static void D_Clear_BitmapXferProc(void* pixels, size_t bytes, uint32_t, size_t) {
+     sk_bzero(pixels, bytes);
+ }
+ 
+-static void D_Dst_BitmapXferProc(void*, size_t, uint32_t data) {}
++static void D_Dst_BitmapXferProc(void*, size_t, uint32_t, size_t) {}
+ 
+-static void D32_Src_BitmapXferProc(void* pixels, size_t bytes, uint32_t data) {
+-    sk_memset32((uint32_t*)pixels, data, SkToInt(bytes >> 2));
++static void D32_Src_BitmapXferProc(void* pixels, size_t bytes, uint32_t data, size_t totalBytes) {
++    SkSetPixels32((uint32_t*)pixels, data, bytes >> 2, totalBytes >> 2);
+ }
+ 
+-static void D16_Src_BitmapXferProc(void* pixels, size_t bytes, uint32_t data) {
+-    sk_memset16((uint16_t*)pixels, data, SkToInt(bytes >> 1));
++static void D16_Src_BitmapXferProc(void* pixels, size_t bytes, uint32_t data, size_t totalBytes) {
++    SkSetPixels16((uint16_t*)pixels, data, bytes >> 1, totalBytes >> 1);
+ }
+ 
+-static void DA8_Src_BitmapXferProc(void* pixels, size_t bytes, uint32_t data) {
++static void DA8_Src_BitmapXferProc(void* pixels, size_t bytes, uint32_t data, size_t) {
+     memset(pixels, data, bytes);
+ }
+ 
+@@ -241,14 +241,15 @@ static void CallBitmapXferProc(const SkBitmap& bitmap, const SkIRect& rect,
+     SkASSERT(pixels);
+     const size_t rowBytes = bitmap.rowBytes();
+     const int widthBytes = rect.width() << shiftPerPixel;
++    const int totalBytes = widthBytes * rect.height();
+ 
+     // skip down to the first scanline and X position mupp
+     pixels += rect.fTop * rowBytes + (rect.fLeft << shiftPerPixel);
+     if ((rect.left() == 0) && (rowBytes == (size_t) widthBytes)) {
+-        proc(pixels, widthBytes * rect.height(), procData);
++        proc(pixels, totalBytes, procData, totalBytes);
+     } else {
+         for (int scans = rect.height() - 1; scans >= 0; --scans) {
+-            proc(pixels, widthBytes, procData);
++            proc(pixels, widthBytes, procData, totalBytes);
+             pixels += rowBytes;
+         }
+     }
+diff --git a/src/core/SkUtils.cpp b/src/core/SkUtils.cpp
+index eff718b..7339422 100644
+--- a/src/core/SkUtils.cpp
++++ b/src/core/SkUtils.cpp
+@@ -151,6 +151,32 @@ void sk_memcpy32(uint32_t dst[], const uint32_t src[], int count) {
+ 
+ ///////////////////////////////////////////////////////////////////////////////
+ 
++void sk_set_pixels16_portable(uint16_t dst[], uint16_t value, int count, int) {
++    sk_memset16_portable(dst, value, count);
++}
++
++void sk_set_pixels32_portable(uint32_t dst[], uint32_t value, int count, int) {
++    sk_memset32_portable(dst, value, count);
++}
++
++static void sk_set_pixels16_stub(uint16_t dst[], uint16_t value, int count, int totalCount) {
++    SkSetPixels16Proc proc = SkSetPixels16GetPlatformProc();
++    SkSetPixels16 = proc ? proc : sk_set_pixels16_portable;
++    SkSetPixels16(dst, value, count, totalCount);
++}
++
++SkSetPixels16Proc SkSetPixels16 = sk_set_pixels16_stub;
++
++static void sk_set_pixels32_stub(uint32_t dst[], uint32_t value, int count, int totalCount) {
++    SkSetPixels32Proc proc = SkSetPixels32GetPlatformProc();
++    SkSetPixels32 = proc ? proc : sk_set_pixels32_portable;
++    SkSetPixels32(dst, value, count, totalCount);
++}
++
++SkSetPixels32Proc SkSetPixels32 = sk_set_pixels32_stub;
++
++///////////////////////////////////////////////////////////////////////////////
++
+ /*  0xxxxxxx    1 total
+     10xxxxxx    // never a leading byte
+     110xxxxx    2 total
+diff --git a/src/opts/SkCacheConfig_x86.h b/src/opts/SkCacheConfig_x86.h
+new file mode 100644
+index 0000000..8ea5be2
+--- /dev/null
++++ b/src/opts/SkCacheConfig_x86.h
+@@ -0,0 +1,24 @@
++/*
++ * Copyright 2014 The Android Open Source Project
++ *
++ * Use of this source code is governed by a BSD-style license that can be
++ * found in the LICENSE file.
++ */
++
++#ifndef SkCacheConfig_x86_DEFINED
++#define SkCacheConfig_x86_DEFINED
++
++#if defined(__slm__)
++/* Values are optimized for Silvermont */
++#define SHARED_CACHE_SIZE   (1024*1024)         /* Silvermont L2 Cache */
++#define DATA_CACHE_SIZE     (24*1024)           /* Silvermont L1 Data Cache */
++#else
++/* Values are optimized for Atom */
++#define SHARED_CACHE_SIZE   (512*1024)          /* Atom L2 Cache */
++#define DATA_CACHE_SIZE     (24*1024)           /* Atom L1 Data Cache */
++#endif
++
++#define SHARED_CACHE_SIZE_HALF  (SHARED_CACHE_SIZE / 2)
++#define DATA_CACHE_SIZE_HALF    (DATA_CACHE_SIZE / 2)
++
++#endif
+diff --git a/src/opts/SkUtils_opts_SSE2.cpp b/src/opts/SkUtils_opts_SSE2.cpp
+index 698f5d3..13f5bf7 100644
+--- a/src/opts/SkUtils_opts_SSE2.cpp
++++ b/src/opts/SkUtils_opts_SSE2.cpp
+@@ -8,84 +8,158 @@
+ #include <emmintrin.h>
+ #include "SkUtils_opts_SSE2.h"
+ #include "cutils/memory.h"
++#include "SkCacheConfig_x86.h"
+ 
+-void sk_memset16_libcutils(uint16_t *dst, uint16_t value, int count)
++
++static void SkNonTemporalMemset16_SSE2(uint16_t *dst, uint16_t value, int count)
++{
++    while (((size_t)dst) & 0x0F) {
++        *dst++ = value;
++        --count;
++    }
++
++    __m128i *d = reinterpret_cast<__m128i*>(dst);
++    __m128i value_wide = _mm_set1_epi16(value);
++    count -= 31;
++    do {
++        _mm_stream_si128(d    , value_wide);
++        _mm_stream_si128(d + 1, value_wide);
++        _mm_stream_si128(d + 2, value_wide);
++        _mm_stream_si128(d + 3, value_wide);
++        d += 4;
++        count -= 32;
++    } while (count > 0);
++
++    count += 24;
++    while (count > 0) {
++        _mm_stream_si128(d, value_wide);
++        d++;
++        count -= 8;
++    }
++
++    dst = reinterpret_cast<uint16_t*>(d);
++    count += 7;
++    while (count > 0) {
++        *dst++ = value;
++        --count;
++    }
++}
++
++static void SkNonTemporalMemset32_SSE2(uint32_t *dst, uint32_t value, int count)
++{
++    while (((size_t)dst) & 0x0F) {
++        *dst++ = value;
++        --count;
++    }
++
++    __m128i *d = reinterpret_cast<__m128i*>(dst);
++    __m128i value_wide = _mm_set1_epi32(value);
++    count -= 15;
++    do {
++        _mm_stream_si128(d    , value_wide);
++        _mm_stream_si128(d + 1, value_wide);
++        _mm_stream_si128(d + 2, value_wide);
++        _mm_stream_si128(d + 3, value_wide);
++        d += 4;
++        count -= 16;
++    } while (count > 0);
++
++    count += 12;
++    while (count > 0) {
++        _mm_stream_si128(d, value_wide);
++        d++;
++        count -= 4;
++    }
++
++    dst = reinterpret_cast<uint32_t*>(d);
++    count += 3;
++    while (count > 0) {
++        *dst++ = value;
++        --count;
++    }
++}
++
++void SkMemset16_x86(uint16_t *dst, uint16_t value, int count)
+ {
+     SkASSERT(dst != NULL && count >= 0);
+ 
+     // dst must be 2-byte aligned.
+     SkASSERT((((size_t) dst) & 0x01) == 0);
+ 
+-    android_memset16(dst, value, count << 1);
++    /* Check the size of the operation. If it's more than half the L2 cache
++     * we use a local function with non temporal stores, otherwise we use
++     * the assembly optimized version in libcutils.
++     */
++    if (count > (SHARED_CACHE_SIZE_HALF >> 1))
++    {
++        SkNonTemporalMemset16_SSE2(dst, value, count);
++    }
++    else
++    {
++        android_memset16(dst, value, count << 1);
++    }
+ }
+ 
+-void sk_memset32_libcutils(uint32_t *dst, uint32_t value, int count)
++void SkMemset32_x86(uint32_t *dst, uint32_t value, int count)
+ {
+     SkASSERT(dst != NULL && count >= 0);
+ 
+     // dst must be 4-byte aligned.
+     SkASSERT((((size_t) dst) & 0x03) == 0);
+ 
+-    android_memset32(dst, value, count << 2);
++    /* Check the size of the operation. If it's more than half the L2 cache
++     * we use a local function with non temporal stores, otherwise we use
++     * the assembly optimized version in libcutils.
++     */
++    if (count > (SHARED_CACHE_SIZE_HALF >> 2))
++    {
++        SkNonTemporalMemset32_SSE2(dst, value, count);
++    }
++    else
++    {
++        android_memset32(dst, value, count << 2);
++    }
+ }
+ 
+-void sk_memset16_SSE2(uint16_t *dst, uint16_t value, int count)
++void SkSetPixels16_x86(uint16_t *dst, uint16_t value, int count, int totalCount)
+ {
+     SkASSERT(dst != NULL && count >= 0);
+ 
+     // dst must be 2-byte aligned.
+     SkASSERT((((size_t) dst) & 0x01) == 0);
+ 
+-    if (count >= 32) {
+-        while (((size_t)dst) & 0x0F) {
+-            *dst++ = value;
+-            --count;
+-        }
+-        __m128i *d = reinterpret_cast<__m128i*>(dst);
+-        __m128i value_wide = _mm_set1_epi16(value);
+-        while (count >= 32) {
+-            _mm_store_si128(d    , value_wide);
+-            _mm_store_si128(d + 1, value_wide);
+-            _mm_store_si128(d + 2, value_wide);
+-            _mm_store_si128(d + 3, value_wide);
+-            d += 4;
+-            count -= 32;
+-        }
+-        dst = reinterpret_cast<uint16_t*>(d);
++    /* Check the total size of the operation. If it's more than half the
++     * L2 cache we use a local function with non temporal stores, otherwise
++     * we use the assembly optimized version in libcutils.
++     */
++    if ((totalCount > (SHARED_CACHE_SIZE_HALF >> 1)) && (count >= 39))
++    {
++        SkNonTemporalMemset16_SSE2(dst, value, count);
+     }
+-    while (count > 0) {
+-        *dst++ = value;
+-        --count;
++    else
++    {
++        android_memset16(dst, value, count << 1);
+     }
+ }
+ 
+-void sk_memset32_SSE2(uint32_t *dst, uint32_t value, int count)
++void SkSetPixels32_x86(uint32_t *dst, uint32_t value, int count, int totalCount)
+ {
+     SkASSERT(dst != NULL && count >= 0);
+ 
+     // dst must be 4-byte aligned.
+     SkASSERT((((size_t) dst) & 0x03) == 0);
+ 
+-    if (count >= 16) {
+-        while (((size_t)dst) & 0x0F) {
+-            *dst++ = value;
+-            --count;
+-        }
+-        __m128i *d = reinterpret_cast<__m128i*>(dst);
+-        __m128i value_wide = _mm_set1_epi32(value);
+-        while (count >= 16) {
+-            _mm_store_si128(d    , value_wide);
+-            _mm_store_si128(d + 1, value_wide);
+-            _mm_store_si128(d + 2, value_wide);
+-            _mm_store_si128(d + 3, value_wide);
+-            d += 4;
+-            count -= 16;
+-        }
+-        dst = reinterpret_cast<uint32_t*>(d);
++    /* Check the total size of the operation. If it's more than half the
++     * L2 cache we use a local function with non temporal stores, otherwise
++     * we use the assembly optimized version in libcutils.
++     */
++    if ((totalCount > (SHARED_CACHE_SIZE_HALF >> 2)) && (count >= 19))
++    {
++        SkNonTemporalMemset32_SSE2(dst, value, count);
+     }
+-    while (count > 0) {
+-        *dst++ = value;
+-        --count;
++    else
++    {
++        android_memset32(dst, value, count << 2);
+     }
+ }
+ 
+diff --git a/src/opts/SkUtils_opts_SSE2.h b/src/opts/SkUtils_opts_SSE2.h
+index 8af47bc..6bf34b1 100644
+--- a/src/opts/SkUtils_opts_SSE2.h
++++ b/src/opts/SkUtils_opts_SSE2.h
+@@ -10,10 +10,10 @@
+ 
+ #include "SkTypes.h"
+ 
+-void sk_memset16_libcutils(uint16_t *dst, uint16_t value, int count);
+-void sk_memset32_libcutils(uint32_t *dst, uint32_t value, int count);
+-void sk_memset16_SSE2(uint16_t *dst, uint16_t value, int count);
+-void sk_memset32_SSE2(uint32_t *dst, uint32_t value, int count);
+ void sk_memcpy32_SSE2(uint32_t *dst, const uint32_t *src, int count);
++void SkMemset16_x86(uint16_t *dst, uint16_t value, int count);
++void SkMemset32_x86(uint32_t *dst, uint32_t value, int count);
++void SkSetPixels16_x86(uint16_t *dst, uint16_t value, int count, int totalCount);
++void SkSetPixels32_x86(uint32_t *dst, uint32_t value, int count, int totalCount);
+ 
+ #endif
+diff --git a/src/opts/SkUtils_opts_arm.cpp b/src/opts/SkUtils_opts_arm.cpp
+index b1c9d0a..3e25bbc 100644
+--- a/src/opts/SkUtils_opts_arm.cpp
++++ b/src/opts/SkUtils_opts_arm.cpp
+@@ -52,6 +52,26 @@ SkMemset32Proc SkMemset32GetPlatformProc() {
+ #endif
+ }
+ 
++void sk_set_pixels16_arm(uint32_t dst[], uint32_t value, int count, int totalCount)
++{
++    // Ignore totalCount since ARM doesn't support it yet.
++    sk_memset16(dst, value, count);
++}
++
++void sk_set_pixels32_arm(uint32_t dst[], uint32_t value, int count, int totalCount)
++{
++    // Ignore totalCount since ARM doesn't support it yet.
++    sk_memset32(dst, value, count);
++}
++
++SkSetPixels16Proc SkSetPixels16GetPlatformProc() {
++    return sk_set_pixels16_arm;
++}
++
++SkSetPixels32Proc SkSetPixels32GetPlatformProc() {
++    return sk_set_pixels32_arm;
++}
++
+ SkMemcpy32Proc SkMemcpy32GetPlatformProc() {
+     return NULL;
+ }
+diff --git a/src/opts/SkUtils_opts_none.cpp b/src/opts/SkUtils_opts_none.cpp
+index 18f5249..cd3fc7e 100644
+--- a/src/opts/SkUtils_opts_none.cpp
++++ b/src/opts/SkUtils_opts_none.cpp
+@@ -18,5 +18,13 @@ SkMemset32Proc SkMemset32GetPlatformProc() {
+ }
+ 
+ SkMemcpy32Proc SkMemcpy32GetPlatformProc() {
++   return NULL;
++}
++
++SkSetPixels16Proc SkSetPixels16GetPlatformProc() {
++    return NULL;
++}
++
++SkSetPixels32Proc SkSetPixels32GetPlatformProc() {
+     return NULL;
+ }
+diff --git a/src/opts/opts_check_x86.cpp b/src/opts/opts_check_x86.cpp
+index 1604b6a..8a06f9c 100644
+--- a/src/opts/opts_check_x86.cpp
++++ b/src/opts/opts_check_x86.cpp
+@@ -276,7 +276,7 @@ SkBlitMask::RowProc SkBlitMask::PlatformRowProcs(SkColorType, SkMask::Format, Ro
+ 
+ SkMemset16Proc SkMemset16GetPlatformProc() {
+     if (supports_simd(SK_CPU_SSE_LEVEL_SSE2)) {
+-        return sk_memset16_libcutils;
++        return SkMemset16_x86;
+     } else {
+         return NULL;
+     }
+@@ -284,12 +284,20 @@ SkMemset16Proc SkMemset16GetPlatformProc() {
+ 
+ SkMemset32Proc SkMemset32GetPlatformProc() {
+     if (supports_simd(SK_CPU_SSE_LEVEL_SSE2)) {
+-        return sk_memset32_libcutils;
++        return SkMemset32_x86;
+     } else {
+         return NULL;
+     }
+ }
+ 
++SkSetPixels16Proc SkSetPixels16GetPlatformProc() {
++    return SkSetPixels16_x86;
++}
++
++SkSetPixels32Proc SkSetPixels32GetPlatformProc() {
++    return SkSetPixels32_x86;
++}
++
+ SkMemcpy32Proc SkMemcpy32GetPlatformProc() {
+     if (supports_simd(SK_CPU_SSE_LEVEL_SSE2)) {
+         return sk_memcpy32_SSE2;
+-- 
+1.7.9.5
+

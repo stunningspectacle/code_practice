@@ -1,0 +1,32 @@
+From 246998c8ca4e2a0eb235cb9294697f51aaf706f9 Mon Sep 17 00:00:00 2001
+From: Xiaolin Zhang <xiaolin.zhang@intel.com>
+Date: Thu, 23 Apr 2015 09:58:24 +0800
+Subject: [PATCH] cif isp: correct to patch  add stack dump when it is in
+ invalid state.
+
+due to typo (it should be MP path check) to correct it.
+
+Change-Id: Id617537b83f28bba475f6fd7999449e076e8fbb0
+Tracked-On: https://jira01.devtools.intel.com/browse/CTEAN-958
+Signed-off-by: Xiaolin Zhang <xiaolin.zhang@intel.com>
+Reviewed-on: https://android.intel.com:443/357803
+---
+ drivers/media/platform/xgold/cif_isp20.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/media/platform/xgold/cif_isp20.c b/drivers/media/platform/xgold/cif_isp20.c
+index 66cf4c9..650df68 100644
+--- a/drivers/media/platform/xgold/cif_isp20.c
++++ b/drivers/media/platform/xgold/cif_isp20.c
+@@ -3448,7 +3448,7 @@ static void cif_isp20_mi_update_buff_addr(
+ 		if (dev->config.mi_config.mp.next_buff_addr ==
+ 			CIF_ISP20_INVALID_BUFF_ADDR) {
+ 			if (cif_ioread32(dev->config.base_addr + CIF_MI_CTRL)
+-			    & CIF_MI_CTRL_SP_ENABLE)
++			    & CIF_MI_CTRL_MP_ENABLE)
+ 				BUG();
+ 			return 0;
+ 		}
+-- 
+1.7.9.5
+

@@ -1,0 +1,13 @@
+diff --git a/driver/src/shared/binary_shader/bs_symbol.c b/driver/src/shared/binary_shader/bs_symbol.c
+index 29a465f..4476224 100644
+--- a/driver/src/shared/binary_shader/bs_symbol.c
++++ b/driver/src/shared/binary_shader/bs_symbol.c
+@@ -333,7 +333,7 @@ MALI_STATIC struct bs_symbol *recursive_lookup_symbol(struct bs_symbol_table *ta
+ 		for (i = 0; i < table->member_count; i++)
+ 		{
+ 			/* some symbols MAY be NULL - skip them*/
+-			if (table->members[i] == NULL)
++			if (table->members[i] == NULL || table->members[i]->name == NULL)
+ 			{
+ 				continue;
+ 			}

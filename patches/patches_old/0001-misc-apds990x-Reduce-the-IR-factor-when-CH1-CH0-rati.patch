@@ -1,0 +1,76 @@
+From 22bdbb59e108c52d323d2d7ccdd6df76b0d69621 Mon Sep 17 00:00:00 2001
+From: Leo Yan <leo.yan@intel.com>
+Date: Thu, 26 Apr 2012 08:54:36 +0800
+Subject: [PATCH] misc/apds990x: Reduce the IR factor when CH1/CH0 ratio is abnormal
+
+BZ: 31055 31056
+
+The lux equation in the apds990x datasheet assume the light source
+is far from the sensor and CH1/CH0 ratio is always below than 0.3.
+If the ratio is out of range, it means an abnormal incandescent light
+source is very close to the sensor. In this case, the lux equation
+doesn't work and we need to reduce the IR factor to get the correct
+lux value.
+
+Change-Id: I59b967bf775fbb3a46591728952688811c6347eb
+Signed-off-by: Leo Yan <leo.yan@intel.com>
+---
+ drivers/misc/apds990x.c |   26 ++++++++++++++++++++++++++
+ 1 files changed, 26 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/misc/apds990x.c b/drivers/misc/apds990x.c
+index 4515409..a49f270 100644
+--- a/drivers/misc/apds990x.c
++++ b/drivers/misc/apds990x.c
+@@ -3,8 +3,10 @@
+  * Chip is combined proximity and ambient light sensor.
+  *
+  * Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies).
++ * Copyright (C) 2012 Intel Corporation
+  *
+  * Contact: Samu Onkalo <samu.p.onkalo@nokia.com>
++ * Contact: Leo Yan <leo.yan@intel.com>
+  *
+  * This program is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU General Public License
+@@ -115,6 +117,8 @@
+ #define APDS_PDIODE_IR	       0x2
+ 
+ #define APDS990X_LUX_OUTPUT_SCALE 10
++#define APDS990X_CH1_CH0_ABN_RATIO 1229
++#define APDS990X_CH1_CH0_MAX_RATIO 2253
+ 
+ #define APDS_POWER_DOWN        (0)
+ #define APDS_POWER_ON          (1)
+@@ -462,6 +466,28 @@ static int apds990x_get_lux(struct apds990x_chip *chip, int clear, int ir)
+ {
+ 	int iac, iac1, iac2; /* IR adjusted counts */
+ 	u32 lpc; /* Lux per count */
++	int ratio, irfactor;
++
++	if (clear == 0)
++		return 0;
++	/* If CH1/CH0 > 0.3 that means an abnormal incandescent light source
++	 * is detected and is very close to the sensor, we need to reduce the
++	 * IR factor to get the correct lux value
++	 * Formulas:
++	 * ratio = CH1/CH0
++	 * IR Factor = 1 - (6/11 * ratio) when 0.3 < ratio < 0.55
++	 * IR Factor = 0 when ratio >= 0.55
++	 */
++	ratio = (ir * APDS_PARAM_SCALE) / clear;
++	if (ratio > APDS990X_CH1_CH0_ABN_RATIO) {
++		if (ratio >= APDS990X_CH1_CH0_MAX_RATIO)
++			irfactor = 0;
++		else
++			irfactor = APDS_PARAM_SCALE - 6 * ratio / 11;
++
++		ir = ir * irfactor / APDS_PARAM_SCALE;
++		chip->lux_ir = ir;
++	}
+ 
+ 	/* Formulas:
+ 	 * iac1 = CF1 * CLEAR_CH - IRF1 * IR_CH
+-- 
+1.7.1
+

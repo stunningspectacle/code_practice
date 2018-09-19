@@ -1,0 +1,26 @@
+diff --git a/Sf3gr_mrd_n1/device.mk b/Sf3gr_mrd_n1/device.mk
+index 47f1b34..264ee26 100755
+--- a/Sf3gr_mrd_n1/device.mk
++++ b/Sf3gr_mrd_n1/device.mk
+@@ -295,7 +295,7 @@ PRODUCT_PROPERTY_OVERRIDES += \
+         persist.sys.media.use-awesome=true \
+         debug.hwui.render_dirty_regions=false \
+         sys.hwc.compose_policy=6 \
+-        sys.hwc.enable=0
++        sys.hwc.enable=1
+ 
+ # These are the hardware-specific features
+ PRODUCT_COPY_FILES += \
+diff --git a/Sf3gr_mrd_n1/overlay/frameworks/base/core/res/res/values/config.xml b/Sf3gr_mrd_n1/overlay/frameworks/base/core/res/res/values/config.xml
+index d67a0e7..2a2a570 100755
+--- a/Sf3gr_mrd_n1/overlay/frameworks/base/core/res/res/values/config.xml
++++ b/Sf3gr_mrd_n1/overlay/frameworks/base/core/res/res/values/config.xml
+@@ -135,7 +135,7 @@
+ 
+     <!-- Whether a software navigation bar should be shown. NOTE: in the future this may be
+          autodetected from the Configuration. -->
+-    <bool name="config_showNavigationBar">true</bool>
++    <bool name="config_showNavigationBar">false</bool>
+ 
+     <!-- Network Location Provider, add provider from gms package -->
+     <string-array name="config_locationProviderPackageNames" translatable="false">

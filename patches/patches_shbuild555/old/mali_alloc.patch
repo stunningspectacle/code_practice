@@ -1,0 +1,12 @@
+diff --git a/drivers/gpu/arm/midgard/mali_kbase_mem_alloc.c b/drivers/gpu/arm/midgard/mali_kbase_mem_alloc.c
+index 8ffa739..a937ed3 100644
+--- a/drivers/gpu/arm/midgard/mali_kbase_mem_alloc.c
++++ b/drivers/gpu/arm/midgard/mali_kbase_mem_alloc.c
+@@ -325,6 +325,7 @@ mali_error kbase_mem_allocator_alloc(struct kbase_mem_allocator *allocator, size
+ #else
+ 	gfp = GFP_HIGHUSER;
+ #endif
++	gfp = GFP_USER;
+ 
+ 	if (current->flags & PF_KTHREAD) {
+ 		/* Don't trigger OOM killer from kernel threads, e.g. when

@@ -1,0 +1,76 @@
+From df67b2ff023b980d75189a3edd4351574ed194e5 Mon Sep 17 00:00:00 2001
+From: Leo Yan <leo.yan@intel.com>
+Date: Fri, 28 Nov 2014 15:02:18 +0800
+Subject: [PATCH] [display]: Change the permission of display sysfs nodes
+
+BZ: 340
+
+Change the permission of display sysfs nodes to comply with CTS test.
+
+Change-Id: I668437eef28cd12ee24af001baa793d4edf1867e
+Signed-off-by: Leo Yan <leo.yan@intel.com>
+---
+ drivers/video/xgold/dcc-sysfs.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/video/xgold/dcc-sysfs.c b/drivers/video/xgold/dcc-sysfs.c
+index 3999e34..07c2708 100644
+--- a/drivers/video/xgold/dcc-sysfs.c
++++ b/drivers/video/xgold/dcc-sysfs.c
+@@ -118,7 +118,7 @@ static ssize_t dcc_sys_frame_update_number_store(struct device *dev,
+ 	return count;
+ }
+ 
+-static DEVICE_ATTR(frame_update_number, 0666, dcc_sys_frame_update_number_show,
++static DEVICE_ATTR(frame_update_number, 0660, dcc_sys_frame_update_number_show,
+ 			 dcc_sys_frame_update_number_store);
+ 
+ 
+@@ -147,7 +147,7 @@ static ssize_t dcc_sys_dif_rate_store(struct device *dev,
+ 	return count;
+ }
+ 
+-static DEVICE_ATTR(dif_rate, 0666, dcc_sys_dif_rate_show,
++static DEVICE_ATTR(dif_rate, 0660, dcc_sys_dif_rate_show,
+ 			 dcc_sys_dif_rate_store);
+ 
+ static ssize_t dcc_sys_display_power_store(struct device *dev,
+@@ -211,7 +211,7 @@ static ssize_t dcc_sys_##_name_##_store(struct device *dev, \
+ 	return count; \
+ } \
+ \
+-static DEVICE_ATTR(_name_, 0666, dcc_sys_##_name_##_show, \
++static DEVICE_ATTR(_name_, 0660, dcc_sys_##_name_##_show, \
+ 			 dcc_sys_##_name_##_store);
+ 
+ #define DCC_SYSFS_GET_SET_LLVAL(_name_, _var_) \
+@@ -234,7 +234,7 @@ static ssize_t dcc_sys_##_name_##_store(struct device *dev, \
+ 	return count; \
+ } \
+ \
+-static DEVICE_ATTR(_name_, 0666, dcc_sys_##_name_##_show, \
++static DEVICE_ATTR(_name_, 0660, dcc_sys_##_name_##_show, \
+ 			 dcc_sys_##_name_##_store);
+ 
+ 
+@@ -281,7 +281,7 @@ static ssize_t dcc_sys_enable_store(struct device *dev,
+ 
+ 	return count;
+ }
+-static DEVICE_ATTR(enable, 0666, dcc_sys_enable_show, dcc_sys_enable_store);
++static DEVICE_ATTR(enable, 0660, dcc_sys_enable_show, dcc_sys_enable_store);
+ 
+ 
+ static struct device_attribute *dcc_attrs[] = {
+@@ -336,7 +336,7 @@ static ssize_t dcc_sys_##_name_##_store(struct kobject *kobj, \
+ 	return count; \
+ } \
+ \
+-KOBJ_ATTR(_name_, 0666, \
++KOBJ_ATTR(_name_, 0660, \
+ 		dcc_sys_##_name_##_show, dcc_sys_##_name_##_store)
+ 
+ 
+-- 
+1.7.9.5
+

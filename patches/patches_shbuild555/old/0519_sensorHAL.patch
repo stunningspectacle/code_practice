@@ -1,0 +1,177 @@
+diff --git a/scalability/MiscSensor.cpp b/scalability/MiscSensor.cpp
+index e14f859..cc9cb56 100644
+--- a/scalability/MiscSensor.cpp
++++ b/scalability/MiscSensor.cpp
+@@ -50,6 +50,8 @@ int MiscSensor::hardwareSet(bool activated)
+                                      __FUNCTION__, __LINE__, device.getName(), ret);
+                                 return -1;
+                         }
++			LOGE("%s line:%d %s real active hardware sensor! %d",
++                                     __FUNCTION__, __LINE__, device.getName(), ret);
+                         state.setActivated(true);
+                         if (DriverCalibration != NULL)
+                                 DriverCalibration(&event, CALIBRATION_DATA, data.driverCalibrationFile.c_str(), data.driverCalibrationInterface.c_str());
+diff --git a/scalability/PSHCommonSensor.cpp b/scalability/PSHCommonSensor.cpp
+index 6d7395f..fcbe484 100644
+--- a/scalability/PSHCommonSensor.cpp
++++ b/scalability/PSHCommonSensor.cpp
+@@ -26,6 +26,7 @@ int PSHCommonSensor::hardwareSet(bool activated)
+ {
+         int dataRate = state.getDataRate();
+ 
++	LOGE("%s: 00000 dataRate=%d", __func__, dataRate);
+         if (!activated) {
+                 state.setActivated(activated);
+                 error_t err = methods.psh_stop_streaming(sensorHandle);
+@@ -42,6 +43,7 @@ int PSHCommonSensor::hardwareSet(bool activated)
+                         return -1;
+                 }
+                 if (!state.getActivated()) {
++			LOGE("%s: 00000000000", __func__);
+                         /* Some PSH session need to set property */
+                         if (!SensorHubHelper::setPSHPropertyIfNeeded(device.getType(), methods, sensorHandle)) {
+                                 LOGE("Set property failed for sensor type %d", device.getType());
+@@ -60,6 +62,8 @@ int PSHCommonSensor::hardwareSet(bool activated)
+                 state.setActivated(activated);
+                 state.setDataRate(dataRate);
+         }
++        LOGE("%s: xxxxxxx name:%s handle:%x dataRate:%d flag:%d",
++                __func__, device.getName(), sensorHandle, dataRate, flag);
+ 
+         return 0;
+ }
+@@ -70,11 +74,15 @@ int PSHCommonSensor::batch(int handle, int flags, int64_t period_ns, int64_t tim
+         static int oldDataRate = -1;
+         static int oldBufferDelay = -1;
+         static streaming_flag oldFlag;
++
++        LOGE("%s: xxxxxxxxx handle=%d, flags=%d, period_ns=%lld, timeout=%lld, minDelay=%d",
++                __func__, handle, flags, period_ns, timeout,  device.getMinDelay() / US_TO_MS);
+         if (timeout == 0) {
+                 if (!(flags & SENSORS_BATCH_DRY_RUN))
+-                        setDelay(handle, period_ns);
++                        setDelay(handle, period_ns + 1);
+                 return 0;
+         }
++        LOGE("%s: xxxxxxxxx Should not be here!!!!!!!!!!!!!", __func__);
+ 
+         if (device.getMinDelay() == 0) {
+                 return -EINVAL;
+@@ -118,12 +126,13 @@ int PSHCommonSensor::batch(int handle, int flags, int64_t period_ns, int64_t tim
+ }
+ 
+ int PSHCommonSensor::activate(int handle, int enabled) {
++        LOGE("%s: xxxxxxxxx %d", __func__, enabled);
+         if (methods.psh_start_streaming == NULL || methods.psh_stop_streaming == NULL || sensorHandle == NULL) {
+                 LOGE("psh_start_streaming/psh_stop_streaming/sensorHandle not initialized!");
+                 return -1;
+         }
+ 
+-        if(enabled == 0) {
++        if (enabled == 0) {
+                 if (state.getActivated())
+                         return hardwareSet(false);
+                 return 0;
+@@ -154,9 +163,13 @@ int PSHCommonSensor::setDelay(int handle, int64_t period_ns) {
+                 dataRate = 1;
+ 
+         if (state.getActivated() && dataRate != state.getDataRate()) {
++		LOGE("sensor-setDelay: 00000 handle=%d, period_ns=%lld, delay=%d, minDelay=%d, dataRate=%d",
++				handle, period_ns, delay, minDelay, dataRate);
+                 state.setDataRate(dataRate);
+                 return hardwareSet(true);
+         }
++	LOGE("sensor-setDelay: 11111 handle=%d, period_ns=%lld, delay=%d, minDelay=%d, dataRate=%d",
++			handle, period_ns, delay, minDelay, dataRate);
+         state.setDataRate(dataRate);
+ 
+         return 0;
+@@ -181,6 +194,8 @@ int PSHCommonSensor::getData(std::queue<sensors_event_t> &eventQue) {
+                          */
+                         eventQue.push(metaEvent);
+                         state.setFlushSuccess(false);
++			LOGE("%s: 11111111111111111111111111111 handle=%d i=%d, count=%d",
++					__func__, device.getHandle());
+                 } else {
+                         if (device.getType() == SENSOR_TYPE_STEP_COUNTER) {
+                                 event.u64.step_counter = sensorhubEvent[i].step_counter;
+diff --git a/scalability/PSHSensor.cpp b/scalability/PSHSensor.cpp
+index 6cfdf82..7e1f856 100644
+--- a/scalability/PSHSensor.cpp
++++ b/scalability/PSHSensor.cpp
+@@ -146,6 +146,7 @@ int PSHSensor::flush(int handle)
+ {
+         error_t err;
+ 
++	LOGI("%s: 0000000000000000, handle=%d", __func__, handle);
+         if (handle != device.getHandle()) {
+                 LOGE("%s: line: %d: %s handle not match! handle: %d required handle: %d",
+                      __FUNCTION__, __LINE__, device.getName(), device.getHandle(), handle);
+@@ -164,5 +165,6 @@ int PSHSensor::flush(int handle)
+ 
+         err = methods.psh_flush_streaming(sensorHandle, SensorHubHelper::getUnitSize(device.getType()));
+ 
++	LOGI("%s: 1111111111111111, handle=%d, err=%d", __func__, handle, err);
+         return err == ERROR_NONE ? 0 : -EINVAL;
+ }
+diff --git a/scalability/Sensor.hpp b/scalability/Sensor.hpp
+index 101b2ab..8f1e3f5 100644
+--- a/scalability/Sensor.hpp
++++ b/scalability/Sensor.hpp
+@@ -27,8 +27,8 @@ protected:
+                         activated = false;
+                         batchModeEnabled = false;
+                         flushSuccess = false;
+-                        dataRate = 5;
+-                        delay = 200;
++                        dataRate = 0;
++                        delay = 0;
+                 }
+                 bool getActivated() { return activated; }
+                 void setActivated(bool new_activated) {  activated = new_activated; }
+diff --git a/scalability/SensorHAL.cpp b/scalability/SensorHAL.cpp
+index 86c70b6..6f05765 100644
+--- a/scalability/SensorHAL.cpp
++++ b/scalability/SensorHAL.cpp
+@@ -241,7 +241,8 @@ int sensorPoll(struct sensors_poll_device_t *dev, sensors_event_t* data, int cou
+                         if (mModule.pollfds[i].revents & POLLIN)
+                                 mModule.sensors[i]->getData(eventQue);
+                         else if (mModule.pollfds[i].revents != 0)
+-                                LOGE("%s: line: %d poll error: %d fd: %d type: %d", __FUNCTION__, __LINE__, mModule.pollfds[i].revents, mModule.pollfds[i].fd, mModule.sensors[i]->getDevice().getType());
++                                LOGE("%s: line: %d poll error: %d fd: %d type: %d",
++						__FUNCTION__, __LINE__, mModule.pollfds[i].revents, mModule.pollfds[i].fd, mModule.sensors[i]->getDevice().getType());
+                         mModule.pollfds[i].revents = 0;
+                 }
+         }
+diff --git a/scalability/SensorHubHelper.cpp b/scalability/SensorHubHelper.cpp
+index 9e090f5..b858a5c 100644
+--- a/scalability/SensorHubHelper.cpp
++++ b/scalability/SensorHubHelper.cpp
+@@ -337,9 +337,14 @@ ssize_t SensorHubHelper::readSensorhubEvents(int fd, struct sensorhub_event_t* e
+ 
+         size_t unitSize = getUnitSize(sensorType);
+         size_t streamSize = unitSize * count;
++	//static int64_t accel_time = 0;
++	//int64_t current_time = getTimestamp();
+         byte* stream = new byte[streamSize];
+ 
+         streamSize = read(fd, reinterpret_cast<void *>(stream), streamSize);
++	if (steamSize < 0) {
++		LOGE("%s: stream size error: %d, %s", __func__, errno, strerror(errno));
++	}
+ 
+         if (streamSize % unitSize != 0) {
+                 LOGE("%s line: %d: invalid stream size: type: %d size: %d",
+@@ -357,6 +362,12 @@ ssize_t SensorHubHelper::readSensorhubEvents(int fd, struct sensorhub_event_t* e
+                         events[i].data[2] = (reinterpret_cast<struct accel_data*>(stream))[i].z;
+                         events[i].accuracy = getVectorStatus(sensorType);
+                         events[i].timestamp = (reinterpret_cast<struct accel_data*>(stream))[i].ts;
++			/*
++			LOGE("%s line: %d: Accel data: x=%d y=%d z=%d", __func__, __LINE__, 
++					events[i].data[0], 
++					events[i].data[1], 
++					events[i].data[2]);
++			*/
+                 }
+                 break;
+         case SENSOR_TYPE_MAGNETIC_FIELD_UNCALIBRATED:

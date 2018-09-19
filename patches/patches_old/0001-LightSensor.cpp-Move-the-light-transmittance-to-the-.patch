@@ -1,0 +1,53 @@
+From 094a9ea287d49c2b5e83857a914c681e53985c4c Mon Sep 17 00:00:00 2001
+From: Leo Yan <leo.yan@intel.com>
+Date: Mon, 9 Jul 2012 18:45:50 +0800
+Subject: [PATCH] LightSensor.cpp: Move the light transmittance to the driver
+
+BZ: 43871
+
+Since the light transmittance affects the device's interrupt
+threshold setting and ADC-LUX conversion,  we need to move it to
+the driver.
+
+Change-Id: I840bf4a77bce3b98688ae7e2ce529fd9338b9e15
+Signed-off-by: Leo Yan <leo.yan@intel.com>
+---
+ ctp_pr0/LightSensor.cpp |    3 +--
+ ctp_pr0/LightSensor.h   |    7 -------
+ 2 files changed, 1 insertions(+), 9 deletions(-)
+
+diff --git a/ctp_pr0/LightSensor.cpp b/ctp_pr0/LightSensor.cpp
+index fd11c30..ef2e454 100644
+--- a/ctp_pr0/LightSensor.cpp
++++ b/ctp_pr0/LightSensor.cpp
+@@ -77,8 +77,7 @@ int LightSensor::readEvents(sensors_event_t* data, int count)
+     *data = mPendingEvent;
+     data->timestamp = getTimestamp();
+     read(data_fd, &val, sizeof(unsigned int));
+-    data->light = (float)val /
+-                    (APDS9900_LUX_OUTPUT_SCALE * APDS9900_LIGHT_TRANS);
++    data->light = (float)val;
+     D("LightSensor - read data val = %f ",data->light);
+ 
+     return 1;
+diff --git a/ctp_pr0/LightSensor.h b/ctp_pr0/LightSensor.h
+index c8217db..ca61811 100644
+--- a/ctp_pr0/LightSensor.h
++++ b/ctp_pr0/LightSensor.h
+@@ -26,13 +26,6 @@
+ #include "SensorBase.h"
+ #include "InputEventReader.h"
+ 
+-#define APDS9900_LUX_OUTPUT_SCALE 10.0
+-#ifdef TARGET_MFLD_GI
+-#define APDS9900_LIGHT_TRANS 0.3
+-#else
+-#define APDS9900_LIGHT_TRANS 1
+-#endif
+-
+ /*****************************************************************************/
+ 
+ struct input_event;
+-- 
+1.7.0.4
+

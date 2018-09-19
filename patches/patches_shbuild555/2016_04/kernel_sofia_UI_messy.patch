@@ -1,0 +1,24 @@
+diff --git a/arch/x86/boot/dts/SF_3GX-mrd_n1.dts b/arch/x86/boot/dts/SF_3GX-mrd_n1.dts
+index 7f3bf60..ab26189 100644
+--- a/arch/x86/boot/dts/SF_3GX-mrd_n1.dts
++++ b/arch/x86/boot/dts/SF_3GX-mrd_n1.dts
+@@ -39,15 +39,16 @@
+ 			reg = <0x0D000000 0x03000000>;
+ 			linux,cma-default;
+ 		};
++
+ 		/* special region for secured processing devices */
+ 		secured_rga_region: region@10000000 {
+ 			compatible = "shared-dma-pool";
+-			reg = <0x10000000 0x01000000>;
+ 			reusable;
++			reg = <0x10000000 0x04000000>;
+ 		};
+-		secured_region: region@11000000 {
++		secured_region: region@14000000 {
+ 			compatible = "shared-dma-pool";
+-			reg = <0x11000000 0x05000000>;
++			reg = <0x14000000 0x05000000>;
+ 			reusable;
+ 		};
+ 	};

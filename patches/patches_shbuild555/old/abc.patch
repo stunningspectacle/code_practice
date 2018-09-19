@@ -1,0 +1,13 @@
+diff --git a/arch/x86/kernel/pci-dma.c b/arch/x86/kernel/pci-dma.c
+index 542594c..a7d2c56 100644
+--- a/arch/x86/kernel/pci-dma.c
++++ b/arch/x86/kernel/pci-dma.c
+@@ -148,6 +148,8 @@ again:
+ 	if (!page)
+ 		page = alloc_pages_node(dev_to_node(dev), flag,
+ 				get_order(size));
++	if (size >= 512)
++		pr_info("loooong: big alloc %d\n", size);
+ 
+ #ifdef CONFIG_SOFIA_LOWMEM_DEV
+ 	if (!page && !retried && (flag & __GFP_WAIT)) {

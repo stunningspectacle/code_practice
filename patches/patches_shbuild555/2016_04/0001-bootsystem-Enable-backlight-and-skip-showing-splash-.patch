@@ -1,0 +1,61 @@
+From 16c380511bd1d950aaf8baf4a719e0e19a72ce7e Mon Sep 17 00:00:00 2001
+From: Leo Yan <leo.yan@intel.com>
+Date: Thu, 24 Mar 2016 10:58:21 +0800
+Subject: [PATCH] bootsystem: Enable backlight and skip showing splash image
+
+Change-Id: I847c6991b50bd8e3f47c014a03a41d4a0e227fe1
+Signed-off-by: Leo Yan <leo.yan@intel.com>
+Tracked-On:
+---
+ applications/slb/src/slb_main.c                    |    9 +++++++++
+ drivers/display/src/display_img_drv.c              |    1 +
+ .../src/sf_3gx_soc/board_sf_3gx/platform_power.c   |    1 +
+ 3 files changed, 11 insertions(+)
+
+diff --git a/applications/slb/src/slb_main.c b/applications/slb/src/slb_main.c
+index 23f98fd..e822703 100644
+--- a/applications/slb/src/slb_main.c
++++ b/applications/slb/src/slb_main.c
+@@ -73,6 +73,15 @@ int main(void)
+   strcpy(board_name, "sf_board_name=");
+   strcpy(board_name+strlen("sf_board_name="), sf_3gx_get_board_name());
+   slb_linux_append_cmdline(board_name); 
++
++  extern unsigned int g_cgu_dcc_clk_rate;
++  g_cgu_dcc_clk_rate = 297000000;
++
++  *((volatile int *)0xe4700a3c) = 0x1c;
++  power_bootsystem_set(POWER_BOOTSYSTEM_DISPLAY_POWER, 1);
++  power_bootsystem_set(POWER_BOOTSYSTEM_DISPLAY_CLOCK, 1);
++  *((volatile int *)0xe4700a3c) = 0x10;
++  power_bootsystem_set(POWER_BOOTSYSTEM_BACKLIGHT, 1);
+ #endif
+ 
+   /* If charger plug in, we start charging, charger detection inside below power function */
+diff --git a/drivers/display/src/display_img_drv.c b/drivers/display/src/display_img_drv.c
+index 59ad1f2..0bf9277 100644
+--- a/drivers/display/src/display_img_drv.c
++++ b/drivers/display/src/display_img_drv.c
+@@ -40,6 +40,7 @@ T_ENUM_DISPLAY_DRV_RETURN_TYPE display_drv_show_image(T_ENUM_SELECT_IMG img)
+   U32 img_size;
+   U8 *img_buf;
+ 
++    return DISPLAY_DRV_RETURN_TYPE_OK;
+   display_drv_platform_init();
+ 
+   if(img == SELECT_IMG_NO_DSIPLAY)
+diff --git a/platforms/src/sf_3gx_soc/board_sf_3gx/platform_power.c b/platforms/src/sf_3gx_soc/board_sf_3gx/platform_power.c
+index cc74060..0e20756 100644
+--- a/platforms/src/sf_3gx_soc/board_sf_3gx/platform_power.c
++++ b/platforms/src/sf_3gx_soc/board_sf_3gx/platform_power.c
+@@ -118,6 +118,7 @@ BOOL platform_power_disable_display_phy_isolation(void)
+ 
+ BOOL platform_power_set_backlight(U32 value)
+ {
++  pmu_bootcore_enable_backlight();
+   return TRUE;
+ }
+ 
+-- 
+1.7.9.5
+

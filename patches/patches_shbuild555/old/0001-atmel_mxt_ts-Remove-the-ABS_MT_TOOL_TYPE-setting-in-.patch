@@ -1,0 +1,36 @@
+From 6a8e51fcd8abb36de95d4b60f76802dd81cd678f Mon Sep 17 00:00:00 2001
+From: Leo Yan <leo.yan@intel.com>
+Date: Thu, 10 Apr 2014 14:23:35 +0800
+Subject: [PATCH] atmel_mxt_ts: Remove the ABS_MT_TOOL_TYPE setting in input
+ device
+
+BZ: 185974
+
+If we set the max value of ABS_MT_TOOL_TYPE parameter of the touch
+input device to 1, some app may expect the input hardware as stylus
+rather than touch screen, and don't response to touch screen event.
+
+Change-Id: I43c1b2e151b06572c7fa5607a8766bfa3ea2087a
+Signed-off-by: Leo Yan <leo.yan@intel.com>
+---
+ input/touchscreen/atmel_mxt_ts.c |    3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/input/touchscreen/atmel_mxt_ts.c b/input/touchscreen/atmel_mxt_ts.c
+index bfb0c11..f55a229 100644
+--- a/input/touchscreen/atmel_mxt_ts.c
++++ b/input/touchscreen/atmel_mxt_ts.c
+@@ -2571,7 +2571,10 @@ static int mxt_initialize_t100_input_device(struct mxt_data *data)
+ 		goto err_free_mem;
+ 	}
+ 
++#if SUPPORT_STYLUS
+ 	input_set_abs_params(input_dev, ABS_MT_TOOL_TYPE, 0, MT_TOOL_MAX, 0, 0);
++#endif
++
+ 	input_set_abs_params(input_dev, ABS_MT_POSITION_X,
+ 			     0, data->max_x, 0, 0);
+ 	input_set_abs_params(input_dev, ABS_MT_POSITION_Y,
+-- 
+1.7.9.5
+

@@ -1,0 +1,29 @@
+From 994a4a75b7f636fe8a34fe9551b80163c8bbe4d1 Mon Sep 17 00:00:00 2001
+From: Atul Vaish <atul.vaish@intel.com>
+Date: Mon, 22 Jun 2015 18:43:32 +0530
+Subject: [PATCH 1/2] EAPSIM item added in menu
+
+Signed-off-by: Atul Vaish <atul.vaish@intel.com>
+Tracked-On: https://jira01.devtools.intel.com/browse/CTEAN-2425
+---
+ res/values/arrays.xml |    4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/res/values/arrays.xml b/res/values/arrays.xml
+index 3f5fdf8..df29d6c 100755
+--- a/res/values/arrays.xml
++++ b/res/values/arrays.xml
+@@ -316,6 +316,10 @@
+         <item>TTLS</item>
+         <!-- Do not translate. -->
+         <item>PWD</item>
++        <!-- Do not translate. -->
++        <item>SIM</item>
++        <!-- Do not translate. -->
++        <item>AKA</item>
+     </string-array>
+ 
+    <!-- Wi-Fi WPS setup for p2p connections.  -->
+-- 
+1.7.9.5
+

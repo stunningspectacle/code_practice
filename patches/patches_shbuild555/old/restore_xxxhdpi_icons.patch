@@ -1,0 +1,18 @@
+commit 8efa01d0e9c281a474203d4f38f9cb502e01d598
+Author: Yu Ping Hu <yph@google.com>
+Date:   Tue Mar 25 09:13:32 2014 -0700
+
+    Restore xxxhdpi icons.
+    
+    Bug: 13653397
+    Change-Id: I4c7e6336ef0a354bf4dc2ecefd129110fb2f974f
+    (cherry picked from commit faaec9f4e1c50d08c1050db3a2969452d536a13f)
+
+diff --git a/res/mipmap-xxxhdpi/ic_launcher_mail.png b/res/mipmap-xxxhdpi/ic_launcher_mail.png
+new file mode 100644
+index 0000000..262e5d5
+Binary files /dev/null and b/res/mipmap-xxxhdpi/ic_launcher_mail.png differ
+diff --git a/res/mipmap-xxxhdpi/ic_launcher_shortcut_folder.png b/res/mipmap-xxxhdpi/ic_launcher_shortcut_folder.png
+new file mode 100644
+index 0000000..262e5d5
+Binary files /dev/null and b/res/mipmap-xxxhdpi/ic_launcher_shortcut_folder.png differ

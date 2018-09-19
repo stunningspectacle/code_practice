@@ -1,0 +1,126 @@
+From 900e6f070a76bc9eed7a9921232d5e89621489bd Mon Sep 17 00:00:00 2001
+From: Leo Yan <leo.yan@intel.com>
+Date: Wed, 7 Jan 2015 09:54:52 +0800
+Subject: [PATCH 6/6] [10/22]HWC: feed PP out of hwc geometry check
+
+Change-Id: I3d8010a5086a201bbd9c4b94ae9a0dd1dc5bf1d1
+Tracked-On: https://jira01.devtools.intel.com/browse/IMINAN-17187
+Signed-off-by: Yan Leo <leo.yan@intel.com>
+---
+ libhwcomposer/hwcomposer.cpp |   55 ++++++++++++++++++++++++++++++------------
+ 1 file changed, 39 insertions(+), 16 deletions(-)
+
+diff --git a/libhwcomposer/hwcomposer.cpp b/libhwcomposer/hwcomposer.cpp
+index 1138469..d13e4a5 100644
+--- a/libhwcomposer/hwcomposer.cpp
++++ b/libhwcomposer/hwcomposer.cpp
+@@ -269,7 +269,8 @@ public:
+         memset(fbLastHandle, 0, HWC_MAX_LAYER_NUM*sizeof(buffer_handle_t));
+         fbt_enabled = false;
+         ppLayerIndex = HWC_OVERLAY_INVALID;
+-        // find the composition target buffer
++        // find the composition target buffer and reset
++        // all HWC_OVERLAY back to be HWC_FRAMEBUFFER
+         for (size_t i = 0; i < display->numHwLayers; i++) {
+             if (display->hwLayers[i].compositionType
+                     == HWC_FRAMEBUFFER_TARGET) {
+@@ -278,6 +279,10 @@ public:
+                 back = &display->hwLayers[i];
+                 backIndex = fbt_index;
+             }
++
++            if (display->hwLayers[i].compositionType == HWC_OVERLAY) {
++                display->hwLayers[i].compositionType = HWC_FRAMEBUFFER;
++            }
+         }
+         for (size_t i = 0; i < HWC_OVERLAY_NUM; i++) {
+             // do not delete the override layers
+@@ -658,18 +663,6 @@ public:
+             }
+         }
+ 
+-        // setup layer post-processing if needed
+-        if (conf.ppLayerIndex != HWC_OVERLAY_INVALID) {
+-            if (activatePP()) {
+-                feedPP(conf);
+-            } else {
+-                ALOGE("Can not activate PP4HWC: fall back to OpenGL (configurator was %s)", conf.configuratorName);
+-                conf.reset(display);
+-            }
+-        } else {
+-            deactivatePP();
+-        }
+-
+         // logging
+         configure_count++;
+         ALOGV("cnf@%5d (lc=%d oc=%d overlays fbt=%d)", configure_count,
+@@ -706,6 +699,25 @@ public:
+         }
+     }
+ 
++    /*
++     * update(): called in every circle of prepare to update layer
++     * non-geometry changes, like layer handle, crops info, etc.
++     */
++    void update(hwc_display_contents_1_t* display) {
++
++        // setup layer post-processing if needed
++        if (conf.ppLayerIndex != HWC_OVERLAY_INVALID) {
++            if (activatePP()) {
++                feedPP(conf);
++            } else {
++                ALOGE("Can not activate PP4HWC: fall back to OpenGL (configurator was %s)", conf.configuratorName);
++                conf.reset(display);
++            }
++        } else {
++            deactivatePP();
++        }
++    }
++
+     void setupSmartComposition(hwc_display_contents_1_t* display) {
+          int compositionType = HWC_OVERLAY;
+ 
+@@ -796,6 +808,14 @@ public:
+             }
+         }
+ 
++        for (size_t i = 0; i < conf.overlay_count; i++) {
++            hwc_layer_1_t * layer = overlays[i];
++            if (layer->acquireFenceFd >= 0) {
++                close(layer->acquireFenceFd);
++                layer->acquireFenceFd = -1;
++            }
++        }
++
+         if (conf.back && conf.back->acquireFenceFd >= 0) {
+             close(back->acquireFenceFd);
+             back->acquireFenceFd = -1;
+@@ -867,8 +887,10 @@ public:
+             // might not match the layer config anymore
+             conf.overrides[0] = vl;
+             // close the original acquire fence (the VPP holds a duplicate)
+-            if (conf.overlays[0]->acquireFenceFd >= 0)
++            if (conf.overlays[0]->acquireFenceFd >= 0) {
+                 close(conf.overlays[0]->acquireFenceFd);
++                conf.overlays[0]->acquireFenceFd = -1;
++            }
+         }
+     }
+ 
+@@ -995,10 +1017,11 @@ static int hwc_prepare(hwc_composer_device_1_t *dev,
+     if (displays[0]->flags & HWC_GEOMETRY_CHANGED) {
+         ctxt->dcc_updater.configure(displays[0]);
+         ctxt->dcc_updater.apply(displays[0]);
+-    } else {
+-        ctxt->dcc_updater.setupSmartComposition(displays[0]);
+     }
+ 
++    ctxt->dcc_updater.update(displays[0]);
++    ctxt->dcc_updater.setupSmartComposition(displays[0]);
++
+     return 0;
+ }
+ 
+-- 
+1.7.9.5
+

@@ -1,0 +1,273 @@
+From 10722249e97c09ad0f034e7835b3147cb2e30c1f Mon Sep 17 00:00:00 2001
+From: Lei Li <lei.l.li@intel.com>
+Date: Fri, 31 Oct 2014 15:16:30 +0100
+Subject: [PATCH 02/12] Add optimization of S32_opaque_D32_nofilter_DX.
+
+Adds an optimized version of S32_opaque_D32_nofilter_DX
+using SSE2 SIMD instruction set.
+
+Change-Id: I430815a2ca53777fa2f31b20925719aade76a9e4
+Old-Change-ID: I0ef7310df5852660584f1de09c45b712f58ffa36
+Ori-Change-ID: I5d1473aeb658176e27f8e057e61b468d84dd1387
+Orig-Change-Id: Iff842e33d600a8be5c90f4ede814625a40a1d4fc
+Category: aosp improvement
+Domain: AOSP-Others
+Origin: internal
+Upstream-Candidate: yes
+Tracked-On: https://jira01.devtools.intel.com/browse/CTEAN-1950
+Orig-Tracked-On: https://jira01.devtools.intel.com/browse/IMINAN-2473
+Signed-off-by: Joakim Landberg <joakim.landberg@intel.com>
+Old-Reviewed-on: https://android.intel.com:443/374222
+Signed-off-by: Xinyun Liu <xinyun.liu@intel.com>
+---
+ Android.mk                                 |    1 +
+ src/core/SkBitmapProcState.h               |    2 +
+ src/opts/SkBitmapProcState_opts_SSE2.cpp   |   49 ++++++++++++
+ src/opts/SkBitmapProcState_opts_SSE2.h     |    6 +-
+ src/opts/SkBitmapProcState_opts_SSE2_asm.S |  114 ++++++++++++++++++++++++++++
+ src/opts/opts_check_x86.cpp                |    4 +
+ 6 files changed, 175 insertions(+), 1 deletion(-)
+ create mode 100644 src/opts/SkBitmapProcState_opts_SSE2_asm.S
+
+diff --git a/Android.mk b/Android.mk
+index f8db9e8..74d3dd6 100644
+--- a/Android.mk
++++ b/Android.mk
+@@ -617,6 +617,7 @@ LOCAL_CFLAGS_x86 += \
+ LOCAL_SRC_FILES_x86 += \
+ 	src/opts/opts_check_x86.cpp \
+ 	src/opts/SkBitmapProcState_opts_SSE2.cpp \
++	src/opts/SkBitmapProcState_opts_SSE2_asm.S \
+ 	src/opts/SkBitmapFilter_opts_SSE2.cpp \
+ 	src/opts/SkBlitRow_opts_SSE2.cpp \
+ 	src/opts/SkBlitRect_opts_SSE2.cpp \
+diff --git a/src/core/SkBitmapProcState.h b/src/core/SkBitmapProcState.h
+index 663bcb8..52649a5 100644
+--- a/src/core/SkBitmapProcState.h
++++ b/src/core/SkBitmapProcState.h
+@@ -222,6 +222,8 @@ void ClampX_ClampY_nofilter_affine(const SkBitmapProcState& s,
+                                    uint32_t xy[], int count, int x, int y);
+ void S32_D16_filter_DX(const SkBitmapProcState& s,
+                        const uint32_t* xy, int count, uint16_t* colors);
++void S32_opaque_D32_nofilter_DX(const SkBitmapProcState& s, const uint32_t xy[],
++                                int count, SkPMColor colors[]);
+ 
+ void highQualityFilter32(const SkBitmapProcState &s, int x, int y,
+                          SkPMColor *SK_RESTRICT colors, int count);
+diff --git a/src/opts/SkBitmapProcState_opts_SSE2.cpp b/src/opts/SkBitmapProcState_opts_SSE2.cpp
+index f1d150c..68feb75 100644
+--- a/src/opts/SkBitmapProcState_opts_SSE2.cpp
++++ b/src/opts/SkBitmapProcState_opts_SSE2.cpp
+@@ -11,6 +11,13 @@
+ #include "SkPaint.h"
+ #include "SkUtils.h"
+ 
++#if !defined(__x86_64__)
++extern "C" void S32_opaque_D32_nofilter_DX_SSE2_asm(const uint32_t* xy,
++                                                    int count,
++                                                    const SkPMColor* srcAddr,
++                                                    uint32_t* colors);
++#endif
++
+ static inline uint32_t ClampX_ClampY_pack_filter(SkFixed f, unsigned max,
+                                                  SkFixed one) {
+     unsigned i = SkClampMax(f >> 16, max);
+@@ -524,3 +531,45 @@ void S32_D16_filter_DX_SSE2(const SkBitmapProcState& s,
+         *colors++ = SkPixel32ToPixel16(dstColor);
+     } while (--count > 0);
+ }
++
++#if !defined(__x86_64__)
++void S32_opaque_D32_nofilter_DX_SSE2(const SkBitmapProcState& s,
++                                     const uint32_t* xy,
++                                     int count, uint32_t* colors) {
++    SkASSERT(count > 0 && colors != NULL);
++    SkASSERT(s.fInvType <= (SkMatrix::kTranslate_Mask | SkMatrix::kScale_Mask));
++    SkASSERT(s.fDoFilter == false);
++    SkASSERT(s.fBitmap->config() == SkBitmap::kARGB_8888_Config);
++    SkASSERT(s.fAlphaScale == 256);
++
++    const SkPMColor* SK_RESTRICT srcAddr =
++        (const SkPMColor*)s.fBitmap->getPixels();
++
++    // buffer is y32, x16, x16, x16, x16, x16
++    // bump srcAddr to the proper row, since we're told Y never changes
++    SkASSERT((unsigned)xy[0] < (unsigned)s.fBitmap->height());
++    srcAddr = (const SkPMColor*)((const char*)srcAddr +
++                                                xy[0] * s.fBitmap->rowBytes());
++    xy += 1;
++
++    SkPMColor src;
++
++    if (1 == s.fBitmap->width()) {
++        src = srcAddr[0];
++        uint32_t dstValue = src;
++        sk_memset32(colors, dstValue, count);
++    } else {
++        int i;
++
++        S32_opaque_D32_nofilter_DX_SSE2_asm(xy, count, srcAddr, colors);
++
++        xy     += 2 * (count >> 2);
++        colors += 4 * (count >> 2);
++        const uint16_t* SK_RESTRICT xx = (const uint16_t*)(xy);
++        for (i = (count & 3); i > 0; --i) {
++            SkASSERT(*xx < (unsigned)s.fBitmap->width());
++            src = srcAddr[*xx++]; *colors++ = src;
++        }
++    }
++}
++#endif
+diff --git a/src/opts/SkBitmapProcState_opts_SSE2.h b/src/opts/SkBitmapProcState_opts_SSE2.h
+index 9e15ade..a61f5eb 100644
+--- a/src/opts/SkBitmapProcState_opts_SSE2.h
++++ b/src/opts/SkBitmapProcState_opts_SSE2.h
+@@ -23,5 +23,9 @@ void ClampX_ClampY_nofilter_affine_SSE2(const SkBitmapProcState& s,
+ void S32_D16_filter_DX_SSE2(const SkBitmapProcState& s,
+                             const uint32_t* xy,
+                             int count, uint16_t* colors);
+-
++#if !defined(__x86_64__)
++void S32_opaque_D32_nofilter_DX_SSE2(const SkBitmapProcState& s,
++                                     const uint32_t* xy,
++                                     int count, uint32_t* colors);
++#endif
+ #endif
+diff --git a/src/opts/SkBitmapProcState_opts_SSE2_asm.S b/src/opts/SkBitmapProcState_opts_SSE2_asm.S
+new file mode 100644
+index 0000000..2dfb814
+--- /dev/null
++++ b/src/opts/SkBitmapProcState_opts_SSE2_asm.S
+@@ -0,0 +1,114 @@
++/*
++ * Copyright 2014 The Android Open Source Project
++ *
++ * Use of this source code is governed by a BSD-style license that can be
++ * found in the LICENSE file.
++ */
++
++
++/*
++ * void S32_opaque_D32_nofilter_DX_SSE2_asm(const uint32_t* xy,
++ *                                        int count,
++ *                                        const SkPMColor* srcAddr,
++ *                                        uint32_t* colors);
++ */
++
++.globl S32_opaque_D32_nofilter_DX_SSE2_asm;
++S32_opaque_D32_nofilter_DX_SSE2_asm:
++
++    push %ebp
++    mov  %esp, %ebp
++    push %esi
++    push %edi
++    push %ebx
++    sub  $0x8, %esp
++
++    mov 0x08(%ebp), %esi           # xy
++    mov 0x0c(%ebp), %ecx           # count
++    mov 0x0c(%ebp), %ecx           # count
++    mov 0x10(%ebp), %edx           # srcAddr
++    mov 0x14(%ebp), %edi           # colors
++
++    sarl $0x2, %ecx                # count / 4
++    test %ecx, %ecx
++    jle nofilter_done
++
++    sall $0x3, %ecx                # terminal value for index
++    movd %ecx, %xmm7
++
++    xor %eax, %eax                 # index = 0
++
++    # prepare for part 1
++    movl (%esi,%eax,1), %ebx
++
++    shr $0x4, %ecx                 # count / 8
++    jc .Lpart1odd
++    jmp .Lpart1even
++
++
++    .align 16
++.Lloop:
++    # part 2
++    movzx %cx, %ebx
++    shr $0x10, %ecx
++    movl (%edx,%ebx,4), %ebx
++    movl (%edx,%ecx,4), %ecx
++    movl %ebx, -0x8(%edi,%eax,2)
++    movl (%esi,%eax,1), %ebx       # prepare for part 1
++    movl %ecx, -0x4(%edi,%eax,2)
++
++.Lpart1even:
++    # part 1
++    movzx %bx, %ecx
++    shr $0x10, %ebx
++    movl (%edx,%ecx,4), %ecx
++    movl (%edx,%ebx,4), %ebx
++    movl %ecx, (%edi,%eax,2)
++    movl 0x4(%esi,%eax,1), %ecx    # prepare for part 2
++    movl %ebx, 0x4(%edi,%eax,2)
++
++    lea 0x8(%eax), %eax
++
++    # part 2
++    movzx %cx, %ebx
++    shr $0x10, %ecx
++    movl (%edx,%ebx,4), %ebx
++    movl (%edx,%ecx,4), %ecx
++    movl %ebx, -0x8(%edi,%eax,2)
++    movl (%esi,%eax,1), %ebx       # prepare for part 1
++    movl %ecx, -0x4(%edi,%eax,2)
++
++.Lpart1odd:
++    # part 1
++    movzx %bx, %ecx
++    shr $0x10, %ebx
++    movl (%edx,%ecx,4), %ecx
++    movl (%edx,%ebx,4), %ebx
++    movl %ecx, (%edi,%eax,2)
++    movl 0x4(%esi,%eax,1), %ecx    # prepare for part 2
++    movl %ebx, 0x4(%edi,%eax,2)
++
++    lea 0x8(%eax), %eax
++
++    movd %xmm7, %ebx
++    sub %eax, %ebx
++
++    jnz .Lloop
++
++
++    # part 2
++    movzx %cx, %ebx
++    shr $0x10, %ecx
++    movl (%edx,%ebx,4), %ebx
++    movl (%edx,%ecx,4), %ecx
++    movl %ebx, -0x8(%edi,%eax,2)
++    movl %ecx, -0x4(%edi,%eax,2)
++
++
++nofilter_done:
++    add  $0x8, %esp
++    pop  %ebx
++    pop  %edi
++    pop  %esi
++    pop  %ebp
++    ret
+diff --git a/src/opts/opts_check_x86.cpp b/src/opts/opts_check_x86.cpp
+index 06e5b4c..21afbad 100644
+--- a/src/opts/opts_check_x86.cpp
++++ b/src/opts/opts_check_x86.cpp
+@@ -145,6 +145,10 @@ void SkBitmapProcState::platformProcs() {
+         if (supports_simd(SK_CPU_SSE_LEVEL_SSSE3)) {
+             fSampleProc32 = S32_alpha_D32_filter_DXDY_SSSE3;
+         }
++    } else if (fSampleProc32 == S32_opaque_D32_nofilter_DX) {
++#if !defined(__x86_64__)
++        fSampleProc32 = S32_opaque_D32_nofilter_DX_SSE2; // Not 64-bit compatible
++#endif
+     }
+ 
+     /* Check fSampleProc16 */
+-- 
+1.7.9.5
+

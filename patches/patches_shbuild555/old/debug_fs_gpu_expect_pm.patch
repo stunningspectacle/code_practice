@@ -1,0 +1,87 @@
+diff --git a/drivers/gpu/arm/midgard/platform/xgold/mali_kbase_platform_debugfs.c b/drivers/gpu/arm/midgard/platform/xgold/mali_kbase_platform_debugfs.c
+index 07ea02e..79b2fc9 100644
+--- a/drivers/gpu/arm/midgard/platform/xgold/mali_kbase_platform_debugfs.c
++++ b/drivers/gpu/arm/midgard/platform/xgold/mali_kbase_platform_debugfs.c
+@@ -104,6 +104,72 @@ static const struct file_operations dev_gpu_dvfs_fops = {
+ 	.write = dev_gpu_dvfs_write,
+ };
+ 
++static ssize_t dev_gpu_pm_state_read(struct file *filp, char __user *ubuf,
++	size_t cnt, loff_t *ppos) {
++	char output_buffer[3];
++	size_t r;
++	struct xgold_platform_context *plf_context;
++	plf_context = (struct xgold_platform_context *) kbdev->platform_context;
++
++	mali_dbg("%s()\n", __func__);
++	r = snprintf(output_buffer, 3, "%u\n", plf_context->resume_pm_state);
++	return simple_read_from_buffer(ubuf, cnt, ppos, output_buffer, r);
++}
++
++static ssize_t dev_gpu_pm_state_write(struct file *filp, const char __user *ubuf,
++	size_t cnt, loff_t *ppos)
++{
++	int ret;
++	char control_buffer[2];
++	unsigned long control_value;
++	struct xgold_platform_context *plf_context;
++	plf_context = (struct xgold_platform_context *) kbdev->platform_context;
++
++	mali_dbg("%s()\n", __func__);
++	/* Copy single character from buffer */
++	if (copy_from_user(control_buffer, ubuf, sizeof(control_buffer)-1))
++		return -EFAULT;
++
++	/* Add trailing zero */
++	control_buffer[sizeof(control_buffer)-1] = '\0';
++
++	/* Convert to unsigned long */
++	ret = kstrtoul(control_buffer, 10, &control_value);
++	if (0 != ret)
++		return ret;
++
++	if (plf_context->dvfs_off == MALI_TRUE && 0 < control_value && control_value <= GPU_MAX_PM_STATE) {
++		mali_dbg("DebugFS - Change GPU power state to %d!\n", control_value);
++
++		mutex_lock(&plf_context->pm_lock_mutex);
++
++		if (plf_context->resume_pm_state != control_value) {
++
++			plf_context->resume_pm_state = control_value;
++
++			ret = kbase_platform_xgold_pm_control(kbdev,
++					control_value);
++			if (ret < 0) {
++				mali_err("%s() ret = %d\n", __func__, ret);
++				mutex_unlock(&plf_context->pm_lock_mutex);
++				return ret;
++			}
++		}
++
++		mutex_unlock(&plf_context->pm_lock_mutex);
++	}
++
++	*ppos += cnt;
++
++	return cnt;
++}
++
++static const struct file_operations dev_gpu_pm_state_fops = {
++	.owner = THIS_MODULE,
++	.read = dev_gpu_pm_state_read,
++	.write = dev_gpu_pm_state_write,
++};
++
+ int platform_debugfs_register(struct kbase_device *p_kbdev)
+ {
+ 	mali_dbg("%s()\n", __func__);
+@@ -119,5 +185,9 @@ int platform_debugfs_register(struct kbase_device *p_kbdev)
+ 		dev_gpu_debugfs_dir, NULL,
+ 		&dev_gpu_dvfs_fops);
+ 
++	debugfs_create_file("expect_pm", 0600,
++		dev_gpu_debugfs_dir, NULL,
++		&dev_gpu_pm_state_fops);
++
+ 	return 0;
+ }

@@ -1,0 +1,32 @@
+From 6d22aea312c852b99443a14f9fb179158f42fcae Mon Sep 17 00:00:00 2001
+From: Leo Yan <leo.yan@intel.com>
+Date: Thu, 17 Apr 2014 09:40:08 +0800
+Subject: [PATCH] synaptics_dsx: Fix a critical Klocwork issue
+
+BZ: 187853
+
+Fix a critical Klocwork issue in Synaptics DSX touch driver.
+
+Change-Id: Iee4c701eb70521563513b2ad9eba89e29969a98c
+Signed-off-by: Leo Yan <leo.yan@intel.com>
+---
+ .../touchscreen/synaptics_dsx/synaptics_dsx_core.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/input/touchscreen/synaptics_dsx/synaptics_dsx_core.c b/input/touchscreen/synaptics_dsx/synaptics_dsx_core.c
+index 5c92ddc..5902336 100644
+--- a/input/touchscreen/synaptics_dsx/synaptics_dsx_core.c
++++ b/input/touchscreen/synaptics_dsx/synaptics_dsx_core.c
+@@ -723,7 +723,8 @@ static int synaptics_rmi4_f12_abs_report(struct synaptics_rmi4_data *rmi4_data,
+ 		}
+ 		finger = (fingers_to_process - 1) % 8; /* Highest bit */
+ 		do {
+-			if (extra_data->data15_data[temp] & (1 << finger))
++			if (temp < 0 ||
++				extra_data->data15_data[temp] & (1 << finger))
+ 				break;
+ 
+ 			if (finger) {
+-- 
+1.7.9.5
+

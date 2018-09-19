@@ -1,0 +1,83 @@
+diff --git a/sofia_lte/configs/memtags.xml b/sofia_lte/configs/memtags.xml
+index 8ef4aac..39b6470 100644
+--- a/sofia_lte/configs/memtags.xml
++++ b/sofia_lte/configs/memtags.xml
+@@ -2,6 +2,7 @@
+       <memtag phyStart="0x00000000" size="0x30400000" virtStart="0x00000000" type="1" flags="0" comment="cacheable mem"/>
+       <memtag phyStart="0x30400000" size="0x00400000" virtStart="0x30400000" type="2" flags="0" comment="Mobilevisor Non-cacheable"/>
+       <memtag phyStart="0x30800000" size="0x0F800000" virtStart="0x30800000" type="1" flags="0" comment="cacheable mem"/>
++      <memtag phyStart="0x40000000" size="0x40000000" virtStart="0x40000000" type="1" flags="0" comment="cacheable mem"/>
+       <memtag phyStart="0xE0000000" size="0x10000000" virtStart="0xE0000000" type="2" flags="0" comment="peripherals"/>
+       <memtag phyStart="0x80000000" size="0x02000000" virtStart="0x80000000" type="2" flags="0" comment="Trace arbitrator FIF0"/>
+       <memtag phyStart="0xFEC00000" size="0x00100000" virtStart="0xFEC00000" type="2" flags="0" comment="IOAPIC"/>
+diff --git a/sofia_lte/configs/memtags_linux.xml b/sofia_lte/configs/memtags_linux.xml
+index daee152..76f0023 100644
+--- a/sofia_lte/configs/memtags_linux.xml
++++ b/sofia_lte/configs/memtags_linux.xml
+@@ -1,5 +1,6 @@
+       <memtags>
+         <memtag phyStart="0x00000000" size="0x2E000000" virtStart="0x00000000" type="1" comment="Linux/Android mem"/>
++        <memtag phyStart="0x40000000" size="0x40000000" virtStart="0x40000000" type="1" comment="Linux/Android mem"/>
+         <memtag phyStart="0x2E000000" size="0x01c00000" virtStart="0x2E000000" type="1" comment="vm shared mem"/>
+         <memtag phyStart="0xE0000000" size="0x10000000" virtStart="0xE0000000" type="2" comment="peripherals"/>
+       </memtags>
+diff --git a/sofia_lte/configs/memtags_modem.xml b/sofia_lte/configs/memtags_modem.xml
+index 33d7715..b288404 100644
+--- a/sofia_lte/configs/memtags_modem.xml
++++ b/sofia_lte/configs/memtags_modem.xml
+@@ -1,5 +1,6 @@
+       <memtags>
+         <memtag phyStart="0x2F000000" size="0x01000000" virtStart="0x2F000000" type="1" comment="Linux + vm shared mem"/>
++        <memtag phyStart="0x40000000" size="0x40000000" virtStart="0x40000000" type="1" comment="Linux"/>
+         <memtag phyStart="0x38000000" size="0x08000000" virtStart="0x38000000" type="1" comment="modem mem"/>
+         <memtag phyStart="0xE0000000" size="0x10000000" virtStart="0xE0000000" type="2" comment="peripherals"/>
+         <memtag phyStart="0xFFF10000" size="0x00010000" virtStart="0xFFF10000" type="1" comment="LMU, open all for now"/>
+diff --git a/sofia_lte/configs/memtags_secvm.xml b/sofia_lte/configs/memtags_secvm.xml
+index 9ebd7e9..863c7d1 100644
+--- a/sofia_lte/configs/memtags_secvm.xml
++++ b/sofia_lte/configs/memtags_secvm.xml
+@@ -1,5 +1,6 @@
+       <memtags>
+         <memtag phyStart="0x00000000" size="0x2F000000" virtStart="0x00000000" type="1" comment="Linux/Android memory"/>
++        <memtag phyStart="0x40000000" size="0x40000000" virtStart="0x40000000" type="1" comment="Linux/Android memory"/>
+         <memtag phyStart="0x2F000000" size="0x01000000" virtStart="0x2F000000" type="1" comment="VMM shared memory"/>
+         <memtag phyStart="0x30800000" size="0x07800000" virtStart="0x30800000" type="1" comment="Secure VM memory"/>
+         <memtag phyStart="0x38000000" size="0x04000000" virtStart="0x40000000" type="1" comment="Modem VM memory"/>
+diff --git a/sofia_lte/configs/module_boot.xml b/sofia_lte/configs/module_boot.xml
+index ac27f37..d26bbf0 100644
+--- a/sofia_lte/configs/module_boot.xml
++++ b/sofia_lte/configs/module_boot.xml
+@@ -16,7 +16,8 @@
+                 E820_NVS        4
+                 E820_UNUSABLE   5 -->
+           <e820 addr="0x00000000" size="0x2E000000" type="1" />
+-          <e820 addr="0x2E000000" size="0xD1FFFFFF" type="2" />
++          <e820 addr="0x2E000000" size="0x11FFFFFF" type="2" />
++          <e820 addr="0x40000000" size="0x40000000" type="1" />
+         </param>
+         <param type="uint32" value="1"          description="proxy certificate to secvm enable/disable"/>
+         <param type="uint32" value="0x37000000" description="proxy certificate to secvm address"/>
+diff --git a/sofia_lte/configs/module_security.xml b/sofia_lte/configs/module_security.xml
+index bf3cefa..84b8dfb 100644
+--- a/sofia_lte/configs/module_security.xml
++++ b/sofia_lte/configs/module_security.xml
+@@ -117,7 +117,7 @@
+ 
+             <!--                            EMIC                       -->
+             <!-- protected range1 40000000 NOC_EMIC_SIZE_1GB Inhibit ALL -->
+-            <param type="uint32" value="0x40000000"  description="noc fw emic reg1 addr"/>
++            <param type="uint32" value="0x80000000"  description="noc fw emic reg1 addr"/>
+             <param type="uint32" value="13"          description="noc fw emic reg1 size type: 13-> NOC_FW_SIZE_TYPE_EMIC_1GB"/>
+             <param type="uint32" value="6"           description="noc fw emic reg1 condition type:6-> NOC_FW_CONDITION_SET_TYPE_INHIBIT_ALL"/>
+             <param type="uint32" value="0"           description="noc fw emic reg1 param1 -> dont care"/>
+diff --git a/sofia_lte/configs/mtrrs.xml b/sofia_lte/configs/mtrrs.xml
+index 33236bf..83d292d 100644
+--- a/sofia_lte/configs/mtrrs.xml
++++ b/sofia_lte/configs/mtrrs.xml
+@@ -1,5 +1,5 @@
+     <mtrrs>
+-      <mtrr start="0x0"        size="0x40000000" memType="0x6" comment="external mem" />
++      <mtrr start="0x0"        size="0x80000000" memType="0x6" comment="external mem" />
+       <!-- actual usage: base 0xFFF00000, size 0x50000 -->
+       <mtrr start="0xFFF00000" size="0x80000"    memType="0x6" comment="LMU"/>
+       <!-- actual usage: base 0xFFFE8000, size 0x18000 -->

@@ -1,0 +1,90 @@
+diff --git a/input/touchscreen/r69001-ts-i2c.c b/input/touchscreen/r69001-ts-i2c.c
+index aa5232d..f3c86a2 100644
+--- a/input/touchscreen/r69001-ts-i2c.c
++++ b/input/touchscreen/r69001-ts-i2c.c
+@@ -119,6 +119,7 @@ struct r69001_ts_data {
+ 	struct i2c_client *client;
+ 	struct input_dev *input_dev;
+ 	struct r69001_ts_finger finger[MAX_FINGERS];
++	struct r69001_ts_finger prev_finger[MAX_FINGERS];
+ 	struct r69001_io_data data;
+ 	struct r69001_ts_before_regs regs;
+ 	struct r69001_platform_data *pdata;
+@@ -199,20 +200,38 @@ static void
+ r69001_ts_report_coordinates_data(struct r69001_ts_data *ts, int filter)
+ {
+ 	struct r69001_ts_finger *finger = ts->finger;
++	struct r69001_ts_finger *prev_finger = ts->prev_finger;
+ 	struct input_dev *input_dev = ts->input_dev;
++	struct i2c_client *client = ts->client;
+ 	unsigned int mask = 0;
++	int delta_x, delta_y, slot;
+ 	u8 i;
+ 
+ 	for (i = 0; i < ts->t_num; i++) {
+ 		if (finger[i].t < TOUCH_ID_MIN || finger[i].t == filter)
+ 			continue;
+ 		finger[i].t -= TOUCH_ID_MIN;
++		mask |= (1 << finger[i].t);
++
++		slot = finger[i].t;
++		delta_x = finger[i].x - prev_finger[slot].x;
++		delta_y = finger[i].y - prev_finger[slot].y;
++		dev_info(&client->dev,
++				"slot=%d, %8d, %8d, %8d, %8d, %8d, %8d, %8d\n",
++				slot, finger[i].x, finger[i].y,
++				prev_finger[slot].x, prev_finger[slot].y,
++				delta_x, delta_y,
++				delta_x * delta_x + delta_y * delta_y);
++		if (delta_x * delta_x + delta_y * delta_y < 25)
++			continue;
++		prev_finger[i].x = finger[i].x;
++		prev_finger[i].y = finger[i].y;
++
+ 		input_mt_slot(input_dev, finger[i].t);
+ 		input_mt_report_slot_state(input_dev, MT_TOOL_FINGER, true);
+ 		input_report_abs(input_dev, ABS_MT_POSITION_X, finger[i].x);
+ 		input_report_abs(input_dev, ABS_MT_POSITION_Y, finger[i].y);
+ 		input_report_abs(input_dev, ABS_MT_PRESSURE, finger[i].z);
+-		mask |= (1 << finger[i].t);
+ 	}
+ 
+ 	/* Get the removed fingers */
+@@ -224,6 +243,8 @@ r69001_ts_report_coordinates_data(struct r69001_ts_data *ts, int filter)
+ 			input_mt_slot(input_dev, i);
+ 			input_mt_report_slot_state(input_dev,
+ 					MT_TOOL_FINGER, false);
++			prev_finger[i].x = 0;
++			prev_finger[i].y = 0;
+ 		}
+ 		ts->finger_mask >>= 1;
+ 	}
+@@ -262,8 +283,6 @@ static int r69001_ts_read_coordinates_data(struct r69001_ts_data *ts)
+ 				((u16)(data[7] & 0xf0) << 4) | (u16)(data[6]);
+ 			finger[i].z = data[8];
+ 			finger[i].t = (data[0] & 0xf0) >> 4;
+-			if (finger[i].t < TOUCH_ID_MIN)
+-				inval_id = true;
+ 
+ 		} else {
+ 			error = r69001_ts_read_data(ts,
+@@ -277,9 +296,9 @@ static int r69001_ts_read_coordinates_data(struct r69001_ts_data *ts)
+ 				((u16)(data[3] & 0xf0) << 4) | (u16)(data[2]);
+ 			finger[i].z = data[4];
+ 			finger[i].t = data[0] & 0x0f;
+-			if (finger[i].t < TOUCH_ID_MIN)
+-				inval_id = true;
+ 		}
++		if (finger[i].t < TOUCH_ID_MIN)
++			inval_id = true;
+ 	}
+ 
+ 	/* Only update the number when there is no error happened */
+@@ -506,6 +525,7 @@ r69001_ts_probe(struct i2c_client *client, const struct i2c_device_id *id)
+ 	struct r69001_platform_data *pdata = client->dev.platform_data;
+ 	int error;
+ 
++	dev_err(&client->dev, "xxxxxxxxxxxxxxx\n");
+ 	if (!i2c_check_functionality(client->adapter, I2C_FUNC_I2C)) {
+ 		dev_err(&client->dev, "Not I2C_FUNC_I2C\n");
+ 		return -EIO;

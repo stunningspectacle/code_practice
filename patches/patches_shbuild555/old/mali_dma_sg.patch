@@ -1,0 +1,113 @@
+diff --git a/drivers/gpu/arm/mali/linux/mali_memory_os_alloc.c b/drivers/gpu/arm/mali/linux/mali_memory_os_alloc.c
+index 00f9974..e04c8e6 100644
+--- a/drivers/gpu/arm/mali/linux/mali_memory_os_alloc.c
++++ b/drivers/gpu/arm/mali/linux/mali_memory_os_alloc.c
+@@ -117,6 +117,82 @@ static void mali_mem_os_free(mali_mem_allocation *descriptor)
+ 	}
+ }
+ 
++static int mali_mem_os_alloc_buffer(mali_mem_allocation *descriptor, u32 size)
++{
++	unsigned int order;
++	struct scatterlist *sglist;
++	int max_pages, err = 0, i = 0;
++	int sglen = 0, alloc_size = 0;
++	struct page *page;
++	gfp_t flags = __GFP_ZERO | __GFP_REPEAT | __GFP_NOWARN | __GFP_COLD;
++
++	flags |= GFP_DMA;
++	max_pages = size >> PAGE_SHIFT;
++	sglist = kcalloc(max_pages, sizeof(*sglist), GFP_KERNEL);
++	if (sglist == NULL) {
++		err = -ENOMEM;
++		goto out;
++	}
++
++	while (size) {
++		order = get_order(size);
++
++		if ((PAGE_SIZE << order) > size)
++			order--;
++		page = alloc_pages(flags, order);
++		while (page == NULL) {
++			order--;
++			page = alloc_pages(flags, order);
++			if (page == NULL && order == 0) {
++				page = alloc_page(flags | __GFP_WAIT);
++				if (page == NULL)
++					err = -ENOMEM;
++					goto error;
++			}
++		}
++		size -= (PAGE_SIZE) << order;
++
++		sg_set_page(&sglist[i++], page, PAGE_SIZE << order, 0);
++		sglen++;
++	}
++
++	err = dma_map_sg(&mali_platform_device->dev, sglist, sglen, DMA_TO_DEVICE);
++	if (err) {
++		MALI_PRINT(("dma_map_sg error, code=%d!\n", err));
++		goto error;
++	}
++
++	for (i = 0; i < sglen; i++) {
++		alloc_size = sg_dma_len(&sglist[i]);
++		page = sg_page(&sglist[i]);
++		dma_addr_t dma_addr = sg_dma_address(&sglist[i]);
++		do {
++			SetPagePrivate(page);
++			set_page_private(page, dma_addr);
++			list_add_tail(&page->lru, &descriptor->os_mem.pages);
++			page++;
++			dma_addr += PAGE_SIZE;
++		} while (alloc_size -= PAGE_SIZE);
++		set_memory_wc((unsigned long)page_address(sg_page(&sglist[i])),
++					alloc_size / PAGE_SIZE);
++	}
++	goto out;
++error:
++	if (sglist) {
++		i = sglen;
++		while (i) {
++			i--;
++			alloc_size = sg_dma_len(&sglist[i]);
++			page = sg_page(&sglist[i]);
++			__free_pages(page, get_order(sg_dma_len(&sglist[i])));
++		}
++	}
++out:
++	if (sglist)
++		kfree(sglist);
++	return err;
++}
++
+ static int mali_mem_os_alloc_pages(mali_mem_allocation *descriptor, u32 size)
+ {
+ 	struct page *new_page, *tmp;
+@@ -153,6 +229,17 @@ static int mali_mem_os_alloc_pages(mali_mem_allocation *descriptor, u32 size)
+ 		list_move_tail(&new_page->lru, &descriptor->os_mem.pages);
+ 	}
+ 
++	int err;
++	if (remaining) {
++		err = mali_mem_os_alloc_buffer(descriptor, remaining << PAGE_SHIFT);
++		if (err) {
++			descriptor->os_mem.count = (page_count - remaining) + i;
++			atomic_add(descriptor->os_mem.count, &mali_mem_os_allocator.allocated_pages);
++			mali_mem_os_free(descriptor);
++			return -ENOMEM;
++		}
++	}
++#if 0
+ 	/* Allocate new pages, if needed. */
+ 	for (i = 0; i < remaining; i++) {
+ 		dma_addr_t dma_addr;
+@@ -211,6 +298,7 @@ static int mali_mem_os_alloc_pages(mali_mem_allocation *descriptor, u32 size)
+ 
+ 		list_add_tail(&new_page->lru, &descriptor->os_mem.pages);
+ 	}
++#endif
+ 
+ 	atomic_add(page_count, &mali_mem_os_allocator.allocated_pages);
+ 

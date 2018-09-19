@@ -1,0 +1,81 @@
+From 6e59004e1c3bb0774e4f4267db9c8db48e8e56d8 Mon Sep 17 00:00:00 2001
+From: "joe,shen" <joe.shen@intel.com>
+Date: Fri, 25 Mar 2016 16:25:24 +0800
+Subject: [PATCH] Revert "leds: leds-pwm: enhance with min-brightness and dec
+ step params" and remove active-low operation
+
+This reverts commit bd54f80155c0f5a61b4995797c9defe637da4cfc.
+
+Change-Id: If762980000520550602c7af27167c2fba58a4276
+---
+ drivers/leds/leds-pwm.c |   23 ++---------------------
+ 1 file changed, 2 insertions(+), 21 deletions(-)
+
+diff --git a/drivers/leds/leds-pwm.c b/drivers/leds/leds-pwm.c
+index 66119f6..b9d57d4 100644
+--- a/drivers/leds/leds-pwm.c
++++ b/drivers/leds/leds-pwm.c
+@@ -24,15 +24,12 @@
+ #include <linux/slab.h>
+ #include <linux/workqueue.h>
+ 
+-#define DUTY_DECREASE_STEP 58
+-
+ struct led_pwm_data {
+ 	struct led_classdev	cdev;
+ 	struct pwm_device	*pwm;
+ 	struct work_struct	work;
+ 	unsigned int		active_low;
+ 	unsigned int		period;
+-	unsigned int		min_brightness;
+ 	int			duty;
+ 	bool			can_sleep;
+ };
+@@ -48,12 +45,8 @@ static void __led_pwm_set(struct led_pwm_data *led_dat)
+ 
+ 	pwm_config(led_dat->pwm, new_duty, led_dat->period);
+ 
+-	if (new_duty == 0) {
+-		pwm_config(led_dat->pwm, new_duty + DUTY_DECREASE_STEP,
+-				led_dat->period);
+-		pwm_config(led_dat->pwm, new_duty, led_dat->period);
++	if (new_duty == 0)
+ 		pwm_disable(led_dat->pwm);
+-	}
+ 	else
+ 		pwm_enable(led_dat->pwm);
+ }
+@@ -72,19 +65,10 @@ static void led_pwm_set(struct led_classdev *led_cdev,
+ 	struct led_pwm_data *led_dat =
+ 		container_of(led_cdev, struct led_pwm_data, cdev);
+ 	unsigned int max = led_dat->cdev.max_brightness;
+-	unsigned int min = led_dat->min_brightness;
+ 	unsigned long long duty =  led_dat->period;
+ 
+-	if ((brightness < min) && (brightness > 0))
+-		duty *= min;
+-	else
+-		duty *= brightness;
+-
++	duty *= brightness;
+ 	do_div(duty, max);
+-
+-	if (led_dat->active_low)
+-		duty = led_dat->period - duty;
+-
+ 	led_dat->duty = duty;
+ 
+ 	if (led_dat->can_sleep)
+@@ -121,9 +105,6 @@ static int led_pwm_add(struct device *dev, struct led_pwm_priv *priv,
+ 	led_data->cdev.brightness = LED_OFF;
+ 	led_data->cdev.max_brightness = led->max_brightness;
+ 	led_data->cdev.flags = LED_CORE_SUSPENDRESUME;
+-	of_property_read_u32(child, "min-brightness",
+-			&led_data->min_brightness);
+-	of_property_read_u32(child, "period", &led_data->period);
+ 
+ 	if (child)
+ 		led_data->pwm = devm_of_pwm_get(dev, child, NULL);
+-- 
+1.7.9.5
+

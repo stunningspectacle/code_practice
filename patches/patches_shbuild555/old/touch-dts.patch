@@ -1,0 +1,50 @@
+diff --git a/arch/x86/boot/dts/Sf3gr_mrd_n1.dts b/arch/x86/boot/dts/Sf3gr_mrd_n1.dts
+index dac3542..c80ed87 100644
+--- a/arch/x86/boot/dts/Sf3gr_mrd_n1.dts
++++ b/arch/x86/boot/dts/Sf3gr_mrd_n1.dts
+@@ -505,6 +505,37 @@
+ 	pinctrl-2 = <&i2c4_inactive_pins>;
+ 
+ #ifndef RECOVERY_KERNEL
++#ifdef CONFIG_CC_TOUCHSCREEN_ICN87XX
++	touchscreen {
++		compatible = "chipone,chipone-icn85xx";
++		reg = < 0x48 >;
++		interrupt-parent = <&eint>;
++		interrupts = < EINT_EXI12 XGOLD_IRQ_TYPE_EDGE_FALLING >;
++		pinctrl-names = "default", "sleep", "inactive";
++		pinctrl-0 = <&touch_default_pins>;
++		pinctrl-1 = <&touch_sleep_pins>;
++		pinctrl-2 = <&touch_inactive_pins>;
++		intel,ts-gpio-reset = <&xgold_pmx_gpio 58 0>;
++		intel,ts-gpio-irq = <&xgold_pmx_gpio 70 0>;
++		intel,x_pos_max = < 720 >;
++		intel,x_pos_min = < 0 >;
++		intel,y_pos_max = < 1280 >;
++		intel,y_pos_min = < 0 >;
++		intel,max-y = < 720 >;
++		intel,max-x = < 1280 >;
++		intel,revert-y = < 0 >;
++		intel,revert-x = < 0 >;
++		intel,key_y = < 1350 >;
++		intel,key_back = < 580 >;
++		intel,key_menu = < 120 >;
++		intel,key_home = < 360 >;
++		pm,class-name = "icn85xx_class";
++		pm,user-name = "tp";
++		pm,state-D0 = "enable";
++		pm,state-D3 = "disable";
++	};
++#else
++
+         touchscreen {
+                 compatible = "goodix,GT9157";
+                 reg = < 0x14 >;
+@@ -522,6 +553,7 @@
+                 pm,state-D3 = "disable";
+         };
+ #endif
++#endif
+ };
+ 
+ &i2c_5 {

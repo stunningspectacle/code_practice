@@ -1,0 +1,293 @@
+diff --git a/arch/Kconfig b/arch/Kconfig
+index 80bbb8c..fca8e3a 100644
+--- a/arch/Kconfig
++++ b/arch/Kconfig
+@@ -1,6 +1,8 @@
+ #
+ # General architecture dependent options
+ #
++config MOST
++        bool "Enable Mobile Storage Analyzer (MOST)"
+ 
+ config OPROFILE
+ 	tristate "OProfile system profiling"
+@@ -213,6 +215,9 @@ config GENERIC_SMP_IDLE_THREAD
+ config GENERIC_IDLE_POLL_SETUP
+        bool
+ 
++config HAVE_DMA_CONTIGUOUS
++       bool
++
+ # Select if arch init_task initializer is different to init/init_task.c
+ config ARCH_INIT_TASK
+        bool
+diff --git a/arch/x86/configs/i386_sofia_defconfig b/arch/x86/configs/i386_sofia_defconfig
+index 221e61a..260cf0d 100644
+--- a/arch/x86/configs/i386_sofia_defconfig
++++ b/arch/x86/configs/i386_sofia_defconfig
+@@ -2604,6 +2604,10 @@ CONFIG_LEDS_LP8557=y
+ # CONFIG_LEDS_BLINKM is not set
+ CONFIG_LCD_LEDS_XGOLD=y
+ 
++#MOST
++CONFIG_MOST=y
++CONFIG_HAVE_DMA_CONTIGUOUS
++
+ #
+ # LED Triggers
+ #
+diff --git a/block/blk-core.c b/block/blk-core.c
+index bfe16d5..16e736a 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -45,6 +45,21 @@ EXPORT_TRACEPOINT_SYMBOL_GPL(block_rq_remap);
+ EXPORT_TRACEPOINT_SYMBOL_GPL(block_bio_complete);
+ EXPORT_TRACEPOINT_SYMBOL_GPL(block_unplug);
+ 
++#ifdef CONFIG_MOST
++#define MOST_TABLE_SIZE 500
++struct blk_req_table
++{
++	pid_t pid;
++	sector_t sector;
++	int count;
++	int temp_file;
++	unsigned char d_iname[40];	/* small names */
++};
++
++struct blk_req_table gblk_req_table[MOST_TABLE_SIZE];
++int gblk_current;
++#endif
++
+ DEFINE_IDA(blk_queue_ida);
+ 
+ /*
+@@ -1906,6 +1921,95 @@ void submit_bio(int rw, struct bio *bio)
+ 				bdevname(bio->bi_bdev, b),
+ 				count);
+ 		}
++
++#ifdef CONFIG_MOST
++		//bdevname(bio->bi_bdev, b);
++		//if(!strncmp(b, "mmcblk1p1", 9))
++		{
++			int tmp_file = 0;
++
++			if(bio && bio->bi_io_vec && bio->bi_io_vec->bv_page && bio->bi_io_vec->bv_page->mapping)
++			{
++				struct inode * inode;
++				struct list_head *next;
++				struct dentry *dentry;
++				unsigned char *name;
++				int len;
++				
++				inode = NULL;
++				next = NULL;
++				dentry = NULL;
++				
++				if(bio->bi_io_vec->bv_page->mapping->host)
++					inode = bio->bi_io_vec->bv_page->mapping->host;
++
++				if(PageAnon( bio->bi_io_vec->bv_page))
++					goto final;
++								
++
++				if(inode && inode->i_ino!=0 && inode->i_dentry.first)
++				{	
++					next = inode->i_dentry.first;
++
++					dentry = list_entry(next, struct dentry, d_alias);
++
++					if(dentry)
++					{
++			
++						len = strlen(dentry->d_iname);
++						
++						strcpy(gblk_req_table[gblk_current].d_iname, dentry->d_iname);
++
++						if(rw & WRITE)
++						{
++							
++							if(dentry->d_iname[len-8]=='-' && dentry->d_iname[len-7]=='j')
++							{
++								//printk("submit_bio : (%s)(%s)\n", current->comm, dentry->d_iname);
++								tmp_file = 100000;
++							}
++							else if(dentry->d_iname[len-12]=='b' && dentry->d_iname[len-11]=='-' && dentry->d_iname[len-10]=='m' && dentry->d_iname[len-9]=='j')
++							{
++								//printk("submit_bio : (%s)(%s)\n", current->comm, dentry->d_iname);
++								tmp_file = 200000;
++							}
++							else if(dentry->d_iname[len-4]=='.' && dentry->d_iname[len-3]=='b' && dentry->d_iname[len-2]=='a' && dentry->d_iname[len-1]=='k')
++							{
++								//printk("submit_bio : (%s)(%s)\n", current->comm, dentry->d_iname);
++								tmp_file = 300000;
++							}
++							else if(dentry->d_iname[len-3]=='t' && dentry->d_iname[len-2]=='m' && dentry->d_iname[len-1]=='p')
++							{
++								//printk("submit_bio : (%s)(%s)\n", current->comm, dentry->d_iname);
++								tmp_file = 400000;
++							}
++							else if(dentry->d_iname[len-3]=='.' && dentry->d_iname[len-2]=='d' && dentry->d_iname[len-1]=='b')
++							{
++								//printk("submit_bio : (%s)(%s)\n", current->comm, dentry->d_iname);
++								tmp_file = 500000;
++							}
++						}
++					}
++				}
++			}
++
++			final:
++				
++			gblk_req_table[gblk_current].pid = task_pid_nr(current);
++			gblk_req_table[gblk_current].temp_file = tmp_file;
++			gblk_req_table[gblk_current].sector = bio->bi_iter.bi_sector;
++			gblk_req_table[gblk_current].count = bio->bi_iter.bi_size;
++			trace_printk(KERN_ERR"%s %s %s (%s), pid:%d, sector:%d, count:%d, temp:%d\n", __func__, current->comm,
++					(rw & WRITE) ? "WRITE" : "READ",
++					gblk_req_table[gblk_current].d_iname,
++                                        gblk_req_table[gblk_current].pid, gblk_req_table[gblk_current].sector,
++                                        gblk_req_table[gblk_current].count, gblk_req_table[gblk_current].temp_file);
++			gblk_current++;
++			if(gblk_current == MOST_TABLE_SIZE)
++				gblk_current=0;
++		}
++#endif
++
+ 	}
+ 
+ 	generic_make_request(bio);
+diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
+index b418cb0..5995ff6 100644
+--- a/kernel/trace/blktrace.c
++++ b/kernel/trace/blktrace.c
+@@ -198,6 +198,23 @@ static const u32 ddir_act[2] = { BLK_TC_ACT(BLK_TC_READ),
+  * The worker for the various blk_add_trace*() types. Fills out a
+  * blk_io_trace structure and places it in a per-cpu subbuffer.
+  */
++
++
++#ifdef CONFIG_MOST
++#define MOST_TABLE_SIZE 500
++struct blk_req_table
++{
++	pid_t pid;
++	sector_t sector;
++	int count;
++	int temp_file;
++	unsigned char d_iname[40];	/* small names */
++};
++
++extern struct blk_req_table gblk_req_table[MOST_TABLE_SIZE];
++extern int gblk_current;
++#endif
++
+ static void __blk_add_trace(struct blk_trace *bt, sector_t sector, int bytes,
+ 		     int rw, u32 what, int error, int pdu_len, void *pdu_data)
+ {
+@@ -211,6 +228,15 @@ static void __blk_add_trace(struct blk_trace *bt, sector_t sector, int bytes,
+ 	int cpu, pc = 0;
+ 	bool blk_tracer = blk_tracer_enabled;
+ 
++#ifdef CONFIG_MOST
++	int gblk_index, loop_count;
++	sector_t sector_trans;
++	struct task_struct *tsk_orig=NULL;
++	int temp_file;
++#else
++	struct task_struct *tsk_orig=NULL;
++#endif
++
+ 	if (unlikely(bt->trace_state != Blktrace_running && !blk_tracer))
+ 		return;
+ 
+@@ -227,6 +253,42 @@ static void __blk_add_trace(struct blk_trace *bt, sector_t sector, int bytes,
+ 		return;
+ 	cpu = raw_smp_processor_id();
+ 
++#ifdef CONFIG_MOST
++	loop_count = MOST_TABLE_SIZE-1;
++
++	if(gblk_current==0)
++		gblk_index = MOST_TABLE_SIZE-1;
++	else
++		gblk_index = gblk_current -1;
++
++
++	if(sector >= bt->start_lba)
++		sector_trans = sector - bt->start_lba;
++	else
++		sector_trans =0;
++		
++	temp_file = 0;
++		
++	do
++	{		 
++		if( sector_trans == gblk_req_table[gblk_index].sector)
++		{
++			pid = gblk_req_table[gblk_index].pid;
++			temp_file = gblk_req_table[gblk_index].temp_file;
++				
++			tsk_orig = find_task_by_vpid(pid);
++			pid = pid + temp_file;
++			printk("__blk_add_trace (%s)\n", gblk_req_table[gblk_index].d_iname);
++			break;
++		}
++
++		if(gblk_index==0)
++			gblk_index=MOST_TABLE_SIZE-1;
++		else
++			gblk_index--;
++	}while(loop_count--);
++#endif
++
+ 	if (blk_tracer) {
+ 		tracing_record_cmdline(current);
+ 
+@@ -250,6 +312,24 @@ static void __blk_add_trace(struct blk_trace *bt, sector_t sector, int bytes,
+ 	 * from coming in and stepping on our toes.
+ 	 */
+ 	local_irq_save(flags);
++
++#ifdef CONFIG_MOST
++	{
++		if(tsk_orig!=NULL)
++		{
++			tsk_orig->btrace_seq = blktrace_seq;
++			trace_note(bt, pid , BLK_TN_PROCESS, tsk_orig->comm, sizeof(tsk_orig->comm));
++		}
++		else
++			trace_note_tsk(tsk);
++	}
++#else
++	{
++	if (unlikely(tsk->btrace_seq != blktrace_seq))
++		trace_note_tsk(tsk);
++	}
++#endif
++
+ 	t = relay_reserve(bt->rchan, sizeof(*t) + pdu_len);
+ 	if (t) {
+ 		sequence = per_cpu_ptr(bt->sequence, cpu);
+@@ -265,10 +345,18 @@ record_it:
+ 		 * here too.
+ 		 */
+ 		t->cpu = cpu;
+-		t->pid = pid;
+-
++//		t->pid = pid;
++#ifdef CONFIG_MOST
++		t->sector = gblk_req_table[gblk_index].sector;
++		t->pid = gblk_req_table[gblk_index].pid;
++		t->bytes = gblk_req_table[gblk_index].count;
++#else
+ 		t->sector = sector;
++		t->pid = pid;
+ 		t->bytes = bytes;
++#endif
++//		t->sector = sector;
++//		t->bytes = bytes;
+ 		t->action = what;
+ 		t->device = bt->dev;
+ 		t->error = error;

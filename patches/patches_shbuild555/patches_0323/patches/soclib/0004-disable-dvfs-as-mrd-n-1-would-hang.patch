@@ -1,0 +1,41 @@
+From ec859148478c893e9df3c9115990ff328e3d7cdd Mon Sep 17 00:00:00 2001
+From: Jing Xiang <jing.xiang@intel.com>
+Date: Mon, 21 Mar 2016 18:40:01 +0800
+Subject: [PATCH 4/5] disable dvfs as mrd n-1 would hang
+
+Change-Id: I0f425e4a7424131cab9a21ae91b88e540672897c
+Signed-off-by: Jing Xiang <jing.xiang@intel.com>
+---
+ devices/pm/inc/power_management/board_sf_3gr/omp_cfg.h                  | 2 +-
+ devices/pm/power_control/pmu/src/board_sf_3gx_ext_pmic/pmu_domain_cfg.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/devices/pm/inc/power_management/board_sf_3gr/omp_cfg.h b/devices/pm/inc/power_management/board_sf_3gr/omp_cfg.h
+index 13281f0..dfb8f65 100644
+--- a/devices/pm/inc/power_management/board_sf_3gr/omp_cfg.h
++++ b/devices/pm/inc/power_management/board_sf_3gr/omp_cfg.h
+@@ -56,7 +56,7 @@
+ typedef enum {
+   OMP_MIPS_ANY = 0,
+   OMP_MIN_PLATFORM_MIPS = 416,   /**< min MIPS in MHz to be used on platform */
+-  OMP_MAX_PLATFORM_MIPS = 1200, /**< max MIPS in MHz to be used on platform */
++  OMP_MAX_PLATFORM_MIPS = 600, /**< max MIPS in MHz to be used on platform */
+ }e_OMP_PLATFORM_MIPS_RANGE_IN_MHZ ;
+ 
+ 
+diff --git a/devices/pm/power_control/pmu/src/board_sf_3gx_ext_pmic/pmu_domain_cfg.c b/devices/pm/power_control/pmu/src/board_sf_3gx_ext_pmic/pmu_domain_cfg.c
+index f8509ce..ed6489b 100644
+--- a/devices/pm/power_control/pmu/src/board_sf_3gx_ext_pmic/pmu_domain_cfg.c
++++ b/devices/pm/power_control/pmu/src/board_sf_3gx_ext_pmic/pmu_domain_cfg.c
+@@ -121,7 +121,7 @@ static const sPMU_DOMAIN_SET_FUNCS_T pmu_domain_set_func[PMU_NOF_DOMAINS] =
+   { PMU_DOMAIN_SD2,                     NULL,                                   NULL,                                   NULL                                         ,NULL                                              },
+   { PMU_DOMAIN_ELDO_VMMC,               PMU_int_hal_set_eldo_vmmc_voltage,      PMU_int_hal_set_eldo_vmmc_mode,         NULL                                          ,NULL                                             },
+   { PMU_DOMAIN_GNSS_TCXO_LDO,           PMU_int_hal_set_gnss_tcxo_ldo_voltage,  PMU_int_hal_set_gnss_tcxo_ldo_mode,     NULL                                           ,NULL                                            },
+-  { PMU_DOMAIN_EXT_BUCK1,               PMU_int_hal_set_ext_buck1_voltage,      NULL,                                   NULL                                           ,NULL                                            },
++  { PMU_DOMAIN_EXT_BUCK1,               NULL/*PMU_int_hal_set_ext_buck1_voltage*/,      NULL,                                   NULL                                           ,NULL                                            },
+   { PMU_DOMAIN_EXT_BUCK2,               NULL,                                   NULL,                                   NULL                                           ,NULL                                            },
+   { PMU_DOMAIN_EXT_LDO5,                NULL,                                   NULL,          NULL                                           ,NULL                                            },
+   { PMU_DOMAIN_DUMMY,                   NULL,                                   NULL,                                   NULL                                              ,NULL                                         },
+-- 
+1.9.1
+

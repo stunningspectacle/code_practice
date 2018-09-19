@@ -1,0 +1,26 @@
+diff --git a/arch/x86/boot/dts/Sf3gr_mrd_n1.dts b/arch/x86/boot/dts/Sf3gr_mrd_n1.dts
+index d2a07ad..8389e62d 100644
+--- a/arch/x86/boot/dts/Sf3gr_mrd_n1.dts
++++ b/arch/x86/boot/dts/Sf3gr_mrd_n1.dts
+@@ -103,7 +103,7 @@
+ 	fb {
+ 		compatible = "rockchip,fb";
+ 		rockchip,disp-mode = <NO_DUAL>;
+-		rockchip,loader-logo-on = <0>;
++		rockchip,loader-logo-on = <1>;
+ 		rockchip,ion-drv = "rockchip";
+ 	};
+ 
+diff --git a/drivers/video/rockchip/rockchip_fb.c b/drivers/video/rockchip/rockchip_fb.c
+index 908fd87..709a444 100644
+--- a/drivers/video/rockchip/rockchip_fb.c
++++ b/drivers/video/rockchip/rockchip_fb.c
+@@ -2347,6 +2347,8 @@ static int rockchip_fb_show_copy_from_loader(struct fb_info *info)
+ 		return -ENOMEM;
+ 	}
+ 
++	dev_info(info->dev, "vop xres=%d, yres=%d\n", info->var.xres, info->var.yres);
++
+ 	if (info->var.xres % 32 == 0) {
+ 		memcpy(dst, vaddr + offset, size);
+ 	} else {

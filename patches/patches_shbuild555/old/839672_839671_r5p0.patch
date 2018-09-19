@@ -1,0 +1,160 @@
+Index: src/devicedrv/mali/common/mali_control_timer.c
+===================================================================
+--- src/devicedrv/mali/common/mali_control_timer.c	(revision 175662)
++++ src/devicedrv/mali/common/mali_control_timer.c	(revision 175663)
+@@ -43,10 +43,10 @@
+ #else
+ 			mali_utilization_platform_realize(util_data);
+ #endif
+-		}
+ 
+-		if (MALI_TRUE == timer_running) {
+-			mali_control_timer_add(mali_control_timeout);
++			if ((MALI_TRUE == timer_running) && (0 != util_data->utilization_gpu)) {
++				mali_control_timer_add(mali_control_timeout);
++			}
+ 		}
+ 	}
+ }
+Index: src/devicedrv/mali/common/mali_executor.c
+===================================================================
+--- src/devicedrv/mali/common/mali_executor.c	(revision 175662)
++++ src/devicedrv/mali/common/mali_executor.c	(revision 175663)
+@@ -1681,7 +1681,20 @@
+ 		}
+ 	}
+ 
+-	/* 3. Activate virtual group, if needed */
++
++	/* 3. Deactivate idle pp group , must put deactive here before active vitual group
++	 *    for cover case first only has physical job in normal queue but group inactive,
++	 *    so delay the job start go to active group, when group activated, 
++	 *    call scheduler again, but now if we get high queue virtual job,
++	 *    we will do nothing in schedule cause executor schedule stop 
++	 */
++
++	if (MALI_TRUE == mali_executor_deactivate_list_idle(deactivate_idle_group
++			&& (!mali_timeline_has_physical_pp_job()))) {
++		trigger_pm_update = MALI_TRUE;
++	}
++
++	/* 4. Activate virtual group, if needed */
+ 
+ 	if (EXEC_STATE_INACTIVE == virtual_group_state &&
+ 	    0 < mali_scheduler_job_next_is_virtual()) {
+@@ -1694,21 +1707,14 @@
+ 			trigger_pm_update = MALI_TRUE;
+ 		}
+ 	}
+-
+-	/* 4. To power up group asap, we trigger pm update here. */
++	
++	/* 5. To power up group asap, we trigger pm update here. */
+ 
+ 	if (MALI_TRUE == trigger_pm_update) {
+ 		trigger_pm_update = MALI_FALSE;
+ 		mali_pm_update_async();
+ 	}
+ 
+-	/* 5. Deactivate idle pp group */
+-
+-	if (MALI_TRUE == mali_executor_deactivate_list_idle(deactivate_idle_group
+-			&& (!mali_timeline_has_physical_pp_job()))) {
+-		trigger_pm_update = MALI_TRUE;
+-	}
+-
+ 	/* 6. Assign jobs to idle virtual group (or deactivate if no job) */
+ 
+ 	if (EXEC_STATE_IDLE == virtual_group_state) {
+Index: src/devicedrv/mali/common/mali_soft_job.c
+===================================================================
+--- src/devicedrv/mali/common/mali_soft_job.c	(revision 175662)
++++ src/devicedrv/mali/common/mali_soft_job.c	(revision 175663)
+@@ -289,8 +289,10 @@
+ 	job->activated_notification = NULL;
+ }
+ 
+-void mali_soft_job_system_activate_job(struct mali_soft_job *job)
++mali_scheduler_mask mali_soft_job_system_activate_job(struct mali_soft_job *job)
+ {
++	mali_scheduler_mask schedule_mask = MALI_SCHEDULER_MASK_EMPTY;
++
+ 	MALI_DEBUG_ASSERT_POINTER(job);
+ 	MALI_DEBUG_ASSERT_POINTER(job->system);
+ 	MALI_DEBUG_ASSERT_POINTER(job->system->session);
+@@ -307,7 +309,7 @@
+ 		/* Since we are in shutdown, we can ignore the scheduling bitmask. */
+ 		mali_timeline_tracker_release(&job->tracker);
+ 		mali_soft_job_destroy(job);
+-		return;
++		return schedule_mask;
+ 	}
+ 
+ 	/* Send activated notification. */
+@@ -318,15 +320,12 @@
+ 
+ 	/* If job type is self signaled, release tracker, move soft job to free list, and scheduler at once */
+ 	if (MALI_SOFT_JOB_TYPE_SELF_SIGNALED == job->type) {
+-		mali_scheduler_mask schedule_mask;
+-
+ 		MALI_DEBUG_ASSERT(MALI_SOFT_JOB_STATE_STARTED == job->state);
+ 
+ 		job->state = MALI_SOFT_JOB_STATE_SIGNALED;
+ 		mali_soft_job_system_unlock(job->system);
+ 
+-		schedule_mask = mali_timeline_tracker_release(&job->tracker);
+-		mali_executor_schedule_from_mask(schedule_mask, MALI_FALSE);
++		schedule_mask |= mali_timeline_tracker_release(&job->tracker);
+ 
+ 		mali_soft_job_destroy(job);
+ 	} else {
+@@ -334,6 +333,8 @@
+ 
+ 		mali_soft_job_system_unlock(job->system);
+ 	}
++
++	return schedule_mask;
+ }
+ 
+ mali_scheduler_mask mali_soft_job_system_timeout_job(struct mali_soft_job *job)
+Index: src/devicedrv/mali/common/mali_timeline.c
+===================================================================
+--- src/devicedrv/mali/common/mali_timeline.c	(revision 175662)
++++ src/devicedrv/mali/common/mali_timeline.c	(revision 175663)
+@@ -654,7 +654,7 @@
+ 		timeline = tracker->timeline;
+ 		MALI_DEBUG_ASSERT_POINTER(timeline);
+ 
+-		mali_soft_job_system_activate_job((struct mali_soft_job *) tracker->job);
++		schedule_mask |= mali_soft_job_system_activate_job((struct mali_soft_job *) tracker->job);
+ 
+ 		/* Start a soft timer to make sure the soft job be released in a limited time */
+ 		mali_spinlock_reentrant_wait(system->spinlock, tid);
+Index: src/devicedrv/mali/common/mali_soft_job.h
+===================================================================
+--- src/devicedrv/mali/common/mali_soft_job.h	(revision 175662)
++++ src/devicedrv/mali/common/mali_soft_job.h	(revision 175663)
+@@ -165,8 +165,9 @@
+  * Used by the Timeline system to activate a soft job.
+  *
+  * @param job The soft job that is being activated.
++ * @return A scheduling bitmask.
+  */
+-void mali_soft_job_system_activate_job(struct mali_soft_job *job);
++mali_scheduler_mask mali_soft_job_system_activate_job(struct mali_soft_job *job);
+ 
+ /**
+  * Used by the Timeline system to timeout a soft job.
+Index: src/devicedrv/mali/common/mali_scheduler.c
+===================================================================
+--- src/devicedrv/mali/common/mali_scheduler.c	(revision 175662)
++++ src/devicedrv/mali/common/mali_scheduler.c	(revision 175663)
+@@ -1266,7 +1266,7 @@
+ 			/* unlock scheduler in this uncommon case */
+ 			mali_scheduler_unlock();
+ 
+-			mali_timeline_tracker_release(
++			schedule_mask |= mali_timeline_tracker_release(
+ 				mali_pp_job_get_tracker(job));
+ 
+ 			/* Notify user space and close the job object */

@@ -1,0 +1,110 @@
+diff --git a/libhwcomposer/hwcomposer.cpp b/libhwcomposer/hwcomposer.cpp
+index 52e0a78..1e06ddd 100644
+--- a/libhwcomposer/hwcomposer.cpp
++++ b/libhwcomposer/hwcomposer.cpp
+@@ -147,7 +147,7 @@ hwc_module_t HAL_MODULE_INFO_SYM = {
+ /*****************************************************************************/
+ 
+ static void dump_layer(hwc_layer_1_t const* l) {
+-    ALOGV("\ttype=%d, flags=%08x, handle=%p, tr=%02x, blend=%04x, {%d,%d,%d,%d}, {%d,%d,%d,%d}",
++    ALOGD("\ttype=%d, flags=%08x, handle=%p, tr=%02x, blend=%04x, {%d,%d,%d,%d}, {%d,%d,%d,%d}",
+             l->compositionType, l->flags, l->handle, l->transform, l->blending,
+             l->sourceCrop.left,
+             l->sourceCrop.top,
+@@ -161,8 +161,8 @@ static void dump_layer(hwc_layer_1_t const* l) {
+ 	if(l->handle)
+ 	{
+ 		private_handle_t const* hnd = reinterpret_cast<private_handle_t const*>(l->handle);
+-
+-		ALOGV("HANDLE_DETAILS:: hnd = %p | hnd->ion_fd = %d | hnd->ion_hdl = %0x | hnd->base = %0x | hnd->phys = %0x | hnd->fmt = %d | hnd->[w X h] = [%d X %d] | hnd->bpp = %d \n",
++		if (hnd)
++		ALOGD("HANDLE_DETAILS:: hnd = %p | hnd->ion_fd = %d | hnd->ion_hdl = %0x | hnd->base = %0x | hnd->phys = %0x | hnd->fmt = %d | hnd->[w X h] = [%d X %d] | hnd->bpp = %d \n",
+ 			hnd,
+ 			hnd->ion_fd,
+ 			hnd->ion_hdl,
+@@ -191,7 +191,27 @@ static int hwc_prepare(hwc_composer_device_1_t *dev,
+ 		//ALOGV("CUST_HWC: %s <<< Geometry Changed >>> \n", __FUNCTION__);
+ 		for (size_t i=0 ; i<(displays[0]->numHwLayers) ; i++) {
+ 
+-			//dump_layer(&displays[0]->hwLayers[i]);
++			if (displays[0]->numHwLayers == 2) {
++				hwc_layer_1_t *layer = &displays[0]->hwLayers[0];
++				if (!(layer->flags & HWC_SKIP_LAYER) &&
++				    layer->transform == 0) {
++
++					buffer_handle_t handle = layer->handle;
++					private_handle_t const* hnd =
++						reinterpret_cast<private_handle_t const*>(handle);
++
++				        if (hnd && (hnd->fmt == HAL_PIXEL_FORMAT_BGRA_8888 ||
++				            hnd->fmt == HAL_PIXEL_FORMAT_RGBA_8888 ||
++				            hnd->fmt == HAL_PIXEL_FORMAT_RGB_565 ||
++				            hnd->fmt == HAL_PIXEL_FORMAT_RGBX_8888)) {
++						ALOGD("format = %d, rgbx=%d, rgba=%d\n", hnd->fmt, HAL_PIXEL_FORMAT_RGBX_8888, HAL_PIXEL_FORMAT_RGBA_8888);
++						layer->compositionType = HWC_OVERLAY;
++						break;
++					}
++				}
++			}
++
++			dump_layer(&displays[0]->hwLayers[i]);
+ 			if(HWC_FRAMEBUFFER_TARGET != displays[0]->hwLayers[i].compositionType) {
+ 				displays[0]->hwLayers[i].compositionType = HWC_FRAMEBUFFER;
+ 			}
+@@ -278,7 +298,8 @@ static int to_dcc_hal_fmt(int hal_pix_fmt) {
+ 
+ 		case HAL_PIXEL_FORMAT_RGBA_8888:
+ 		case HAL_PIXEL_FORMAT_RGBX_8888:
+-			return (DCC_COLOR_RGB | DCC_COLOR_ABGR8888);
++			//return (DCC_COLOR_RGB | DCC_COLOR_ABGR8888);
++			return (DCC_COLOR_RGB | DCC_COLOR_ARGB8888);
+ 
+ #if 0
+ 		case HAL_PIXEL_FORMAT_RGBX_8888:
+@@ -323,14 +344,30 @@ static int hwc_set(hwc_composer_device_1_t *dev,
+ 		for(size_t i = 0; i < displays[0]->numHwLayers; i++) {
+ 
+ 			//dump_layer(&(displays[0]->hwLayers[i]));
+-			if(HWC_FRAMEBUFFER_TARGET == displays[0]->hwLayers[i].compositionType) {
+-				ALOGV("[%s]: FBT indx = %d\n", __func__, i);
++			if (HWC_OVERLAY == displays[0]->hwLayers[i].compositionType) {
++				ALOGD("[%s]: HWC OV indx = %d\n", __func__, i);
++
+ 				hwc_layer_1_t const* l = &(displays[0]->hwLayers[i]);
+ 				if(!(l->handle))
+ 				{
+ 					ALOGE("FBT has NULL handle!!!\n");
+ 					break;
+ 				}
++
++				dump_layer(&(displays[0]->hwLayers[i]));
++
++			}
++
++			if(HWC_OVERLAY == displays[0]->hwLayers[i].compositionType ||
++			  HWC_FRAMEBUFFER_TARGET == displays[0]->hwLayers[i].compositionType) {
++				ALOGD("[%s]: FBT indx = %d\n", __func__, i);
++				hwc_layer_1_t const* l = &(displays[0]->hwLayers[i]);
++				if(!(l->handle))
++				{
++					ALOGE("FBT has NULL handle!!!\n");
++					break;
++				}
++
+ 				dump_layer(&(displays[0]->hwLayers[i]));
+ 
+ 				buffer_handle_t handle = l->handle;
+@@ -362,11 +399,12 @@ static int hwc_set(hwc_composer_device_1_t *dev,
+ 				tmp_layer_list.num_layers = 1;
+ 				tmp_layer_list.dcc_op_class =  DCC_M2D_CLASS;
+ 				tmp_layer_list.dcc_layer[0] = &tmp_layer;
+-
++#if 0
+ 				if (displays[0]->hwLayers[i].acquireFenceFd > 0)
+ 				{
+ 					sync_wait(displays[0]->hwLayers[i].acquireFenceFd, -1);
+ 				}
++#endif
+ 
+ 				dcc_hal_bind_layers(&tmp_layer_list);
+ 				dcc_hal_process_layers(&tmp_layer_list);

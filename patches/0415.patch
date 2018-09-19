@@ -1,0 +1,16 @@
+diff --git a/arch/x86/boot/dts/SF_3GX-mrd_d.dts b/arch/x86/boot/dts/SF_3GX-mrd_d.dts
+index a0e4ad1..4e9ed88 100755
+--- a/arch/x86/boot/dts/SF_3GX-mrd_d.dts
++++ b/arch/x86/boot/dts/SF_3GX-mrd_d.dts
+@@ -590,11 +590,6 @@
+ 			0x08000074>;	/* KEY_VOLUMEUP */
+ };
+ 
+-&vop {
+-	status = "okay";
+-	rockchip,fb-win-map = <FB_DEFAULT_ORDER>;
+-};
+-
+ #if 0
+ #ifndef RECOVERY_KERNEL
+ &cif {

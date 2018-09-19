@@ -1,0 +1,228 @@
+diff --git a/libcamera_native/CameraHWInterface.cpp b/libcamera_native/CameraHWInterface.cpp
+index fa8dab2..92bc192 100644
+--- a/libcamera_native/CameraHWInterface.cpp
++++ b/libcamera_native/CameraHWInterface.cpp
+@@ -738,7 +738,7 @@ status_t  CameraHardwareImc::setPreviewWindow(preview_stream_ops *w)
+ 		mPreviewBuf[i].bufHandle = bufHandle;
+ 		mPreviewBuf[i].used = false;
+ 		private_handle_t *p_hnd = (private_handle_t*) *bufHandle;
+-		LOGE("virtAddr = %ld, phys = %p\n", (unsigned long int)virtAddr[0], (void*)p_hnd->phys);
++		LOGE("virtAddr = %p, phys = %p\n", virtAddr[0], (void*)p_hnd->phys);
+ 		mImcCamera->setPreviewBuffers(i, (unsigned long int)virtAddr[0], p_hnd->size, stride);
+ 		/*save the bufHandler used during enqueuing back*/
+ 
+@@ -971,6 +971,7 @@ int CameraHardwareImc::previewThread()
+    buffer_handle_t* bufHandle;
+    int width, height, frame_size;
+    void *virtAddr;
++   int err;
+ 
+    mNumPreviewBuffersInUseLock.lock();
+    if (mPreviewRunning) {
+@@ -999,8 +1000,12 @@ int CameraHardwareImc::previewThread()
+          //flush cache before s/w access.
+          typedef int (*FLUSH_FUNC_T)(gralloc_module_t const* module, buffer_handle_t handle);
+          FLUSH_FUNC_T gralloc_flush_cache = (FLUSH_FUNC_T)(mGrallocModule->reserved_proc[0]);
+-         if (gralloc_flush_cache != NULL)
+-             gralloc_flush_cache(mGrallocModule, *mPreviewBuf[index].bufHandle);
++         if (gralloc_flush_cache != NULL) {
++             err = gralloc_flush_cache(mGrallocModule, *mPreviewBuf[index].bufHandle);
++             if (err < 0)
++                 ALOGE("loooooooong: gralloc_flush_cache handle(0x%x) failed!",
++                         *mPreviewBuf[index].bufHandle);
++         }
+ 
+ #ifdef RAW_DUMP_PREVIEW
+          if (yuv_preview_fd != NULL)
+diff --git a/libgralloc/gr.h b/libgralloc/gr.h
+index 676092d..8f91b9f 100644
+--- a/libgralloc/gr.h
++++ b/libgralloc/gr.h
+@@ -40,9 +40,23 @@ struct private_handle_t;
+ 
+ static inline void print_private_handle(struct private_handle_t* hnd, const char* str)
+ {
+-	ALOGV("%s [fd:%d flags:0x%x size:%d %dx%d offset:0x%x base:0x%08x phys:0x%08x fmt:0x%x ion{hdl:%p}]",
++    if (!hnd) {
++	ALOGE("%s hnd is null", str);
++        return;
++    }
++
++    const native_handle_t *h = (const native_handle_t *)hnd;
++	ALOGE("%s [fd:%d flags:0x%x size:%d %dx%d offset:0x%x base:0x%08x phys:0x%08x fmt:0x%x ion{hdl:%p}]",
+ 		str, hnd->fd, hnd->flags, hnd->size, hnd->w, hnd->h, hnd->offset,
+ 		hnd->base, hnd->phys, hnd->fmt, (void*)hnd->ion_hdl);
++        ALOGE("loooong: handle (at %p): "
++              "ver(0x%x/0x%x) ints(0x%x/0x%x) fds(0x%x/0x%x) magic(0x%x/0x%x) fd(%d)",
++              h,
++              h ? h->version : -1, sizeof(native_handle),
++              h ? h->numInts : -1, hnd->sNumInts,
++              h ? h->numFds : -1, hnd->sNumFds,
++              hnd ? hnd->magic : -1, hnd->sMagic,
++              hnd ? hnd->fd : -1);
+ }
+ 
+ 
+diff --git a/libgralloc/gralloc.cpp b/libgralloc/gralloc.cpp
+index da8b799..96b9659 100644
+--- a/libgralloc/gralloc.cpp
++++ b/libgralloc/gralloc.cpp
+@@ -175,7 +175,7 @@ static int gralloc_alloc_framebuffer(alloc_device_t* dev,
+ 	} else {
+ 		err = -EINVAL;
+ 	}
+-
++        print_private_handle(hnd, "gralloc_alloc_framebuffer");
+ exit:
+ 	pthread_mutex_unlock(&m->lock);
+ 	return err;
+@@ -474,7 +474,6 @@ static int gralloc_free(alloc_device_t* dev,
+ 	gralloc_module_t* module = reinterpret_cast<gralloc_module_t*>(
+                                                                    dev->common.module);
+ 	private_handle_t const* hnd = reinterpret_cast<private_handle_t const*>(handle);
+-	print_private_handle((private_handle_t*)hnd, "gralloc_free" );
+ 
+ 	if (hnd->base)
+ 		grallocUnmap(module, const_cast<private_handle_t*>(hnd));
+@@ -483,6 +482,7 @@ static int gralloc_free(alloc_device_t* dev,
+ 	if (hnd->ion_hdl)
+ 		ion_free(getIonFd(module), hnd->ion_hdl);
+ 	delete hnd;
++	print_private_handle((private_handle_t*)hnd, "gralloc_free");
+ 	return 0;
+ }
+ 
+diff --git a/libgralloc/gralloc_priv.h b/libgralloc/gralloc_priv.h
+index 4e2a088..c192eb7 100644
+--- a/libgralloc/gralloc_priv.h
++++ b/libgralloc/gralloc_priv.h
+@@ -204,7 +204,17 @@ struct private_handle_t {
+                 h->numInts != sNumInts || h->numFds != sNumFds ||
+                 hnd->magic != sMagic)
+         {
+-            ALOGE("invalid gralloc handle (at %p)", h);
++            //ALOGE("invalid gralloc handle (at %p)", h);
++            ALOGE("loooong: Inval handle (at %p): "
++                  "ver(0x%x/0x%x) ints(0x%x/0x%x) fds(0x%x/0x%x) magic(0x%x/0x%x) fd(%d) base(0x%x) phys(0x%x)",
++                  h,
++                  h ? h->version : -1, sizeof(native_handle),
++                  h ? h->numInts : -1, sNumInts,
++                  h ? h->numFds : -1, sNumFds,
++                  hnd ? hnd->magic : -1, sMagic,
++                  hnd ? hnd->fd : -1, 
++                  hnd ? hnd->base : -1,
++                  hnd ? hnd->phys : -1);
+             return -EINVAL;
+         }
+         return 0;
+diff --git a/libgralloc/mapper.cpp b/libgralloc/mapper.cpp
+index f8886f2..923cf6f 100644
+--- a/libgralloc/mapper.cpp
++++ b/libgralloc/mapper.cpp
+@@ -42,6 +42,11 @@
+ static int gralloc_map(gralloc_module_t const* module, buffer_handle_t handle)
+ {
+     private_handle_t* hnd = (private_handle_t*)handle;
++    if (hnd->flags & private_handle_t::PRIV_FLAGS_FRAMEBUFFER) {
++	    ALOGE("looooong: Can't register buffer 0x%x as it is a framebuffer",
++                                    (unsigned int)handle );
++            return 0;
++    }
+ 
+     void* mappedAddress = mmap(0, hnd->size, PROT_READ|PROT_WRITE, MAP_SHARED,
+                                hnd->fd, 0);
+@@ -136,7 +141,7 @@ int gralloc_register_buffer(gralloc_module_t const* module,
+ 	pthread_mutex_lock(&s_map_lock);
+ 
+     if (hnd->flags & private_handle_t::PRIV_FLAGS_FRAMEBUFFER){
+-	    ALOGE( "Can't register buffer 0x%x as it is a framebuffer", (unsigned int)handle );
++	    ALOGE( "loooong: Can't register buffer 0x%x as it is a framebuffer", (unsigned int)handle );
+     }else if ( hnd->flags & private_handle_t::PRIV_FLAGS_CONTIGUOUS ){
+ 	    int ret;
+ 	    unsigned char *mappedAddress;
+@@ -161,9 +166,12 @@ int gralloc_register_buffer(gralloc_module_t const* module,
+ #endif
+ 
+ 	    hnd->base = intptr_t(mappedAddress) + hnd->offset;
+-	    ALOGV("%s: fd: %d, phys: 0x%x, virt:0x%08x\n", __FUNCTION__, hnd->fd, hnd->phys, hnd->base);
++	    ALOGE("%s: fd: %d, phys: 0x%x, virt:0x%08x\n", __FUNCTION__, hnd->fd, hnd->phys, hnd->base);
+ 	    pthread_mutex_unlock( &s_map_lock );
++            print_private_handle(hnd, "gralloc_register_buffer");
+ 	    return 0;
++    } else {
++	    ALOGE( "looooong: register invalid buffer 0x%x", (unsigned int)handle );
+     }
+ 
+ cleanup:
+@@ -176,12 +184,16 @@ int gralloc_unregister_buffer(gralloc_module_t const* module,
+ {
+     if (private_handle_t::validate(handle) < 0)
+         return -EINVAL;
+-
+     private_handle_t* hnd = (private_handle_t*)handle;
++    if (hnd->flags & private_handle_t::PRIV_FLAGS_FRAMEBUFFER) {
++	    ALOGE("loooong: Can't unregister buffer 0x%x as it is a framebuffer",
++                    (unsigned int)handle);
++        return 0;
++    }
++
+     ALOGV("%s: base 0x%08x %d %d %d\n", __func__, hnd->base, hnd->size,
+           hnd->w, hnd->h);
+ 
+-    print_private_handle((private_handle_t*)hnd, "gralloc_unregister_buffer" );
+ 
+     void* base = (void*)hnd->base;
+     size_t size = hnd->size;
+@@ -195,9 +207,12 @@ int gralloc_unregister_buffer(gralloc_module_t const* module,
+     if (hnd->ion_hdl)
+         ion_free(getIonFd(module), hnd->ion_hdl);
+ 
++    hnd->base = 0;
++
+     ALOGV("%s", __FUNCTION__);
+ 
+ 
++    print_private_handle(hnd, "gralloc_unregister_buffer");
+ 	return 0;
+ }
+ 
+@@ -224,19 +239,26 @@ int gralloc_lock(gralloc_module_t const* module,
+     // flushed or invalidated depending on the usage bits and the
+     // hardware.
+ 
++    private_handle_t* hnd = (private_handle_t*)handle;
++
+     if (private_handle_t::validate(handle) < 0)
+         return -EINVAL;
+ 
+-    private_handle_t* hnd = (private_handle_t*)handle;
+-    if (!hnd->base)
+-        gralloc_map(module, hnd);
++    print_private_handle(hnd, "gralloc_lock");
++    if (usage & (GRALLOC_USAGE_SW_READ_MASK | GRALLOC_USAGE_SW_WRITE_MASK)) {
++        if (!hnd->base)
++            gralloc_map(module, hnd);
++    }
+     if (vaddr != NULL)
+         *vaddr = (void*)hnd->base;
++
+     return 0;
+ }
+ 
+ int gralloc_unlock(gralloc_module_t const* module, buffer_handle_t handle)
+ {
++    private_handle_t* hnd = (private_handle_t*)handle;
++    print_private_handle(hnd, "gralloc_unlock");
+     // we're done with a software buffer. nothing to do in this
+     // implementation. typically this is used to flush the data cache.
+ #if 0
+@@ -254,6 +276,9 @@ int gralloc_flush_cache(gralloc_module_t const* module, buffer_handle_t handle)
+     private_handle_t* hnd = (private_handle_t*)handle;
+     int retval = 0;
+     int usage = 0;
++
++    if (private_handle_t::validate(handle) < 0)
++        return -EINVAL;
+     pthread_mutex_lock(&s_map_lock);
+     usage = hnd->usage;
+     if ((usage & GRALLOC_USAGE_HW_MASK) && (usage & GRALLOC_USAGE_PRIVATE_3)) {

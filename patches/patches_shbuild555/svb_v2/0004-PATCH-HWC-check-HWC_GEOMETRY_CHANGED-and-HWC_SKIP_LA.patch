@@ -1,0 +1,56 @@
+From 6f38250f6390b7b67661f604514e7289529c4f30 Mon Sep 17 00:00:00 2001
+From: Lei Zhang <lei.zhang@intel.com>
+Date: Tue, 2 Dec 2014 13:49:26 +0800
+Subject: [PATCH 4/8] [PATCH] HWC: check HWC_GEOMETRY_CHANGED and
+ HWC_SKIP_LAYER
+
+BZ: 256
+
+This is the patch to add check of HWC_GEOMETRY_CHANGED and
+HWC_SKIP_LAYER flags, following Android hwcomposer.h defination.
+
+Change-Id: I4fb758f23880ecac8369f5ba90c0b935c63676d9
+Signed-off-by: Lei Zhang <lei.zhang@intel.com>
+---
+ libhwcomposer/hwcomposer.cpp |   11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
+
+diff --git a/libhwcomposer/hwcomposer.cpp b/libhwcomposer/hwcomposer.cpp
+index 2275f7a..97f8d3d 100644
+--- a/libhwcomposer/hwcomposer.cpp
++++ b/libhwcomposer/hwcomposer.cpp
+@@ -225,6 +225,7 @@ public:
+         ADDOV_RES_WRONG_FMT,
+         ADDOV_RES_CANT_SCALE,
+         ADDOV_RES_NOT_FULLSCREEN,
++        ADDOV_RES_SKIP_LAYER,
+     };
+ 
+     LayerConfiguration() :
+@@ -296,6 +297,9 @@ public:
+         // allow 2 layers as no FBT is needed for sure
+         if (count == 3 && overlay_count > 1)
+             return ADDOV_RES_TOO_MANY;
++        // bypass HWC_SKIP_LAYER layer
++        if (l->flags & HWC_SKIP_LAYER)
++            return ADDOV_RES_SKIP_LAYER;
+         // no rotation
+         if (!allowScalingAndRotate && l->transform)
+             return ADDOV_RES_CANT_TRANSFORM;
+@@ -938,9 +942,10 @@ static int hwc_prepare(hwc_composer_device_1_t *dev,
+         return 0;
+ 
+     // for the time being only consider display 0
+-    // and ignore whether there are geometry changes or not
+-    ctxt->dcc_updater.configure(displays[0]);
+-    ctxt->dcc_updater.apply(displays[0]);
++    if (displays[0]->flags & HWC_GEOMETRY_CHANGED) {
++        ctxt->dcc_updater.configure(displays[0]);
++        ctxt->dcc_updater.apply(displays[0]);
++    }
+ 
+     return 0;
+ }
+-- 
+1.7.9.5
+

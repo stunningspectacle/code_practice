@@ -1,0 +1,16 @@
+diff --git a/arch/x86/boot/dts/xgold/display/NT35596-3gr.dtsi b/arch/x86/boot/dts/xgold/display/NT35596-3gr.dtsi
+index cbd7f72..184faa4 100644
+--- a/arch/x86/boot/dts/xgold/display/NT35596-3gr.dtsi
++++ b/arch/x86/boot/dts/xgold/display/NT35596-3gr.dtsi
+@@ -2414,6 +2414,11 @@ display-panel@nt35596 {
+ 			intel,cmd-data = <0xD4 0x04>;
+ 			intel,cmd-lp = <1>;
+ 		};
++		nt35596_cmd467 {
++			intel,cmd-type = <0x15>;
++			intel,cmd-data = <0x55 0x00>;
++			intel,cmd-lp = <1>;
++		};
+ 		sleep-out {
+ 			intel,cmd-type = <0x05>;
+ 			intel,cmd-data = <0x11>;

@@ -1,0 +1,37 @@
+#
+# (C) COPYRIGHT ARM Limited. All rights reserved.
+#
+# This program is free software and is provided to you under the terms of the
+# GNU General Public License version 2 as published by the Free Software
+# Foundation, and any use by you of this program is subject to the terms
+# of such GNU licence.
+#
+# A copy of the licence is included with the program, and can also be obtained
+# from Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+# Boston, MA  02110-1301, USA.
+#
+#
+
+config VIDEO_TX
+	tristate "Video Transmitter Framework"
+	---help---
+	This framework provides an abstraction for the video transmitter
+	hardware.
+
+if VIDEO_TX
+config TEST_VIDEO_TX
+	depends on VIDEO_TX
+	tristate "Test driver for the Video Transmitter Framework"
+	---help---
+	This video transmitter device driver provides a test implementation of
+	the video transmitter framework useful for initial platform bringup
+	as well as testing the transmitter framework functionality.
+
+config SENC_TX
+	depends on VIDEO_TX
+	tristate "DRM Slave encoder wrapper for Video Transmitter Framework"
+	---help---
+	This module can wrap around a DRM slave encoder implementation to provide
+	a video-tx driver.
+
+endif

@@ -1,0 +1,27 @@
+From 13675832f16dbee1db915a804d5be06ff01fd6da Mon Sep 17 00:00:00 2001
+From: Jing Xiang <jing.xiang@intel.com>
+Date: Tue, 22 Mar 2016 11:44:47 +0800
+Subject: [PATCH 2/2] need revert after rebase to latest vmm
+
+Change-Id: Idae33cc789bf255fbb19ab0c41d9de57560a8a1b
+Tracked-On:
+Signed-off-by: Jing Xiang <jing.xiang@intel.com>
+---
+ sofia3gx/configs/module_boot.xml | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/sofia3gx/configs/module_boot.xml b/sofia3gx/configs/module_boot.xml
+index 5134312..0d78104 100644
+--- a/sofia3gx/configs/module_boot.xml
++++ b/sofia3gx/configs/module_boot.xml
+@@ -7,7 +7,6 @@
+         <param type="uint32" value="0x007ff800" description="setup_sector_address"/>
+         <param type="uint32" value="0x300000"   description="ramdisk_address"/>
+         <param type="uint32" value="0x0"        description="ramdisk_size, used in standalone vmm only"/>
+-        <param type="uint32" value="0x0"        description="boot image address, used in standalone vmm only"/>
+         <param type="e820"   description="e820 entries">
+         <!-- E820 entries MAX: 5 -->
+         <!-- possible types: -->
+-- 
+1.9.1
+

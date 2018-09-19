@@ -1,0 +1,43 @@
+From 58f46a5bfc8fbc8624b7b82d8ea597e49673111d Mon Sep 17 00:00:00 2001
+From: Leo Yan <leo.yan@intel.com>
+Date: Fri, 28 Nov 2014 13:44:21 +0800
+Subject: [PATCH] [display]: Change the permission of dcc node
+
+BZ: 340
+
+Change the permission of dcc node to comply with CTS test.
+
+Change-Id: Iade5cb1b85a996acbc64525139184b62af2c6232
+Signed-off-by: Leo Yan <leo.yan@intel.com>
+---
+ sofia3g/init.sofia3g.rc    |    3 +++
+ sofia3g/ueventd.sofia3g.rc |    2 +-
+ 2 files changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/sofia3g/init.sofia3g.rc b/sofia3g/init.sofia3g.rc
+index 8fbbf42..5870baa 100644
+--- a/sofia3g/init.sofia3g.rc
++++ b/sofia3g/init.sofia3g.rc
+@@ -114,6 +114,9 @@ on post-fs-data
+ 	# remember start fg_conf on charger also
+ 	start fg_conf
+ 
++    # Permissions for dcc
++    chown system system /sys/bus/platform/drivers/dcc/e1000000.dcc/enable
++
+ on boot
+ # Define TCP buffer sizes for various networks
+ #   ReadMin, ReadInitial, ReadMax, WriteMin, WriteInitial, WriteMax,
+diff --git a/sofia3g/ueventd.sofia3g.rc b/sofia3g/ueventd.sofia3g.rc
+index 29bd5e9..6acddd8 100644
+--- a/sofia3g/ueventd.sofia3g.rc
++++ b/sofia3g/ueventd.sofia3g.rc
+@@ -1,4 +1,4 @@
+-/dev/dcc	0666	system	system
++/dev/dcc	0660	system	system
+ /dev/ion	0666	system	system
+ /dev/pmem_gfx	0666	system	system
+ /dev/vbpipe0	0666	system	system
+-- 
+1.7.9.5
+

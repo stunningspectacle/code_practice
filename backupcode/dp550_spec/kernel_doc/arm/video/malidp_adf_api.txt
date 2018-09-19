@@ -1,0 +1,478 @@
+#
+# (C) COPYRIGHT 2014-2015 ARM Limited. All rights reserved.
+#
+# This program is free software and is provided to you under the terms of the
+# GNU General Public License version 2 as published by the Free Software
+# Foundation, and any use by you of this program is subject to the terms
+# of such GNU licence.
+#
+# A copy of the licence is included with the program, and can also be obtained
+# from Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+# Boston, MA  02110-1301, USA.
+#
+#
+
+
+Mali-DP ADF custom data API
+===========================
+
+The malidp_custom_data struct, passed to the mali_dp driver in an ADF_POST
+operation describes the layout of the "posted" buffers on the screen,
+including their positions, orientations and sizes. It complements the list
+of adf_buffer_configs with a list of malidp_buffer_configs, which provide the
+further information necessary to construct the scene.
+
+Broadly speaking, the two buffer lists can be interpreted thus:
+  * adf_buffer_config list -> physical description of the buffers
+  * malidp_buffer_config list -> describes the appearance of the buffers
+    on-screen
+
+A malidp_buffer_config must always be associated with an adf_buffer_config by
+using the adf_buffer_index field. It must also target a particular interface:
+  * The primary display interface
+  * The memory write-back interface
+If it is desired to "display" a buffer on both interfaces, then two
+malidp_buffer_configs are required - one "targeting" the primary interface
+and one targeting the memory interface, both with the same adf_buffer_index.
+The fields in each malidp_buffer_config apply only to the targeted interface.
+This means that a post consisting of "n" input layers has at most (n * 2) + 1
+and at least "n" malidp_buffer_configs - up to 2 for each input layer, and a
+further one for any output buffer.
+
+Consider a simple case where a single buffer is to be displayed on the primary
+interface. There should be a single adf_buffer_config describing the physical
+memory, and selecting an overlay engine to use for the buffer.
+There should also be a matching malidp_buffer_config, targeting
+adf_buffer_index 0 and the interface ID of the primary interface. The other
+fields of the malidp_buffer_config can then be used to set how that buffer
+will be composed on screen.
+
+Source Cropping
+---------------
+Source cropping is expressed entirely in the adf_buffer_config, through a
+combination of the offset, width, height and pitch fields.
+Top and left cropping is specified by setting the offset fields:
+offset = (left_crop * bytes_per_pixel) + (top_crop * pitch)
+Right and bottom cropping is achieved by setting the width and height
+appropriately.
+
+Memory write-back
+-----------------
+To make use of the memory write-back interface, an output buffer must be
+supplied. This means an adf_buffer_config describing the memory to be written
+to, and a malidp_buffer_config with the MALIDP_FLAG_BUFFER_OUTPUT flag set,
+targeting the memory interface. For output buffers, the overlay engine is
+unimportant, but must be a valid overlay engine ID.
+The contents of the written buffer depend on the other buffer descriptions in
+the post. In general, any malidp_buffer_configs flagged as INPUT with the
+interface set to the memory write-back interface will be written to memory.
+If no INPUT buffers targeting the memory interface are provided, then the post
+will fail.
+
+The possible write-back operations are:
+  * Composition write-back
+    The result of composition (i.e. the image displayed on-screen) will be
+    written to memory if:
+    * The output buffer dimensions match those of the display mode
+    * All input buffers target both the primary and memory interfaces, and
+      the corresponding malidp_buffer_configs describe the same layout for
+      both interfaces.
+  * Scaled composition write-back
+    The composition result will be scaled before being written to memory if:
+    * All input buffers target both the primary and memory interfaces
+    * The corresponding malidp_buffer_configs differ only in a linear scaling
+      of all dimensions
+    NB: When scaling the composition, dimensions which are non-integer after
+    scaling should be truncated by the application.
+  * Selected layer write-back
+    A particular layer can be selected to be written to the output buffer if:
+    * It has a malidp_buffer_config targeting the memory interface
+    * No other layers have malidp_buffer_configs targeting the memory
+      interface
+    * The output buffer dimensions match the display rectangle of that
+      malidp_buffer_config
+    NB: In this case, no composition is conducted, meaning no alpha blending
+    (there is nothing to blend with!)
+
+There is one special case where the above can be ambiguous:
+Only a single layer is being displayed, with dimensions which match the
+display mode, and is also targeting the memory write-back interface.
+In this situation, the behavior is determined by comparing the display
+rectangles of the layer being written and the output buffer:
+  * the sizes do not match -> write the result of the composition
+  * the sizes match the mode -> write the result of the composition
+  * the sizes match (but not the mode) -> write only the layer matching the
+    input buffer
+
+Scaling
+-------
+Scaling is determined by comparing the display width and height specified in a
+malidp_buffer_config to the width and height of its corresponding
+adf_buffer_config - if the dimensions differ then a scaling operation is
+attempted.
+When a layer targets both interfaces (by having 2 malidp_buffer_configs) the
+display rectangles can differ, meaning that scaling can be set independently for
+each interface. In the case of "scaled composition write-back" above, this is
+the method used to indicate that the scaled composition should be written.
+
+Not all layers can be scaled, and only a limited number of total scaling
+operations can be conducted in a particular scene. This information can be
+queried from the ADF objects, stored in their custom data:
+ * A malidp ADF device exposes n_scalers which is the total number of
+   scale operations the device can carry out in a scene.
+ * A malidp ADF overlay engine exposes supports_scaling, which states whether
+   that overlay can be scaled.
+
+AFBC
+----
+The Mali-DP supports displaying buffers which are compressed using the AFBC
+compression algorithm.
+For an AFBC buffer, the adf_buffer_config must:
+  * Set the offset field to point to the start of the AFBC "header buffer"
+  * Set the width and height to the source width and height of the area to be
+    displayed, taking account of any cropping
+  * Use a format which is compatible with the AFBC decoder
+The corresponding malidp_buffer_config(s) must:
+  * Set the MALIDP_FLAG_AFBC flag
+  * If the compressed data uses the lossless YUV transform set
+    MALIDP_FLAG_AFBC_YTR
+  * Set the display top/left/width/height to the desired composed size of the
+    display region, after any scaling
+  * Set the afbc_crop_t/l/b/r fields for any required cropping (including
+    padding)
+The effect of all this is that the overall dimensions of the AFBC buffer are
+expressed as:
+  Width:  adf_buffer_config.w + afbc_crop_l + afbc_crop_r
+  Height: adf_buffer_config.h + afbc_crop_t + afbc_crop_b
+These overall width/height values must be aligned to 16 pixels as stated by the
+AFBC specification, however the individual components are only required to
+align to any chroma subsampling.
+
+Smart Layer
+-----------
+This feature is introduced by Mali-DP 550 display processor. It can be detected
+by the overlay engine custome data. If the n_supported_layers@malidp_adf_overlay_custom_data
+is more than 1, it means the smart layer is supported by this overlay engine and
+the field indicates how many smart layers are supported by this overlay engine.
+For smart layer overlay engine, multiple buffers can be mapped to it. But these
+buffers must be same format and non-overlapped. Please check the smart layer hardware
+spec for more detail about the smart layer limitation.
+
+Examples
+--------
+Below are some pseudo-code examples of different configurations, in all cases a
+640x480 display mode is assumed:
+
+Example 1 - Single buffer for display
+-------------------------------------
+adf_buffers = {
+	{ /* Input buffer, layer 1 */
+		.overlay_engine = MALIDP_OVERLAY_GRAPHICS1,
+		.format = RGB565,
+		.w = 640,
+		.h = 480,
+	},
+};
+
+malidp_buffers = {
+	{ /* Layer 1, primary interface descriptor */
+		.adf_buffer_index = 0,
+		.adf_intf_id = MALIDP_INTERFACE_PRIMARY,
+		.display_width = 640,
+		.display_height = 480,
+		.flags = MALIDP_FLAG_BUFFER_INPUT,
+		.alpha_mode = MALIDP_ALPHA_MODE_NONE,
+	},
+};
+
+Example 2 - Compose 2 layers, display and write-back composition
+----------------------------------------------------------------
+adf_buffers = {
+	{ /* Input buffer, layer 1 */
+		.overlay_engine = MALIDP_OVERLAY_VIDEO,
+		.format = RGB888,
+		.w = 640,
+		.h = 480,
+	},
+	{ /* Input buffer, layer 2 */
+		.overlay_engine = MALIDP_OVERLAY_GRAPHICS1,
+		.format = RGB565,
+		.w = 320,
+		.h = 240,
+	},
+	{ /* Output buffer for writing to */
+		.overlay_engine = X, /* Don't care */
+		.format = XRGB8888,
+		/* The dimensions match the display mode */
+		.w = 640,
+		.h = 480,
+	},
+};
+
+malidp_buffers = {
+	{ /* Layer 1, primary interface descriptor */
+		.adf_buffer_index = 0,
+		.adf_intf_id = MALIDP_INTERFACE_PRIMARY,
+		.display_width = 640,
+		.display_height = 480,
+		.flags = MALIDP_FLAG_BUFFER_INPUT,
+		.alpha_mode = MALIDP_ALPHA_MODE_NONE,
+	},
+	{ /* Layer 1, memory interface descriptor */
+		.adf_buffer_index = 0,
+		.adf_intf_id = MALIDP_INTERFACE_MEMORY,
+		.display_width = 640,
+		.display_height = 480,
+		.flags = MALIDP_FLAG_BUFFER_INPUT,
+		.alpha_mode = MALIDP_ALPHA_MODE_NONE,
+	},
+	{ /* Layer 2, primary interface descriptor */
+		.adf_buffer_index = 1,
+		.adf_intf_id = MALIDP_INTERFACE_PRIMARY,
+		/* Centered on screen */
+		.display_top = 120,
+		.display_left = 160,
+		.display_width = 320,
+		.display_height = 240,
+		.flags = MALIDP_FLAG_BUFFER_INPUT,
+		.alpha_mode = MALIDP_ALPHA_MODE_LAYER,
+		.layer_alpha = 128, /* 50% transparent */
+	},
+	{ /* Layer 2, memory interface descriptor */
+		.adf_buffer_index = 1,
+		.adf_intf_id = MALIDP_INTERFACE_MEMORY,
+		/* Centered on screen */
+		.display_top = 120,
+		.display_left = 160,
+		.display_width = 320,
+		.display_height = 240,
+		.flags = MALIDP_FLAG_BUFFER_INPUT,
+		.alpha_mode = MALIDP_ALPHA_MODE_LAYER,
+		.layer_alpha = 128, /* 50% transparent */
+	},
+	{ /* Output buffer */
+		.adf_buffer_index = 2,
+		.adf_intf_id = MALIDP_INTERFACE_MEMORY,
+		/* No scaling */
+		.display_width = 640,
+		.display_height = 480,
+		.flags = MALIDP_FLAG_BUFFER_OUTPUT,
+		.alpha_mode = MALIDP_ALPHA_MODE_NONE,
+	},
+};
+
+Example 3 - Compose 2 layers, display and write-back downscaled composition
+---------------------------------------------------------------------------
+adf_buffers = {
+	{ /* Input buffer, layer 1 */
+		.overlay_engine = MALIDP_OVERLAY_VIDEO,
+		.format = RGB888,
+		.w = 640,
+		.h = 480,
+	},
+	{ /* Input buffer, layer 2 */
+		.overlay_engine = MALIDP_OVERLAY_GRAPHICS1,
+		.format = RGB565,
+		.w = 320,
+		.h = 240,
+	},
+	{ /* Output buffer for writing to */
+		.overlay_engine = X, /* Don't care */
+		.format = XRGB8888,
+		/* Downscale - The dimensions are 50% of the display mode */
+		.w = 320,
+		.h = 240,
+	},
+};
+
+malidp_buffers = {
+	{ /* Layer 1, primary interface descriptor */
+		.adf_buffer_index = 0,
+		.adf_intf_id = MALIDP_INTERFACE_PRIMARY,
+		/* Full-size on primary interface */
+		.display_width = 640,
+		.display_height = 480,
+		.flags = MALIDP_FLAG_BUFFER_INPUT,
+		.alpha_mode = MALIDP_ALPHA_MODE_NONE,
+	},
+	{ /* Layer 1, memory interface descriptor */
+		.adf_buffer_index = 0,
+		.adf_intf_id = MALIDP_INTERFACE_MEMORY,
+		/* Dimensions downscaled by 50% for memory interface */
+		.display_width = 320,
+		.display_height = 240,
+		.flags = MALIDP_FLAG_BUFFER_INPUT,
+		.alpha_mode = MALIDP_ALPHA_MODE_NONE,
+	},
+	{ /* Layer 2, primary interface descriptor */
+		.adf_buffer_index = 1,
+		.adf_intf_id = MALIDP_INTERFACE_PRIMARY,
+		/* Full-size, centered on primary interface */
+		.display_top = 120,
+		.display_left = 160,
+		.display_width = 320,
+		.display_height = 240,
+		.flags = MALIDP_FLAG_BUFFER_INPUT,
+		.alpha_mode = MALIDP_ALPHA_MODE_LAYER,
+		.layer_alpha = 128, /* 50% transparent */
+	},
+	{ /* Layer 2, memory interface descriptor */
+		.adf_buffer_index = 1,
+		.adf_intf_id = MALIDP_INTERFACE_MEMORY,
+		/* Dimensions downscaled by 50% for memory interface */
+		.display_top = 60,
+		.display_left = 80,
+		.display_width = 160,
+		.display_height = 120,
+		.flags = MALIDP_FLAG_BUFFER_INPUT,
+		.alpha_mode = MALIDP_ALPHA_MODE_LAYER,
+		.layer_alpha = 128, /* 50% transparent */
+	},
+	{ /* Output buffer */
+		.adf_buffer_index = 2,
+		.adf_intf_id = MALIDP_INTERFACE_MEMORY,
+		/* Dimensions match physical buffer */
+		.display_width = 320,
+		.display_height = 240,
+		.flags = MALIDP_FLAG_BUFFER_OUTPUT,
+		.alpha_mode = MALIDP_ALPHA_MODE_NONE,
+	},
+};
+
+Example 4 - Compose 2 layers for display, write-back a single stretched layer
+-----------------------------------------------------------------------------
+adf_buffers = {
+	{ /* Input buffer, layer 1 */
+		.overlay_engine = MALIDP_OVERLAY_VIDEO,
+		.format = RGB888,
+		.w = 640,
+		.h = 480,
+	},
+	{ /* Input buffer, layer 2 */
+		.overlay_engine = MALIDP_OVERLAY_GRAPHICS1,
+		.format = RGB565,
+		.w = 320,
+		.h = 240,
+	},
+	{ /* Output buffer for writing to */
+		.overlay_engine = X, /* Don't care */
+		.format = XRGB8888,
+		/* We will "stretch" layer 2 into this buffer */
+		.w = 640,
+		.h = 240,
+	},
+};
+
+malidp_buffers = {
+	{ /* Layer 1, primary interface descriptor */
+		.adf_buffer_index = 0,
+		.adf_intf_id = MALIDP_INTERFACE_PRIMARY,
+		/* Full-size on primary interface */
+		.display_width = 640,
+		.display_height = 480,
+		.flags = MALIDP_FLAG_BUFFER_INPUT,
+		.alpha_mode = MALIDP_ALPHA_MODE_NONE,
+	},
+	/* No memory interface descriptor for layer 1 - don't write it to memory */
+	{ /* Layer 2, primary interface descriptor */
+		.adf_buffer_index = 1,
+		.adf_intf_id = MALIDP_INTERFACE_PRIMARY,
+		/* Full-size, centered on primary interface */
+		.display_top = 120,
+		.display_left = 160,
+		.display_width = 320,
+		.display_height = 240,
+		.flags = MALIDP_FLAG_BUFFER_INPUT,
+		.alpha_mode = MALIDP_ALPHA_MODE_NONE,
+	},
+	{ /* Layer 2, memory interface descriptor */
+		.adf_buffer_index = 1,
+		.adf_intf_id = MALIDP_INTERFACE_MEMORY,
+		/* x-dimension doubled, for "stretch" */
+		.display_width = 640,
+		.display_height = 240,
+		.flags = MALIDP_FLAG_BUFFER_INPUT,
+		.alpha_mode = MALIDP_ALPHA_MODE_NONE,
+	},
+	{ /* Output buffer */
+		.adf_buffer_index = 2,
+		.adf_intf_id = MALIDP_INTERFACE_MEMORY,
+		/* Dimensions match physical buffer */
+		.display_width = 640,
+		.display_height = 240,
+		.flags = MALIDP_FLAG_BUFFER_OUTPUT,
+		.alpha_mode = MALIDP_ALPHA_MODE_NONE,
+	},
+};
+
+Example 5 - Display 4 non-overlapped layers with smart layer overlay engine
+---------------------------------------------------------------------------
+adf_buffers = {
+	{ /* Input buffer, smart layer 1 */
+		.overlay_engine = MALIDP_OVERLAY_SMART1,
+		.format = ARGB8888,
+		.w = 320,
+		.h = 240,
+	},
+	{ /* Input buffer, smart layer 2 */
+		.overlay_engine = MALIDP_OVERLAY_SMART1,
+		.format = ARGB8888,
+		.w = 160,
+		.h = 120,
+	},
+	{ /* Input buffer, smart layer 3 */
+		.overlay_engine = MALIDP_OVERLAY_SMART1,
+		.format = ARGB8888,
+		.w = 160,
+		.h = 120,
+	},
+	{ /* Input buffer, smart layer 4 */
+		.overlay_engine = MALIDP_OVERLAY_SMART1,
+		.format = ARGB8888,
+		.w = 160,
+		.h = 120,
+	},
+};
+
+malidp_buffers = {
+	{ /* Smart Layer 1, primary interface descriptor */
+		.adf_buffer_index = 0,
+		.adf_intf_id = MALIDP_INTERFACE_PRIMARY,
+		.display_top = 10,
+		.display_left = 20,
+		.display_width = 320,
+		.display_height = 240,
+		.flags = MALIDP_FLAG_BUFFER_INPUT,
+		.alpha_mode = MALIDP_ALPHA_MODE_NONE,
+	},
+	{ /* Smart Layer 2, primary interface descriptor */
+		.adf_buffer_index = 1,
+		.adf_intf_id = MALIDP_INTERFACE_PRIMARY,
+		.display_top = 270,
+		.display_left = 50,
+		.display_width = 160,
+		.display_height = 120,
+		.flags = MALIDP_FLAG_BUFFER_INPUT,
+		.alpha_mode = MALIDP_ALPHA_MODE_NONE,
+	},
+	{ /* Smart Layer 3, primary interface descriptor */
+		.adf_buffer_index = 2,
+		.adf_intf_id = MALIDP_INTERFACE_PRIMARY,
+		.display_top = 260,
+		.display_left = 240,
+		.display_width = 160,
+		.display_height = 120,
+		.flags = MALIDP_FLAG_BUFFER_INPUT,
+		.alpha_mode = MALIDP_ALPHA_MODE_NONE,
+	},
+	{ /* Smart Layer 4, primary interface descriptor */
+		.adf_buffer_index = 3,
+		.adf_intf_id = MALIDP_INTERFACE_PRIMARY,
+		.display_top = 30,
+		.display_left = 360,
+		.display_width = 160,
+		.display_height = 120,
+		.flags = MALIDP_FLAG_BUFFER_INPUT,
+		.alpha_mode = MALIDP_ALPHA_MODE_NONE,
+	},
+};

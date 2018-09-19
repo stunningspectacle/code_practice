@@ -1,0 +1,54 @@
+diff --git a/libhwcomposer/hwcomposer.cpp b/libhwcomposer/hwcomposer.cpp
+index 6b447e0..5bf0e0e 100644
+--- a/libhwcomposer/hwcomposer.cpp
++++ b/libhwcomposer/hwcomposer.cpp
+@@ -258,6 +258,7 @@ public:
+     size_t  fb_count;
+     hwc_layer_1_t* fbLayers[HWC_MAX_LAYER_NUM];
+     buffer_handle_t fbLastHandle[HWC_MAX_LAYER_NUM];
++    bool smartCompEnabled;
+ 
+     static const char *DEFAULT_CONFIGURATOR_NAME;
+ 
+@@ -726,6 +727,7 @@ public:
+ 
+     void setupSmartComposition() {
+          int compositionType = HWC_OVERLAY;
++         conf.smartCompEnabled = true;
+ 
+          // setup smart composition only there's no update on all FB layers
+          for (size_t i = 0; i < conf.fb_count; i++) {
+@@ -735,6 +737,7 @@ public:
+              if (lastHandle != currentHandle) {
+                  conf.fbLastHandle[i] = currentHandle;
+                  compositionType = HWC_FRAMEBUFFER;
++                 conf.smartCompEnabled = false;
+              }
+          }
+ 
+@@ -784,6 +787,17 @@ public:
+                 ALOGV("render() - using normal   [%p] at %d", overlays[i], i);
+             }
+         }
++
++        if (conf.smartCompEnabled) {
++            for (size_t i = 0; i < conf.fb_count; i++) {
++                hwc_layer_1_t *layer = conf.fbLayers[i];
++                if (layer->acquireFenceFd >= 0) {
++                    close(layer->acquireFenceFd);
++                    layer->acquireFenceFd = -1;
++                }
++            }
++        }
++
+         dcc_hal_compose(back, overlays, conf.overlay_count,
+                 conf.back != 0, &display->retireFenceFd);
+ 
+@@ -800,6 +814,7 @@ public:
+                 layer->acquireFenceFd = -1;
+             }
+         }
++
+         if (conf.back && conf.back->acquireFenceFd >= 0) {
+             close(back->acquireFenceFd);
+             back->acquireFenceFd = -1;

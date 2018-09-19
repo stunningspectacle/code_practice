@@ -1,0 +1,81 @@
+From 0c2545037b4aff9e729b9dbd44da0d0a8fa032c2 Mon Sep 17 00:00:00 2001
+From: "joe,shen" <joe.shen@intel.com>
+Date: Wed, 20 Jan 2016 14:08:15 +0800
+Subject: [PATCH] [MRD6][dsi]LP command can not be sent after video is stop
+
+1:it should set STP bit to let dsi phy return to TX stop state
+2:command length should config into VID6
+
+Change-Id: I074d40ffb91ac1ff3c3b1794166a6af139b6d96c
+Signed-off-by: joe,shen <joe.shen@intel.com>
+Tracked-On:
+---
+ drivers/video/xgold/dsi/dsi_device.c  |    3 ++-
+ drivers/video/xgold/dsi/dsi_display.c |   18 ++++++++++++++++++
+ drivers/video/xgold/dsi/dsi_display.h |    1 +
+ 3 files changed, 21 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/video/xgold/dsi/dsi_device.c b/drivers/video/xgold/dsi/dsi_device.c
+index 2cdc77e..4da1095 100644
+--- a/drivers/video/xgold/dsi/dsi_device.c
++++ b/drivers/video/xgold/dsi/dsi_device.c
+@@ -66,7 +66,8 @@ static int xgold_mipi_dsi_disable(void)
+ 	if (unlikely(!mipi_dsi) || !mipi_dsi->sys_state)
+ 		return 0;
+ 
+-	dsi_config(display, DIF_TX_DATA);
++	dsi_config_after_video(display);
++
+ 	if (display->sleep_in)
+ 		display->sleep_in(display);
+ 
+diff --git a/drivers/video/xgold/dsi/dsi_display.c b/drivers/video/xgold/dsi/dsi_display.c
+index 4c4a36f..c39933a 100644
+--- a/drivers/video/xgold/dsi/dsi_display.c
++++ b/drivers/video/xgold/dsi/dsi_display.c
+@@ -158,6 +158,13 @@ static void dsi_mipidsi_send_short_packet(struct dsi_display *display,
+ 	dsi_write_field(display, EXR_DSI_VID3,
+ 			BITFLDS(EXR_DSI_VID3_PIXEL_PACKETS, 1));
+ 
++	/*	it can not send first LP short command after stop video data
++			and config dsi to DIF_TX_DATA mode. VID6 should be updated
++	*/
++
++	dsi_write_field(display, EXR_DSI_VID6,
++			BITFLDS(EXR_DSI_VID6_LAST_PIXEL, msg->length));
++
+ 	dsi_write_field(display, EXR_DSI_HEAD, dsihead);
+ 	dsi_write_field(display, EXR_DSI_CFG,
+ 			dsicfg | BITFLDS(EXR_DSI_CFG_HEAD_LAT, 1));
+@@ -710,6 +717,17 @@ void dsi_config(struct dsi_display *display, int type)
+ 	dsi_write_field(display, EXR_DSI_CFG, dsicfg);
+ }
+ 
++void dsi_config_after_video(struct dsi_display *display)
++{
++	dsi_write_field(display, EXR_DSI_CFG, DSI_CFG_OFF(DSI_CMD));
++	dsi_write_field(display, EXR_DSI_IMSC, DSI_IRQ_ERR_MASK);
++	/* STP bit should be set to let dsi phy return to tx stop
++	 * state after video stop. otherwise LP command cannot be sent
++	 */
++	dsi_write_field(display, EXR_DSI_CFG, DSI_CFG_RX_LP_STP(1));
++	mdelay(100);
++}
++
+ static int dsi_dphy_calculation(struct dsi_display *display)
+ {
+ 	int ui_ps = 0, ths_prepare_ns, ths_trail_ns, ths_prepare_zero_ns,
+diff --git a/drivers/video/xgold/dsi/dsi_display.h b/drivers/video/xgold/dsi/dsi_display.h
+index 5501335..ecab874 100644
+--- a/drivers/video/xgold/dsi/dsi_display.h
++++ b/drivers/video/xgold/dsi/dsi_display.h
+@@ -192,5 +192,6 @@ int dsi_irq_probe(struct dsi_display *display);
+ int dsi_irq_remove(struct dsi_display *display);
+ int dsi_init(struct dsi_display *display);
+ void dsi_config(struct dsi_display *display, int type);
++void dsi_config_after_video(struct dsi_display *display);
+ int dsi_stop(struct dsi_display *display);
+ #endif
+-- 
+1.7.9.5
+

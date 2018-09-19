@@ -1,0 +1,386 @@
+diff --git a/arch/x86/boot/dts/SF_LTE-mrd6-p1.dts b/arch/x86/boot/dts/SF_LTE-mrd6-p1.dts
+index 49a6134..7705974 100644
+--- a/arch/x86/boot/dts/SF_LTE-mrd6-p1.dts
++++ b/arch/x86/boot/dts/SF_LTE-mrd6-p1.dts
+@@ -77,8 +77,8 @@
+ 		intel,gpu-shared-mem = <0x20000000>;
+ 		intel,dcc-fbpixelformat= "RGB888";
+ 		intel,dcc-debug-level = <1>;
+-#ifdef RECOVERY_KERNEL
+ 		intel,fb-api = <1>;
++#ifdef RECOVERY_KERNEL
+ 		intel,dcc-mem = < 0x00800000 >;
+ #else
+ 		intel,dcc-use-fences = <1>;
+@@ -89,6 +89,7 @@
+ 		intel,display-fps = <60>;
+ 		intel,display-ramless = <1>;
+ 		intel,display-preinit = <0>;
++		intel,display-bootinit = <1>;
+ 		intel,display-if = <&mipi_dsi>;
+ 		intel,display-if-rate = <375000000>;
+ 		/include/ "xgold/display/HX8394.dtsi"
+diff --git a/arch/x86/configs/i386_sofia_defconfig b/arch/x86/configs/i386_sofia_defconfig
+index 4388de8..e057cbf 100644
+--- a/arch/x86/configs/i386_sofia_defconfig
++++ b/arch/x86/configs/i386_sofia_defconfig
+@@ -2180,7 +2180,7 @@ CONFIG_FB_MODE_HELPERS=y
+ # CONFIG_EXYNOS_VIDEO is not set
+ CONFIG_XGOLD_DCC=y
+ CONFIG_XGOLD_DCC_SYSFS=y
+-# CONFIG_XGOLD_DCC_DEBUG is not set
++CONFIG_XGOLD_DCC_DEBUG=y
+ CONFIG_TRANSMITTER_LVDS=y
+ CONFIG_XGOLD_MIPI_DSI=y
+ CONFIG_FB_ROCKCHIP=y
+diff --git a/drivers/video/xgold/dcc/dcc-core.c b/drivers/video/xgold/dcc/dcc-core.c
+index beeb0d3..5120dc6 100644
+--- a/drivers/video/xgold/dcc/dcc-core.c
++++ b/drivers/video/xgold/dcc/dcc-core.c
+@@ -260,7 +260,7 @@ int dcc_core_probe(struct platform_device *pdev)
+ 	pdata->dev = dev;
+ 
+ 	/* gra driver information */
+-	dcc_boot_dbg("kernel frequency is %d MHz\n", pdata->clk_rate/1000/1000);
++	dcc_boot_info("kernel frequency is %d MHz\n", pdata->clk_rate/1000/1000);
+ 
+ 	/* Map dedicated memory */
+ 	if (pdata->mem.pbase) {
+@@ -275,12 +275,16 @@ int dcc_core_probe(struct platform_device *pdev)
+ 		pdata->mem.vbase = dma_alloc_writecombine(dev, pdata->mem.size,
+ 				&pdata->mem.pbase, GFP_KERNEL);
+ 	}
+-	dcc_boot_dbg("dedicated memory [0x%08x-0x%08x] remapped to 0x%08x\n",
++	dcc_boot_info("dedicated memory [0x%08x-0x%08x] remapped to 0x%08x\n",
+ 			pdata->mem.pbase, pdata->mem.size,
+ 			(unsigned)pdata->mem.vbase);
+ 
+ 	/* setup hardware: DCC*/
+-	dcc_core_hwstart(pdata);
++	//dcc_core_hwstart(pdata);
++	if (!pdata->display_boot_initialized) {
++		/* setup hardware: DCC*/
++		dcc_core_hwstart(pdata);
++	}
+ 	/* Read DCC revision number */
+ 	gra_read_field(pdata, EXR_DIF_ID_NUMBER, &pdata->id);
+ 
+@@ -326,15 +330,21 @@ int dcc_core_probe(struct platform_device *pdev)
+ 	}
+ 
+ 	xgold_noc_qos_set("DCC2");
+-	dcc_display_setup(pdata);
++	//dcc_display_setup(pdata);
+ 
+ 	if (pdata->display_invert_composite)
+ 		dcc_invert_RGB_composite(pdata);
+ 
++	if (pdata->display_boot_initialized) {
++		dcc_display_setup_again(pdata);
++	} else {
++		dcc_display_setup(pdata);
++		dcc_core_hwsetup(pdata);
++	}
+ 	dcc_boot_info("Display device %dx%d %s\n",
+ 			pdata->display.xres, pdata->display.yres,
+ 			dcc_format_name(pdata->fbfmt));
+-	dcc_core_hwsetup(pdata);
++	//dcc_core_hwsetup(pdata);
+ 
+ 	dcc_boot_info("HWID 0x%x / DCC@%d MHz / %dMB RAM [0x%08x->0x%p]\n",
+ 			pdata->id, pdata->clk_rate/1000/1000,
+@@ -348,6 +358,33 @@ int dcc_core_probe(struct platform_device *pdev)
+ 	dcc_sysfs_create(dev);
+ #endif
+ 
++#if 1
++	//dcc_set_pinctrl_state(&pdev->dev, pdata->pins_default);
++	//dcc_core_hwstart(pdata);
++
++	//gra_write_field(pdata, EXR_DIF_RUNCTRL, DCC_MODE_RUN);
++	//xgold_noc_qos_set("DCC2");
++	//gra_write_field(pdata, EXR_DIF_RUNCTRL, DCC_MODE_CONF);
++	/* Initialize interrupts */
++	/*
++	ret = dcc_interrupt_setup(pdata);
++	if (ret != 0)
++		dcc_err("Error during Interrupt initialization\n");
++	*/
++
++	/* resume display */
++	/*
++	ret = dcc_display_setup(pdata);
++	if (ret != 0)
++		dcc_err("Error during display resume\n");
++	*/
++
++	/*
++	if (pdata->display_invert_composite)
++		dcc_invert_RGB_composite(pdata);
++	*/
++	//dcc_core_hwsetup(pdata);
++#endif
+ 	return ret;
+ 
+ exit_unmap:
+diff --git a/drivers/video/xgold/dcc/dcc-core.h b/drivers/video/xgold/dcc/dcc-core.h
+index fa23696..2cc605c 100644
+--- a/drivers/video/xgold/dcc/dcc-core.h
++++ b/drivers/video/xgold/dcc/dcc-core.h
+@@ -246,6 +246,8 @@ struct dcc_drvdata {
+ 	int use_fbapi;
+ 	int fbapi_nr_buffers;
+ 	int display_preinit;
++	int display_bootinit;/////////
++	int display_boot_initialized;////////
+ 	int dcc_sprite2_unified;
+ 	int display_autorefresh;
+ 	int display_invert_composite;
+@@ -367,6 +369,7 @@ int dcc_hal_remove(struct dcc_drvdata *pdata);
+ int dcc_interrupt_setup(struct dcc_drvdata *pdata);
+ 
+ int dcc_display_setup(struct dcc_drvdata *pdata);
++int dcc_display_setup_again(struct dcc_drvdata *pdata);
+ int dcc_display_suspend(struct dcc_drvdata *pdata);
+ int dcc_display_resume(struct dcc_drvdata *pdata);
+ 
+diff --git a/drivers/video/xgold/dcc/dcc-dif-mipi-dbi.c b/drivers/video/xgold/dcc/dcc-dif-mipi-dbi.c
+index 335f491e..9f485b2 100644
+--- a/drivers/video/xgold/dcc/dcc-dif-mipi-dbi.c
++++ b/drivers/video/xgold/dcc/dcc-dif-mipi-dbi.c
+@@ -238,7 +238,7 @@ static unsigned char dcc_lcd_ns2cycles(unsigned int freq, unsigned char ns)
+ 
+ 	freq /= (1000*1000); /* to MHz */
+ 	ns_per_cycle = (1000 / freq) + ((ns_per_cycle*freq) != 1000);
+-	/* dcc_boot_dbg("%s, %dMHz, %d ns/cycle\n",
++	/* dcc_boot_info("%s, %dMHz, %d ns/cycle\n",
+ 				__func__, freq , ns_per_cycle); */
+ 
+ 	cycles = (ns/ns_per_cycle) + ((ns%ns_per_cycle) != 0);
+@@ -253,13 +253,13 @@ void dcc_dbi_timings(struct dcc_drvdata *pdata)
+ 		unsigned split = 0;
+ 		struct dcc_display_if_mipi_dbi *tim = &lcd->dif.u.dbi;
+ 
+-		dcc_boot_dbg("MIPI-BDI timing in ns\n");
+-		dcc_boot_dbg("dd:%d ac:%d ad:%d wr:%d->%d cs:%d->%d\n",
++		dcc_boot_info("MIPI-BDI timing in ns\n");
++		dcc_boot_info("dd:%d ac:%d ad:%d wr:%d->%d cs:%d->%d\n",
+ 			tim->data_delay_ns, tim->access_cycle_ns,
+ 			tim->addr_delay_ns, tim->wr_rd_act_ns,
+ 			tim->wr_rd_deact_ns, tim->cs_act_ns, tim->cs_deact_ns);
+-		dcc_boot_dbg("MIPI-BDI timing in cycomp\n");
+-		dcc_boot_dbg("dd:%d ac:%d ad:%d wr:%d->%d cs:%d->%d\n",
++		dcc_boot_info("MIPI-BDI timing in cycomp\n");
++		dcc_boot_info("dd:%d ac:%d ad:%d wr:%d->%d cs:%d->%d\n",
+ 			dcc_lcd_ns2cycles(pdata->clk_rate,
+ 				tim->data_delay_ns),
+ 			dcc_lcd_ns2cycles(pdata->clk_rate,
+@@ -358,7 +358,7 @@ int dcc_dbi_sync(struct dcc_display *lcd)
+ 	gra_write_field(p, EXR_DIF_SYNCCOUNT_NUMBYTES, lcd->xres * 2);
+ 	gra_write_field(p, EXR_DIF_SYNCCOUNT_HDSTART, 0x3FF);
+ 	gra_read_field(p, EXR_DIF_SYNCCOUNT, &data);
+-	dcc_boot_dbg("DIF_SYNC_COUNT set to %#x\n", data);
++	dcc_boot_info("DIF_SYNC_COUNT set to %#x\n", data);
+ 
+ 	if (lcd->cs == 0) {
+ 		gra_write_field(p, EXR_DIF_SYNCCONFIG_SYNCCS1,
+@@ -375,7 +375,7 @@ int dcc_dbi_sync(struct dcc_display *lcd)
+ 	gra_write_field(p, EXR_DIF_SYNCCONFIG_SYNCEN, 1);
+ 
+ 	gra_read_field(p, EXR_DIF_SYNCCONFIG, &data);
+-	dcc_boot_dbg("DIF_SYNC_CONFIG set to %#x\n", data);
++	dcc_boot_info("DIF_SYNC_CONFIG set to %#x\n", data);
+ 
+ 	return err;
+ }
+@@ -443,7 +443,7 @@ int dcc_dbi_config(struct dcc_display *lcd, int type)
+ 	dcc_dbi_timings(pdata);
+ 
+ 
+-	dcc_boot_dbg("Display probed!\n");
++	dcc_boot_info("Display probed!\n");
+ 	return 0;
+ error:
+ 	dcc_err("Display setup failed\n");
+diff --git a/drivers/video/xgold/dcc/dcc-dts.c b/drivers/video/xgold/dcc/dcc-dts.c
+index 61471bf..3bfb765 100644
+--- a/drivers/video/xgold/dcc/dcc-dts.c
++++ b/drivers/video/xgold/dcc/dcc-dts.c
+@@ -337,6 +337,12 @@ int dcc_of_parse_graphics(struct platform_device *pdev,
+ 	if (ret < 0)
+ 		pdata->display_preinit = 0;
+ 
++	/* disable driver screen operations */
++	ret = of_property_read_u32(ngraphics, "intel,display-bootinit",
++			&pdata->display_bootinit);
++	if (ret < 0)
++		pdata->display_bootinit = 0;
++
+ 	/* debug */
+ 	ret = of_property_read_u32(ngraphics, "intel,dcc-debug-level",
+ 			&pdata->debug.level);
+diff --git a/drivers/video/xgold/dcc/dcc-lcd.c b/drivers/video/xgold/dcc/dcc-lcd.c
+index 7c36db3..557c838 100644
+--- a/drivers/video/xgold/dcc/dcc-lcd.c
++++ b/drivers/video/xgold/dcc/dcc-lcd.c
+@@ -40,13 +40,58 @@ void dcc_display_reset(int gpio, struct dcc_display *lcd)
+ 	}
+ 
+ 	list_for_each_entry(res, &lcd->reset->list, list) {
+-		DCC_DBG2("gpio-reset %d %dms\n",
+-		 res->value, res->mdelay);
+-			gpio_set_value(gpio, !!res->value);
+-		mdelay(res->mdelay);
++		dcc_boot_info("xxxxxxb gpio-reset: set %d to %d, delay %dms\n",
++		 gpio, res->value, res->mdelay);
++		//gpio_set_value(gpio, !!res->value);
++		gpio_set_value(gpio, !!res->value);
++		//mdelay(res->mdelay);
++		mdelay(2);
+ 	}
+ }
+ 
++int dcc_display_setup_again(struct dcc_drvdata *pdata)
++{
++	struct dcc_display *lcd = &pdata->display;
++	int err = 0;
++	lcd->panel_reset = dcc_display_reset;
++	/**
++	 * Display interface configuration
++	 */
++	dcc_boot_info("%s: xxxxxxxxkk reset panel\n", __func__);
++	lcd->panel_reset(pdata->gpio_reset, lcd);
++
++	if (DISPLAY_IS_MIPI_DBI_IF(lcd->dif.type)) {
++		dcc_boot_info("%s: xxxxxxxx type is DBI dif.type=%d\n",
++				__func__, lcd->dif.type);
++		err = dcc_dbi_probe(lcd);
++	} else if (DISPLAY_IS_MIPI_DSI_IF(lcd->dif.type)) {
++		dcc_boot_info("%s: xxxxxxxx type is DSI dif.type=%d\n",
++				__func__, lcd->dif.type);
++		err = dcc_dsi_probe(lcd);
++	} else
++		goto error;
++
++	if ((lcd->dif_config == NULL) || (lcd->panel_init == NULL))
++		goto error;
++	if (lcd->dif_init)
++		lcd->dif_init(lcd);
++
++	lcd->dif_config(lcd, DIF_TX_DATA);
++
++	lcd->panel_init(lcd);
++
++	lcd->dif_config(lcd, DIF_TX_PIXELS);
++
++	/* switch to GRA */
++	gra_write_field(pdata, EXR_DIF_CSREG_GRACMD, 1);
++
++	dcc_boot_info("Display_Interface loaded successfully again!\n");
++	return 0;
++error:
++	dcc_err("Display setup failed\n");
++	return -EINVAL;
++}
++
+ int dcc_display_setup(struct dcc_drvdata *pdata)
+ {
+ 	struct dcc_display *lcd = &pdata->display;
+@@ -60,7 +105,7 @@ int dcc_display_setup(struct dcc_drvdata *pdata)
+ 		mdelay(pdata->gpio_lcd_bias_msdelay);
+ 	}
+ 
+-	dcc_boot_dbg("Initializing display hardware\n");
++	dcc_boot_info("Initializing display hardware\n");
+ 	lcd->panel_reset = dcc_display_reset;
+ 	if (!pdata->display_preinit)
+ 		lcd->panel_reset(pdata->gpio_reset, lcd);
+@@ -100,7 +145,7 @@ int dcc_display_setup(struct dcc_drvdata *pdata)
+ 		gra_write_field(pdata, EXR_DIF_RUNCTRL, DCC_MODE_RUN);
+ 	}
+ 	pdata->display_preinit = 0;
+-	dcc_boot_dbg("Display_Interface loaded successfully!\n");
++	dcc_boot_info("Display_Interface loaded successfully!\n");
+ 	return 0;
+ error:
+ 	dcc_err("Display setup failed\n");
+diff --git a/drivers/video/xgold/dcc/dcc-main.c b/drivers/video/xgold/dcc/dcc-main.c
+index e89d44f..0e23c20 100644
+--- a/drivers/video/xgold/dcc/dcc-main.c
++++ b/drivers/video/xgold/dcc/dcc-main.c
+@@ -958,6 +958,9 @@ int dcc_main_probe(struct platform_device *pdev)
+ 	resource_size_t res_size;
+ 	struct dcc_drvdata *pdata;
+ 
++	unsigned int stat = 0;
++	unsigned int pllstat;
++
+ 	/* Allocate driver data record */
+ 	pdata = devm_kzalloc(&pdev->dev,
+ 			sizeof(struct dcc_drvdata), GFP_KERNEL);
+@@ -976,6 +979,10 @@ int dcc_main_probe(struct platform_device *pdev)
+ 	pdata->drv_suspend = dcc_main_suspend;
+ 	pdata->drv_resume = dcc_main_resume;
+ 
++	/* it is depend on dts and pll check */
++	pdata->display_bootinit = 0;
++	pdata->display_boot_initialized = 0;
++
+ 	/* Map registers */
+ 	res = platform_get_resource_byname(pdev,
+ 			IORESOURCE_MEM, "registers");
+@@ -1007,15 +1014,17 @@ int dcc_main_probe(struct platform_device *pdev)
+ 		 DCCDRV_VERSION_STR, __DATE__, __TIME__);
+ 
+ 	DCC_DBG2("DCC Driver configuration:\n");
+-	if (pdata->display_autorefresh)
++	//if (pdata->display_autorefresh)
+ 		dcc_boot_info("\t%s: display auto refresh\n",
+ 			pdata->display_autorefresh ? "ON " : "OFF");
+-	if (pdata->display_preinit)
++	//if (pdata->display_preinit)
+ 		dcc_boot_info("\t%s: display pre-init\n",
+ 			pdata->display_preinit ? "ON " : "OFF");
+-	if (pdata->use_fences)
++	//if (pdata->use_fences)
+ 		dcc_boot_info("\t%s: use fences\n",
+ 			pdata->use_fences ? "ON " : "OFF");
++	dcc_boot_info("\t%s: display boot-init\n",
++		pdata->display_bootinit ? "enable " : "disable");
+ 
+ 	/* Initialize ioctl semaphore */
+ 	sema_init(&pdata->sem, 1);
+@@ -1045,16 +1054,30 @@ int dcc_main_probe(struct platform_device *pdev)
+ 	}
+ #endif
+ 
++	if (pdata->display_bootinit) {
++		pllstat = BITFLDS(EXR_DIF_STAT_DSILOCK, 1);
++		gra_read_field(pdata, EXR_DIF_STAT, &stat);
++		if ((stat & pllstat) == pllstat) {
++			pdata->display_boot_initialized = 1;
++			dcc_boot_info("0x%x,display is initialized in bootsystem\n",
++					stat);
++		}
++	}
++
+ 	ret = dcc_core_probe(pdev);
+ 	if (ret) {
+ 		dcc_err("Failed to initialize hardware(%d)", ret);
+ 		goto exit;
+ 	}
+ 	/* display boot animation */
+-	dcc_clearscreen(pdata);
++	//dcc_clearscreen(pdata);
++	if (!pdata->display_boot_initialized) {
++		/* display boot animation */
++		dcc_clearscreen(pdata);
+ 
+-	if (pdata->test.bootscreen)
+-		dcc_bootscreen(pdata);
++		if (pdata->test.bootscreen)
++			dcc_bootscreen(pdata);
++	}
+ 
+ 	pdata->devfile.minor = MISC_DYNAMIC_MINOR;
+ 	pdata->devfile.name = DCC_DRIVER_NAME;

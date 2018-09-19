@@ -1,0 +1,55 @@
+From ce9450d87053b874b0c7ade2c73cf4bdba38b8f9 Mon Sep 17 00:00:00 2001
+From: Leo Yan <leo.yan@intel.com>
+Date: Mon, 30 Mar 2015 11:05:09 +0800
+Subject: [PATCH] libhwcomposer: Fix image distortion when playing some games
+
+[BYPASS_BZ_CHECK]
+
+It looks like the DCC cannot do hardware overlay for the rows that
+contain pixels in more than one format, so let GLES handle them.
+UTP-Id: SMS06750010
+Signed-off-by: Leo Yan <leo.yan@intel.com>
+
+Change-Id: Icb1f3432fb3e40ee43f14a74b6dcebe0758c297c
+---
+ libhwcomposer/hwcomposer.cpp |   10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/libhwcomposer/hwcomposer.cpp b/libhwcomposer/hwcomposer.cpp
+index d346c5d..44724a3 100644
+--- a/libhwcomposer/hwcomposer.cpp
++++ b/libhwcomposer/hwcomposer.cpp
+@@ -401,7 +401,12 @@ public:
+     }
+ 
+     bool compareSizes(const hwc_rect_t& r1, const hwc_rect_t& r2) {
+-        return (r1.bottom - r1.top) == (r2.bottom - r2.top);
++        return ((r1.bottom - r1.top) == (r2.bottom - r2.top)) &&
++                ((r1.right - r1.left) == (r2.right - r2.left));
++    }
++
++    bool compareWidth(const hwc_rect_t& r1, const hwc_rect_t& r2) {
++        return (r1.right - r1.left) == (r2.right - r2.left);
+     }
+ 
+     bool isFormatSupportedAsOverlay(int hal_pix_fmt, bool allowYCbCr = false) {
+@@ -487,6 +492,7 @@ public:
+     TwoLayerConfigurator() : IConfigurator("Two") {}
+     bool configure(hwc_display_contents_1_t* display, LayerConfiguration& conf) {
+         hwc_layer_1_t *l;
++        hwc_layer_1_t *fbt_l = &display->hwLayers[conf.fbt_index];
+         LayerConfiguration::AddOvResult res;
+         size_t id, last_id;
+ 
+@@ -496,6 +502,8 @@ public:
+             l = &display->hwLayers[id];
+             if (l->compositionType == HWC_FRAMEBUFFER_TARGET)
+                 continue;
++            if (!conf.compareWidth(l->displayFrame, fbt_l->sourceCrop))
++                continue;
+             private_handle_t const *h = getHandle(l);
+             if (h && to_bpp_hal_fmt(h->fmt) <=
+                     to_bpp_hal_fmt(HAL_PIXEL_FORMAT_RGB_565)) {
+-- 
+1.7.9.5
+

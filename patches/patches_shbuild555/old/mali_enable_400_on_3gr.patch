@@ -1,0 +1,89 @@
+diff --git a/driver/src/base/common/pp/mali_pp_job.c b/driver/src/base/common/pp/mali_pp_job.c
+index ca9b21c..72044ba 100644
+--- a/driver/src/base/common/pp/mali_pp_job.c
++++ b/driver/src/base/common/pp/mali_pp_job.c
+@@ -47,6 +47,7 @@ MALI_STATIC_INLINE void _mali_pp_job_start_instrumented(mali_pp_job_handle job_h
+ 
+ MALI_STATIC mali_bool m200_check_version(void)
+ {
++	return MALI_TRUE;
+ 	u32 hwversion = _mali_arch_pp_get_core_version();
+ 
+ #if defined(USING_MALI400) && (MALI_HWVER == 0x0101)
+diff --git a/driver/src/egl/egl_config.c b/driver/src/egl/egl_config.c
+index c1da7f5..2fe7499 100644
+--- a/driver/src/egl/egl_config.c
++++ b/driver/src/egl/egl_config.c
+@@ -1165,7 +1165,7 @@ EGLBoolean _egl_choose_config(EGLDisplay __dpy,
+ 	if (EGL_DONT_CARE != config.config_id)
+ 	{
+ 		/* find config id in configs */
+-		if (config_size >= 1)
++		if (config_size >= 1 || NULL == __configs)
+ 		{
+ 			EGLConfig config_by_id;
+ 
+diff --git a/driver/src/egl/egl_image_android.cpp b/driver/src/egl/egl_image_android.cpp
+index 0c1e3e8..be9faf5 100644
+--- a/driver/src/egl/egl_image_android.cpp
++++ b/driver/src/egl/egl_image_android.cpp
+@@ -218,6 +218,7 @@ struct mali_image *_egl_android_map_native_buffer_yuv(android_native_buffer_t *b
+ 		case EGL_YVU420SP_KHR:
+ 		case EGL_YUV420SP_KHR:
+ 		{
++#if 0
+ 			u32 ofs_y = hnd->offset, ofs_uv = 0;
+ 			ofs_uv = buffer->stride * buffer->height + hnd->offset;
+ 
+@@ -260,6 +261,7 @@ struct mali_image *_egl_android_map_native_buffer_yuv(android_native_buffer_t *b
+ 			image->pixel_buffer[3][0]->flags |= MALI_SURFACE_FLAG_TRACK_SURFACE;
+ #endif
+ 			break;
++#endif
+ 		}
+ 
+ 		case EGL_YV12_KHR:
+diff --git a/driver/src/egl/egl_platform_android.cpp b/driver/src/egl/egl_platform_android.cpp
+index 0d4713c..3be7fa6 100644
+--- a/driver/src/egl/egl_platform_android.cpp
++++ b/driver/src/egl/egl_platform_android.cpp
+@@ -662,6 +662,13 @@ void __egl_platform_cancel_buffers(egl_surface *surface, mali_bool cancel_frameb
+ 					mali_bool buffer_released = MALI_FALSE;
+ 					native_buf = MALI_REINTERPRET_CAST(android_native_buffer_t *)surface->buffer[i].data;
+ 
++					/* Temporary add this NULL pointer check to avoid crash, actually it should NOT happen*/
++                                        if(native_buf == NULL)
++                                        {
++                                            surface->buffer[i].flags = BUFFER_EMPTY;
++                                            continue;
++                                        }
++
+ 					if (MALI_FALSE == IS_FRAMEBUFFER(native_buf))
+ 					{
+ 						ADBG(2, "cancel UMP/dma_buf buffer at index %i buffer 0x%pn (flags: %i)\n", i, surface->buffer[i].data, surface->buffer[i].flags);
+diff --git a/driver/src/opengles/mali_gp_geometry_common/gles_gb_bounding_box.c b/driver/src/opengles/mali_gp_geometry_common/gles_gb_bounding_box.c
+index 9757ae6..e2cd82a 100644
+--- a/driver/src/opengles/mali_gp_geometry_common/gles_gb_bounding_box.c
++++ b/driver/src/opengles/mali_gp_geometry_common/gles_gb_bounding_box.c
+@@ -746,7 +746,7 @@ MALI_STATIC mali_bool _gles_check_bounding_box(gles_vertex_attrib *attr_array,
+  * @param po  - binary shader program
+  * Note: this function is local to this file so could be static but we don't want the compiler inlining it.
+  */
+-void parse_cpupretrans_patterns(bs_program *po)
++void __attribute__((noinline)) parse_cpupretrans_patterns(bs_program *po)
+ {
+ 	struct binary_shader_chunk_vertex_operand *stack[BS_MAXMEMORY_FOR_PATTERNS] = { NULL };
+ 	struct binary_shader_expression_item *entry = NULL;
+diff --git a/driver/src/shared/binary_shader/bs_symbol.c b/driver/src/shared/binary_shader/bs_symbol.c
+index 29a465f..a667a3c 100644
+--- a/driver/src/shared/binary_shader/bs_symbol.c
++++ b/driver/src/shared/binary_shader/bs_symbol.c
+@@ -340,7 +340,7 @@ MALI_STATIC struct bs_symbol *recursive_lookup_symbol(struct bs_symbol_table *ta
+ 
+ 			/* in addition to strncmp we need to check if symbol has a terminating zero at position 'namelen'
+ 			 * and that the symbol found is a struct */
+-			if (_mali_sys_memcmp(name, table->members[i]->name, symbol_namelen) == 0 &&
++			if (_mali_sys_strncmp(name, table->members[i]->name, symbol_namelen) == 0 &&
+ 			        table->members[i]->name[symbol_namelen] == '\0')
+ 			{
+ 				MALI_DEBUG_ASSERT(symbol_namelen != 0, ("We found a match for a symbol without any name. What?"));

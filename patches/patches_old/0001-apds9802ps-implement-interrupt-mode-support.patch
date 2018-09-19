@@ -1,0 +1,542 @@
+From 1fc605bcdd14852749795cca84609405712dc865 Mon Sep 17 00:00:00 2001
+From: Hong Liu <hong.liu@intel.com>
+Date: Fri, 6 May 2011 10:33:59 +0800
+Subject: [PATCH] apds9802ps: implement interrupt mode support
+
+BZ: 1455
+
+When voice call is active, Android PhoneApp will enable the proximity
+sensor to control the screen on/off whether the phone is put near head or not.
+Currently we use polling mode to report data to Android, this will prevent
+system from entering into S0i3 when voice call is active.
+
+Enable threshold interrupt mode in driver to report data only when there is
+object moving close enough to the phone, and when object is moving away from
+the phone. With this, we can avoid the polling from Android framework.
+
+Change-Id: I3d957a4281a3af214963199f1ea592aac0b4a3d8
+Signed-off-by: Hong Liu <hong.liu@intel.com>
+---
+ arch/x86/kernel/mrst.c                    |   14 ++
+ drivers/staging/mfld-sensors/apds9802ps.c |  343 ++++++++++++++++++++++++++---
+ 2 files changed, 323 insertions(+), 34 deletions(-)
+
+diff --git a/arch/x86/kernel/mrst.c b/arch/x86/kernel/mrst.c
+index 88bdf06..d98faf7 100644
+--- a/arch/x86/kernel/mrst.c
++++ b/arch/x86/kernel/mrst.c
+@@ -1124,6 +1124,19 @@ static void *lis3dh_platform_data(void *info)
+ 	return &lis3dh_pdata;
+ }
+ 
++static void *apds9802ps_platform_data(void *info)
++{
++	struct i2c_board_info *i2c_info = info;
++	int gpio;
++
++	gpio = get_gpio_by_name("AL-intr");
++	if (gpio < 0)
++		pr_err("fail to get AL-intr gpio pin\n");
++
++	i2c_info->irq = gpio;
++	return NULL;
++}
++
+ #define BH1770GLC_GPIO_INT "bh1770glc_int"
+ 
+ void *bh1770glc_platform_data_init(void *info)
+@@ -2717,6 +2730,7 @@ static const struct devs_id device_ids[] = {
+ 	{"i2c_thermal", SFI_DEV_TYPE_I2C, 0, &emc1403_platform_data},
+ 	{"i2c_accel", SFI_DEV_TYPE_I2C, 0, &lis331dl_platform_data},
+ 	{"lis3lv02d", SFI_DEV_TYPE_I2C, 0, &lis3dh_platform_data},
++	{"apds9802ps", SFI_DEV_TYPE_I2C, 0, &apds9802ps_platform_data},
+ 	{"cy8ctmg110", SFI_DEV_TYPE_I2C, 0, &cy8ctmg110_platform_data},
+ 	{"aava-max3107", SFI_DEV_TYPE_SPI, 1, &no_platform_data},
+ 	{"pmic_audio", SFI_DEV_TYPE_SPI, 1, &no_platform_data},
+diff --git a/drivers/staging/mfld-sensors/apds9802ps.c b/drivers/staging/mfld-sensors/apds9802ps.c
+index 2bd3fb3..2844ed8 100644
+--- a/drivers/staging/mfld-sensors/apds9802ps.c
++++ b/drivers/staging/mfld-sensors/apds9802ps.c
+@@ -30,20 +30,69 @@
+ #include <linux/mutex.h>
+ #include <linux/sysfs.h>
+ #include <linux/pm_runtime.h>
++#include <linux/gpio.h>
++#include <linux/interrupt.h>
++#include <linux/miscdevice.h>
++#include <linux/wait.h>
++#include <linux/poll.h>
+ 
+ MODULE_AUTHOR("Anantha Narayanan <Anantha.Narayanan@intel.com");
+ MODULE_DESCRIPTION("Avago apds9802ps Proximity Driver");
+ MODULE_LICENSE("GPL v2");
+ 
+-#define POWER_STA_ENABLE 1
+-#define POWER_STA_DISABLE 0
+-
+ #define DRIVER_NAME "apds9802ps"
+ 
+-struct ps_data{
++#define THRESHOLD 1000
++#define APDS9802PS_SYSFS_POWERON   1
++#define APDS9802PS_SYSFS_POWERDOWN 0
++
++
++/* command register bits, use smbus write byte protocol to config */
++#define CMD_THRESH_CLEAR (1 << 6)
++#define CMD_EOC_CLEAR    (1 << 5)
++
++/* other target registers, use smbus write byte data protocol to config */
++#define APDS9802PS_POWER_CTRL 0x80
++  #define POWER_CTRL_ON	 (1 << 0)
++
++#define APDS9802PS_PULSE_FREQ 0x81
++  #define PULSE_COUNT_20  (4 << 5)
++  #define DUTY_CYCLE_25   (1 << 2)
++  #define PULSE_FREQ_100K (2 << 0)
++
++#define APDS9802PS_INTERVAL_CTRL 0x82
++  #define START_MEASUREMENT  (1 << 5)
++  #define LED_CURRENT_100MA  (1 << 3)
++  #define INTERVAL_DELAY_5MS (0 << 0)
++
++#define APDS9802PS_IRQ_THRESH_LOW  0x83
++#define APDS9802PS_IRQ_THRESH_HIGH 0x84
++#define APDS9802PS_DATA_LOW	   0x85
++#define APDS9802PS_DATA_HIGH	   0x86
++
++#define APDS9802PS_IRQ_CTRL	   0x87
++  #define IRQ_THRESH_NEGATIVE (1 << 6)
++  #define IRQ_THRESH_POSITIVE (1 << 5)
++  #define IRQ_EOC	      (1 << 4)
++  #define IRQ_THRESH_ENABLE   (1 << 1)
++  #define IRQ_EOC_ENABLE      (1 << 0)
++
++
++enum obj_state {
++	STATE_OBJ_AWAY = 1,
++	STATE_OBJ_NEAR = 2,
++};
++
++struct ps_data {
+ 	struct mutex lock;
++	wait_queue_head_t misc_wait;
++	int open;
++	int has_data;
++	u8 state;
+ };
+ 
++static struct ps_data *ps_dev; /* for miscdevice */
++
+ static ssize_t ps_proximity_output_data_show(struct device *dev,
+ 				struct device_attribute *attr, char *buf)
+ {
+@@ -56,31 +105,26 @@ static ssize_t ps_proximity_output_data_show(struct device *dev,
+ 	pm_runtime_get_sync(dev);
+ 	mutex_lock(&data->lock);
+ 
+-	/* start measurement */
+-	i2c_smbus_write_byte_data(client, 0x82, 0x2d);
+-
+ 	/* wait for data ready */
+ 	do {
+ 		msleep(5);
+-		ret_val = i2c_smbus_read_byte_data(client, 0x87);
+-		if (ret_val > 0 && (ret_val & 0x10))
++		ret_val = i2c_smbus_read_byte_data(client, APDS9802PS_IRQ_CTRL);
++		if (ret_val > 0 && (ret_val & IRQ_EOC))
+ 			break;
+ 	} while (retry--);
+ 
+ 	if (!retry)
+ 		dev_warn(dev, "timeout waiting for data ready\n");
+ 
+-	l = i2c_smbus_read_byte_data(client, 0x85); /* LSB data */
++	l = i2c_smbus_read_byte_data(client, APDS9802PS_DATA_LOW);
+ 	if (l < 0)
+ 		dev_warn(dev, "failed proximity out read LSB\n");
+ 
+-	h = i2c_smbus_read_byte_data(client, 0x86); /* MSB data */
++	h = i2c_smbus_read_byte_data(client, APDS9802PS_DATA_HIGH);
+ 	if (h < 0)
+ 		dev_warn(dev, "failed proximity out read MSB\n");
+ 
+-	/* stop measurement and clear interrupt status */
+-	i2c_smbus_write_byte_data(client, 0x82, 0x0d);
+-	i2c_smbus_write_byte(client, 0x60);
++	i2c_smbus_write_byte(client, CMD_THRESH_CLEAR | CMD_EOC_CLEAR);
+ 
+ 	mutex_unlock(&data->lock);
+ 	pm_runtime_put_sync(dev);
+@@ -96,23 +140,49 @@ static void ps_set_power_state(struct i2c_client *client, bool on_off)
+ 
+ 	mutex_lock(&data->lock);
+ 
+-	curr_val = i2c_smbus_read_byte_data(client, 0x80);
++	curr_val = i2c_smbus_read_byte_data(client, APDS9802PS_POWER_CTRL);
+ 	if (on_off)
+-		curr_val = curr_val | 0x01;
++		curr_val = curr_val | POWER_CTRL_ON;
+ 	else
+-		curr_val = curr_val & 0xFE;
++		curr_val = curr_val & (~POWER_CTRL_ON);
+ 
+-	if (i2c_smbus_write_byte_data(client, 0x80, curr_val) < 0)
++	if (i2c_smbus_write_byte_data(client, APDS9802PS_POWER_CTRL,
++				      curr_val) < 0)
+ 		dev_warn(&client->dev, "failed power state write\n");
+ 
+ 	mutex_unlock(&data->lock);
+ }
+-
+ static DEVICE_ATTR(proximity_output, S_IRUGO,
+ 		   ps_proximity_output_data_show, NULL);
+ 
++static ssize_t ps_poweron_store(struct device *dev,
++		struct device_attribute *attr, const char *buf, size_t count)
++{
++	unsigned long state;
++
++	if (strict_strtoul(buf, 0, &state))
++		return -EINVAL;
++
++	if (state != APDS9802PS_SYSFS_POWERON &&
++	    state != APDS9802PS_SYSFS_POWERDOWN)
++		return -EINVAL;
++
++	if (pm_runtime_suspended(dev) && state == APDS9802PS_SYSFS_POWERDOWN)
++		return count;
++
++	if (state == APDS9802PS_SYSFS_POWERON)
++		pm_runtime_get(dev);
++	else
++		pm_runtime_put(dev);
++
++	return count;
++}
++
++static DEVICE_ATTR(poweron, S_IWUGO, NULL, ps_poweron_store);
++
+ static struct attribute *mid_att_ps[] = {
+ 	&dev_attr_proximity_output.attr,
++	&dev_attr_poweron.attr,
+ 	NULL
+ };
+ 
+@@ -121,19 +191,199 @@ static struct attribute_group m_ps_gr = {
+ 	.attrs = mid_att_ps
+ };
+ 
++static ssize_t apds9802ps_misc_read(struct file *file, char __user *buf,
++				    size_t count, loff_t *pos)
++{
++	ssize_t ret;
++
++	if (count < 1)
++		return -EINVAL;
++
++	mutex_lock(&ps_dev->lock);
++
++	if (!ps_dev->has_data && (file->f_flags & O_NONBLOCK)) {
++		ret = -EWOULDBLOCK;
++		goto out_unlock;
++	}
++
++	mutex_unlock(&ps_dev->lock);
++	ret = wait_event_interruptible(ps_dev->misc_wait, ps_dev->has_data);
++	if (ret < 0)
++		goto out;
++
++	mutex_lock(&ps_dev->lock);
++
++	ret = 0;
++	if (ps_dev->has_data) {
++		if (copy_to_user(buf, &ps_dev->state, sizeof(ps_dev->state))) {
++			ret = -EFAULT;
++			goto out_unlock;
++		}
++		ret = count;
++		ps_dev->has_data = 0;
++	}
++
++out_unlock:
++	mutex_unlock(&ps_dev->lock);
++out:
++	return ret;
++}
++
++static int apds9802ps_misc_open(struct inode *inode, struct file *file)
++{
++	int ret = 0;
++
++	mutex_lock(&ps_dev->lock);
++
++	if (ps_dev->open) {
++		ret = -EBUSY;
++		goto out;
++	}
++	ps_dev->open = 1;
++	ps_dev->has_data = 0;
++out:
++	mutex_unlock(&ps_dev->lock);
++	return ret;
++}
++
++static int apds9802ps_misc_release(struct inode *inode, struct file *file)
++{
++	mutex_lock(&ps_dev->lock);
++	ps_dev->open = 0;
++	mutex_unlock(&ps_dev->lock);
++
++	return 0;
++}
++
++static unsigned int apds9802ps_misc_poll(struct file *file, poll_table *wait)
++{
++	int ret = 0;
++
++	poll_wait(file, &ps_dev->misc_wait, wait);
++
++	mutex_lock(&ps_dev->lock);
++	if (ps_dev->has_data)
++		ret = POLLIN | POLLRDNORM;
++	mutex_unlock(&ps_dev->lock);
++
++	return ret;
++}
++
++static const struct file_operations apds9802ps_misc_fops = {
++	.owner = THIS_MODULE,
++	.llseek = no_llseek,
++	.read = apds9802ps_misc_read,
++	.open = apds9802ps_misc_open,
++	.release = apds9802ps_misc_release,
++	.poll = apds9802ps_misc_poll,
++};
++
++static struct miscdevice apds9802ps_dev = {
++	.minor = MISC_DYNAMIC_MINOR,
++	.name = "apds9802ps",
++	.fops = &apds9802ps_misc_fops,
++};
++
++static irqreturn_t apds9802ps_isr(int irq, void *data)
++{
++	struct i2c_client *client = data;
++	struct ps_data *ps = i2c_get_clientdata(client);
++	int irq_stat;
++	int ret = IRQ_NONE;
++
++	mutex_lock(&ps->lock);
++	irq_stat = i2c_smbus_read_byte_data(client, APDS9802PS_IRQ_CTRL);
++	if (irq_stat < 0) {
++		dev_err(&client->dev, "fail to read irq stat\n");
++		goto out_none;
++	}
++
++	if (irq_stat & IRQ_THRESH_NEGATIVE)
++		ps->state = STATE_OBJ_AWAY;
++	else if (irq_stat & IRQ_THRESH_POSITIVE)
++		ps->state = STATE_OBJ_NEAR;
++	else
++		goto out_none;
++
++	if (ps->open) {
++		ps->has_data = 1;
++		wake_up_interruptible(&ps_dev->misc_wait);
++	}
++
++	i2c_smbus_write_byte(client, CMD_THRESH_CLEAR | CMD_EOC_CLEAR);
++	ret = IRQ_HANDLED;
++
++out_none:
++	mutex_unlock(&ps->lock);
++	return ret;
++}
++
++static int apds9802ps_setup_irq(struct i2c_client *client)
++{
++	int ret;
++	int gpio;
++
++	/* gpio number is stored in client->irq */
++	gpio = client->irq;
++
++	ret = gpio_request(gpio, "apds9802ps");
++	if (ret < 0) {
++		dev_err(&client->dev, "fail to request gpio pin %d\n", gpio);
++		return ret;
++	}
++
++	ret = gpio_direction_input(gpio);
++	if (ret < 0) {
++		dev_err(&client->dev, "fail to set gpio %d direction\n", gpio);
++		goto error;
++	}
++
++	ret = gpio_to_irq(gpio);
++	if (ret < 0) {
++		dev_err(&client->dev, "fail to get IRQ for gpio %d\n", gpio);
++		goto error;
++	}
++	client->irq = ret;
++
++	ret = request_threaded_irq(client->irq, NULL, apds9802ps_isr,
++				   IRQF_SHARED, DRIVER_NAME, client);
++	if (ret < 0) {
++		dev_err(&client->dev, "failed to request irq%d\n", client->irq);
++		goto error;
++	}
++	return ret;
++
++error:
++	gpio_free(gpio);
++	return ret;
++}
++
+ static void ps_set_default_config(struct i2c_client *client)
+ {
+ 	/* Power ON */
+-	if (i2c_smbus_write_byte_data(client, 0x80, 0x01) < 0)
++	if (i2c_smbus_write_byte_data(client, APDS9802PS_POWER_CTRL,
++				      POWER_CTRL_ON))
+ 		dev_warn(&client->dev, "failed default power on write\n");
+ 
+ 	/* 20 pulses, 100Khz Pulse frequency */
+-	if (i2c_smbus_write_byte_data(client, 0x81, 0x86) < 0)
++	if (i2c_smbus_write_byte_data(client, APDS9802PS_PULSE_FREQ,
++			PULSE_COUNT_20 | DUTY_CYCLE_25 | PULSE_FREQ_100K))
+ 		dev_warn(&client->dev, "failed pulse frequency write\n");
+ 
+ 	/* 100MA LED current, 500ms interval delay */
+-	if (i2c_smbus_write_byte_data(client, 0x82, 0x0d) < 0)
++	if (i2c_smbus_write_byte_data(client, APDS9802PS_INTERVAL_CTRL,
++		START_MEASUREMENT | LED_CURRENT_100MA | INTERVAL_DELAY_5MS))
+ 		dev_warn(&client->dev, "failed interval delay write\n");
++
++	if (i2c_smbus_write_byte_data(client, APDS9802PS_IRQ_THRESH_LOW,
++				      THRESHOLD & 0xff) ||
++	    i2c_smbus_write_byte_data(client, APDS9802PS_IRQ_THRESH_HIGH,
++				      (THRESHOLD >> 8) & 0xf))
++		dev_warn(&client->dev, "failed to write threshold value\n");
++
++	if (i2c_smbus_write_byte_data(client, APDS9802PS_IRQ_CTRL,
++				      IRQ_THRESH_ENABLE))
++		dev_warn(&client->dev, "failed to enable threshold irq\n");
+ }
+ 
+ static int apds9802ps_probe(struct i2c_client *client,
+@@ -148,6 +398,7 @@ static int apds9802ps_probe(struct i2c_client *client,
+ 		return -ENOMEM;
+ 	}
+ 	i2c_set_clientdata(client, data);
++	ps_dev = data;
+ 
+ 	res = sysfs_create_group(&client->dev.kobj, &m_ps_gr);
+ 	if (res) {
+@@ -155,6 +406,12 @@ static int apds9802ps_probe(struct i2c_client *client,
+ 		goto ps_error1;
+ 	}
+ 
++	res = apds9802ps_setup_irq(client);
++	if (res) {
++		dev_err(&client->dev, "fail to setup interrupt\n");
++		goto out_free_sysfs;
++	}
++
+ 	dev_info(&client->dev, "proximity sensor chip found\n");
+ 
+ 	ps_set_default_config(client);
+@@ -163,8 +420,15 @@ static int apds9802ps_probe(struct i2c_client *client,
+ 	pm_runtime_enable(&client->dev);
+ 
+ 	mutex_init(&data->lock);
++	init_waitqueue_head(&data->misc_wait);
++
++	if (misc_register(&apds9802ps_dev))
++		dev_err(&client->dev, "fail to register misc dev\n");
++
+ 	return res;
+ 
++out_free_sysfs:
++	sysfs_remove_group(&client->dev.kobj, &m_ps_gr);
+ ps_error1:
+ 	i2c_set_clientdata(client, NULL);
+ 	kfree(data);
+@@ -184,28 +448,31 @@ static int __devexit apds9802ps_remove(struct i2c_client *client)
+ 	pm_runtime_set_suspended(&client->dev);
+ 	pm_runtime_put_noidle(&client->dev);
+ 
++	free_irq(client->irq, client);
++	misc_deregister(&apds9802ps_dev);
+ 	kfree(data);
+ 	return 0;
+ }
+ 
+-static int apds9802ps_suspend(struct i2c_client *client, pm_message_t mesg)
++#ifdef CONFIG_PM_SLEEP
++static int apds9802ps_suspend(struct device *dev)
+ {
++	struct i2c_client *client = to_i2c_client(dev);
++
+ 	ps_set_power_state(client, false);
+ 	return 0;
+ }
+ 
+-static int apds9802ps_resume(struct i2c_client *client)
++static int apds9802ps_resume(struct device *dev)
+ {
++	struct i2c_client *client = to_i2c_client(dev);
++
+ 	ps_set_default_config(client);
+ 	return 0;
+ }
++#endif
+ 
+-static struct i2c_device_id apds9802ps_id[] = {
+-	{ DRIVER_NAME, 0 },
+-	{ }
+-};
+-MODULE_DEVICE_TABLE(i2c, apds9802ps_id);
+-
++#ifdef CONFIG_PM_RUNTIME
+ static int apds9802ps_runtime_suspend(struct device *dev)
+ {
+ 	struct i2c_client *client = to_i2c_client(dev);
+@@ -221,12 +488,22 @@ static int apds9802ps_runtime_resume(struct device *dev)
+ 	ps_set_power_state(client, true);
+ 	return 0;
+ }
++#endif
+ 
+ static const struct dev_pm_ops apds9802ps_pm_ops = {
+-	.runtime_suspend = apds9802ps_runtime_suspend,
+-	.runtime_resume = apds9802ps_runtime_resume,
++	SET_SYSTEM_SLEEP_PM_OPS(apds9802ps_suspend,
++				apds9802ps_resume)
++	SET_RUNTIME_PM_OPS(apds9802ps_runtime_suspend,
++			   apds9802ps_runtime_resume,
++			   NULL)
+ };
+ 
++static struct i2c_device_id apds9802ps_id[] = {
++	{ DRIVER_NAME, 0 },
++	{ }
++};
++
++MODULE_DEVICE_TABLE(i2c, apds9802ps_id);
+ static struct i2c_driver apds9802ps_driver = {
+ 	.driver = {
+ 		.name = DRIVER_NAME,
+@@ -234,8 +511,6 @@ static struct i2c_driver apds9802ps_driver = {
+ 	},
+ 	.probe = apds9802ps_probe,
+ 	.remove = __devexit_p(apds9802ps_remove),
+-	.suspend = apds9802ps_suspend,
+-	.resume = apds9802ps_resume,
+ 	.id_table = apds9802ps_id,
+ };
+ 
+-- 
+1.7.4.4
+

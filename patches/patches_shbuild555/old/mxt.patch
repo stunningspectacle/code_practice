@@ -1,0 +1,22 @@
+diff --git a/input/touchscreen/atmel_mxt_ts.c b/input/touchscreen/atmel_mxt_ts.c
+index 618ed81..a39a0f6 100644
+--- a/input/touchscreen/atmel_mxt_ts.c
++++ b/input/touchscreen/atmel_mxt_ts.c
+@@ -3415,9 +3415,14 @@ static int mxt_probe(struct i2c_client *client,
+ 		goto err_free_irq;
+ 
+ 	if (data->pdata->gpio_switch >= 0) {
+-		gpio_request(data->pdata->gpio_switch, "ts_power");
+-		gpio_export(data->pdata->gpio_switch, 0);
+-		gpio_direction_output(data->pdata->gpio_switch, 1);
++		if (gpio_request(data->pdata->gpio_switch, "ts_power") > 0) {
++			dev_warn(&client->dev, "Request gpio %d failed\n",
++					data->pdata->gpio_switch);
++			gpio_export(data->pdata->gpio_switch, 0);
++			gpio_direction_output(data->pdata->gpio_switch, 1);
++		} else {
++			data->pdata->gpio_switch = -1;
++		}
+ 	}
+ 
+ 	device_create_file(&client->dev, &dev_attr_early_suspend);

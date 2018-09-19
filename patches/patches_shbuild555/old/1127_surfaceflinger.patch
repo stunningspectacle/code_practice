@@ -1,0 +1,21 @@
+diff --git a/services/surfaceflinger/SurfaceFlinger.cpp b/services/surfaceflinger/SurfaceFlinger.cpp
+index cf9270d..580766f 100755
+--- a/services/surfaceflinger/SurfaceFlinger.cpp
++++ b/services/surfaceflinger/SurfaceFlinger.cpp
+@@ -2085,6 +2085,8 @@ status_t SurfaceFlinger::createLayer(
+             result = BAD_VALUE;
+             break;
+     }
++    ALOGE("loooong: createLayer() name: %s, w=%d, h=%d", name.string(),
++            int(w), int(h));
+ 
+     if (result == NO_ERROR) {
+         addClientLayer(client, *handle, *gbp, layer);
+@@ -2144,6 +2146,7 @@ status_t SurfaceFlinger::onLayerRemoved(const sp<Client>& client, const sp<IBind
+     status_t err = NO_ERROR;
+     sp<Layer> l(client->getLayerUser(handle));
+     if (l != NULL) {
++        ALOGE("loooong: onLayerRemoved(), name=%s", l->getName().string());
+         err = removeLayer(l);
+         ALOGE_IF(err<0 && err != NAME_NOT_FOUND,
+                 "error removing layer=%p (%s)", l.get(), strerror(-err));

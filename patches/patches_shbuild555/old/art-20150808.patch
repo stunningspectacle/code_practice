@@ -1,0 +1,108 @@
+commit 3279417e9b6e2403d05adfaa99ec79b794e9badf
+Author: Chao-ying Fu <chao-ying.fu@intel.com>
+Date:   Sat Aug 8 01:08:15 2015 -0700
+
+    ART: Use an iterative way in DoDFSPreOrderSSARename()
+    
+    This patch changes the recursion to an iterative implementation.
+    
+    Category: device enablement
+    Domain: AOSP.ART-ME
+    Origin: internal
+    Upstream-Candidate: no, proprietary
+    Tracked-On: IMINAN-40061
+    Change-Id: I56afe79e91e1e82c9992a8b8e39ad3f2a0284758
+    Signed-off-by: Chao-ying Fu <chao-ying.fu@intel.com>
+
+diff --git a/compiler/dex/ssa_transformation.cc b/compiler/dex/ssa_transformation.cc
+index a2b9bb7..c2a9808 100644
+--- a/compiler/dex/ssa_transformation.cc
++++ b/compiler/dex/ssa_transformation.cc
+@@ -581,6 +581,79 @@ bool MIRGraph::InsertPhiNodeOperands(BasicBlock* bb) {
+ }
+ 
+ void MIRGraph::DoDFSPreOrderSSARename(BasicBlock* block) {
++#if 1
++  ScopedArenaAllocator allocator(&cu_->arena_stack);
++  ScopedArenaVector<BasicBlock*> bb_stack(allocator.Adapter());
++  ScopedArenaVector<BasicBlock*> succ_stack(allocator.Adapter());
++  ScopedArenaVector<int*> ssa_map_stack(allocator.Adapter());
++  ScopedArenaVector<int> map_size_stack(allocator.Adapter());
++
++  bb_stack.push_back(block);
++  /* Save SSA map snapshot */
++  int map_size = sizeof(int) * GetNumOfCodeAndTempVRs();
++  int* saved_ssa_map =
++      static_cast<int*>(allocator.Alloc(map_size, kArenaAllocDalvikToSSAMap));
++  memcpy(saved_ssa_map, vreg_to_ssa_map_, map_size);
++  ssa_map_stack.push_back(saved_ssa_map);
++  map_size_stack.push_back(map_size);
++
++  while (!bb_stack.empty()) {
++    BasicBlock* b = bb_stack.back();
++    bb_stack.pop_back();
++    int* old_ssa_map = ssa_map_stack.back();
++    ssa_map_stack.pop_back();
++    int old_map_size = map_size_stack.back();
++    map_size_stack.pop_back();
++
++    if (b->visited || b->hidden) {
++      continue;
++    }
++    b->visited = true;
++
++    /* Restore SSA map snapshot */
++    memcpy(vreg_to_ssa_map_, old_ssa_map, old_map_size);
++
++    /* Process this block */
++    DoSSAConversion(b);
++
++    /* Save SSA map snapshot */
++    map_size = sizeof(int) * GetNumOfCodeAndTempVRs();
++    saved_ssa_map =
++      static_cast<int*>(allocator.Alloc(map_size, kArenaAllocDalvikToSSAMap));
++    memcpy(saved_ssa_map, vreg_to_ssa_map_, map_size);
++
++    if (b->successor_block_list_type != kNotUsed) {
++      GrowableArray<SuccessorBlockInfo*>::Iterator iterator(b->successor_blocks);
++      while (true) {
++        SuccessorBlockInfo *successor_block_info = iterator.Next();
++        if (successor_block_info == NULL) {
++          break;
++        }
++        BasicBlock* succ_bb = GetBasicBlock(successor_block_info->block);
++        succ_stack.push_back(succ_bb);
++      }
++      while (!succ_stack.empty()) {
++        bb_stack.push_back(succ_stack.back());
++        succ_stack.pop_back();
++        ssa_map_stack.push_back(saved_ssa_map);
++        map_size_stack.push_back(map_size);
++      }
++    }
++
++    if (b->taken != NullBasicBlockId) {
++      bb_stack.push_back(GetBasicBlock(b->taken));
++      ssa_map_stack.push_back(saved_ssa_map);
++      map_size_stack.push_back(map_size);
++    }
++
++    if (b->fall_through != NullBasicBlockId) {
++      bb_stack.push_back(GetBasicBlock(b->fall_through));
++      ssa_map_stack.push_back(saved_ssa_map);
++      map_size_stack.push_back(map_size);
++    }
++  }
++#endif
++#if 0
+   if (block->visited || block->hidden) {
+     return;
+   }
+@@ -620,6 +693,7 @@ void MIRGraph::DoDFSPreOrderSSARename(BasicBlock* block) {
+     }
+   }
+   return;
++#endif
+ }
+ 
+ }  // namespace art

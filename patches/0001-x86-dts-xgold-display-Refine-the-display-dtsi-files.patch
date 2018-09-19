@@ -1,0 +1,142 @@
+From 8f1325f3ebb91f4cfb6dc71473f3dc29dcfd7cf0 Mon Sep 17 00:00:00 2001
+From: Leo Yan <leo.yan@intel.com>
+Date: Thu, 21 Apr 2016 13:39:52 +0800
+Subject: [PATCH] x86, dts, xgold, display: Refine the display dtsi files
+
+1. Remove the unuseful and redundant entries which are not needed
+   anymore by the driver implementation and add new entries.
+2. Correct the physical size setting.
+
+Change-Id: I97b675610a98cb25d9a3e19616e84caab4db85f0
+Signed-off-by: Leo Yan <leo.yan@intel.com>
+Tracked-On: https://jira01.devtools.intel.com/browse/OAM-29975
+---
+ arch/x86/boot/dts/xgold/display/NT35596-dsi.dtsi |   37 ++--------------------
+ arch/x86/boot/dts/xgold/display/ili7807b.dtsi    |   35 ++------------------
+ 2 files changed, 5 insertions(+), 67 deletions(-)
+
+diff --git a/arch/x86/boot/dts/xgold/display/NT35596-dsi.dtsi b/arch/x86/boot/dts/xgold/display/NT35596-dsi.dtsi
+index 73f5c75..89ed8b2 100644
+--- a/arch/x86/boot/dts/xgold/display/NT35596-dsi.dtsi
++++ b/arch/x86/boot/dts/xgold/display/NT35596-dsi.dtsi
+@@ -13,26 +13,7 @@ display-panel@nt35596 {
+ 	intel,display-eot = <1>;
+ 	intel,display-gate = <1>;
+ 	intel,display-if-dts = <1>;
+-	intel,display-if = <&mipi_dsi_nt35596>;
+-	mipi_dsi_nt35596:mipi-dsi {
+-		intel,display-if-rate = <400000000>;
+-		intel,display-if-nblanes = <4>;
+-		intel,display-if-phy-pwup = <6>;
+-		intel,display-if-phy-calib = <3>;
+-		intel,display-if-phy-to_lp_hs_req = <24>;
+-		intel,display-if-phy-to_lp_hs_dis = <25>;
+-		intel,display-if-phy-to_lp_hs_eot = <60>;
+-		intel,display-if-phy-to_hs_zero = <13>;
+-		intel,display-if-phy-to_hs_flip = <24>;
+-		intel,display-if-phy-lp_clk_div = <31>;
+-		intel,display-if-phy-to_hs_clk_pre = <36>;
+-		intel,display-if-phy-to_hs_clk_post = <42>;
+-		intel,display-if-phy-data_delay = <7>;
+-		intel,display-if-phy-clock_delay = <7>;
+-		intel,display-if-phy-lp_tx_tfall = <2>;
+-		intel,display-if-phy-lp_tx_rise = <2>;
+-		intel,display-if-phy-lp_tx_vref = <31>;
+-	};
++	intel,display-physical-dimensions = <63 116>;
+ 
+ 	display-timings {
+ 		native-mode = <&nt35596_timing>;
+@@ -40,8 +21,8 @@ display-panel@nt35596 {
+ 			screen-type = <SCREEN_MIPI>;
+ 			out-face    = <OUT_P888>;
+ 			color-mode = <COLOR_RGB>;
+-			width = <75>;
+-			height = <132>;
++			width = <63>;
++			height = <116>;
+ 			clock-frequency = <65774400>;
+ 			hactive = <1080>;
+ 			vactive = <1920>;
+@@ -2414,18 +2395,6 @@ display-panel@nt35596 {
+ 			intel,cmd-data = <0xD4 0x04>;
+ 			intel,cmd-lp = <1>;
+ 		};
+-		sleep-out {
+-			intel,cmd-type = <0x05>;
+-			intel,cmd-data = <0x11>;
+-			intel,cmd-delay = <300>;
+-			intel,cmd-lp = <1>;
+-		};
+-		display-on {
+-			intel,cmd-type = <0x05>;
+-			intel,cmd-data = <0x29>;
+-			intel,cmd-delay = <100>;
+-			intel,cmd-lp = <1>;
+-		};
+ 	};
+ 
+ 	gpio-power-on {
+diff --git a/arch/x86/boot/dts/xgold/display/ili7807b.dtsi b/arch/x86/boot/dts/xgold/display/ili7807b.dtsi
+index aef0ab5..e382137 100644
+--- a/arch/x86/boot/dts/xgold/display/ili7807b.dtsi
++++ b/arch/x86/boot/dts/xgold/display/ili7807b.dtsi
+@@ -14,26 +14,6 @@ display-panel@ili7807b{
+ 	intel,display-gate = <1>;
+ 	intel,display-if-dts = <1>;
+ 	intel,display-physical-dimensions = <63 116>;
+-	intel,display-if = <&mipi_dsi_ili7807b>;
+-	mipi_dsi_ili7807b:mipi-dsi {
+-		intel,display-if-rate = <400000000>;
+-		intel,display-if-nblanes = <4>;
+-		intel,display-if-phy-pwup = <6>;
+-		intel,display-if-phy-calib = <3>;
+-		intel,display-if-phy-to_lp_hs_req = <24>;
+-		intel,display-if-phy-to_lp_hs_dis = <25>;
+-		intel,display-if-phy-to_lp_hs_eot = <60>;
+-		intel,display-if-phy-to_hs_zero = <13>;
+-		intel,display-if-phy-to_hs_flip = <24>;
+-		intel,display-if-phy-lp_clk_div = <31>;
+-		intel,display-if-phy-to_hs_clk_pre = <36>;
+-		intel,display-if-phy-to_hs_clk_post = <42>;
+-		intel,display-if-phy-data_delay = <7>;
+-		intel,display-if-phy-clock_delay = <7>;
+-		intel,display-if-phy-lp_tx_tfall = <2>;
+-		intel,display-if-phy-lp_tx_rise = <2>;
+-		intel,display-if-phy-lp_tx_vref = <31>;
+-	};
+ 
+ 	display-timings {
+ 		native-mode = <&ili7807b_timing>;
+@@ -41,8 +21,8 @@ display-panel@ili7807b{
+ 			screen-type = <SCREEN_MIPI>;
+ 			out-face    = <OUT_P888>;
+ 			color-mode = <COLOR_RGB>;
+-			width = <75>;
+-			height = <132>;
++			width = <63>;
++			height = <116>;
+ 			clock-frequency = <65774400>;
+ 			hactive = <1080>;
+ 			vactive = <1920>;
+@@ -2563,17 +2543,6 @@ display-panel@ili7807b{
+ 		     intel,cmd-data = <0x35 0x00>;
+ 		     intel,cmd-lp = <1>;
+ 		 };
+-	    ili7807b_cmd500 {
+-		     intel,cmd-type = <0x15>;
+-		     intel,cmd-data = <0x11 0x00>;
+-		     intel,cmd-delay = <120>;
+-		     intel,cmd-lp = <1>;
+-		 };
+-	    ili7807b_cmd501 {
+-		     intel,cmd-type = <0x15>;
+-		     intel,cmd-data = <0x29 0x00>;
+-		     intel,cmd-lp = <1>;
+-		 };
+ 	};
+ 
+ 	gpio-power-on {
+-- 
+1.7.9.5
+

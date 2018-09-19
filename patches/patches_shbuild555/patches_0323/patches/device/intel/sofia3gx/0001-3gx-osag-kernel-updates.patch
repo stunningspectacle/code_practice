@@ -1,0 +1,42 @@
+From df0c7be5712c8ee072af5c63ce77f7f9aabf9097 Mon Sep 17 00:00:00 2001
+From: Jing Xiang <jing.xiang@intel.com>
+Date: Tue, 22 Mar 2016 14:41:50 +0800
+Subject: [PATCH] 3gx osag/kernel updates
+
+Change-Id: Ief8e7bbdead2ed2947d747583bdaa3e6d10eefad
+Tracked-On:
+Signed-off-by: Jing Xiang <jing.xiang@intel.com>
+---
+ s3gxmrd_n1/BoardConfig.mk | 2 +-
+ s3gxmrd_n1/mixins.spec    | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/s3gxmrd_n1/BoardConfig.mk b/s3gxmrd_n1/BoardConfig.mk
+index 9db0d33..283dd3b 100644
+--- a/s3gxmrd_n1/BoardConfig.mk
++++ b/s3gxmrd_n1/BoardConfig.mk
+@@ -1,4 +1,4 @@
+-TARGET_BOARD_PLATFORM_VAR := sofia3gr_garnet
++TARGET_BOARD_PLATFORM_VAR := sofia3gx
+ 
+ # Enhance x86 compatibility for apps
+ COMPATIBILITY_ENHANCEMENT_HOUDINI := true
+diff --git a/s3gxmrd_n1/mixins.spec b/s3gxmrd_n1/mixins.spec
+index 48d88eb..a95c358 100644
+--- a/s3gxmrd_n1/mixins.spec
++++ b/s3gxmrd_n1/mixins.spec
+@@ -4,9 +4,9 @@ mixinsdir: device/intel/mixins/groups
+ 
+ [groups]
+ variants: false
+-kernel: sofia3g32(useprebuilt=false,board_dtb=SF_3GR-es1-sr-garnet.dtb,src_path=kernel/sofia, interactive_governor=true,cma_size=160M,earlyprintk=xgold@0xE1200000, external_modules=perftools-external/sofia/3gr/socperfdk/src perftools-external/sofia/3gr/socwatchdk/src perftools-external/sofia/3gr/socwatchmvdk/src gnss, debug_modules=perftools-internal/sofia/3gr/sepdk/src perftools-internal/sofia/3gr/sepdk/src/pax, build_dtbs=true, extmod_platform=sofia_3gr, kdefconfig=sofia_3gr_ )
++kernel: sofia3g32(useprebuilt=false,board_dtb=SF_3GX-mrd_n1.dtb,src_path=kernel/sofia, interactive_governor=true,cma_size=160M,earlyprintk=xgold@0xE1100000, external_modules=perftools-external/sofia/3gr/socperfdk/src perftools-external/sofia/3gr/socwatchdk/src perftools-external/sofia/3gr/socwatchmvdk/src gnss, debug_modules=perftools-internal/sofia/3gr/sepdk/src perftools-internal/sofia/3gr/sepdk/src/pax, build_dtbs=true, extmod_platform=sofia_3gr, kdefconfig=sofia_3gx_ )
+ disk-bus: mmc-sofia
+-boot-arch: sofia_3gx(bitness=32,modem_platform=SF_3GR_SOC_ES_1_0_AG620_ES2_DVFS_VMM_EMMC_ONLY_DSDS_GARNET,modem_projectname=SF_3GR,mv_config_chip_ver=,hardware=s3gxmrd_n1,board_platform=sofia3gx,telephony=true,throttle_cpu_during_boot=false,num_cpus=4,mv_config_paddr=0x1CC00000,forceencrypt=true,encryptable=false,verity_warning=true,dm_verity=verify,metadata_part=16,system_partition_size=2304,userdata_partition_size=4692)
++boot-arch: sofia_3gx(bitness=32,modem_platform=SF_3GX_SOC_ES_1_0_AG620_ES2_DVFS_VMM_EMMC_ONLY_DSDS,modem_projectname=SF_3GX,mv_config_chip_ver=,hardware=s3gxmrd_n1,board_platform=sofia3gx,telephony=true,throttle_cpu_during_boot=false,num_cpus=4,mv_config_paddr=0x1CC00000,forceencrypt=true,encryptable=false,verity_warning=true,dm_verity=verify,metadata_part=16,system_partition_size=2304,userdata_partition_size=4692)
+ osag: sofia_3gx(firmware_src_path=hardware/intel/sofia3gx-osag)
+ cpu-arch: slm
+ audio: sofia_3gr
+-- 
+1.9.1
+

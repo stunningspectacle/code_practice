@@ -1,0 +1,60 @@
+diff --git a/arch/x86/boot/dts/xgold/display/ili7807b.dtsi b/arch/x86/boot/dts/xgold/display/ili7807b.dtsi
+index aef0ab5..e382137 100644
+--- a/arch/x86/boot/dts/xgold/display/ili7807b.dtsi
++++ b/arch/x86/boot/dts/xgold/display/ili7807b.dtsi
+@@ -14,26 +14,6 @@ display-panel@ili7807b{
+ 	intel,display-gate = <1>;
+ 	intel,display-if-dts = <1>;
+ 	intel,display-physical-dimensions = <63 116>;
+-	intel,display-if = <&mipi_dsi_ili7807b>;
+-	mipi_dsi_ili7807b:mipi-dsi {
+-		intel,display-if-rate = <400000000>;
+-		intel,display-if-nblanes = <4>;
+-		intel,display-if-phy-pwup = <6>;
+-		intel,display-if-phy-calib = <3>;
+-		intel,display-if-phy-to_lp_hs_req = <24>;
+-		intel,display-if-phy-to_lp_hs_dis = <25>;
+-		intel,display-if-phy-to_lp_hs_eot = <60>;
+-		intel,display-if-phy-to_hs_zero = <13>;
+-		intel,display-if-phy-to_hs_flip = <24>;
+-		intel,display-if-phy-lp_clk_div = <31>;
+-		intel,display-if-phy-to_hs_clk_pre = <36>;
+-		intel,display-if-phy-to_hs_clk_post = <42>;
+-		intel,display-if-phy-data_delay = <7>;
+-		intel,display-if-phy-clock_delay = <7>;
+-		intel,display-if-phy-lp_tx_tfall = <2>;
+-		intel,display-if-phy-lp_tx_rise = <2>;
+-		intel,display-if-phy-lp_tx_vref = <31>;
+-	};
+ 
+ 	display-timings {
+ 		native-mode = <&ili7807b_timing>;
+@@ -41,8 +21,8 @@ display-panel@ili7807b{
+ 			screen-type = <SCREEN_MIPI>;
+ 			out-face    = <OUT_P888>;
+ 			color-mode = <COLOR_RGB>;
+-			width = <75>;
+-			height = <132>;
++			width = <63>;
++			height = <116>;
+ 			clock-frequency = <65774400>;
+ 			hactive = <1080>;
+ 			vactive = <1920>;
+@@ -2563,17 +2543,6 @@ display-panel@ili7807b{
+ 		     intel,cmd-data = <0x35 0x00>;
+ 		     intel,cmd-lp = <1>;
+ 		 };
+-	    ili7807b_cmd500 {
+-		     intel,cmd-type = <0x15>;
+-		     intel,cmd-data = <0x11 0x00>;
+-		     intel,cmd-delay = <120>;
+-		     intel,cmd-lp = <1>;
+-		 };
+-	    ili7807b_cmd501 {
+-		     intel,cmd-type = <0x15>;
+-		     intel,cmd-data = <0x29 0x00>;
+-		     intel,cmd-lp = <1>;
+-		 };
+ 	};
+ 
+ 	gpio-power-on {

@@ -1,0 +1,85 @@
+From 11bcb5bc5eca9783ef69e00d6ed0e2a33e4c73d6 Mon Sep 17 00:00:00 2001
+From: Lei Zhang <lei.zhang@intel.com>
+Date: Tue, 23 Dec 2014 11:55:26 +0800
+Subject: [PATCH 8/8] [PATCH] HWC: fix tombstone in dcc_hal_compose
+
+BZ:
+
+This patch adds NULL pointer check in dcc_hal_compose. During boot stage,
+sometimes the fbt layer handle is NULL and will cause tombstone in hwc.
+
+Change-Id: I65dd6f9855ba4ea38ecaa5786c2c6aaa0d6ad313
+Signed-off-by: Lei Zhang <lei.zhang@intel.com>
+---
+ libhwcomposer/dcc-hal.c |   33 +++++++++++++++++++--------------
+ 1 file changed, 19 insertions(+), 14 deletions(-)
+
+diff --git a/libhwcomposer/dcc-hal.c b/libhwcomposer/dcc-hal.c
+index 29458ff..ca742ec 100644
+--- a/libhwcomposer/dcc-hal.c
++++ b/libhwcomposer/dcc-hal.c
+@@ -199,11 +199,15 @@ static void hal_to_dcc_layer_back(const hwc_layer_1_t* hal_layer,
+     // TODO: need to support a dest rectangle for background?
+     //hal_to_dcc_bounds(&hal_layer->displayFrame, &dcc_layer->dst);
+     dcc_layer->fence_acquire = hal_layer->acquireFenceFd;
+-    dcc_layer->fd = hnd->fd;
+-    dcc_layer->phys = hnd->phys;
+-    dcc_layer->fmt = hal_to_dcc_fmt(hnd->fmt);
+-    // TODO: stride in private handle, for now recompute
+-    dcc_layer->stride = dcc_hal_compute_stride(hnd->w, hnd->fmt);
++    if (hnd != NULL) {
++        dcc_layer->fd = hnd->fd;
++        dcc_layer->phys = hnd->phys;
++        dcc_layer->fmt = hal_to_dcc_fmt(hnd->fmt);
++        // TODO: stride in private handle, for now recompute
++        dcc_layer->stride = dcc_hal_compute_stride(hnd->w, hnd->fmt);
++    } else {
++        ALOGE("%s - layer handle is NULL!\n", __FUNCTION__);
++    }
+ }
+ 
+ static void hal_to_dcc_layer_ovl(const hwc_layer_1_t* hal_layer,
+@@ -215,12 +219,16 @@ static void hal_to_dcc_layer_ovl(const hwc_layer_1_t* hal_layer,
+     // TODO: need to support a dest rectangle for background?
+     hal_to_dcc_bounds(&hal_layer->displayFrame, &dcc_layer->dst);
+     dcc_layer->fence_acquire = hal_layer->acquireFenceFd;
+-    dcc_layer->fd = hnd->fd;
+-    dcc_layer->phys = hnd->phys;
+-    dcc_layer->fmt = hal_to_dcc_fmt(hnd->fmt);
+-    // TODO: stride in private handle, for now recompute
+-    // TODO: DCC does not support stride for overlays
+-    //dcc_layer-> = dcc_hal_compute_stride(hnd->w, hnd->fmt);
++    if (hnd != NULL) {
++        dcc_layer->fd = hnd->fd;
++        dcc_layer->phys = hnd->phys;
++        dcc_layer->fmt = hal_to_dcc_fmt(hnd->fmt);
++        // TODO: stride in private handle, for now recompute
++        // TODO: DCC does not support stride for overlays
++        //dcc_layer-> = dcc_hal_compute_stride(hnd->w, hnd->fmt);
++    } else {
++        ALOGE("%s - layer handle is NULL!\n", __FUNCTION__);
++    }
+ }
+ 
+ /*
+@@ -236,7 +244,6 @@ display.
+ int dcc_hal_compose(hwc_layer_1_t* fb_layer, hwc_layer_1_t** ov_layers,
+         size_t ov_count, int fb_enabled, int *retireFenceFd) {
+     int err = 0;
+-    struct private_handle_t const * hnd;
+     struct dcc_update_layers updt;
+     unsigned int ov_id, l_id;
+ 
+@@ -255,9 +262,7 @@ int dcc_hal_compose(hwc_layer_1_t* fb_layer, hwc_layer_1_t** ov_layers,
+         updt.ovls[ov_id].fence_release = -1;
+ 
+     /* Set up FB */
+-    hnd = ((struct private_handle_t const *)fb_layer->handle);
+     hal_to_dcc_layer_back(fb_layer, &updt.back);
+-    updt.back.fmt = hal_to_dcc_fmt(hnd->fmt);
+     if (!fb_enabled) {
+         /* disable FB if requested */
+         updt.back.fd   = -1;
+-- 
+1.7.9.5
+

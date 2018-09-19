@@ -1,0 +1,821 @@
+# tracer: nop
+#
+# entries-in-buffer/entries-written: 810/810   #P:4
+#
+#                              _-----=> irqs-off
+#                             / _----=> need-resched
+#                            | / _---=> hardirq/softirq
+#                            || / _--=> preempt-depth
+#                            ||| /     delay
+#           TASK-PID   CPU#  ||||    TIMESTAMP  FUNCTION
+#              | |       |   ||||       |         |
+       swapper/0-1     [000] ....    10.693222: mali_platform_device_init: Mali Platform [D]: Dedicated memory region not defined
+       swapper/0-1     [000] ....    10.767952: mali_platform_runtime_resume: Mali Platform [D]: mali_platform_runtime_resume() 	-> Device pm set state to 4
+       swapper/0-1     [000] ....    10.768134: mali_platform_runtime_resume: Mali Platform [D]: Restore GPU QoS
+       swapper/0-1     [000] ....    10.768139: mali_report_gpu_clock_info: Mali Platform [D]: mali_report_gpu_clock_info:
+       swapper/0-1     [000] ....    10.768144: mali_report_gpu_clock_info: Mali Platform [D]: {208, 1000}
+       swapper/0-1     [000] ....    10.768149: mali_report_gpu_clock_info: Mali Platform [D]: {312, 2000}
+       swapper/0-1     [000] ....    10.768153: mali_report_gpu_clock_info: Mali Platform [D]: {416, 3000}
+       swapper/0-1     [000] ....    10.768158: mali_report_gpu_clock_info: Mali Platform [D]: {600, 4000}
+       swapper/0-1     [001] ....    11.055576: mali_report_gpu_clock_info: Mali Platform [D]: mali_report_gpu_clock_info:
+       swapper/0-1     [001] ....    11.055586: mali_report_gpu_clock_info: Mali Platform [D]: {208, 1000}
+       swapper/0-1     [001] ....    11.055593: mali_report_gpu_clock_info: Mali Platform [D]: {312, 2000}
+       swapper/0-1     [001] ....    11.055597: mali_report_gpu_clock_info: Mali Platform [D]: {416, 3000}
+       swapper/0-1     [001] ....    11.055601: mali_report_gpu_clock_info: Mali Platform [D]: {600, 4000}
+     kworker/1:1-16    [001] ....    11.065887: mali_platform_runtime_idle: Mali Platform [D]: mali_platform_runtime_idle()
+       swapper/0-1     [001] ....    11.066567: mali_report_gpu_clock_info: Mali Platform [D]: mali_report_gpu_clock_info:
+       swapper/0-1     [001] ....    11.066573: mali_report_gpu_clock_info: Mali Platform [D]: {208, 1000}
+       swapper/0-1     [001] ....    11.066578: mali_report_gpu_clock_info: Mali Platform [D]: {312, 2000}
+       swapper/0-1     [001] ....    11.066582: mali_report_gpu_clock_info: Mali Platform [D]: {416, 3000}
+       swapper/0-1     [001] ....    11.066586: mali_report_gpu_clock_info: Mali Platform [D]: {600, 4000}
+     kworker/1:1-16    [001] ....    12.212374: mali_platform_runtime_suspend: Mali Platform [D]: mali_platform_runtime_suspend() 	-> Device pm set state to 0
+     kworker/3:1-26    [003] ....    19.341995: mali_platform_runtime_resume: Mali Platform [D]: mali_platform_runtime_resume() 	-> Device pm set state to 4
+    kworker/u8:2-128   [002] ....    19.434786: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:2-128   [002] ....    19.515901: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:2-128   [002] ....    19.612606: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:2-128   [002] ....    19.685331: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:2-128   [002] ....    19.780469: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:2-128   [000] ....    19.850788: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [001] ....    19.948461: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [001] ....    20.015300: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:2-128   [000] ....    20.106604: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:2-128   [000] ....    20.181360: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [000] ....    20.274557: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [003] ....    20.346786: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:2-128   [002] ....    20.444291: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:2-128   [002] ....    20.512236: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [003] ....    20.610391: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [003] ....    20.899008: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:2-128   [001] ....    20.995841: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:2-128   [001] ....    21.028472: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [002] ....    21.124242: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [002] ....    21.194113: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:2-128   [002] ....    21.292125: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:0-6     [001] ....    21.358718: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [002] ....    21.450227: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [002] ....    21.524295: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:0-6     [002] ....    21.618266: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:0-6     [002] ....    21.689870: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [002] ....    21.786108: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [003] ....    21.858864: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:0-6     [000] ....    21.954073: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:0-6     [000] ....    21.994551: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:0-6     [000] ....    22.092380: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:0-6     [001] ....    22.169736: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:2-128   [002] ....    22.260441: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:2-128   [003] ....    22.335616: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [000] ....    22.428474: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    22.500529: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:2-128   [001] ....    22.596300: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:2-128   [001] ....    22.666431: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [001] ....    22.764238: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [001] ....    22.831097: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:2-128   [001] ....    22.922389: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:2-128   [001] ....    22.997355: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [002] ....    23.090302: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [002] ....    23.162981: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:2-128   [003] ....    23.258569: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:2-128   [003] ....    23.328273: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:2-128   [002] ....    23.426283: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:2-128   [000] ....    23.494282: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [000] ....    23.584285: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    23.658656: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:2-128   [002] ....    23.752337: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:2-128   [003] ....    23.823586: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [002] ....    23.920280: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    23.988806: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:2-128   [002] ....    24.078327: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:2-128   [000] ....    24.154072: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [003] ....    24.246528: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [003] ....    24.319240: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [002] ....    24.414300: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    24.484618: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:2-128   [003] ....    24.582507: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:2-128   [003] ....    24.649693: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [000] ....    24.740303: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    24.815466: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:2-128   [000] ....    24.908280: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:2-128   [000] ....    24.980793: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:2-128   [001] ....    25.076222: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:2-128   [001] ....    25.146093: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:2-128   [001] ....    25.244191: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:2-128   [001] ....    25.311147: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [002] ....    25.402199: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [002] ....    25.476501: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:2-128   [002] ....    25.570224: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:2-128   [002] ....    25.641421: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [002] ....    25.738202: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [002] ....    25.806956: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:2-128   [002] ....    25.896280: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:2-128   [002] ....    25.972308: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [002] ....    26.064194: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    26.137186: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [002] ....    26.232220: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    26.302392: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:2-128   [002] ....    26.400144: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:2-128   [001] ....    26.467701: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [002] ....    26.558243: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    26.632939: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [002] ....    26.726116: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [001] ....    26.798077: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [002] ....    26.894089: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [002] ....    26.963686: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:2-128   [000] ....    27.062819: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:2-128   [001] ....    27.128468: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [002] ....    27.220120: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [002] ....    27.294014: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:2-128   [002] ....    27.388128: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:2-128   [003] ....    27.459612: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [002] ....    27.556073: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    27.624884: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [003] ....    27.714159: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [003] ....    27.789988: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [003] ....    27.882215: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [003] ....    27.955666: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [003] ....    28.050229: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    28.122807: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [000] ....    28.218088: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    28.288054: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [002] ....    28.386023: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    28.452996: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [001] ....    28.554048: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    28.619352: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [000] ....    28.712148: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    28.784276: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [003] ....    28.880088: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [003] ....    28.949456: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:2-128   [002] ....    29.047962: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:2-128   [000] ....    29.114711: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [003] ....    29.206135: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [003] ....    29.279989: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [000] ....    29.374049: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    29.445200: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [000] ....    29.542044: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    29.610388: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [003] ....    29.700020: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [002] ....    29.775569: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [003] ....    29.868068: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    29.940755: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [003] ....    30.036020: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [002] ....    30.106126: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [003] ....    30.204066: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [003] ....    30.271221: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [000] ....    30.362020: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [000] ....    30.437061: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [002] ....    30.529955: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [003] ....    30.602512: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [002] ....    30.697864: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [002] ....    30.767718: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [001] ....    30.866228: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [000] ....    30.933874: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [001] ....    31.024013: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [001] ....    31.099320: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [001] ....    31.192879: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [001] ....    31.264218: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [003] ....    31.359960: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [003] ....    31.429682: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [002] ....    31.527975: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [003] ....    31.594551: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [002] ....    31.685926: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [000] ....    31.759967: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [002] ....    31.853933: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    31.925406: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [003] ....    32.021846: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [002] ....    32.090386: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [001] ....    32.180087: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [001] ....    32.255660: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [002] ....    32.347900: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [002] ....    32.421213: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [003] ....    32.515876: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    32.586335: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [002] ....    32.683881: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [000] ....    32.751566: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [001] ....    32.841919: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [001] ....    32.916899: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [003] ....    33.009829: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [003] ....    33.082112: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [001] ....    33.177826: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [001] ....    33.247440: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [003] ....    33.345774: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [000] ....    33.412597: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [000] ....    33.503846: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    33.578767: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [001] ....    33.671796: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [000] ....    33.744459: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [003] ....    33.840142: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [003] ....    33.909977: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [001] ....    34.007716: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [000] ....    34.075491: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [002] ....    34.165882: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    34.240926: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [000] ....    34.333796: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [000] ....    34.406094: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [001] ....    34.501763: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [001] ....    34.571761: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [000] ....    34.669629: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [000] ....    34.736696: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [001] ....    34.827734: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    34.902687: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [001] ....    34.995669: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [000] ....    35.067881: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [000] ....    35.163711: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    35.233648: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [002] ....    35.331714: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [002] ....    35.398323: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [001] ....    35.489737: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    35.563630: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [000] ....    35.657903: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [000] ....    35.729044: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [000] ....    35.825616: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    35.894317: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [000] ....    35.983720: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [000] ....    36.059544: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [001] ....    36.151804: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [001] ....    36.225054: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [001] ....    36.319646: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [002] ....    36.391407: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [001] ....    36.487631: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [001] ....    36.556513: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [001] ....    36.645852: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [001] ....    36.721734: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [002] ....    36.813625: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    36.886931: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [000] ....    36.981624: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [001] ....    37.052106: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [001] ....    37.149749: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [000] ....    37.217382: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [000] ....    37.307725: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    37.382698: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [001] ....    37.475646: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [000] ....    37.548113: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [002] ....    37.643592: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [000] ....    37.713353: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [002] ....    37.811485: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [000] ....    37.878396: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [002] ....    37.969701: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    38.043661: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [002] ....    38.137546: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [002] ....    38.209093: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [000] ....    38.305602: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    38.374083: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [000] ....    38.463644: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [000] ....    38.539423: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [001] ....    38.641417: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [001] ....    38.704327: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [001] ....    38.799540: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [001] ....    38.869654: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [003] ....    38.967553: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [000] ....    39.035150: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [003] ....    39.125527: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    39.200345: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [000] ....    39.293620: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    39.365021: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [000] ....    39.471541: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    39.530707: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [000] ....    39.619644: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    39.695541: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [002] ....    39.787584: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [002] ....    39.861931: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [003] ....    39.955561: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [003] ....    40.026929: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [002] ....    40.123427: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [002] ....    40.192758: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [000] ....    40.281621: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [000] ....    40.358189: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [003] ....    40.449568: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    40.523567: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [003] ....    40.617466: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [000] ....    40.688841: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [003] ....    40.785461: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [000] ....    40.854161: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [000] ....    40.943660: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [001] ....    41.019273: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [000] ....    41.111414: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [002] ....    41.184510: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [003] ....    41.279388: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [003] ....    41.349920: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [001] ....    41.447289: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [001] ....    41.515042: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [000] ....    41.605443: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+       Thread-51-630   [002] d..1    41.634346: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa99af380
+       Thread-51-630   [002] ....    41.634364: mali_timeline_fence_wait: Mali Timeline: wait on fence 0xb1785ed4, wait 0xa99af380, timeout=4294967295ms, pid=568
+       Thread-51-630   [002] ....    41.634371: mali_timeline_fence_wait: Mali Timeline: return from fence 0xb1785ed4, wait 0xa99af380, remain=0ms, pid=568
+    kworker/u8:1-34    [001] ....    41.680469: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [001] ....    41.773384: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [001] ....    41.845694: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [002] ....    41.942170: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    42.013180: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [003] ....    42.099411: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [001] ....    42.178893: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [001] ....    42.277330: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [002] ....    42.344344: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [002] ....    42.435305: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [001] ....    42.509037: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [002] ....    42.604313: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [002] ....    42.675284: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [001] ....    42.772752: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [001] ....    42.844044: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [002] ....    42.939195: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [000] ....    43.005984: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [001] ....    43.097310: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [001] ....    43.171391: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [001] ....    43.265445: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [001] ....    43.336617: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [002] ....    43.433364: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [002] ....    43.501864: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [002] ....    43.594926: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [000] ....    43.669123: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [002] ....    43.759345: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [002] ....    43.837071: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [002] ....    43.927351: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [002] ....    44.002061: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [002] ....    44.095204: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [002] ....    44.167822: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [001] ....    44.263475: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+ m.intel.thermal-870   [003] ....    44.291826: max_freq_level_store: Mali Platform [D]: set max freq 4
+    kworker/u8:1-34    [003] ....    44.333636: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [000] ....    44.431109: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    44.506621: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [002] ....    44.599142: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [002] ....    44.664272: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [002] ....    44.757160: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [002] ....    44.831786: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [002] ....    44.925253: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [002] ....    44.995299: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [002] ....    45.093964: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [002] ....    45.166676: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [000] ....    45.261153: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [000] ....    45.334627: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [000] ....    45.433488: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    45.491971: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [001] ....    45.587111: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [001] ....    45.643559: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [001] ....    45.735275: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(1) DVFS 	-> Device pm set state to 2
+    kworker/u8:3-129   [000] ....    45.775775: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    45.823655: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [000] ....    45.913869: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    45.988140: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [000] ....    46.081134: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    46.154935: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [001] ....    46.249056: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [003] ....    46.320767: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [003] ....    46.416949: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [003] ....    46.486611: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [003] ....    46.584929: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [002] ....    46.663387: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [003] ....    46.753340: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [003] ....    46.826513: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [002] ....    46.923873: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [003] ....    46.989329: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [003] ....    47.078974: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [003] ....    47.154719: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [003] ....    47.246946: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [001] ....    47.320788: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [001] ....    47.415199: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(1) DVFS 	-> Device pm set state to 2
+    kworker/u8:1-34    [001] ....    47.434557: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [001] ....    47.492132: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [001] ....    47.583414: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [003] ....    47.652999: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [001] ....    47.751016: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [001] ....    47.819885: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [001] ....    47.908890: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [000] ....    47.990163: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [000] ....    48.086707: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [002] ....    48.126343: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(2) DVFS 	-> Device pm set state to 3
+    kworker/u8:1-34    [002] ....    48.185543: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [002] ....    48.232322: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [001] ....    48.323886: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [001] ....    48.398215: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [001] ....    48.492014: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [003] ....    48.551676: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(1) DVFS 	-> Device pm set state to 2
+    kworker/u8:3-129   [003] ....    48.610497: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    48.648986: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [002] ....    48.738918: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [000] ....    48.812782: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [000] ....    48.906775: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    48.978024: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [000] ....    49.074717: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [000] ....    49.152030: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [003] ....    49.242884: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    49.316104: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [000] ....    49.410616: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(1) DVFS 	-> Device pm set state to 2
+    kworker/u8:1-34    [000] ....    49.430436: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [000] ....    49.798337: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [001] ....    49.954248: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [001] ....    50.459604: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [000] ....    50.556752: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [002] ....    50.576559: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(2) DVFS 	-> Device pm set state to 3
+    kworker/u8:1-34    [002] ....    50.596410: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [002] ....    50.737431: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [002] ....    50.835481: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(1) DVFS 	-> Device pm set state to 2
+    kworker/u8:3-129   [002] ....    50.853219: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [000] ....    50.872960: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    50.892686: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(2) DVFS 	-> Device pm set state to 3
+    kworker/u8:3-129   [000] ....    50.912392: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [000] ....    51.090276: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [000] ....    52.275537: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [003] ....    52.374779: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(1) DVFS 	-> Device pm set state to 2
+    kworker/u8:1-34    [002] ....    52.394709: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [002] ....    52.434310: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:3-129   [003] ....    52.656748: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    RenderThread-1135  [001] d..1    52.677850: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xab867d00
+    RenderThread-1135  [001] ....    52.677870: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xab867d00, timeout=4294967295ms, pid=918
+    RenderThread-1135  [001] ....    52.677879: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xab867d00, remain=0ms, pid=918
+    kworker/u8:1-34    [003] ....    53.500975: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(1) DVFS 	-> Device pm set state to 2
+    kworker/u8:1-34    [001] ....    53.520763: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+     kworker/0:1-11    [000] ....    54.726128: mali_platform_runtime_suspend: Mali Platform [D]: mali_platform_runtime_suspend() 	-> Device pm set state to 0
+     kworker/1:2-105   [001] ....    55.541998: mali_platform_runtime_resume: Mali Platform [D]: mali_platform_runtime_resume() 	-> Device pm set state to 4
+    kworker/u8:1-34    [000] ....    55.635093: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+     kworker/1:2-105   [001] ....    56.672783: mali_platform_runtime_suspend: Mali Platform [D]: mali_platform_runtime_suspend() 	-> Device pm set state to 0
+     kworker/0:1-11    [000] ....    58.058563: mali_platform_runtime_resume: Mali Platform [D]: mali_platform_runtime_resume() 	-> Device pm set state to 4
+    kworker/u8:1-34    [000] ....    58.154539: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+     kworker/0:1-11    [000] ....    59.666476: mali_platform_runtime_suspend: Mali Platform [D]: mali_platform_runtime_suspend() 	-> Device pm set state to 0
+     kworker/0:1-11    [000] ....    65.490786: mali_platform_runtime_resume: Mali Platform [D]: mali_platform_runtime_resume() 	-> Device pm set state to 4
+    kworker/u8:1-34    [000] ....    65.584307: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+     kworker/2:2-233   [002] ....    66.523113: mali_platform_runtime_suspend: Mali Platform [D]: mali_platform_runtime_suspend() 	-> Device pm set state to 0
+     kworker/0:2-133   [000] ....    67.988979: mali_platform_runtime_resume: Mali Platform [D]: mali_platform_runtime_resume() 	-> Device pm set state to 4
+    kworker/u8:1-34    [000] ....    68.083905: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [000] ....    69.076947: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:1-34    [000] ....    69.170667: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+    kworker/u8:1-34    [001] ....    69.591052: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(3) DVFS 	-> Device pm set state to 4
+    kworker/u8:3-129   [001] ....    69.684606: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+     kworker/2:2-233   [002] ....    70.603233: mali_platform_runtime_suspend: Mali Platform [D]: mali_platform_runtime_suspend() 	-> Device pm set state to 0
+     kworker/0:2-133   [000] ....    72.084505: mali_platform_runtime_resume: Mali Platform [D]: mali_platform_runtime_resume() 	-> Device pm set state to 4
+    kworker/u8:3-129   [000] ....    72.174243: mali_dev_do_dvfs: Mali Platform [D]: mali_gpu_set_clock_step(0) DVFS 	-> Device pm set state to 1
+              sh-1439  [003] ....    72.515144: dev_gpu_dvfs_write: Mali Platform [D]: DebugFS - Disable DVFS!
+              sh-1439  [003] ....    72.515166: dev_gpu_dvfs_write: Mali Platform [D]: DebugFS - PM Setting power state to 4
+     kworker/2:2-233   [002] ....    73.438848: mali_platform_runtime_suspend: Mali Platform [D]: mali_platform_runtime_suspend() 	-> Device pm set state to 0
+     kworker/2:0-19    [002] ....    75.335440: mali_platform_runtime_resume: Mali Platform [D]: mali_platform_runtime_resume() 	-> Device pm set state to 4
+     kworker/2:2-233   [002] ....    76.402794: mali_platform_runtime_suspend: Mali Platform [D]: mali_platform_runtime_suspend() 	-> Device pm set state to 0
+     kworker/1:1-16    [001] ....    77.823022: mali_platform_runtime_resume: Mali Platform [D]: mali_platform_runtime_resume() 	-> Device pm set state to 4
+     kworker/0:1-11    [000] ....    79.426015: mali_platform_runtime_suspend: Mali Platform [D]: mali_platform_runtime_suspend() 	-> Device pm set state to 0
+     kworker/0:1-11    [000] ....    80.055341: mali_platform_runtime_resume: Mali Platform [D]: mali_platform_runtime_resume() 	-> Device pm set state to 4
+    RenderThread-1135  [003] ....    80.462146: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xb1235480, timeout=1000ms, pid=918
+          <idle>-0     [002] dph3    80.468590: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xb1235480
+    RenderThread-1135  [003] ....    80.468716: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xb1235480, remain=990ms, pid=918
+    RenderThread-1135  [002] ....    81.294656: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xaa89c980, timeout=1000ms, pid=918
+          <idle>-0     [001] dph3    81.327233: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xaa89c980
+    RenderThread-1135  [003] ....    81.327435: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xaa89c980, remain=970ms, pid=918
+    RenderThread-1135  [003] ....    81.330261: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xa9b54100, timeout=1000ms, pid=918
+          <idle>-0     [000] dph3    81.339269: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa9b54100
+    RenderThread-1135  [003] ....    81.339382: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xa9b54100, remain=990ms, pid=918
+    RenderThread-1135  [003] ....    81.345083: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xb3a94d00, timeout=1000ms, pid=918
+        Binder_6-894   [002] d.h2    81.346075: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xb3a94d00
+    RenderThread-1135  [003] ....    81.346225: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xb3a94d00, remain=1000ms, pid=918
+    RenderThread-1135  [003] ....    81.350493: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xb3a94300, timeout=1000ms, pid=918
+             fmd-235   [000] d.h2    81.350679: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xb3a94300
+    RenderThread-1135  [003] ....    81.350797: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xb3a94300, remain=1000ms, pid=918
+     kworker/2:2-233   [002] ....    83.388349: mali_platform_runtime_suspend: Mali Platform [D]: mali_platform_runtime_suspend() 	-> Device pm set state to 0
+     kworker/3:3-605   [003] ....    84.862538: mali_platform_runtime_resume: Mali Platform [D]: mali_platform_runtime_resume() 	-> Device pm set state to 4
+     kworker/2:2-233   [002] ....    86.283069: mali_platform_runtime_suspend: Mali Platform [D]: mali_platform_runtime_suspend() 	-> Device pm set state to 0
+              sh-1439  [001] ....    87.564182: dev_gpu_pm_write: Mali Platform [D]: DebugFS - PM Invalid power level requested!
+     kworker/2:2-233   [002] ....    87.761237: mali_platform_runtime_resume: Mali Platform [D]: mali_platform_runtime_resume() 	-> Device pm set state to 4
+     kworker/1:2-105   [001] ....    89.276862: mali_platform_runtime_suspend: Mali Platform [D]: mali_platform_runtime_suspend() 	-> Device pm set state to 0
+     kworker/2:2-233   [002] ....    95.134790: mali_platform_runtime_resume: Mali Platform [D]: mali_platform_runtime_resume() 	-> Device pm set state to 4
+     kworker/2:2-233   [002] ....    96.164110: mali_platform_runtime_suspend: Mali Platform [D]: mali_platform_runtime_suspend() 	-> Device pm set state to 0
+     kworker/2:2-233   [002] ....    96.219792: mali_platform_runtime_resume: Mali Platform [D]: mali_platform_runtime_resume() 	-> Device pm set state to 4
+    RenderThread-1135  [003] ....    96.379682: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xaa89cb00, timeout=1000ms, pid=918
+ AsyncOperationS-1938  [002] d.h2    96.398341: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xaa89cb00
+    RenderThread-1135  [003] ....    96.398719: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xaa89cb00, remain=980ms, pid=918
+    RenderThread-1135  [003] ....    96.404020: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xa9b59700, timeout=1000ms, pid=918
+          logcat-225   [002] d.h2    96.409390: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa9b59700
+    RenderThread-1135  [003] ....    96.409691: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xa9b59700, remain=1000ms, pid=918
+    RenderThread-1135  [003] ....    96.418728: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xa9b59480, timeout=1000ms, pid=918
+          <idle>-0     [002] dpH3    96.419820: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa9b59480
+    RenderThread-1135  [003] ....    96.419899: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xa9b59480, remain=990ms, pid=918
+    RenderThread-1135  [002] ....    96.422985: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xabb69d00, timeout=1000ms, pid=918
+          <idle>-0     [002] d.h3    96.424535: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xabb69d00
+    RenderThread-1135  [002] ....    96.424726: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xabb69d00, remain=1000ms, pid=918
+    RenderThread-1135  [002] d..1    96.427088: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xabb69000
+    RenderThread-1135  [002] ....    96.427102: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xabb69000, timeout=1000ms, pid=918
+    RenderThread-1135  [002] ....    96.427110: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xabb69000, remain=1000ms, pid=918
+    RenderThread-1135  [001] ....    97.692382: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xaccd3e00, timeout=1000ms, pid=918
+          <idle>-0     [002] dph3    97.719245: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xaccd3e00
+    RenderThread-1135  [001] ....    97.719692: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xaccd3e00, remain=970ms, pid=918
+    RenderThread-1135  [001] ....    97.722315: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xa7a00600, timeout=1000ms, pid=918
+          <idle>-0     [002] d.h3    97.729955: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa7a00600
+    RenderThread-1135  [001] ....    97.730113: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xa7a00600, remain=990ms, pid=918
+    RenderThread-1135  [000] ....    97.735295: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xa99aac00, timeout=1000ms, pid=918
+          <idle>-0     [000] d.h3    97.736436: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa99aac00
+    RenderThread-1135  [000] ....    97.736647: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xa99aac00, remain=1000ms, pid=918
+    RenderThread-1135  [000] ....    97.739870: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xa99aa480, timeout=1000ms, pid=918
+          <idle>-0     [002] dph3    97.740039: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa99aa480
+    RenderThread-1135  [000] ....    97.740195: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xa99aa480, remain=1000ms, pid=918
+     kworker/1:1-16    [001] ....   100.144919: mali_platform_runtime_suspend: Mali Platform [D]: mali_platform_runtime_suspend() 	-> Device pm set state to 0
+     kworker/2:2-233   [002] ....   101.325192: mali_platform_runtime_resume: Mali Platform [D]: mali_platform_runtime_resume() 	-> Device pm set state to 4
+     kworker/1:2-105   [001] ....   102.318394: mali_platform_runtime_suspend: Mali Platform [D]: mali_platform_runtime_suspend() 	-> Device pm set state to 0
+     kworker/2:2-233   [002] ....   105.033473: mali_platform_runtime_resume: Mali Platform [D]: mali_platform_runtime_resume() 	-> Device pm set state to 1
+    RenderThread-1135  [002] ....   105.254961: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0x8ac81b00, timeout=1000ms, pid=918
+          logcat-225   [002] d.h2   105.282343: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0x8ac81b00
+    RenderThread-1135  [002] ....   105.282494: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0x8ac81b00, remain=970ms, pid=918
+    RenderThread-1135  [003] ....   105.286810: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xab867d80, timeout=1000ms, pid=918
+          <idle>-0     [001] d.h3   105.294521: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xab867d80
+    RenderThread-1135  [003] ....   105.294691: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xab867d80, remain=990ms, pid=918
+    RenderThread-1135  [003] ....   105.301373: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xa99f1780, timeout=1000ms, pid=918
+ AsyncOperationS-1949  [000] d.h2   105.302689: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa99f1780
+    RenderThread-1135  [002] ....   105.302837: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xa99f1780, remain=990ms, pid=918
+    RenderThread-1135  [002] ....   105.307976: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xa99b2180, timeout=1000ms, pid=918
+          <idle>-0     [002] d.h3   105.309926: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa99b2180
+    RenderThread-1135  [002] ....   105.310278: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xa99b2180, remain=1000ms, pid=918
+    RenderThread-1135  [001] ....   106.484515: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xb3ab4d00, timeout=1000ms, pid=918
+          <idle>-0     [000] dph3   106.524151: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xb3ab4d00
+    RenderThread-1135  [001] ....   106.524285: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xb3ab4d00, remain=960ms, pid=918
+    RenderThread-1135  [001] ....   106.527972: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xb3ab4600, timeout=1000ms, pid=918
+          <idle>-0     [002] d.h3   106.535154: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xb3ab4600
+    RenderThread-1135  [002] ....   106.535464: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xb3ab4600, remain=1000ms, pid=918
+    RenderThread-1135  [002] ....   106.542047: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0x8ac5da80, timeout=1000ms, pid=918
+          <idle>-0     [002] d.h3   106.543163: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0x8ac5da80
+    RenderThread-1135  [002] ....   106.543384: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0x8ac5da80, remain=1000ms, pid=918
+    RenderThread-1135  [002] ....   106.547726: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0x8ac5d800, timeout=1000ms, pid=918
+          <idle>-0     [000] dph3   106.547913: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0x8ac5d800
+    RenderThread-1135  [002] ....   106.548081: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0x8ac5d800, remain=1000ms, pid=918
+     kworker/2:2-233   [002] ....   109.006980: mali_platform_runtime_suspend: Mali Platform [D]: mali_platform_runtime_suspend() 	-> Device pm set state to 0
+     kworker/1:2-105   [001] ....   110.153632: mali_platform_runtime_resume: Mali Platform [D]: mali_platform_runtime_resume() 	-> Device pm set state to 1
+     kworker/2:2-233   [002] ....   111.150734: mali_platform_runtime_suspend: Mali Platform [D]: mali_platform_runtime_suspend() 	-> Device pm set state to 0
+     kworker/0:1-11    [000] ....   114.942206: mali_platform_runtime_resume: Mali Platform [D]: mali_platform_runtime_resume() 	-> Device pm set state to 1
+     kworker/2:2-233   [002] ....   115.982277: mali_platform_runtime_suspend: Mali Platform [D]: mali_platform_runtime_suspend() 	-> Device pm set state to 0
+     kworker/1:2-105   [001] ....   117.478478: mali_platform_runtime_resume: Mali Platform [D]: mali_platform_runtime_resume() 	-> Device pm set state to 1
+     kworker/2:2-233   [002] ....   118.887482: mali_platform_runtime_suspend: Mali Platform [D]: mali_platform_runtime_suspend() 	-> Device pm set state to 0
+     kworker/0:1-11    [000] ....   124.837136: mali_platform_runtime_resume: Mali Platform [D]: mali_platform_runtime_resume() 	-> Device pm set state to 1
+     kworker/2:2-233   [002] ....   125.842473: mali_platform_runtime_suspend: Mali Platform [D]: mali_platform_runtime_suspend() 	-> Device pm set state to 0
+     kworker/0:1-11    [000] ....   127.324589: mali_platform_runtime_resume: Mali Platform [D]: mali_platform_runtime_resume() 	-> Device pm set state to 1
+    RenderThread-1135  [003] ....   128.174456: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xb3a94300, timeout=1000ms, pid=918
+          <idle>-0     [001] dph3   128.202748: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xb3a94300
+    RenderThread-1135  [000] ....   128.202937: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xb3a94300, remain=980ms, pid=918
+    RenderThread-1135  [000] ....   128.207125: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xa9b54580, timeout=1000ms, pid=918
+          logcat-225   [000] d.h4   128.215916: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa9b54580
+    RenderThread-1135  [000] ....   128.216117: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xa9b54580, remain=990ms, pid=918
+    RenderThread-1135  [000] ....   128.224406: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xa7d6c800, timeout=1000ms, pid=918
+        Binder_4-706   [002] d.h2   128.225776: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa7d6c800
+    RenderThread-1135  [000] ....   128.226048: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xa7d6c800, remain=1000ms, pid=918
+    RenderThread-1135  [000] ....   128.229074: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xa8266780, timeout=1000ms, pid=918
+          <idle>-0     [002] d.h3   128.230848: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa8266780
+    RenderThread-1135  [002] ....   128.231070: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xa8266780, remain=1000ms, pid=918
+    RenderThread-1135  [002] ....   128.233306: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xab867780, timeout=1000ms, pid=918
+          <idle>-0     [001] d.H3   128.233449: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xab867780
+    RenderThread-1135  [002] ....   128.233789: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xab867780, remain=1000ms, pid=918
+    RenderThread-1135  [001] ....   129.059416: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xab867c00, timeout=1000ms, pid=918
+  surfaceflinger-271   [001] d.h2   129.100393: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xab867c00
+    RenderThread-1135  [001] ....   129.100634: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xab867c00, remain=960ms, pid=918
+    RenderThread-1135  [001] ....   129.104266: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xaa89ef80, timeout=1000ms, pid=918
+        Binder_6-1660  [000] d.h3   129.114806: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xaa89ef80
+    RenderThread-1135  [001] ....   129.114889: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xaa89ef80, remain=990ms, pid=918
+    RenderThread-1135  [001] ....   129.120521: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xa7d6b200, timeout=1000ms, pid=918
+ gle.android.gms-1080  [001] d.h2   129.121800: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa7d6b200
+    RenderThread-1135  [001] ....   129.122146: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xa7d6b200, remain=1000ms, pid=918
+     kworker/0:1-11    [000] ....   131.791087: mali_platform_runtime_suspend: Mali Platform [D]: mali_platform_runtime_suspend() 	-> Device pm set state to 0
+     kworker/3:3-605   [003] ....   132.581894: mali_platform_runtime_resume: Mali Platform [D]: mali_platform_runtime_resume() 	-> Device pm set state to 1
+     kworker/0:1-11    [000] ....   133.766163: mali_platform_runtime_suspend: Mali Platform [D]: mali_platform_runtime_suspend() 	-> Device pm set state to 0
+     kworker/1:1-16    [001] ....   134.872134: mali_platform_runtime_resume: Mali Platform [D]: mali_platform_runtime_resume() 	-> Device pm set state to 2
+     kworker/2:1-21    [002] ....   135.880440: mali_platform_runtime_suspend: Mali Platform [D]: mali_platform_runtime_suspend() 	-> Device pm set state to 0
+     kworker/2:1-21    [002] ....   135.998140: mali_platform_runtime_resume: Mali Platform [D]: mali_platform_runtime_resume() 	-> Device pm set state to 2
+    RenderThread-1135  [003] ....   136.126548: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xb3b4a280, timeout=1000ms, pid=918
+            main-191   [002] d.h3   136.151131: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xb3b4a280
+    RenderThread-1135  [003] ....   136.152098: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xb3b4a280, remain=970ms, pid=918
+    RenderThread-1135  [003] ....   136.158788: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xa8268b00, timeout=1000ms, pid=918
+            main-191   [002] d.h2   136.163284: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa8268b00
+    RenderThread-1135  [003] ....   136.163489: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xa8268b00, remain=1000ms, pid=918
+    RenderThread-1135  [000] ....   136.171264: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xb3a94200, timeout=1000ms, pid=918
+            main-191   [002] d.h2   136.172009: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xb3a94200
+    RenderThread-1135  [000] ....   136.172467: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xb3a94200, remain=1000ms, pid=918
+    RenderThread-1135  [000] ....   136.175896: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xb3a94180, timeout=1000ms, pid=918
+            main-191   [002] d.h4   136.177649: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xb3a94180
+    RenderThread-1135  [001] ....   136.177846: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xb3a94180, remain=990ms, pid=918
+    RenderThread-1135  [001] ....   136.180280: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xab86a980, timeout=1000ms, pid=918
+            main-191   [002] d.h4   136.180468: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xab86a980
+    RenderThread-1135  [001] ....   136.180588: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xab86a980, remain=1000ms, pid=918
+    RenderThread-1135  [003] ....   136.948374: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xa9b54600, timeout=1000ms, pid=918
+          logcat-225   [002] d.h2   136.985389: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa9b54600
+    RenderThread-1135  [003] ....   136.985522: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xa9b54600, remain=970ms, pid=918
+    RenderThread-1135  [003] ....   136.990202: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0x8ac40a80, timeout=1000ms, pid=918
+      android.bg-590   [002] d.h2   136.998152: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0x8ac40a80
+    RenderThread-1135  [003] ....   136.998232: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0x8ac40a80, remain=990ms, pid=918
+    RenderThread-1135  [003] ....   137.004452: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xaccd3f00, timeout=1000ms, pid=918
+      android.bg-590   [002] d.h2   137.005478: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xaccd3f00
+    RenderThread-1135  [003] ....   137.005580: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xaccd3f00, remain=1000ms, pid=918
+    RenderThread-1135  [000] ....   137.013503: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xa7a00f00, timeout=1000ms, pid=918
+      rpc-daemon-518   [002] d.h2   137.013705: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa7a00f00
+    RenderThread-1135  [000] ....   137.014075: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xa7a00f00, remain=1000ms, pid=918
+     kworker/2:1-21    [002] ....   139.634993: mali_platform_runtime_suspend: Mali Platform [D]: mali_platform_runtime_suspend() 	-> Device pm set state to 0
+     kworker/1:1-16    [001] ....   139.736500: mali_platform_runtime_resume: Mali Platform [D]: mali_platform_runtime_resume() 	-> Device pm set state to 2
+              sh-1439  [001] ....   140.709748: dev_gpu_pm_write: Mali Platform [D]: DebugFS - PM Setting power state to 3
+     kworker/2:1-21    [002] ....   140.751338: mali_platform_runtime_suspend: Mali Platform [D]: mali_platform_runtime_suspend() 	-> Device pm set state to 0
+     kworker/0:1-11    [000] ....   142.058747: mali_platform_runtime_resume: Mali Platform [D]: mali_platform_runtime_resume() 	-> Device pm set state to 3
+    RenderThread-1135  [002] ....   142.221885: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xa7d6c380, timeout=1000ms, pid=918
+          <idle>-0     [001] dph3   142.244793: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa7d6c380
+    RenderThread-1135  [002] .N..   142.244959: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xa7d6c380, remain=970ms, pid=918
+    RenderThread-1135  [002] ....   142.247612: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xaa89e780, timeout=1000ms, pid=918
+     mediaserver-561   [002] d.h3   142.256571: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xaa89e780
+    RenderThread-1135  [003] ....   142.256686: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xaa89e780, remain=990ms, pid=918
+    RenderThread-1135  [002] ....   142.264869: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xaa89e100, timeout=1000ms, pid=918
+          <idle>-0     [002] d.h3   142.265455: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xaa89e100
+    RenderThread-1135  [002] ....   142.265620: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xaa89e100, remain=1000ms, pid=918
+    RenderThread-1135  [002] ....   142.268631: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xaa89e400, timeout=1000ms, pid=918
+          <idle>-0     [002] d.h3   142.269951: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xaa89e400
+    RenderThread-1135  [002] ....   142.270154: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xaa89e400, remain=1000ms, pid=918
+    RenderThread-1135  [001] ....   143.066557: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xa8266580, timeout=1000ms, pid=918
+          <idle>-0     [002] dph3   143.102271: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa8266580
+    RenderThread-1135  [002] ....   143.102876: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xa8266580, remain=960ms, pid=918
+    RenderThread-1135  [002] ....   143.106324: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0x82c09a80, timeout=1000ms, pid=918
+        Binder_9-1074  [000] d.h2   143.115913: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0x82c09a80
+    RenderThread-1135  [002] ....   143.116580: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0x82c09a80, remain=990ms, pid=918
+    RenderThread-1135  [002] ....   143.121716: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0x82c09f80, timeout=1000ms, pid=918
+          <idle>-0     [001] d.h3   143.123092: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0x82c09f80
+    RenderThread-1135  [002] ....   143.123322: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0x82c09f80, remain=990ms, pid=918
+    RenderThread-1135  [002] ....   143.126431: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0x82c09f80, timeout=1000ms, pid=918
+        Binder_9-1074  [000] d.h2   143.126644: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0x82c09f80
+    RenderThread-1135  [002] ....   143.126750: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0x82c09f80, remain=1000ms, pid=918
+    RenderThread-1135  [001] d..1   145.025927: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa9aece80
+    RenderThread-1135  [001] ....   145.025945: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xa9aece80, timeout=4294967295ms, pid=918
+    RenderThread-1135  [001] ....   145.025953: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xa9aece80, remain=0ms, pid=918
+    RenderThread-1135  [001] d..1   145.031915: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa8266680
+    RenderThread-1135  [001] ....   145.031930: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xa8266680, timeout=4294967295ms, pid=918
+    RenderThread-1135  [001] ....   145.031937: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xa8266680, remain=0ms, pid=918
+    RenderThread-1135  [001] d..1   145.051808: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa8266580
+    RenderThread-1135  [001] ....   145.051824: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xa8266580, timeout=4294967295ms, pid=918
+    RenderThread-1135  [001] ....   145.051831: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xa8266580, remain=0ms, pid=918
+    RenderThread-1135  [000] d..1   145.053861: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xad6f3080
+    RenderThread-1135  [000] ....   145.053876: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xad6f3080, timeout=4294967295ms, pid=918
+    RenderThread-1135  [000] ....   145.053883: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xad6f3080, remain=0ms, pid=918
+    RenderThread-1135  [000] d..1   145.053926: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xad6f3080
+    RenderThread-1135  [000] ....   145.053933: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84a5fed4, wait 0xad6f3080, timeout=4294967295ms, pid=918
+    RenderThread-1135  [000] ....   145.053938: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84a5fed4, wait 0xad6f3080, remain=0ms, pid=918
+      Thread-220-2361  [003] d..1   146.061874: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0x8ac81300
+      Thread-220-2361  [003] ....   146.061897: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0x8ac81300, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [003] ....   146.061908: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0x8ac81300, remain=0ms, pid=2343
+      Thread-220-2361  [001] d..1   147.060168: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa8269b00
+      Thread-220-2361  [001] ....   147.060185: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xa8269b00, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [001] ....   147.060196: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xa8269b00, remain=0ms, pid=2343
+      Thread-220-2361  [003] d..1   148.059181: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0x8ac81700
+      Thread-220-2361  [003] ....   148.059197: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0x8ac81700, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [003] ....   148.059205: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0x8ac81700, remain=0ms, pid=2343
+      Thread-220-2361  [000] d..1   149.058286: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0x8ac60780
+      Thread-220-2361  [000] ....   149.058304: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0x8ac60780, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [000] ....   149.058311: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0x8ac60780, remain=0ms, pid=2343
+      Thread-220-2361  [003] d..1   150.057493: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xb3ab4d00
+      Thread-220-2361  [003] ....   150.057506: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xb3ab4d00, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [003] ....   150.057514: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xb3ab4d00, remain=0ms, pid=2343
+              sh-1439  [000] ....   150.952785: dev_gpu_pm_write: Mali Platform [D]: DebugFS - PM Setting power state to 4
+      Thread-220-2361  [000] d..1   151.057806: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xb115fd80
+      Thread-220-2361  [000] ....   151.057821: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xb115fd80, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [000] ....   151.057829: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xb115fd80, remain=0ms, pid=2343
+      Thread-220-2361  [001] d..1   152.047353: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0x8ac63b80
+      Thread-220-2361  [001] ....   152.047368: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0x8ac63b80, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [001] ....   152.047375: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0x8ac63b80, remain=0ms, pid=2343
+      Thread-220-2361  [002] d..1   153.035136: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0x8ac63a80
+      Thread-220-2361  [002] ....   153.035156: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0x8ac63a80, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [002] ....   153.035164: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0x8ac63a80, remain=0ms, pid=2343
+      Thread-220-2361  [001] d..1   154.030167: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa7d69e00
+      Thread-220-2361  [001] ....   154.030183: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xa7d69e00, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [001] ....   154.030191: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xa7d69e00, remain=0ms, pid=2343
+      Thread-220-2361  [000] d..1   155.022527: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xb115fb80
+      Thread-220-2361  [000] ....   155.022541: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xb115fb80, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [000] ....   155.022549: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xb115fb80, remain=0ms, pid=2343
+      Thread-220-2361  [001] d..1   156.021583: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0x97522100
+      Thread-220-2361  [001] ....   156.021610: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0x97522100, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [001] ....   156.021621: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0x97522100, remain=0ms, pid=2343
+      Thread-220-2361  [000] d..1   157.020179: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0x8ace2d80
+      Thread-220-2361  [000] ....   157.020194: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0x8ace2d80, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [000] ....   157.020203: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0x8ace2d80, remain=0ms, pid=2343
+      Thread-220-2361  [003] d..1   158.019647: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0x8ac63200
+      Thread-220-2361  [003] ....   158.019664: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0x8ac63200, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [003] ....   158.019671: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0x8ac63200, remain=0ms, pid=2343
+              sh-1439  [001] ....   158.078778: dev_gpu_pm_write: Mali Platform [D]: DebugFS - PM Setting power state to 1
+      Thread-220-2361  [002] d..1   159.020177: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xad6f3980
+      Thread-220-2361  [002] ....   159.020196: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xad6f3980, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [002] ....   159.020205: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xad6f3980, remain=0ms, pid=2343
+      Thread-220-2361  [003] d..1   160.019315: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa7d6ec80
+      Thread-220-2361  [003] ....   160.019339: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xa7d6ec80, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [003] ....   160.019346: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xa7d6ec80, remain=0ms, pid=2343
+      Thread-220-2361  [000] d..1   161.018795: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xb1382e80
+      Thread-220-2361  [000] ....   161.018814: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xb1382e80, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [000] ....   161.018823: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xb1382e80, remain=0ms, pid=2343
+      Thread-220-2361  [001] d..1   162.017907: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xb3ab4d00
+      Thread-220-2361  [001] ....   162.017924: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xb3ab4d00, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [001] ....   162.017932: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xb3ab4d00, remain=0ms, pid=2343
+      Thread-220-2361  [001] d..1   163.016932: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa99afa00
+      Thread-220-2361  [001] ....   163.016948: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xa99afa00, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [001] ....   163.016955: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xa99afa00, remain=0ms, pid=2343
+      Thread-220-2361  [001] d..1   164.015707: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa7d6b680
+      Thread-220-2361  [001] ....   164.015721: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xa7d6b680, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [001] ....   164.015728: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xa7d6b680, remain=0ms, pid=2343
+      Thread-220-2361  [001] d..1   165.015947: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa99b0280
+      Thread-220-2361  [001] ....   165.015964: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xa99b0280, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [001] ....   165.015972: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xa99b0280, remain=0ms, pid=2343
+      Thread-220-2361  [001] d..1   166.014797: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xb1382c80
+      Thread-220-2361  [001] ....   166.014814: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xb1382c80, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [001] ....   166.014823: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xb1382c80, remain=0ms, pid=2343
+      Thread-220-2361  [003] d..1   167.015319: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xaa89c380
+      Thread-220-2361  [003] ....   167.015343: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xaa89c380, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [003] ....   167.015355: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xaa89c380, remain=0ms, pid=2343
+      Thread-220-2361  [000] d..1   168.013245: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa99b0f00
+      Thread-220-2361  [000] ....   168.013263: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xa99b0f00, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [000] ....   168.013271: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xa99b0f00, remain=0ms, pid=2343
+      Thread-220-2361  [000] d..1   169.012628: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0x8ac61180
+      Thread-220-2361  [000] ....   169.012644: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0x8ac61180, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [000] ....   169.012654: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0x8ac61180, remain=0ms, pid=2343
+      Thread-220-2361  [002] d..1   170.011830: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xaa89e280
+      Thread-220-2361  [002] ....   170.011847: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xaa89e280, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [002] ....   170.011855: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xaa89e280, remain=0ms, pid=2343
+      Thread-220-2361  [001] d..1   171.011173: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa99b0280
+      Thread-220-2361  [001] ....   171.011191: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xa99b0280, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [001] ....   171.011199: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xa99b0280, remain=0ms, pid=2343
+      Thread-220-2361  [001] d..1   172.010568: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa99b0980
+      Thread-220-2361  [001] ....   172.010582: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xa99b0980, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [001] ....   172.010589: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xa99b0980, remain=0ms, pid=2343
+      Thread-220-2361  [001] d..1   173.010087: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa99b0100
+      Thread-220-2361  [001] ....   173.010104: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xa99b0100, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [001] ....   173.010112: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xa99b0100, remain=0ms, pid=2343
+      Thread-220-2361  [002] d..1   174.010429: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xaa89e080
+      Thread-220-2361  [002] ....   174.010453: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xaa89e080, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [002] ....   174.010466: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xaa89e080, remain=0ms, pid=2343
+      Thread-220-2361  [002] d..1   175.008570: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa99f4880
+      Thread-220-2361  [002] ....   175.008587: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xa99f4880, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [002] ....   175.008595: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xa99f4880, remain=0ms, pid=2343
+      Thread-220-2361  [003] d..1   176.009876: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa8268880
+      Thread-220-2361  [003] ....   176.009900: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xa8268880, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [003] ....   176.009912: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xa8268880, remain=0ms, pid=2343
+      Thread-220-2361  [003] d..1   177.007138: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa7a00000
+      Thread-220-2361  [003] ....   177.007152: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xa7a00000, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [003] ....   177.007160: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xa7a00000, remain=0ms, pid=2343
+      Thread-220-2361  [001] d..1   178.006445: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa8268f00
+      Thread-220-2361  [001] ....   178.006460: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xa8268f00, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [001] ....   178.006468: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xa8268f00, remain=0ms, pid=2343
+      Thread-220-2361  [000] d..1   179.005747: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa7d6b200
+      Thread-220-2361  [000] ....   179.005764: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xa7d6b200, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [000] ....   179.005771: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xa7d6b200, remain=0ms, pid=2343
+      Thread-220-2361  [002] d..1   180.006143: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xaa89e080
+      Thread-220-2361  [002] ....   180.006163: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xaa89e080, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [002] ....   180.006172: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xaa89e080, remain=0ms, pid=2343
+      Thread-220-2361  [001] d..1   181.004473: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa8268a80
+      Thread-220-2361  [001] ....   181.004490: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xa8268a80, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [001] ....   181.004498: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xa8268a80, remain=0ms, pid=2343
+      Thread-220-2361  [001] d..1   182.003875: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa8268a80
+      Thread-220-2361  [001] ....   182.003892: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xa8268a80, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [001] ....   182.003899: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xa8268a80, remain=0ms, pid=2343
+      Thread-220-2361  [001] d..1   183.003062: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa8268f80
+      Thread-220-2361  [001] ....   183.003081: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xa8268f80, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [001] ....   183.003090: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xa8268f80, remain=0ms, pid=2343
+      Thread-220-2361  [000] d..1   184.004105: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa8268a80
+      Thread-220-2361  [000] ....   184.004129: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xa8268a80, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [000] ....   184.004141: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xa8268a80, remain=0ms, pid=2343
+      Thread-220-2361  [000] d..1   185.001756: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0x8ac40500
+      Thread-220-2361  [000] ....   185.001771: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0x8ac40500, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [000] ....   185.001778: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0x8ac40500, remain=0ms, pid=2343
+      Thread-220-2361  [003] d..1   186.002748: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa7d63a80
+      Thread-220-2361  [003] ....   186.002772: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xa7d63a80, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [003] ....   186.002786: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xa7d63a80, remain=0ms, pid=2343
+      Thread-220-2361  [003] d..1   187.000731: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa7d63c00
+      Thread-220-2361  [003] ....   187.000750: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xa7d63c00, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [003] ....   187.000758: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xa7d63c00, remain=0ms, pid=2343
+      Thread-220-2361  [001] d..1   188.001461: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa801ba00
+      Thread-220-2361  [001] ....   188.001488: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xa801ba00, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [001] ....   188.001500: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xa801ba00, remain=0ms, pid=2343
+      Thread-220-2361  [001] d..1   188.999069: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xb115f400
+      Thread-220-2361  [001] ....   188.999087: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xb115f400, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [001] ....   188.999095: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xb115f400, remain=0ms, pid=2343
+      Thread-220-2361  [003] d..1   189.998458: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa7d63500
+      Thread-220-2361  [003] ....   189.998475: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xa7d63500, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [003] ....   189.998485: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xa7d63500, remain=0ms, pid=2343
+      Thread-220-2361  [000] d..1   190.997774: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0x8ace2400
+      Thread-220-2361  [000] ....   190.997791: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0x8ace2400, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [000] ....   190.997798: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0x8ace2400, remain=0ms, pid=2343
+      Thread-220-2361  [002] d..1   191.998043: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xaccd3280
+      Thread-220-2361  [002] ....   191.998076: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xaccd3280, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [002] ....   191.998091: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xaccd3280, remain=0ms, pid=2343
+      Thread-220-2361  [000] d..1   192.996371: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xb3b5e680
+      Thread-220-2361  [001] ....   192.997535: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xb3b5e680, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [001] .n..   192.997551: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xb3b5e680, remain=0ms, pid=2343
+      Thread-220-2361  [000] d..1   193.995752: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0x8ac40500
+      Thread-220-2361  [000] ....   193.995770: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0x8ac40500, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [000] ....   193.995778: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0x8ac40500, remain=0ms, pid=2343
+      Thread-220-2361  [002] d..1   194.995093: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xaccd3380
+      Thread-220-2361  [002] ....   194.995112: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xaccd3380, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [002] ....   194.995122: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xaccd3380, remain=0ms, pid=2343
+      Thread-220-2361  [003] d..1   195.994701: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa7d63a00
+      Thread-220-2361  [003] ....   195.994721: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xa7d63a00, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [003] ....   195.994730: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xa7d63a00, remain=0ms, pid=2343
+      Thread-220-2361  [003] d..1   196.994842: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa7d63580
+      Thread-220-2361  [003] ....   196.994867: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xa7d63580, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [003] ....   196.994878: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xa7d63580, remain=0ms, pid=2343
+      Thread-220-2361  [002] d..1   197.994053: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xaccd3d00
+      Thread-220-2361  [002] ....   197.994077: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xaccd3d00, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [002] ....   197.994088: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xaccd3d00, remain=0ms, pid=2343
+      Thread-220-2361  [000] d..1   198.993142: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xab86a200
+      Thread-220-2361  [000] ....   198.993161: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xab86a200, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [000] ....   198.993169: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xab86a200, remain=0ms, pid=2343
+      Thread-220-2361  [000] d..1   200.001002: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0x8ac81000
+      Thread-220-2361  [000] ....   200.001034: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0x8ac81000, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [000] ....   200.001046: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0x8ac81000, remain=0ms, pid=2343
+      Thread-220-2361  [000] d..1   200.991111: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0x8ac81c00
+      Thread-220-2361  [000] ....   200.991126: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0x8ac81c00, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [000] ....   200.991134: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0x8ac81c00, remain=0ms, pid=2343
+      Thread-220-2361  [003] d..1   201.990677: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xabb69380
+      Thread-220-2361  [003] ....   201.990693: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xabb69380, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [003] ....   201.990701: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xabb69380, remain=0ms, pid=2343
+      Thread-220-2361  [003] d..1   202.989916: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xa7d69800
+      Thread-220-2361  [003] ....   202.989934: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xa7d69800, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [003] ....   202.989943: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xa7d69800, remain=0ms, pid=2343
+      Thread-220-2361  [001] d..1   203.993868: mali_timeline_fence_wait_activate: Mali Timeline: activation for fence wait tracker 0xb3ab4600
+      Thread-220-2361  [001] ....   203.993882: mali_timeline_fence_wait: Mali Timeline: wait on fence 0x84b01ed4, wait 0xb3ab4600, timeout=4294967295ms, pid=2343
+      Thread-220-2361  [001] ....   203.993889: mali_timeline_fence_wait: Mali Timeline: return from fence 0x84b01ed4, wait 0xb3ab4600, remain=0ms, pid=2343

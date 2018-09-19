@@ -1,0 +1,113 @@
+diff --git a/driver/src/egl/egl_config.c b/driver/src/egl/egl_config.c
+index c1da7f5..2fe7499 100644
+--- a/driver/src/egl/egl_config.c
++++ b/driver/src/egl/egl_config.c
+@@ -1165,7 +1165,7 @@ EGLBoolean _egl_choose_config(EGLDisplay __dpy,
+ 	if (EGL_DONT_CARE != config.config_id)
+ 	{
+ 		/* find config id in configs */
+-		if (config_size >= 1)
++		if (config_size >= 1 || NULL == __configs)
+ 		{
+ 			EGLConfig config_by_id;
+ 
+diff --git a/driver/src/egl/egl_platform_android.cpp b/driver/src/egl/egl_platform_android.cpp
+index 0d4713c..3be7fa6 100644
+--- a/driver/src/egl/egl_platform_android.cpp
++++ b/driver/src/egl/egl_platform_android.cpp
+@@ -662,6 +662,13 @@ void __egl_platform_cancel_buffers(egl_surface *surface, mali_bool cancel_frameb
+ 					mali_bool buffer_released = MALI_FALSE;
+ 					native_buf = MALI_REINTERPRET_CAST(android_native_buffer_t *)surface->buffer[i].data;
+ 
++					/* Temporary add this NULL pointer check to avoid crash, actually it should NOT happen*/
++                                        if(native_buf == NULL)
++                                        {
++                                            surface->buffer[i].flags = BUFFER_EMPTY;
++                                            continue;
++                                        }
++
+ 					if (MALI_FALSE == IS_FRAMEBUFFER(native_buf))
+ 					{
+ 						ADBG(2, "cancel UMP/dma_buf buffer at index %i buffer 0x%pn (flags: %i)\n", i, surface->buffer[i].data, surface->buffer[i].flags);
+diff --git a/driver/src/opengles/mali_gp_geometry_common/gles_gb_bounding_box.c b/driver/src/opengles/mali_gp_geometry_common/gles_gb_bounding_box.c
+index 9757ae6..e2cd82a 100644
+--- a/driver/src/opengles/mali_gp_geometry_common/gles_gb_bounding_box.c
++++ b/driver/src/opengles/mali_gp_geometry_common/gles_gb_bounding_box.c
+@@ -746,7 +746,7 @@ MALI_STATIC mali_bool _gles_check_bounding_box(gles_vertex_attrib *attr_array,
+  * @param po  - binary shader program
+  * Note: this function is local to this file so could be static but we don't want the compiler inlining it.
+  */
+-void parse_cpupretrans_patterns(bs_program *po)
++void __attribute__((noinline)) parse_cpupretrans_patterns(bs_program *po)
+ {
+ 	struct binary_shader_chunk_vertex_operand *stack[BS_MAXMEMORY_FOR_PATTERNS] = { NULL };
+ 	struct binary_shader_expression_item *entry = NULL;
+diff --git a/driver/src/opengles/shader_generator/gles_shader_generator.c b/driver/src/opengles/shader_generator/gles_shader_generator.c
+index 87e2a87..190b709 100644
+--- a/driver/src/opengles/shader_generator/gles_shader_generator.c
++++ b/driver/src/opengles/shader_generator/gles_shader_generator.c
+@@ -462,12 +462,12 @@ MALI_STATIC mali_err_code init_program(gles_sg_context *sg_ctx, gles_sg_program
+ 		const char *symbolname = prs->binary.samplers.info[i].symbol->name;
+ 
+ 		MALI_DEBUG_ASSERT(
+-		    (0 == _mali_sys_memcmp("StageSamplerNormal", symbolname, 18) && _mali_sys_strlen(symbolname) == 19 && symbolname[18] >= '0' && symbolname[18] < '0' + MAX_TEXTURE_STAGES) ||
+-		    (0 == _mali_sys_memcmp("StageSamplerExternal", symbolname, 20) && _mali_sys_strlen(symbolname) == 21 && symbolname[20] >= '0' && symbolname[20] < '0' + MAX_TEXTURE_STAGES),
++		    (0 == _mali_sys_strncmp("StageSamplerNormal", symbolname, 18) && _mali_sys_strlen(symbolname) == 19 && symbolname[18] >= '0' && symbolname[18] < '0' + MAX_TEXTURE_STAGES) ||
++		    (0 == _mali_sys_strncmp("StageSamplerExternal", symbolname, 20) && _mali_sys_strlen(symbolname) == 21 && symbolname[20] >= '0' && symbolname[20] < '0' + MAX_TEXTURE_STAGES),
+ 		    ("GLES1 generated sampler name must start with 'StageSamplerNormal' or 'StageSamplerExternal'; found '%s',"
+ 		     "Also it must end in exactly one digit ", symbolname));
+ 
+-		if (0 == _mali_sys_memcmp("StageSamplerNormal", symbolname, 18) && _mali_sys_strlen(symbolname) == 19 &&
++		if (0 == _mali_sys_strncmp("StageSamplerNormal", symbolname, 18) && _mali_sys_strlen(symbolname) == 19 &&
+ 		        symbolname[18] >= '0' && symbolname[18] < '0' + MAX_TEXTURE_STAGES)
+ 		{
+ 			int stage = symbolname[18] - '0';
+@@ -475,7 +475,7 @@ MALI_STATIC mali_err_code init_program(gles_sg_context *sg_ctx, gles_sg_program
+ 			prs->binary.samplers.info[i].td_remap_table_index = stage;
+ 			prs->binary.samplers.td_remap_table_size = MAX(prs->binary.samplers.td_remap_table_size, MAX_TEXTURE_STAGES);
+ 		}
+-		else if (0 == _mali_sys_memcmp("StageSamplerExternal", symbolname, 20) && _mali_sys_strlen(symbolname) == 21 &&
++		else if (0 == _mali_sys_strncmp("StageSamplerExternal", symbolname, 20) && _mali_sys_strlen(symbolname) == 21 &&
+ 		         symbolname[20] >= '0' && symbolname[20] < '0' + MAX_TEXTURE_STAGES)
+ 		{
+ 			int stage = symbolname[20] - '0';
+diff --git a/driver/src/shared/binary_shader/bs_symbol.c b/driver/src/shared/binary_shader/bs_symbol.c
+index 29a465f..7700c2e 100644
+--- a/driver/src/shared/binary_shader/bs_symbol.c
++++ b/driver/src/shared/binary_shader/bs_symbol.c
+@@ -340,7 +340,7 @@ MALI_STATIC struct bs_symbol *recursive_lookup_symbol(struct bs_symbol_table *ta
+ 
+ 			/* in addition to strncmp we need to check if symbol has a terminating zero at position 'namelen'
+ 			 * and that the symbol found is a struct */
+-			if (_mali_sys_memcmp(name, table->members[i]->name, symbol_namelen) == 0 &&
++			if (_mali_sys_strncmp(name, table->members[i]->name, symbol_namelen) == 0 &&
+ 			        table->members[i]->name[symbol_namelen] == '\0')
+ 			{
+ 				MALI_DEBUG_ASSERT(symbol_namelen != 0, ("We found a match for a symbol without any name. What?"));
+@@ -446,7 +446,7 @@ MALI_STATIC_FORCE_INLINE mali_bool bs_filter_symbol(struct bs_symbol *symbol, co
+ 	{
+ 		u32 filterlen = _mali_sys_strlen(filters[k]);
+ 
+-		if (namelen >= filterlen && _mali_sys_memcmp(symbol->name, filters[k], filterlen) == 0)
++		if (namelen >= filterlen && _mali_sys_strncmp(symbol->name, filters[k], filterlen) == 0)
+ 		{
+ 			return MALI_TRUE;
+ 		}
+@@ -508,7 +508,7 @@ MALI_EXPORT s32 bs_lookup_uniform_location(struct bs_symbol_table *table, const
+ 
+ 			/* in addition to strncmp we need to check if symbol has a terminating zero at position 'namelen'
+ 			 * and that the symbol found is a struct */
+-			if (_mali_sys_memcmp(name, symbol->name, symbol_namelen) == 0 &&
++			if (_mali_sys_strncmp(name, symbol->name, symbol_namelen) == 0 &&
+ 			        symbol->name[symbol_namelen] == '\0')
+ 			{
+ 				MALI_DEBUG_ASSERT(symbol_namelen != 0, ("We found a match for a symbol without any name. What?"));
+@@ -555,7 +555,7 @@ MALI_EXPORT s32 bs_lookup_uniform_location(struct bs_symbol_table *table, const
+ 
+ 				/* in addition to strncmp we need to check if symbol has a terminating zero at position 'namelen'
+ 				 * and that the symbol found is a struct */
+-				if (_mali_sys_memcmp(name, symbol->name, symbol_namelen) == 0 &&
++				if (_mali_sys_strncmp(name, symbol->name, symbol_namelen) == 0 &&
+ 				        symbol->name[symbol_namelen] == '\0')
+ 				{
+ 					MALI_DEBUG_ASSERT(symbol_namelen != 0, ("We found a match for a symbol without any name. What?"));

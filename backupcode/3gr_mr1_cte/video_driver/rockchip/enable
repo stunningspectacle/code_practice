@@ -1,0 +1,95 @@
+Kconfig:	  Please choose Y to enable rockchip
+rga/rga_reg_info.c:	u8 TLB_size, mmu_enable, src_flag, dst_flag, CMD_flag;
+rga/rga_reg_info.c:	mmu_enable = msg->mmu_info.mmu_flag & 0x1;
+rga/rga_reg_info.c:	     s_RGA_MMU_CTRL_MMU_ENABLE(mmu_enable));
+rga/vrga_fe.c:		"combined_mode_enable",	     /* 11: pp only */
+rga/rga_drv.c:	if (rga_service.enable)
+rga/rga_drv.c:	clk_prepare_enable(struct clk *clk)(drvdata->aclk_rga);
+rga/rga_drv.c:	clk_prepare_enable(drvdata->hclk_rga);
+rga/rga_drv.c:	/*clk_prepare_enable(drvdata->pd_rga); */
+rga/rga_drv.c:	rga_service.enable = true;
+rga/rga_drv.c:	if (!rga_service.enable)
+rga/rga_drv.c:	rga_service.enable = false;
+rga/rga_drv.c:	if (rga_service.enable) {
+rga/rga_drv.c:	rga_service.enable = false;
+rga/rga.h:	rop_enable_mask = 0x2,
+rga/rga.h:	dither_enable_mask = 0x8,
+rga/rga.h:	fading_enable_mask = 0x10,
+rga/rga.h:    /* [0] mmu enable [1] src_flush [2] dst_flush
+rga/rga.h:	/* ([0] = 1 alpha_rop_enable)       */
+rga/rga.h:	/* ([1] = 1 rop enable)             */
+rga/rga.h:	/* ([2] = 1 fading_enable)          */
+rga/rga.h:	/* ([3] = 1 PD_enable)              */
+rga/rga.h:	/* ([5] = 1 dither_enable)          */
+rga/rga.h:	/* ([7] = 1 AA_enable)              */
+rga/rga.h:	atomic_t int_disable;	/* 0 int enable 1 int disable  */
+rga/rga.h:	bool enable;
+rockchip_fb.c:		if (dev_drv->iommu_enabled) {
+rockchip_fb.c:	if (dev_drv->iommu_enabled)
+rockchip_fb.c:			if (dev_drv->iommu_enabled)
+rockchip_fb.c:			if (dev_drv->iommu_enabled)
+rockchip_fb.c:		if (dev_drv->iommu_enabled) {
+rockchip_fb.c:	if (dev_drv->iommu_enabled) {
+rockchip_fb.c:	int enable;	/* enable fb:1 enable;0 disable */
+rockchip_fb.c:		if (copy_from_user(&enable, argp, sizeof(enable)))
+rockchip_fb.c:		dev_drv->ops->open(dev_drv, win_id, enable);
+rockchip_fb.c:		enable = dev_drv->ops->get_win_state(dev_drv, win_id);
+rockchip_fb.c:		if (copy_to_user(argp, &enable, sizeof(enable)))
+rockchip_fb.c:		if (copy_from_user(&enable, argp, sizeof(enable)))
+rockchip_fb.c:		dev_drv->vsync_info.active = enable;
+rockchip_fb.c:		if (copy_to_user(argp, &dev_drv->iommu_enabled,
+rockchip_fb.c:				 sizeof(dev_drv->iommu_enabled)))
+rockchip_fb.c: * @enable:
+rockchip_fb.c:			  bool enable, int vop_id)
+rockchip_fb.c:	pr_info("hdmi %s vop%d\n", enable ? "connect to" : "remove from",
+rockchip_fb.c:	if (enable) {
+rockchip_fb.c:	hdmi_switch_complete = enable;
+rockchip_fb.c:	dev_dbg(fbi->dev, "ion type %d, enable %d\n",
+rockchip_fb.c:		sfb_info->ion_server_type, dev_drv->iommu_enabled);
+rockchip_fb.c:		if (dev_drv->iommu_enabled) {
+rockchip_fb.c:	if (dev_drv->iommu_enabled && dev_drv->mmu_dev)
+rockchip_fb.c:		if (dev_drv->iommu_enabled)
+rockchip_fb.c:		if (dev_drv->iommu_enabled) {
+rockchip_fb.c:			if (dev_drv->iommu_enabled)
+rockchip_fb_sysfs.c:	return snprintf(buf, PAGE_SIZE, "%s\n", state ? "enabled" : "disabled");
+rockchip_fb_sysfs.c:	__ATTR(enable, S_IRUGO | S_IWUSR, show_fb_state, set_fb_state),
+rockchip_screen.c:int rockchip_disp_pwr_enable(struct rockchip_screen *screen)
+vop/Kconfig:	  Please select Y to enable the
+vop/rockchip_vop.c:static void rockchip_vop_clk_enable(struct vop_device *vop_dev)
+vop/rockchip_vop.c:		clk_prepare_enable(vop_dev->dclk);
+vop/rockchip_vop.c:static int rockchip_vop_enable_irq(struct rockchip_vop_driver *dev_drv)
+vop/rockchip_vop.c:static void vop_win_enable(struct vop_device *vop_dev, unsigned int win_id,
+vop/rockchip_vop.c:static int rockchip_vop_mmu_en(struct rockchip_vop_driver *dev_drv, bool enable)
+vop/rockchip_vop.c:		val = V_MMU_EN(enable) | V_AXI_OUTSTANDING_MAX_NUM(31) |
+vop/rockchip_vop.c:	if (dev_drv->iommu_enabled) {
+vop/rockchip_vop.c:		if (enable && !vop_dev->iommu_status) {
+vop/rockchip_vop.c:		if (!enable && vop_dev->iommu_status) {
+vop/rockchip_vop.c:				bool enable)
+vop/rockchip_vop.c:	if (!enable) {
+vop/rockchip_vop.c:	if (dev_drv->iommu_enabled) {
+vop/rockchip_vop.c:	rockchip_disp_pwr_enable(screen);
+vop/rockchip_vop.c:	rockchip_vop_clk_enable(vop_dev);
+vop/rockchip_vop.c:	    dev_drv->trsm_ops && dev_drv->trsm_ops->enable)
+vop/rockchip_vop.c:		dev_drv->trsm_ops->enable();
+vop/rockchip_vop.c:	/* enable clk,when first layer open */
+vop/rockchip_vop.c:		rockchip_vop_clk_enable(vop_dev);
+vop/rockchip_vop.c:			rockchip_vop_enable_irq(dev_drv);
+vop/rockchip_vop.c:		vop_win_enable(vop_dev, win_id, open);
+vop/rockchip_vop.c:	/* this is the first frame of the system,enable frame start interrupt */
+vop/rockchip_vop.c:		rockchip_vop_enable_irq(dev_drv);
+vop/rockchip_vop.c:	rockchip_disp_pwr_enable(dev_drv->cur_screen);
+vop/rockchip_vop.c:		rockchip_vop_clk_enable(vop_dev);
+vop/rockchip_vop.c:			dev_drv->trsm_ops->enable)
+vop/rockchip_vop.c:		dev_drv->trsm_ops->enable();
+vop/rockchip_vop.c:	/* VOP leave standby mode after DSI enable */
+vop/rockchip_vop.c:				       int enable)
+vop/rockchip_vop.c:	if (enable)
+vop/rockchip_vop.c:		enable_irq(vop_dev->irq);
+vop/rockchip_vop.c:			strcpy(status_w0, "enabled");
+vop/rockchip_vop.c:			strcpy(status_w1, "enabled");
+vop/rockchip_vop.c:	if (of_property_read_u32(np, "rockchip,iommu-enabled", &val))
+vop/rockchip_vop.c:		vop_dev->driver.iommu_enabled = 0;
+vop/rockchip_vop.c:		vop_dev->driver.iommu_enabled = val;
+vop/rockchip_vop.c:	vop_dev->driver.iommu_enabled = 0;
+vop/rockchip_vop.c:	if (dev_drv->iommu_enabled)
+vop/rockchip_vop.c:		 vop_dev->id, dev_drv->iommu_enabled ? "enabled" : "disabled");

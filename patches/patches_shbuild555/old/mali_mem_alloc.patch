@@ -1,0 +1,27 @@
+diff --git a/drivers/gpu/arm/mali/linux/mali_memory_os_alloc.c b/drivers/gpu/arm/mali/linux/mali_memory_os_alloc.c
+index a1dc8cc..a3610a8 100644
+--- a/drivers/gpu/arm/mali/linux/mali_memory_os_alloc.c
++++ b/drivers/gpu/arm/mali/linux/mali_memory_os_alloc.c
+@@ -124,7 +124,11 @@ static int mali_mem_os_alloc_pages(mali_mem_allocation *descriptor, u32 size)
+ 	size_t page_count = PAGE_ALIGN(size) / _MALI_OSK_MALI_PAGE_SIZE;
+ 	size_t remaining = page_count;
+ 	u32 i;
++	struct timeval start;
++	struct timeval stop;
++	unsigned int elapse_time;
+ 
++	do_gettimeofday(&start);
+ 	MALI_DEBUG_ASSERT_POINTER(descriptor);
+ 	MALI_DEBUG_ASSERT(MALI_MEM_OS == descriptor->type);
+ 
+@@ -212,6 +216,10 @@ static int mali_mem_os_alloc_pages(mali_mem_allocation *descriptor, u32 size)
+ 		MALI_DEBUG_PRINT(4, ("OS Mem: Stopping pool trim timer, only %u pages on pool\n", mali_mem_os_allocator.pool_count));
+ 		cancel_delayed_work(&mali_mem_os_allocator.timed_shrinker);
+ 	}
++	do_gettimeofday(&stop);
++	elapse_time = timeval_to_ns(&stop) - timeval_to_ns(&start);
++	pr_info("mali: %s: Need %d pages, allocating %d pages from system pool, eclapse time=%dms\n",
++				__func__, page_count, remaining, elapse_time/1000000);
+ 
+ 	return 0;
+ }

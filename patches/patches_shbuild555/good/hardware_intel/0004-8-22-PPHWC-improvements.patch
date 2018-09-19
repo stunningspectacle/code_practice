@@ -1,0 +1,274 @@
+From e4a9427431041be0f2844ac21945797514e8320d Mon Sep 17 00:00:00 2001
+From: Fabrizio Iannetti <fabrizio.iannetti@intel.com>
+Date: Mon, 1 Dec 2014 08:43:43 +0100
+Subject: [PATCH 4/6] [8/22]PPHWC improvements
+
+Change-Id: I6641ae519ffa914b4b378a6a894a3ccd4db6273a
+Tracked-On: https://jira01.devtools.intel.com/browse/IMINAN-17187
+Signed-off-by: Yan Leo <leo.yan@intel.com>
+---
+ libhwcomposer/dcc-hal.h            |    1 +
+ libhwcomposer/hwcomposer.cpp       |  109 ++++++++++++++++++++----------------
+ libhwcomposer/hwcomposer_video.cpp |   24 +++++++-
+ 3 files changed, 84 insertions(+), 50 deletions(-)
+
+diff --git a/libhwcomposer/dcc-hal.h b/libhwcomposer/dcc-hal.h
+index 0263aae..35faa05 100644
+--- a/libhwcomposer/dcc-hal.h
++++ b/libhwcomposer/dcc-hal.h
+@@ -42,6 +42,7 @@ extern "C" {
+ #define HWC_OVERLAY_NUM 2
+ /* TODO: support dynamical layer count */
+ #define HWC_MAX_LAYER_NUM 10
++#define HWC_OVERLAY_INVALID HWC_OVERLAY_NUM
+ 
+ int  dcc_hal_init(void);
+ void dcc_hal_deinit(void);
+diff --git a/libhwcomposer/hwcomposer.cpp b/libhwcomposer/hwcomposer.cpp
+index 923cc94..1138469 100644
+--- a/libhwcomposer/hwcomposer.cpp
++++ b/libhwcomposer/hwcomposer.cpp
+@@ -244,6 +244,7 @@ public:
+ 
+     size_t  fbt_index; // index of the framebuffer target layer
+     bool    fbt_enabled; // true if the framebuffer target should be displayed
++    size_t  ppLayerIndex; // index of the layer that requires post-processing
+ 
+     // DCC background frame buffer
+     hwc_layer_1_t* back;
+@@ -267,6 +268,7 @@ public:
+         fb_count = 0;
+         memset(fbLastHandle, 0, HWC_MAX_LAYER_NUM*sizeof(buffer_handle_t));
+         fbt_enabled = false;
++        ppLayerIndex = HWC_OVERLAY_INVALID;
+         // find the composition target buffer
+         for (size_t i = 0; i < display->numHwLayers; i++) {
+             if (display->hwLayers[i].compositionType
+@@ -306,18 +308,23 @@ public:
+         if (l->flags & HWC_SKIP_LAYER)
+             return ADDOV_RES_SKIP_LAYER;
+         // no rotation
+-        if (!allowScalingAndRotate && !l->transform == 0)
++        if (!allowScalingAndRotate && l->transform)
+             return ADDOV_RES_CANT_TRANSFORM;
+         // check color format
+         if (!isFormatSupportedAsOverlay(h->fmt, allowYCbCr))
+             return ADDOV_RES_WRONG_FMT;
+         // no scaling for now
+-        if (!allowScalingAndRotate && !compareSizes(l->displayFrame, l->sourceCrop))
++        bool sameSize = compareSizes(l->displayFrame, l->sourceCrop);
++        if (!allowScalingAndRotate && !sameSize)
+             return ADDOV_RES_CANT_SCALE;
+         // only first overlay can have arbitrary size
+         if (overlay_count > 0 && !compareSizes(l->displayFrame, display->hwLayers[fbt_index].sourceCrop))
+             return ADDOV_RES_NOT_FULLSCREEN;
+ 
++        // if the layer needs resize/rotation then it has to be post-processed
++        if (!sameSize || l->transform)
++            ppLayerIndex = hwc_index;
++
+         overlayIndexes[overlay_count] = hwc_index;
+         overlays[overlay_count] = l;
+         overlay_count++;
+@@ -511,13 +518,6 @@ public:
+             }
+         }
+ exit:
+-        if (canDo) {
+-            canDo = activateVPP();
+-            if (canDo)
+-                feedVPP(conf, video_id);
+-        } else {
+-            deactivateVPP();
+-        }
+         return canDo;
+     }
+ 
+@@ -529,41 +529,6 @@ exit:
+         return false;
+     }
+ 
+-    bool activateVPP() {
+-        if (vpp.get() == 0)
+-            vpp = IHwcVideoPostprocessor::create(IHwcVideoPostprocessor::IHWC_VIDEO_PP_TRANSFORMING);
+-        return vpp.get() != 0;
+-    }
+-
+-    void deactivateVPP() {
+-        if (vpp.get() != 0) {
+-            // note: the vpp will destroy itself asynchronously
+-            vpp->stopLooping();
+-            vpp.clear();
+-        }
+-    }
+-
+-    void feedVPP(LayerConfiguration& conf, size_t video_id) {
+-        const private_handle_t* ppOutBuf;
+-        // send the video buffer to the post-processor
+-        // this will also set the release fence of the layer
+-        vpp->submit(conf.overlays[0]);
+-        // get the current post-processed output
+-        hwc_layer_1_t*  vl = vpp->current(conf.overlays[0]);
+-        if (vl != 0 && vl->handle != conf.overlays[0]->handle) {
+-            // the PP has returned a different buffer, tell the
+-            // configuration about it.
+-            // the new PP layer looks the same, except for the
+-            // buffer out, source dimensions and transform
+-            // TODO: due to the async nature of the VPP the current frame
+-            // might not match the layer config anymore
+-            conf.overrides[0] = vl;
+-            // close the original acquire fence (the VPP holds a duplicate)
+-            if (conf.overlays[0]->acquireFenceFd >= 0)
+-                close(conf.overlays[0]->acquireFenceFd);
+-        }
+-    }
+-    sp<IHwcVideoPostprocessor> vpp;
+ };
+ 
+ /**
+@@ -634,6 +599,9 @@ public:
+     SingleLayerConfigurator compSL;
+     GenOverlayConfigurator compGen;
+ 
++    // post-processor, used to adapt buffers to a format suitable to DCC
++    sp<IHwcVideoPostprocessor> pp;
++
+     // for fps computation
+     size_t  updateCount;
+     size_t  updateStart;
+@@ -690,6 +658,18 @@ public:
+             }
+         }
+ 
++        // setup layer post-processing if needed
++        if (conf.ppLayerIndex != HWC_OVERLAY_INVALID) {
++            if (activatePP()) {
++                feedPP(conf);
++            } else {
++                ALOGE("Can not activate PP4HWC: fall back to OpenGL (configurator was %s)", conf.configuratorName);
++                conf.reset(display);
++            }
++        } else {
++            deactivatePP();
++        }
++
+         // logging
+         configure_count++;
+         ALOGV("cnf@%5d (lc=%d oc=%d overlays fbt=%d)", configure_count,
+@@ -787,6 +767,7 @@ public:
+             // but we will tell it must be disabled
+             back = &display->hwLayers[conf.fbt_index];
+         }
++
+         // post update to HW
+         hwc_layer_1_t* overlays[HWC_OVERLAY_NUM];
+         for (size_t i = 0; i < conf.overlay_count; i++) {
+@@ -801,9 +782,8 @@ public:
+         dcc_hal_compose(back, overlays, conf.overlay_count,
+                 conf.back != 0, &display->retireFenceFd);
+ 
+-        // TODO: this should be more generic, move VPP to Updater?
+-        if (compVideo.vpp.get() != 0)
+-            compVideo.vpp->currentRendered();
++        if (pp.get() != 0)
++            pp->currentRendered();
+ 
+         // close fences for all layers we directly render, *after* calling
+         // the dcc compose, lest we free the fences before dcc uses them.
+@@ -857,6 +837,41 @@ public:
+         }
+     }
+ 
++    bool activatePP() {
++        if (pp.get() == 0)
++            pp = IHwcVideoPostprocessor::create(IHwcVideoPostprocessor::IHWC_VIDEO_PP_TRANSFORMING);
++        return pp.get() != 0;
++    }
++
++    void deactivatePP() {
++        if (pp.get() != 0) {
++            // note: the vpp will destroy itself asynchronously
++            pp->stopLooping();
++            pp.clear();
++        }
++    }
++
++    void feedPP(LayerConfiguration& conf) {
++        const private_handle_t* ppOutBuf;
++        // send the video buffer to the post-processor
++        // this will also set the release fence of the layer
++        pp->submit(conf.overlays[0]);
++        // get the current post-processed output
++        hwc_layer_1_t*  vl = pp->current(conf.overlays[0]);
++        if (vl != 0 && vl->handle != conf.overlays[0]->handle) {
++            // the PP has returned a different buffer, tell the
++            // configuration about it.
++            // the new PP layer looks the same, except for the
++            // buffer out, source dimensions and transform
++            // TODO: due to the async nature of the VPP the current frame
++            // might not match the layer config anymore
++            conf.overrides[0] = vl;
++            // close the original acquire fence (the VPP holds a duplicate)
++            if (conf.overlays[0]->acquireFenceFd >= 0)
++                close(conf.overlays[0]->acquireFenceFd);
++        }
++    }
++
+     void getFrameRates(float& fpsLastSec, float& fpsTotal, size_t& totalMs) {
+         size_t count = updateCount - updateStart;
+         if (count < 2) {
+diff --git a/libhwcomposer/hwcomposer_video.cpp b/libhwcomposer/hwcomposer_video.cpp
+index 9d805c8..8f9df93 100644
+--- a/libhwcomposer/hwcomposer_video.cpp
++++ b/libhwcomposer/hwcomposer_video.cpp
+@@ -206,12 +206,17 @@ public:
+     bool shouldLoop;
+     hwc_layer_1_t mCurrentLayer;
+     int queuedCount;
++    buffer_handle_t lastSubmitted;
++    int lastSubmittedWidth;
++    int lastSubmittedHeight;
++    uint32_t lastSubmittedTransform;
+ 
+     HwcBaseVideoPostprocessor() :
+         allocDev(0),
+         mCurrent(0),
+         shouldLoop(true),
+-        queuedCount(0) {
++        queuedCount(0),
++        lastSubmitted(0) {
+         const struct hw_module_t *pmodule = NULL;
+ 
+         int err = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &pmodule);
+@@ -288,13 +293,26 @@ public:
+ 
+     bool submit_unlocked(const hwc_layer_1_t* l) {
+         ATRACE_CALL();
++        int w = l->displayFrame.right - l->displayFrame.left;
++        int h = l->displayFrame.bottom - l->displayFrame.top;
++        // do not submit the same frame twice, unless we have
++        // different post-processor parameters
++        if (l->handle == lastSubmitted &&
++                w == lastSubmittedWidth &&
++                h == lastSubmittedHeight &&
++                l->transform == lastSubmittedTransform)
++            return true;
+         ATRACE_INT("VPPFree", mFree.size());
+         HwcVideoBuffer* b = dequeueFreeBuffer();
+         ALOGV("VPP submit - got free buffer: %p", b);
+         if (b != 0) {
++            lastSubmitted = l->handle;
++            lastSubmittedWidth = w;
++            lastSubmittedHeight = h;
++            lastSubmittedTransform = l->transform;
+             b->src = hndl(l);
+-            b->reqW = l->displayFrame.right - l->displayFrame.left;
+-            b->reqH = l->displayFrame.bottom - l->displayFrame.top;
++            b->reqW = w;
++            b->reqH = h;
+             // TODO: temporary limitations (hopefully) until DCC can crop
+             b->reqW &= ~7; // multiple of 8 for rgb565
+             b->reqH &= ~1; // multiple of 2 for rgb565
+-- 
+1.7.9.5
+

@@ -1,0 +1,69 @@
+diff --git a/drivers/staging/android/ion/ion.c b/drivers/staging/android/ion/ion.c
+index 5398a28..cde06af 100644
+--- a/drivers/staging/android/ion/ion.c
++++ b/drivers/staging/android/ion/ion.c
+@@ -27,6 +27,7 @@
+ #include <linux/miscdevice.h>
+ #include <linux/export.h>
+ #include <linux/mm.h>
++#include <linux/highmem.h>
+ #include <linux/mm_types.h>
+ #include <linux/rbtree.h>
+ #include <linux/slab.h>
+@@ -1208,6 +1209,22 @@ static unsigned int ion_ioctl_dir(unsigned int cmd)
+        }
+ }
+ 
++static void
++ion_clflush_page(struct page *page)
++{
++       uint8_t *page_virtual;
++       unsigned int i;
++       const int size = boot_cpu_data.x86_clflush_size;
++
++       if (unlikely(page == NULL))
++               return;
++
++       page_virtual = kmap_atomic(page);
++       for (i = 0; i < PAGE_SIZE; i += size)
++               clflush(page_virtual + i);
++       kunmap_atomic(page_virtual);
++}
++
+ static long ion_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
+ {
+        struct ion_client *client = filp->private_data;
+@@ -1274,6 +1291,22 @@ static long ion_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
+                        ret = data.fd.fd;
+                break;
+        }
++       case ION_IOC_CACHE_FLUSH:
++       {
++               struct ion_handle *handle;
++               unsigned long i;
++               struct page *pages;
++
++               handle = ion_handle_get_by_id(client, data.handle.handle);
++               if (IS_ERR(handle))
++                       return PTR_ERR(handle);
++               pages = *handle->buffer->pages;
++               mb();
++               for (i = 0; i < (handle->buffer->size + 4095) / 4096; i++)
++                       ion_clflush_page(pages++);
++               mb();
++               break;
++       }
+        case ION_IOC_IMPORT:
+        {
+                struct ion_handle *handle;
+diff --git a/drivers/staging/android/uapi/ion.h b/drivers/staging/android/uapi/ion.h
+index f09e7c1..5d66dca 100644
+--- a/drivers/staging/android/uapi/ion.h
++++ b/drivers/staging/android/uapi/ion.h
+@@ -192,5 +192,6 @@ struct ion_custom_data {
+  * passes appropriate userdata for that ioctl
+  */
+ #define ION_IOC_CUSTOM         _IOWR(ION_IOC_MAGIC, 6, struct ion_custom_data)
++#define ION_IOC_CACHE_FLUSH            _IOWR(ION_IOC_MAGIC, 8, struct ion_fd_data)
+ 
+ #endif /* _UAPI_LINUX_ION_H */

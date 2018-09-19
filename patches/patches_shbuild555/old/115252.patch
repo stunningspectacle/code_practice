@@ -1,0 +1,30 @@
+From e4fcb87efcf8e89cf5697068a326d4becd12a9a2 Mon Sep 17 00:00:00 2001
+From: Sebastien Lemarie <sebastien.lemarie@intel.com>
+Date: Thu, 16 Jul 2015 16:05:28 +0800
+Subject: [PATCH] VSYNC : Framework : DispSync thread of the SurfaceFlinger
+ support to model HW vsync on Adnroid L
+
+UTP-Id:SMS07788218
+
+Signed-off-by: Sebastien Lemarie <sebastien.lemarie@intel.com>
+---
+ sofia3gr/BoardConfig.mk |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/sofia3gr/BoardConfig.mk b/sofia3gr/BoardConfig.mk
+index 8bcb63e..13fbfc2 100644
+--- a/sofia3gr/BoardConfig.mk
++++ b/sofia3gr/BoardConfig.mk
+@@ -57,7 +57,8 @@ TARGET_PROVIDES_INIT_RC := false
+ BOARD_EGL_CFG ?= device/intel/sofia3gr/egl.cfg
+ USE_OPENGL_RENDERER ?= true
+ TARGET_DISABLE_TRIPLE_BUFFERING := false
+-TARGET_RUNNING_WITHOUT_SYNC_FRAMEWORK := true
++# Not rquired on L anymore 
++TARGET_RUNNING_WITHOUT_SYNC_FRAMEWORK := false
+ SF_VSYNC_EVENT_PHASE_OFFSET_NS := 5000000
+ VSYNC_EVENT_PHASE_OFFSET_NS := 7500000
+ PRESENT_TIME_OFFSET_FROM_VSYNC_NS := 3200000
+-- 
+1.7.9.5
+

@@ -1,0 +1,443 @@
+commit da99c809a85a5caa7ddf99c4890638d45fc51874
+Author: Martin Daser <martin.daser@intel.com>
+Date:   Wed Nov 19 10:16:54 2014 +0100
+
+    gralloc must support usage flag GRALLOC_USAGE_PROTECTED)
+    
+    BZ: 553
+    
+    [PATCH 19/25]in ion_hal, introduce
+    - ion_alloc_secure() and
+    - ion_free_secure()
+    in gralloc introduce
+    - evaluate USAGE_PROTECTED and call ion_alloc_secure()
+    - changes in mapper: skip mapping and registering for secure buffers
+    
+    Change-Id: I34ffd6d1876c22091e54161390720ebf005d1e11
+    Signed-off-by: Martin Daser <martin.daser@intel.com>
+    UTP-Id: SMS05927999
+    Reviewed-on: https://gerrit.rds.intel.com/r/47799
+    Reviewed-by: Fabrizio Iannetti <fabrizio.iannetti@intel.com>
+    Tested-by: Jenkins T-Cloud
+    Reviewed-by: UTP Service
+
+diff --git a/libgralloc/gralloc.cpp b/libgralloc/gralloc.cpp
+index f3b1452..a75d510 100644
+--- a/libgralloc/gralloc.cpp
++++ b/libgralloc/gralloc.cpp
+@@ -228,19 +228,27 @@ int gralloc_alloc_hwbuffer(alloc_device_t* dev, size_t size, int usage, buffer_h
+ {
+ 	private_module_t* m = reinterpret_cast<private_module_t*>(dev->common.module);
+ 	ion_user_handle_t ion_hnd;
+-	unsigned char *cpu_ptr;
+-	unsigned int phys=0;
+-	int fd;
+-	int ret;
+-	int cache_flag = 0;
++	private_handle_t *hnd = NULL;
++
++	unsigned char *cpu_ptr = 0;
++	unsigned int      phys = 0;
++	int                 fd = 0;
++	int              error = 0;
++	int                ret = 0;
++	int         cache_flag = 0;
++
+ 	if(!dev){
+-		ALOGE("%s:dev param is null",__FUNCTION__);
+-		return -1;
++		ALOGE("%s:dev param is null", __FUNCTION__);
++
++    ret = -1;
++    goto end;
+ 	}
+ 
+ 	if(!dev->common.module){
+-		ALOGE("%s:dev->common.module param is null",__FUNCTION__);
+-		return -1;
++		ALOGE("%s:dev->common.module param is null", __FUNCTION__);
++
++    ret = -1;
++		goto end;
+ 	}
+ 
+ 	/* use GRALLOC_USAGE_PRIVATE_3 to indicate ION cacheable buffer attribution */
+@@ -249,49 +257,108 @@ int gralloc_alloc_hwbuffer(alloc_device_t* dev, size_t size, int usage, buffer_h
+ 		ALOGV("[%s] enable ION_FLAG_CACHED|ION_FLAG_CACHED_NEEDS_SYNC\n", __func__);
+ 	}
+ 
+-	/* Keeping page size rounding */
+-	size = roundUpToPageSize(size);
+-	ion_hnd = ion_alloc_buffer(m->ion_client, size, 0, ION_HEAP_TYPE_DMA_MASK, cache_flag,
+-                       &fd, &phys);
++  /* Keeping page size rounding */
++  size = roundUpToPageSize(size);
+ 
+-	if(usage&GRALLOC_USAGE_HW_MASK) {
+-		cpu_ptr = (unsigned char*)mmap( NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0 );
++	if(usage & GRALLOC_USAGE_PROTECTED) {
++    size_t reqSize = size;
+ 
+-		if ( MAP_FAILED == cpu_ptr )
+-		{
+-			ALOGE( "ion_map( %d ) failed", m->ion_client );
+-			if ( 0 != ion_free( m->ion_client, ion_hnd ) ) ALOGE( "ion_free( %d ) failed", m->ion_client );
+-			close(fd);
+-			return -1;
+-		}
+-		memset(cpu_ptr, 0, size);
+-	}
++    ion_hnd = 0;
++    cpu_ptr = NULL;
++    phys    = 0;
++    fd      = 0;
++
++    error = ion_alloc_secure(m->ion_client, &size, &phys);
++
++    ALOGV("ion_alloc_secure( reqlen %lu ) = %d, phys 0x%lx, len %lu",
++      reqSize, error, phys, size);
++
++    if (error != 0) {
++      phys = 0;
++
++      ret = -1;
++      goto end;
++    }
++
++    /* set virtual address to physical address; TODO: verify this later */
++    cpu_ptr = (unsigned char *)phys;
++
++    /* cannot zero buffer, as it's only accessible from secure vm */
++
++  } else {
++    ion_hnd = ion_alloc_buffer(m->ion_client, size, 0, ION_HEAP_TYPE_DMA_MASK, 0,
++      &fd, &phys);
++
++    if(ion_hnd == 0) {
++      ALOGE("ion_alloc_buffer(size %u) = 0", size);
++
++      ret = -1;
++      goto end;
++    }
++
++    if(usage & GRALLOC_USAGE_HW_MASK) {
++      cpu_ptr = (unsigned char*)mmap( NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0 );
++
++      if ( MAP_FAILED == cpu_ptr )
++      {
++        ALOGE( "ion_map( %d ) failed", m->ion_client );
++        if ( 0 != ion_free( m->ion_client, ion_hnd ) ) ALOGE( "ion_free( %d ) failed", m->ion_client );
++        close(fd);
++
++        ret = -1;
++        goto end;
++      }
++
++      memset(cpu_ptr, 0, size);
++    }
++  }
+ 
+-	private_handle_t *hnd = new private_handle_t(fd, usage, flags, size);
++  /* allocate private handle */
++	hnd = new private_handle_t(fd, usage, flags, size);
+ 
+ 	if ( NULL != hnd ){
+-		hnd->ion_fd = m->ion_client;
++		hnd->ion_fd  = m->ion_client;
+ 		hnd->ion_hdl = ion_hnd;
+-		if(usage&GRALLOC_USAGE_HW_MASK)
++		hnd->phys    = phys;
++		*pHandle     = hnd;
++
++		if(usage & GRALLOC_USAGE_HW_MASK)
+ 			hnd->base = intptr_t(cpu_ptr);
+-		hnd->phys = phys;
++
+ 		print_private_handle(hnd, "ion_buffer_alloc" );
+-		*pHandle = hnd;
+-		return 0;
+-	}else{
+-		ALOGE( "Gralloc out of mem for ion_client:%d", m->ion_client );
++
++    ret = 0;
++	} else {
++		ALOGE( "Gralloc: out of mem for private handle, ion_client:%d", m->ion_client );
++
++    /* clean resources */
++
++    if(usage & GRALLOC_USAGE_HW_MASK && cpu_ptr != NULL) {
++      if(fd >= 0) {
++        close(fd);
++      }
++
++      error = munmap( cpu_ptr, size );
++      if (error != 0) {
++        ALOGE( "munmap failed for base:%p size: %d", cpu_ptr, size );
++      }
++
++      error = ion_free( m->ion_client, ion_hnd );
++      if (error != 0) {
++        ALOGE( "ion_free( %d ) failed", m->ion_client );
++      }
++    } else {
++      error = ion_free_secure(m->ion_client, size, phys);
++    }
++
++    ret = -1;
+ 	}
+ 
+-	close(fd);
+-	if(usage&GRALLOC_USAGE_HW_MASK)
+-		ret = munmap( cpu_ptr, size );
+-		if ( 0 != ret )
+-			ALOGE( "munmap failed for base:%p size: %d", cpu_ptr, size );
+-	ret = ion_free( m->ion_client, ion_hnd );
+-	if ( 0 != ret )
+-		ALOGE( "ion_free( %d ) failed", m->ion_client );
++end:
++  ALOGV("%s = %d, size %u, usage 0x%08x, flags %08x", __FUNCTION__,
++    ret, size, usage, flags);
+ 
+-	return -1;
++	return ret;
+ }
+ 
+ /*****************************************************************************/
+@@ -463,27 +530,50 @@ static int gralloc_alloc(alloc_device_t* dev,
+ 
+ 	return 0;
+ }
++
++
+ extern int getIonFd(gralloc_module_t const *module);
++
+ static int gralloc_free(alloc_device_t* dev,
+ 		buffer_handle_t handle)
+ {
++  int ret = 0;
++
+ 	if (!dev) {
+ 		ALOGE("[%s] dev is NULL!!\n", __func__);
+-		return -EINVAL;
++		ret = -EINVAL;
+ 	}
+ 
+-	gralloc_module_t* module = reinterpret_cast<gralloc_module_t*>(
+-                                                                   dev->common.module);
++	gralloc_module_t* module = reinterpret_cast<gralloc_module_t*>(dev->common.module);
++
+ 	private_handle_t const* hnd = reinterpret_cast<private_handle_t const*>(handle);
+-	print_private_handle((private_handle_t*)hnd, "gralloc_free" );
+ 
+-	if (hnd->base)
+-		grallocUnmap(module, const_cast<private_handle_t*>(hnd));
++  if (hnd != NULL)
++  {
++    print_private_handle((private_handle_t*)hnd, "gralloc_free" );
++
++    if(hnd->ion_hdl == 0) {
++      /* assume secure/protected buffer */
++
++      ion_free_secure(getIonFd(module), hnd->size, hnd->phys);
++
++
++    } else {
++      if (hnd->base) {
++        grallocUnmap(module, const_cast<private_handle_t*>(hnd));
++      }
++
++      close(hnd->fd);
++
++      if (hnd->ion_hdl)
++        ion_free(getIonFd(module), hnd->ion_hdl);
++    }
++
++    delete hnd;
++  } else {
++    ret = -1;
++  }
+ 
+-	close(hnd->fd);
+-	if (hnd->ion_hdl)
+-		ion_free(getIonFd(module), hnd->ion_hdl);
+-	delete hnd;
+ 	return 0;
+ }
+ 
+diff --git a/libgralloc/ion-hal.cpp b/libgralloc/ion-hal.cpp
+index ec6d9ea..6dff51b 100644
+--- a/libgralloc/ion-hal.cpp
++++ b/libgralloc/ion-hal.cpp
+@@ -3,7 +3,7 @@
+  *
+  *  Component: Android HAL libgralloc
+  *
+- *  Copyright (C) 2013 Intel Mobile Communications GmbH
++ *  Copyright (C) 2013, 2014 Intel Mobile Communications GmbH
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+@@ -66,7 +66,7 @@ int ion_get_param(int fdion, int bufid, unsigned int *phys, size_t *len)
+ 
+ 	err = ion_ioctl(fdion, ION_IOC_CUSTOM, &custom_data);
+ 	if(err){
+-		ALOGE("%s ION_IOC_CUSTOM failed\n", __FUNCTION__);
++		ALOGE("%s ION_IOC_CUSTOM (GET_PARAM) failed\n", __FUNCTION__);
+ 		*phys = 0;
+ 		return -1;
+ 	}
+@@ -74,3 +74,68 @@ int ion_get_param(int fdion, int bufid, unsigned int *phys, size_t *len)
+ 	*len = xgold_data.size;
+ 	return err;
+ }
++
++int ion_alloc_secure(int fdion, size_t *len, unsigned int *phys)
++{
++	struct xgold_ion_get_params_data xgold_data;
++	struct ion_custom_data custom_data;
++	int err = -127;
++
++  if(phys != NULL && len != NULL) {
++    xgold_data.handle = 0;
++    xgold_data.size   = *len;
++
++    custom_data.cmd = XGOLD_ION_ALLOC_SECURE;
++    custom_data.arg = (unsigned long)(&xgold_data);
++
++    err = ion_ioctl(fdion, ION_IOC_CUSTOM, &custom_data);
++
++    if(err) {
++      ALOGE("%s ION_IOC_CUSTOM (ALLOC) failed\n", __FUNCTION__);
++      *phys = 0;
++
++      err = -1;
++    } else {
++      *phys = (unsigned int) xgold_data.addr;
++      *len  =       (size_t) xgold_data.size;
++
++      err = 0;
++    }
++  }
++
++  ALOGV("ion_alloc_secure(fd %d, len %u, phys 0x%08x) = %d",
++    fdion, *len, *phys, err);
++
++	return err;
++}
++
++int ion_free_secure(int fdion, size_t len, unsigned int phys)
++{
++	struct xgold_ion_get_params_data xgold_data;
++	struct ion_custom_data custom_data;
++	int err = -127;
++
++  if(phys != 0 && len != 0) {
++    xgold_data.handle = 0;
++    xgold_data.size   = len;
++    xgold_data.addr   = phys;
++
++    custom_data.cmd = XGOLD_ION_FREE_SECURE;
++    custom_data.arg = (unsigned long)(&xgold_data);
++
++    err = ion_ioctl(fdion, ION_IOC_CUSTOM, &custom_data);
++
++    if(err) {
++      ALOGE("%s ION_IOC_CUSTOM (FREE) failed\n", __FUNCTION__);
++
++      err = -1;
++    } else {
++      err = 0;
++    }
++  }
++
++  ALOGV("ion_free_secure(fd %d, len %u, phys 0x%08x) = %d",
++    fdion, len, phys, err);
++
++	return err;
++}
+diff --git a/libgralloc/ion-hal.h b/libgralloc/ion-hal.h
+index a0d2e7e..51ff4e4 100644
+--- a/libgralloc/ion-hal.h
++++ b/libgralloc/ion-hal.h
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (C) 2013 Intel Mobile Communications GmbH
++ * Copyright (C) 2013, 2014 Intel Mobile Communications GmbH
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+@@ -20,4 +20,8 @@
+ 
+ int ion_get_param(int fdion, int bufid, unsigned int *phys, size_t *len);
+ 
++int ion_alloc_secure(int fdion, size_t *len, unsigned int *phys);
++int ion_free_secure(int fdion, size_t len, unsigned int phys);
++
++
+ #endif /* __ION_HAL_H */
+diff --git a/libgralloc/mapper.cpp b/libgralloc/mapper.cpp
+index f8886f2..cca5e52 100644
+--- a/libgralloc/mapper.cpp
++++ b/libgralloc/mapper.cpp
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (C) 2011-2013 Intel Mobile Communications GmbH
++ * Copyright (C) 2011-2014 Intel Mobile Communications GmbH
+  * Copyright (C) 2010 ARM Limited. All rights reserved.
+  *
+  * Copyright (C) 2008 The Android Open Source Project
+@@ -43,15 +43,20 @@ static int gralloc_map(gralloc_module_t const* module, buffer_handle_t handle)
+ {
+     private_handle_t* hnd = (private_handle_t*)handle;
+ 
+-    void* mappedAddress = mmap(0, hnd->size, PROT_READ|PROT_WRITE, MAP_SHARED,
+-                               hnd->fd, 0);
+-    if (mappedAddress == MAP_FAILED) {
+-        ALOGE("%s: could not mmap %s", __func__, strerror(errno));
+-        return -errno;
++    if(hnd->usage & GRALLOC_USAGE_PROTECTED == 0) {
++        void* mappedAddress = mmap(0, hnd->size, PROT_READ|PROT_WRITE, MAP_SHARED,
++            hnd->fd, 0);
++        if (mappedAddress == MAP_FAILED) {
++            ALOGE("%s: could not mmap %s", __func__, strerror(errno));
++            return -errno;
++        }
++        ALOGV("%s: base %p %d %d %d\n", __func__, mappedAddress, hnd->size,
++            hnd->w, hnd->h);
++        hnd->base = intptr_t(mappedAddress);
++    } else {
++        ALOGV("gralloc_map() secure buffer; don't map");
++        hnd->base = 0;
+     }
+-    ALOGV("%s: base %p %d %d %d\n", __func__, mappedAddress, hnd->size,
+-          hnd->w, hnd->h);
+-    hnd->base = intptr_t(mappedAddress);
+     return 0;
+ }
+ 
+@@ -133,6 +138,13 @@ int gralloc_register_buffer(gralloc_module_t const* module,
+ 
+ 	int retval = -EINVAL;
+ 
++  print_private_handle(hnd, "gralloc_register_buffer" );
++
++  if(hnd->usage & GRALLOC_USAGE_PROTECTED) {
++      ALOGV("gralloc_register_buffer() protected buffer, don't register 0x%x", (int)handle);
++      return 0;
++  }
++
+ 	pthread_mutex_lock(&s_map_lock);
+ 
+     if (hnd->flags & private_handle_t::PRIV_FLAGS_FRAMEBUFFER){
+@@ -183,6 +195,11 @@ int gralloc_unregister_buffer(gralloc_module_t const* module,
+ 
+     print_private_handle((private_handle_t*)hnd, "gralloc_unregister_buffer" );
+ 
++    if(hnd->usage & GRALLOC_USAGE_PROTECTED) {
++        ALOGV("gralloc_unregister_buffer() protected buffer, don't unregister");
++        return 0;
++    }
++
+     void* base = (void*)hnd->base;
+     size_t size = hnd->size;
+ 

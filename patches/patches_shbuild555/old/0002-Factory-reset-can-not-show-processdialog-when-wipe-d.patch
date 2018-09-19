@@ -1,0 +1,32 @@
+From b6844b486f8605f37ea3439f08db22dd03ff5834 Mon Sep 17 00:00:00 2001
+From: "Sun,Lulu A" <lulu.a.sun@intel.com>
+Date: Wed, 24 Jun 2015 09:21:41 +0800
+Subject: [PATCH 2/2] Factory reset can not show processdialog when wipe data
+
+port patch from:https://android.intel.com/#/c/377645/
+
+Change-Id: Id42795bcd2e5e51f07bfc1780d6368f289fc12cc
+Signed-off-by: Sun,Lulu A <lulu.a.sun@intel.com>
+Tracked-On: https://jira01.devtools.intel.com/browse/CTEAN-1465
+---
+ src/com/android/settings/MasterClearConfirm.java |    4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/src/com/android/settings/MasterClearConfirm.java b/src/com/android/settings/MasterClearConfirm.java
+index 3521aa3..c608f5b 100644
+--- a/src/com/android/settings/MasterClearConfirm.java
++++ b/src/com/android/settings/MasterClearConfirm.java
+@@ -74,6 +74,10 @@ public class MasterClearConfirm extends Fragment {
+                 new AsyncTask<Void, Void, Void>() {
+                     @Override
+                     protected Void doInBackground(Void... params) {
++                        try{
++                            Thread.sleep(500);
++                        }
++                        catch(InterruptedException e ) {}
+                         pdbManager.wipe();
+                         return null;
+                     }
+-- 
+1.7.9.5
+

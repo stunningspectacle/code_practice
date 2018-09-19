@@ -1,0 +1,30 @@
+From 47e4238718b73920ec496763c7cb21c1c18d12b7 Mon Sep 17 00:00:00 2001
+From: Sebastien Lemarie <sebastien.lemarie@intel.com>
+Date: Tue, 21 Jul 2015 18:17:58 +0800
+Subject: [PATCH] AOSP : BoardConfig : Avoid HWSYNC always ON
+
+Lollipop offers VSYNC offset to be computed regularly, including resycn to HWSYNC if offset is too large.
+HWSYNC should be active only when rewquired, leading to less CPU Load and memory bandwisdth instead of being always ON
+
+UTP-Id:SMS07788300
+Signed-off-by: Sebastien Lemarie <sebastien.lemarie@intel.com>
+---
+ sofia3gr/BoardConfig.mk |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/sofia3gr/BoardConfig.mk b/sofia3gr/BoardConfig.mk
+index 13fbfc2..f203b1b 100644
+--- a/sofia3gr/BoardConfig.mk
++++ b/sofia3gr/BoardConfig.mk
+@@ -61,7 +61,7 @@ TARGET_DISABLE_TRIPLE_BUFFERING := false
+ TARGET_RUNNING_WITHOUT_SYNC_FRAMEWORK := false
+ SF_VSYNC_EVENT_PHASE_OFFSET_NS := 5000000
+ VSYNC_EVENT_PHASE_OFFSET_NS := 7500000
+-PRESENT_TIME_OFFSET_FROM_VSYNC_NS := 3200000
++PRESENT_TIME_OFFSET_FROM_VSYNC_NS := 0
+ 
+ TARGET_RECOVERY_PIXEL_FORMAT := "RGBX_8888"
+ 
+-- 
+1.7.9.5
+

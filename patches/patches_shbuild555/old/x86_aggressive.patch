@@ -1,0 +1,1421 @@
+From 20d43c106c1e04e899d272bf7b5bbbc76abfa906 Mon Sep 17 00:00:00 2001
+From: lianghe <liang.he@intel.com>
+Date: Sun, 7 Dec 2014 22:17:25 +0800
+Subject: [PATCH] [MRD6][AOSP]Be "x86 aggressive" when a APK porting at least
+ one ISV .so
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+ISV .so means a .so includes APK's private, main logical.
+It is opponent with "3rd party .so". It is an engine or a decoder or
+Ads who modifies JAVA or encryptor who modifies native code or else.
+Anyway, 3rd party .so missing doesn’t means that ISV forgets it
+and in other side 3rd party .so may be integrated by tools instead of
+ISV.
+
+We are looking for the "certification" which show us ISV tries to port
+the APK on x86. ISV .so is the best signal.
+
+If ISV puts a ARM .so into lib/x86 directory, the apk will be installed
+with ARM.
+
+The algorithm depends on "ThirdPartySO" list. We will be fully "x86
+aggressive" if "ThirdPartySO" is empty.
+
+"OEMWhiteList" list is a shortcut. Any apk in "OEMWhiteList" will be
+installed as default, like AOSP.
+
+Change-Id: I18a3873d3f112fbc8f0c71d09fb09cd41b9a22a2
+Tracked-On: https://jira01.devtools.intel.com/browse/CTEAN-425
+Signed-off-by: jgu21 <jinghui.gu@intel.com>
+Reviewed-on: https://android.intel.com:443/348573
+Reviewed-on: https://android.intel.com/362633
+Reviewed-by: Zhang, Peter <peter.zhang@intel.com>
+Tested-by: Zhang, Peter <peter.zhang@intel.com>
+---
+ .../internal/content/NativeLibraryHelper.java      |   22 +-
+ core/jni/Android.mk                                |   11 +
+ ...ndroid_internal_content_NativeLibraryHelper.cpp |   52 +-
+ core/jni/nativebridgehelper/ABIList.cpp            |   67 +++
+ core/jni/nativebridgehelper/ABIList.h              |   39 ++
+ core/jni/nativebridgehelper/AppLibInfo.cpp         |  501 ++++++++++++++++++++
+ core/jni/nativebridgehelper/AppLibInfo.h           |   51 ++
+ core/jni/nativebridgehelper/ELFParser.cpp          |  110 +++++
+ core/jni/nativebridgehelper/ELFParser.h            |   60 +++
+ core/jni/nativebridgehelper/OEMWhiteList           |    5 +
+ core/jni/nativebridgehelper/ThirdPartySO           |  309 ++++++++++++
+ 11 files changed, 1217 insertions(+), 10 deletions(-)
+ create mode 100644 core/jni/nativebridgehelper/ABIList.cpp
+ create mode 100644 core/jni/nativebridgehelper/ABIList.h
+ create mode 100644 core/jni/nativebridgehelper/AppLibInfo.cpp
+ create mode 100644 core/jni/nativebridgehelper/AppLibInfo.h
+ create mode 100644 core/jni/nativebridgehelper/ELFParser.cpp
+ create mode 100644 core/jni/nativebridgehelper/ELFParser.h
+ create mode 100644 core/jni/nativebridgehelper/OEMWhiteList
+ create mode 100644 core/jni/nativebridgehelper/ThirdPartySO
+
+diff --git a/core/java/com/android/internal/content/NativeLibraryHelper.java b/core/java/com/android/internal/content/NativeLibraryHelper.java
+index 02f675c..7bd6320 100644
+--- a/core/java/com/android/internal/content/NativeLibraryHelper.java
++++ b/core/java/com/android/internal/content/NativeLibraryHelper.java
+@@ -74,6 +74,8 @@ public class NativeLibraryHelper {
+ 
+         final long[] apkHandles;
+         final boolean multiArch;
++        final String pkgName;
++        final String codePath;
+ 
+         public static Handle create(File packageFile) throws IOException {
+             try {
+@@ -86,14 +88,17 @@ public class NativeLibraryHelper {
+ 
+         public static Handle create(Package pkg) throws IOException {
+             return create(pkg.getAllCodePaths(),
+-                    (pkg.applicationInfo.flags & ApplicationInfo.FLAG_MULTIARCH) != 0);
++                    (pkg.applicationInfo.flags & ApplicationInfo.FLAG_MULTIARCH) != 0,
++                    pkg.packageName, pkg.codePath);
+         }
+ 
+         public static Handle create(PackageLite lite) throws IOException {
+-            return create(lite.getAllCodePaths(), lite.multiArch);
++            return create(lite.getAllCodePaths(), lite.multiArch, lite.packageName,
++                    lite.codePath);
+         }
+ 
+-        private static Handle create(List<String> codePaths, boolean multiArch) throws IOException {
++        private static Handle create(List<String> codePaths, boolean multiArch,
++                String pkgName, String codePath) throws IOException {
+             final int size = codePaths.size();
+             final long[] apkHandles = new long[size];
+             for (int i = 0; i < size; i++) {
+@@ -108,12 +113,14 @@ public class NativeLibraryHelper {
+                 }
+             }
+ 
+-            return new Handle(apkHandles, multiArch);
++            return new Handle(apkHandles, multiArch, pkgName, codePath);
+         }
+ 
+-        Handle(long[] apkHandles, boolean multiArch) {
++        Handle(long[] apkHandles, boolean multiArch, String pkgName, String codePath) {
+             this.apkHandles = apkHandles;
+             this.multiArch = multiArch;
++            this.pkgName = pkgName;
++            this.codePath = codePath;
+             mGuard.open("close");
+         }
+ 
+@@ -185,7 +192,8 @@ public class NativeLibraryHelper {
+     public static int findSupportedAbi(Handle handle, String[] supportedAbis) {
+         int finalRes = NO_NATIVE_LIBRARIES;
+         for (long apkHandle : handle.apkHandles) {
+-            final int res = nativeFindSupportedAbi(apkHandle, supportedAbis);
++            final int res = nativeFindSupportedAbi(apkHandle, supportedAbis,
++                    handle.pkgName, handle.codePath);
+             if (res == NO_NATIVE_LIBRARIES) {
+                 // No native code, keep looking through all APKs.
+             } else if (res == INSTALL_FAILED_NO_MATCHING_ABIS) {
+@@ -207,7 +215,7 @@ public class NativeLibraryHelper {
+         return finalRes;
+     }
+ 
+-    private native static int nativeFindSupportedAbi(long handle, String[] supportedAbis);
++    private native static int nativeFindSupportedAbi(long handle, String[] supportedAbis, String pkgName, String codePath);
+ 
+     // Convenience method to call removeNativeBinariesFromDirLI(File)
+     public static void removeNativeBinariesLI(String nativeLibraryPath) {
+diff --git a/core/jni/Android.mk b/core/jni/Android.mk
+index dbaa4b8..429348b 100644
+--- a/core/jni/Android.mk
++++ b/core/jni/Android.mk
+@@ -253,6 +253,17 @@ ifeq ($(USE_OPENGL_RENDERER),true)
+ 	LOCAL_SHARED_LIBRARIES += libhwui
+ endif
+ 
++ifeq ($(WITH_NATIVE_BRIDGE), true)
++	LOCAL_CFLAGS += -DNATIVE_BRIDGE
++
++	LOCAL_SRC_FILES += \
++		nativebridgehelper/ABIList.cpp \
++		nativebridgehelper/ELFParser.cpp \
++		nativebridgehelper/AppLibInfo.cpp
++
++	LOCAL_C_INCLUDES += $(LOCAL_PATH)/nativebridgehelper
++endif
++
+ LOCAL_SHARED_LIBRARIES += \
+ 	libdl
+ # we need to access the private Bionic header
+diff --git a/core/jni/com_android_internal_content_NativeLibraryHelper.cpp b/core/jni/com_android_internal_content_NativeLibraryHelper.cpp
+index 226b764..381d6df 100644
+--- a/core/jni/com_android_internal_content_NativeLibraryHelper.cpp
++++ b/core/jni/com_android_internal_content_NativeLibraryHelper.cpp
+@@ -35,7 +35,12 @@
+ #include <unistd.h>
+ #include <sys/stat.h>
+ #include <sys/types.h>
++#include <sys/time.h>
+ 
++#ifdef NATIVE_BRIDGE
++#include "AppLibInfo.h"
++using namespace nativebridgehelper;
++#endif
+ 
+ #define APK_LIB "lib/"
+ #define APK_LIB_LEN (sizeof(APK_LIB) - 1)
+@@ -485,9 +490,50 @@ com_android_internal_content_NativeLibraryHelper_sumNativeBinaries(JNIEnv *env,
+ 
+ static jint
+ com_android_internal_content_NativeLibraryHelper_findSupportedAbi(JNIEnv *env, jclass clazz,
+-        jlong apkHandle, jobjectArray javaCpuAbisToSearch)
++        jlong apkHandle, jobjectArray javaCpuAbisToSearch, jstring apkPkgName, jstring apkCodePath)
+ {
+-    return (jint) findSupportedAbi(env, apkHandle, javaCpuAbisToSearch);
++#ifdef NATIVE_BRIDGE
++    const int numAbis = env->GetArrayLength(javaCpuAbisToSearch);
++    Vector<ScopedUtfChars*> supportedAbis;
++    for (int i = 0; i < numAbis; ++i) {
++        supportedAbis.add(new ScopedUtfChars(
++                    env,
++            (jstring)env->GetObjectArrayElement(javaCpuAbisToSearch, i)));
++    }
++
++    int abiType = 0;
++    do {
++        ScopedUtfChars name(env, apkPkgName);
++        ALOGV("goto findSupportedAbi %s", name.c_str());
++
++        ABIList al(&supportedAbis);
++        abiType = findSupportedAbi(env, apkHandle, javaCpuAbisToSearch);
++        ALOGV("AOSP return %d[%s]", abiType, al.getNameByIdx(abiType));
++        if (abiType < 0 || !al.isX86Compatible(abiType)) {
++            break;
++        }
++
++        // if one package's name is on OEM's specific white list, then the
++        // package should be installed as default
++        if (isInOEMWhiteList(name.c_str())) {
++            ALOGV("%s is in OEM WHITE LIST, install as default", name.c_str());
++            break;
++        }
++
++        ScopedUtfChars codePath(env, apkCodePath);
++        AppLibInfo aLi((void*)apkHandle, codePath.c_str(), &al);
++        abiType = aLi.whoAmI(abiType);
++        ALOGV("findSupportedAbi return %d[%s]", abiType, al.getNameByIdx(abiType));
++    } while(false);
++
++    for (int i = 0; i < numAbis; ++i) {
++        delete supportedAbis[i];
++    }
++
++    return (jint)abiType;
++#else
++    return (jint)findSupportedAbi(env, apkHandle, javaCpuAbisToSearch);
++#endif
+ }
+ 
+ enum bitcode_scan_result_t {
+@@ -555,7 +601,7 @@ static JNINativeMethod gMethods[] = {
+             "(JLjava/lang/String;)J",
+             (void *)com_android_internal_content_NativeLibraryHelper_sumNativeBinaries},
+     {"nativeFindSupportedAbi",
+-            "(J[Ljava/lang/String;)I",
++            "(J[Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)I",
+             (void *)com_android_internal_content_NativeLibraryHelper_findSupportedAbi},
+     {"hasRenderscriptBitcode", "(J)I",
+             (void *)com_android_internal_content_NativeLibraryHelper_hasRenderscriptBitcode},
+diff --git a/core/jni/nativebridgehelper/ABIList.cpp b/core/jni/nativebridgehelper/ABIList.cpp
+new file mode 100644
+index 0000000..2b9d924
+--- /dev/null
++++ b/core/jni/nativebridgehelper/ABIList.cpp
+@@ -0,0 +1,67 @@
++/*
++ * Copyright (C) 20[14] Intel Corporation.  All rights reserved.
++ * Intel Confidential                                  RS-NDA # RS-8051151
++ * This [file/library] contains Houdini confidential information of Intel Corporation
++ * which is subject to a non-disclosure agreement between Intel Corporation
++ * and you or your company.
++ */
++#define LOG_TAG "NativeLibraryHelper"
++//#define LOG_NDEBUG 0
++
++#include <cutils/log.h>
++#include <string.h>
++#include "ABIList.h"
++
++using namespace android;
++using namespace nativebridgehelper;
++/*
++ * ===========================================================================
++ *     ABIList
++ * ===========================================================================
++ */
++
++ABIList::ABIList(Vector<ScopedUtfChars*>* list) {
++    mList = list;
++    mABINum = mList->size();
++}
++
++ABIList::~ABIList() {
++}
++
++bool ABIList::isX86Compatible(size_t idx) {
++    return isX86Compatible(getNameByIdx(idx));
++}
++
++bool ABIList::isX86Compatible(const char* name) {
++    return !name || (0 == strcmp(name, X86ABI)) ||
++        (0 == strcmp(name, X8664ABI));
++}
++
++bool ABIList::getIdxByName(const char* name, size_t* idx) {
++    if (!name) {
++        return false;
++    }
++
++    bool found = false;
++    *idx = mABINum;
++
++    size_t i = 0;
++    while (i < mABINum) {
++        if (!strcmp((mList->itemAt(i))->c_str(), name)) {
++            *idx = i;
++            found = true;
++            break;
++        }
++        i++;
++    }
++
++    return found;
++}
++
++const char* ABIList::getNameByIdx(int idx) {
++    if (0 > idx || (size_t)idx >= mABINum) {
++        return "UnkNowN";
++    }
++
++    return (mList->itemAt(idx))->c_str();
++}
+diff --git a/core/jni/nativebridgehelper/ABIList.h b/core/jni/nativebridgehelper/ABIList.h
+new file mode 100644
+index 0000000..71ada05
+--- /dev/null
++++ b/core/jni/nativebridgehelper/ABIList.h
+@@ -0,0 +1,39 @@
++/*
++ * Copyright (C) 20[14] Intel Corporation.  All rights reserved.
++ * Intel Confidential                                  RS-NDA # RS-8051151
++ * This [file/library] contains Houdini confidential information of Intel Corporation
++ * which is subject to a non-disclosure agreement between Intel Corporation
++ * and you or your company.
++ */
++
++#ifndef __ABILIST_H__
++#define __ABILIST_H__
++
++#include <utils/KeyedVector.h>
++#include <sys/types.h>
++#include <ScopedUtfChars.h>
++
++using namespace android;
++namespace nativebridgehelper {
++#define ARMABI      "armeabi"
++#define ARMV7ABI    "armeabi-v7a"
++#define ARM64ABI    "arm64_v8a"
++#define X86ABI      "x86"
++#define X8664ABI    "x86_64"
++#define ABI_TYPE_MAX    5
++
++class ABIList {
++public:
++    ABIList(Vector<ScopedUtfChars*>* list);
++    ~ABIList();
++
++    bool isX86Compatible(size_t idx);
++    bool getIdxByName(const char* name, size_t* idx);
++    const char* getNameByIdx(int idx);
++private:
++    bool isX86Compatible(const char* name);
++    size_t mABINum;
++    Vector<ScopedUtfChars*>* mList;
++};
++}//namespace
++#endif//__ABILIST_H__
+diff --git a/core/jni/nativebridgehelper/AppLibInfo.cpp b/core/jni/nativebridgehelper/AppLibInfo.cpp
+new file mode 100644
+index 0000000..2863002
+--- /dev/null
++++ b/core/jni/nativebridgehelper/AppLibInfo.cpp
+@@ -0,0 +1,501 @@
++/*
++ * Copyright (C) 20[14] Intel Corporation.  All rights reserved.
++ * Intel Confidential                                  RS-NDA # RS-8051151
++ * This [file/library] contains Houdini confidential information of Intel Corporation
++ * which is subject to a non-disclosure agreement between Intel Corporation
++ * and you or your company.
++ */
++#define LOG_TAG "NativeLibraryHelper"
++//#define LOG_NDEBUG 0
++
++#include <cutils/log.h>
++#include <ctype.h>
++#include <dlfcn.h>
++#include <errno.h>
++#include <fcntl.h>
++#include <string.h>
++#include <sys/types.h>
++#include <utils/Errors.h>
++#include <androidfw/ZipFileRO.h>
++
++#include "ABIList.h"
++#include "AppLibInfo.h"
++#include "ELFParser.h"
++
++#define APK_LIB "lib/"
++#define APK_LIB_LEN (sizeof(APK_LIB) - 1)
++
++#define LIB_PREFIX "/lib"
++#define LIB_PREFIX_LEN (sizeof(LIB_PREFIX) - 1)
++
++#define LIB_SUFFIX ".so"
++#define LIB_SUFFIX_LEN (sizeof(LIB_SUFFIX) - 1)
++
++using namespace android;
++using namespace nativebridgehelper;
++
++#define ARR_SIZE(x) sizeof(x)/sizeof(x[0])
++
++const char* oemSpecific[] = {
++    #include "OEMWhiteList"
++};
++const char* thirdPartySOes[] = {
++    #include "ThirdPartySO"
++};
++
++bool nativebridgehelper::isInOEMWhiteList(const char* pkgName) {
++    if (!pkgName) return false;
++
++    bool ret = false;
++    size_t len = ARR_SIZE(oemSpecific);
++    for (size_t i = 0; i < len; i++) {
++        if (oemSpecific[i] && strlen(pkgName) >= strlen(oemSpecific[i])) {
++            if (!strcmp(pkgName, oemSpecific[i])) {
++                ret = true;
++                break;
++            }
++        }
++    }
++
++    return ret;
++}
++
++/*
++ * ===========================================================================
++ *     AppLibInfo
++ * ===========================================================================
++ */
++AppLibInfo::AppLibInfo(void* apkHandle, const char* path, ABIList* al) {
++    if (!apkHandle && !path) {
++        return;
++    }
++
++    if (path) {
++        ALOGV("apk is %s", path);
++    }
++
++    mAl = al;
++    mSOList = new List<struct soInfo*>();
++    memset(mSONum, 0, sizeof(mSONum));
++
++    ZipFileRO* zipFile = NULL;
++    if (apkHandle) {
++        zipFile = reinterpret_cast<ZipFileRO*>(apkHandle);
++    } else {
++        zipFile = ZipFileRO::open(path);
++    }
++
++    void* cookie = NULL;
++    if (!zipFile->startIteration(&cookie)) {
++        return;
++    }
++
++    ZipEntryRO next = NULL;
++    char fileName[SO_NAME_MAX];
++    char* buffer = NULL;
++    bool mixedX86AndARM = false;
++    while ((next = zipFile->nextEntry(cookie)) != NULL) {
++        if (zipFile->getEntryFileName(next, fileName, sizeof(fileName))) {
++            continue;
++        }
++
++        // Make sure we're in the lib directory of the ZIP.
++        // And make sure it is a .so file
++        if (strncmp(fileName, APK_LIB, APK_LIB_LEN)) {
++            continue;
++        }
++
++        // pick out directory like lib/xxxx/
++        if (!strstr(fileName, ".so")) {
++            continue;
++        }
++
++        ALOGV(".so: %s", fileName);
++
++        // according to observation, any library file with name like
++        // "*.wav.so" and "*.dat.so" is not a real .so files
++        if (strstr(fileName, ".wav.so") || strstr(fileName, ".dat.so")) {
++            continue;
++        }
++
++        // It is a real .so file, prepare to record
++        // find abi name and focus on what we care: arm(s) and x86(s)
++        const char* lastSlash = strrchr(fileName, '/');
++        const char* cpuAbiOffset = fileName + APK_LIB_LEN;
++        const size_t cpuAbiRegionSize = lastSlash - cpuAbiOffset;
++
++        char tmpName[SO_NAME_MAX];
++        memset(tmpName, 0, sizeof(tmpName));
++        if (cpuAbiRegionSize < SO_NAME_MAX) {
++            memcpy(tmpName, cpuAbiOffset, sizeof(char) * cpuAbiRegionSize);
++        }
++        size_t abiIdx = 0;
++        if (!mAl->getIdxByName(tmpName, &abiIdx)) {
++            continue;
++        }
++        if (mAl->isX86Compatible(abiIdx)) {
++            if (mixedX86AndARM) {
++                continue;
++            }
++
++            // check if ISV puts some ARM .so into lib/x86/
++            if (buffer != NULL) {
++                free(buffer);
++                buffer = NULL;
++            }
++
++            size_t unCompLen = 0;
++            if (!zipFile->getEntryInfo(next, NULL, &unCompLen, NULL, NULL, NULL, NULL)) {
++                continue;
++            }
++
++            buffer = (char*)malloc(unCompLen * sizeof(char));
++            memset(buffer, 0, sizeof(char) * unCompLen);
++
++            if (zipFile->uncompressEntry(next, buffer, unCompLen * sizeof(char))) {
++                if (!is_elf_from_buffer(buffer)) {
++                    continue;
++                }
++
++                if (is_arm_elf_from_buffer(buffer)) {
++                    mixedX86AndARM = true;
++                    mSONum[abiIdx] = 0;
++                    continue;
++                }
++            } else {
++                ALOGE("%s: uncompress failed\n", fileName);
++                continue;
++            }
++        }
++        mSONum[abiIdx]++;
++
++        // fill library name
++        lastSlash++;
++        if (!lastSlash) {
++            continue;
++        }
++        const size_t libraryRegionSize = strlen(lastSlash);
++        memset(tmpName, 0, sizeof(tmpName));
++        memcpy(tmpName, (lastSlash + 3), sizeof(char) *
++                (libraryRegionSize - 6));
++        for (size_t j = 0; j < strlen(tmpName); j++) {
++            tmpName[j] = tolower(tmpName[j]);
++        }
++
++        struct soInfo* soinfo = NULL;
++        List<struct soInfo*>::iterator it = mSOList->begin();
++        while (it != mSOList->end()) {
++            if (!strcmp((*it)->name, tmpName)) {
++            //if (cmpIgnPst((*it)->name, tmpName)) {
++                soinfo = (*it);
++                break;
++            }
++            it++;
++        }
++        if (!soinfo) {
++            soinfo = (struct soInfo*)malloc(sizeof(struct soInfo));
++            if (!soinfo) {
++                ALOGE("MALLOC ERROR");
++                break;
++            }
++            memset(soinfo, 0, sizeof(struct soInfo));
++            memset(soinfo->name, 0, sizeof(soinfo->name));
++            memcpy(soinfo->name, tmpName, sizeof(tmpName));
++            addAndSort(soinfo);
++        }
++        soinfo->abiType[abiIdx] = true;
++    }
++
++    if (buffer != NULL) {
++        free(buffer);
++        buffer = NULL;
++    }
++
++    zipFile->endIteration(cookie);
++    //dump();
++}
++
++AppLibInfo::~AppLibInfo() {
++    List<struct soInfo*>::iterator it = mSOList->begin();
++    while (it != mSOList->end()) {
++        if (*it) {
++            free(*it);
++        }
++        it++;
++    }
++    delete mSOList;
++}
++
++void AppLibInfo::addAndSort(struct soInfo* info) {
++    List<struct soInfo*>::iterator it = mSOList->begin();
++    while (it != mSOList->end()) {
++        if (0 > strcmp(info->name, (*it)->name)) {
++            break;
++        }
++        it++;
++    }
++    mSOList->insert(it, info);
++}
++
++bool AppLibInfo::isKnownThirdPartySO(const char* name) {
++    if (!name) return false;
++
++    bool ret = false;
++    size_t len = ARR_SIZE(thirdPartySOes);
++    for (size_t i = 0; i < len; i++) {
++        if (cmpIgnPst(name, thirdPartySOes[i])) {
++            //if (!strcmp(name, thirdPartySOes[i])) {
++            ret = true;
++            break;
++        }
++    }
++
++    if (ret) {
++        ALOGV("%s is known 3rd party SO", name);
++    }
++
++    return ret;
++}
++
++
++void AppLibInfo::dump(void) {
++    ALOGV("CURRENT APPLICAITON'S LIBRARY INFOMATION DUMP:");
++    ALOGV("|name|:[%s  %s  %s  %s  %s]",
++            mAl->getNameByIdx(0), mAl->getNameByIdx(1),
++            mAl->getNameByIdx(2), mAl->getNameByIdx(3),
++            mAl->getNameByIdx(4));
++    List<struct soInfo*>::iterator it = mSOList->begin();
++    while (it != mSOList->end()) {
++        ALOGV("|%20s|:[%d  %d  %d  %d  %d]",
++                (*it)->name, (*it)->abiType[0], (*it)->abiType[1],
++                (*it)->abiType[2], (*it)->abiType[3], (*it)->abiType[4]);
++        it++;
++    }
++}
++
++bool AppLibInfo::isLinkHyphens(const char c) {
++    return (c == '.' || c == '-' || c == '_');
++}
++
++bool AppLibInfo::isNumeric(const char c) {
++    return ((c <= '9') && (c >= '0'));
++}
++
++bool AppLibInfo::detectX86Keywords(bool is64ABIType) {
++    size_t idx = 0;
++    if (is64ABIType) {
++        mAl->getIdxByName(X8664ABI, &idx);
++    } else {
++        mAl->getIdxByName(X86ABI, &idx);
++    }
++
++    if (!mSONum[idx]) {
++        return false;
++    }
++
++    static const char* x86KyWrd[] = {
++        "intel", "intl", "atom", "x86", "x64",
++    };
++    size_t listLen = sizeof(x86KyWrd) / sizeof(x86KyWrd[0]);
++    bool ret = false;
++    List<struct soInfo*>::iterator it = mSOList->begin();
++    while (it != mSOList->end()) {
++        if ((*it)->abiType[idx]) {
++            const char* name = (*it)->name;
++            size_t i = 0;
++            while (i < listLen) {
++                char* p = strstr(name, x86KyWrd[i]);
++                if (p
++                        && ((isLinkHyphens(*(p - 1)) || isLinkHyphens(*(p + 1)))
++                            || (isNumeric(*(p - 1)) || isNumeric(*(p + 1))))) {
++                    ret = true;
++                    break;
++                }
++                i++;
++            }
++            if (ret) {
++                break;
++            }
++        }
++        it++;
++    }
++
++    return ret;
++}
++
++int AppLibInfo::whoAmI(int sysPrfr) {
++    // sysPrfr comes from android detection result.
++    // After previous filter, it should be "x86" or "x86-64"
++    int ret = sysPrfr;
++    do {
++        const char* sysPrfrName = mAl->getNameByIdx(sysPrfr);
++        bool is64ABIType = strstr(sysPrfrName, X8664ABI) ||
++            strstr(sysPrfrName, ARM64ABI);
++
++        size_t x86Idx = 0;
++        size_t referenceARMIdx = 0;
++        if (is64ABIType) {
++            mAl->getIdxByName(X8664ABI, &x86Idx);
++            mAl->getIdxByName(ARM64ABI, &referenceARMIdx);
++        } else {
++            mAl->getIdxByName(X86ABI, &x86Idx);
++
++            size_t armv7Idx = 0;
++            mAl->getIdxByName(ARMV7ABI, &armv7Idx);
++            size_t armIdx = 0;
++            mAl->getIdxByName(ARMABI, &armIdx);
++
++            referenceARMIdx = mSONum[armv7Idx] ? armv7Idx : armIdx;
++        }
++
++        if (!mSONum[x86Idx] && !mSONum[referenceARMIdx]) {
++            ALOGV("B0, pure JAVA");
++            break;
++        }
++
++        if (!mSONum[x86Idx]) {
++            ALOGV("B0, no any x86 .so");
++            ret = referenceARMIdx;
++            break;
++        }
++
++        // 0. only x86/ or x8664/ has .so(es)
++        if (!mSONum[referenceARMIdx]) {
++            ALOGV("B0, only x86 .so");
++            break;
++        }
++
++        if (detectX86Keywords(is64ABIType)) {
++            ALOGV("B1, x86 keywords");
++            break;
++        }
++
++        size_t referenceARMISVSO = 0;
++        size_t x86ISVSO = 0;
++        bool found = false;
++        List<struct soInfo*>::iterator it = mSOList->begin();
++        while (it != mSOList->end()) {
++            if (isKnownThirdPartySO((*it)->name)) {
++                (*it)->isThirdPartySO = true;
++                if ((*it)->abiType[referenceARMIdx] && !(*it)->abiType[x86Idx]) {
++                    found = true;
++                }
++            } else {
++                (*it)->isThirdPartySO = false;
++                if ((*it)->abiType[x86Idx]) {
++                    x86ISVSO++;
++                }
++                if ((*it)->abiType[referenceARMIdx]) {
++                    referenceARMISVSO++;
++                }
++            }
++
++            it++;
++        }
++
++        if (found) {
++            ret = referenceARMIdx;
++            ALOGV("B2, x86/ misses at least one 3rd party.so");
++            break;
++        }
++
++        if (!x86ISVSO) {
++            if (!referenceARMISVSO) {
++                ALOGV("B3, apk just has 3rd party .so and x86 matches all");
++            } else {
++                ret = referenceARMIdx;
++                ALOGV("B4, x86 misses ISV .so");
++            }
++        } else {
++            ALOGV("B5, x86/ has at least one ISV .so");
++        }
++
++    } while (0);
++
++    ALOGV("Actually, I am %s", mAl->getNameByIdx(ret));
++    return ret;
++}
++
++
++bool AppLibInfo::cmpIgnPst(const char* s1, const char* s2) {
++    bool ret = true;
++    size_t i = 0;
++
++    while (*(s1 + i) != '\0' && *(s2 + i) != '\0') {
++        if (*(s1 + i) != *(s2 + i)) {
++            break;
++        }
++        i++;
++    }
++
++    ret = ignPst(s1 + i) && ignPst(s2 + i);
++//  ALOGV("cmpIgnPst. <%s>-<%s>,  %d", s1, s2, ret);
++    return ret;
++}
++
++bool AppLibInfo::ignPst(const char* postfix) {
++    if (!postfix) {
++        return true;
++    }
++
++    static const char* knownPstList[] = {
++            "sdk", "ndk",
++            "arm", "armv", "neon", "noneon",
++            "nvidia", "tegra", "qcom",
++            "jellybean", "jb", "ics", "honeycomb", "gingerbread",
++            "froyo", "hc", "gb", "kk", "cupcake", "eclair", "dount",
++    };
++    size_t listLen = ARR_SIZE(knownPstList);
++
++    int offset = strlen(postfix) - 1;
++    size_t n = 1;
++    while (offset >= 0) {
++        if (offset == 0 || isLinkHyphens(*(postfix + offset))) {
++            const char* tmpStart = postfix + offset;
++            while (isLinkHyphens(*tmpStart)) {
++                tmpStart++;
++                n--;
++            }
++
++//                ALOGV("check %s, n=%d", tmpStart, n);
++
++            bool passFlag = false;
++            for (size_t i = 0; i < listLen; i++) {
++                if (!strncmp(tmpStart, knownPstList[i], n)) {
++                    passFlag = true;
++                    break;
++                }
++            }
++
++            if (!passFlag) {
++                if (*tmpStart == 'v') {
++                    tmpStart++;
++                    n--;
++                }
++
++//                    ALOGV("check number %s, n=%d", tmpStart, n);
++                bool allNumeric = true;
++                size_t i = 1;
++                while (*tmpStart != '\0' && i <= n) {
++                    if (!isNumeric(*tmpStart)) {
++                        allNumeric = false;
++                        break;
++                    }
++                    tmpStart++;
++                    i++;
++                }
++
++                if (!allNumeric) {
++                    return false;
++                }
++            }
++
++            n = 1;
++        } else {
++            ++n;
++        }
++
++        --offset;
++    }
++    return true;
++}
+diff --git a/core/jni/nativebridgehelper/AppLibInfo.h b/core/jni/nativebridgehelper/AppLibInfo.h
+new file mode 100644
+index 0000000..dae47a8
+--- /dev/null
++++ b/core/jni/nativebridgehelper/AppLibInfo.h
+@@ -0,0 +1,51 @@
++/*
++ * Copyright (C) 20[14] Intel Corporation.  All rights reserved.
++ * Intel Confidential                                  RS-NDA # RS-8051151
++ * This [file/library] contains Houdini confidential information of Intel Corporation
++ * which is subject to a non-disclosure agreement between Intel Corporation
++ * and you or your company.
++ */
++
++#ifndef ___LIBS_APPLICATIONLIBINFO_H
++#define ___LIBS_APPLICATIONLIBINFO_H
++
++#include <sys/types.h>
++#include <utils/List.h>
++
++#include "ABIList.h"
++
++#define SO_NAME_MAX     128
++using namespace android;
++namespace nativebridgehelper {
++
++struct soInfo {
++    bool isThirdPartySO;
++    char name[SO_NAME_MAX];
++    bool abiType[ABI_TYPE_MAX];
++};
++
++class AppLibInfo {
++public:
++    AppLibInfo(void* apkHandle, const char* path, ABIList* al);
++    ~AppLibInfo();
++
++    int  whoAmI(int sysPrfrAbi);
++private:
++    void dump(void);
++    void addAndSort(struct soInfo* info);
++    bool isKnownThirdPartySO(const char* name);
++    bool isLinkHyphens(const char c);
++    bool isNumeric(const char c);
++    bool detectX86Keywords(bool is64ABIType);
++    bool cmpIgnPst(const char* s1, const char* s2);
++    bool ignPst(const char* postfix);
++
++    ABIList* mAl;
++    List<struct soInfo*>* mSOList;
++    size_t mSONum[ABI_TYPE_MAX];
++};
++
++bool isInOEMWhiteList(const char* pkgName);
++}//namespace
++
++#endif//___LIBS_APPLICATIONLIBINFO_H
+diff --git a/core/jni/nativebridgehelper/ELFParser.cpp b/core/jni/nativebridgehelper/ELFParser.cpp
+new file mode 100644
+index 0000000..273aa5b
+--- /dev/null
++++ b/core/jni/nativebridgehelper/ELFParser.cpp
+@@ -0,0 +1,110 @@
++#define LOG_TAG "NativeLibraryHelper"
++//#define LOG_NDEBUG 0
++
++#include <cutils/log.h>
++#include <sys/stat.h>
++#include "ELFParser.h"
++
++namespace nativebridgehelper {
++
++bool is_elf(const char* file_name) {
++    struct stat statbuf;
++    if (stat(file_name, &statbuf) < 0) {
++        ALOGV("%s: No such file\n", file_name);
++        return false;
++    }
++
++    if (!S_ISREG(statbuf.st_mode)) {
++        ALOGV("%s: is not an ordinary file file\n", file_name);
++        return false;
++    }
++
++    if (statbuf.st_size == 0) {
++        ALOGV("%s: is an empty file\n", file_name);
++        return false;
++    }
++
++    FILE* file = fopen(file_name, "rb");
++    if (file == NULL) {
++        ALOGV("%s: is not readable\n", file_name);
++        return false;
++    }
++
++    char ident[EI_NIDENT];
++    if (fread(ident, EI_NIDENT, 1, file) != 1) {
++        ALOGV("%s: failed to read its magic number\n", file_name);
++        fclose(file);
++        return false;
++    }
++
++    if (ident[EI_MAG0] != ELFMAG0 &&
++        ident[EI_MAG1] != ELFMAG1 &&
++        ident[EI_MAG2] != ELFMAG2 &&
++        ident[EI_MAG3] != ELFMAG3) {
++        ALOGV("%s: it is not a .ELF file\n", file_name);
++        fclose(file);
++        return false;
++    }
++
++    fclose(file);
++    return true;
++}
++
++bool is_arm_elf(const char* file_name) {
++    FILE* file = fopen(file_name, "rb");
++    if (file == NULL) {
++        ALOGV("%s: is not readable\n", file_name);
++        return false;
++    }
++
++    if (fseek(file, ELF_MACHINE_OFFSET, SEEK_SET) != 0) {
++        ALOGV("%s: seek failed\n", file_name);
++        return false;
++    }
++
++    unsigned char machine[2];
++    if (fread(machine, 2, 1, file) != 1) {
++        ALOGV("%s: failed to read its machine code\n", file_name);
++        fclose(file);
++        return false;
++    }
++
++    // little endian
++    unsigned machine_code = ((unsigned int)machine[0]) |
++        (((unsigned int)machine[1]) << 8);
++    if (machine_code != EM_ARM &&
++        machine_code !=  EM_AARCH64 &&
++        machine_code != EM_ARM184) {
++        ALOGV("%s: it is not for ARM %d\n", file_name, machine_code);
++        fclose(file);
++        return false;
++    }
++
++    fclose(file);
++    return true;
++}
++
++bool is_elf_from_buffer(const char* buffer) {
++    if (buffer[EI_MAG0] != ELFMAG0 &&
++        buffer[EI_MAG1] != ELFMAG1 &&
++        buffer[EI_MAG2] != ELFMAG2 &&
++        buffer[EI_MAG3] != ELFMAG3) {
++        ALOGV("it is not an .ELF file\n");
++        return false;
++    }
++    return true;
++}
++
++bool is_arm_elf_from_buffer(const char* buffer) {
++    // little endian
++    unsigned machine_code = ((unsigned int)buffer[ELF_MACHINE_OFFSET]) |
++        (((unsigned int)buffer[ELF_MACHINE_OFFSET + 1]) << 8);
++    if (machine_code != EM_ARM &&
++        machine_code !=  EM_AARCH64 &&
++        machine_code != EM_ARM184) {
++        return false;
++    }
++    ALOGV("it is for ARM %d\n", machine_code);
++    return true;
++}
++}
+diff --git a/core/jni/nativebridgehelper/ELFParser.h b/core/jni/nativebridgehelper/ELFParser.h
+new file mode 100644
+index 0000000..08b2b54
+--- /dev/null
++++ b/core/jni/nativebridgehelper/ELFParser.h
+@@ -0,0 +1,60 @@
++#ifndef _ELFPARSER_H_
++#define _ELFPARSER_H_
++
++#include <ctype.h>
++#include <fcntl.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <unistd.h>
++
++namespace nativebridgehelper {
++
++#define EI_NIDENT   16   /* Size of e_ident[] */
++
++/* Fields in e_ident[]
++ */
++#define EI_MAG0     0    /* File identification byte 0 index */
++#define ELFMAG0     0x7F /* Magic number byte 0 */
++#define EI_MAG1     1    /* File identification byte 1 index */
++#define ELFMAG1     'E'  /* Magic number byte 1 */
++#define EI_MAG2     2    /* File identification byte 2 index */
++#define ELFMAG2     'L'  /* Magic number byte 2 */
++#define EI_MAG3     3    /* File identification byte 3 index */
++#define ELFMAG3     'F'  /* Magic number byte 3 */
++
++/* according to implementations of ELF Header
++ *     unsigned char e_ident[16];        // ELF "magic number"
++ *     unsigned char e_type[2];          // Identifies object file type
++ *     unsigned char e_machine[2];       // Specifies required architecture
++ */
++#define ELF_MACHINE_OFFSET  18
++
++/* Values for e_machine, which identifies the architecture.  These numbers
++ * are officially assigned by registry@sco.com.  See below for a list of
++ * ad-hoc numbers used during initial development.
++ * Please always sync them.
++ */
++#define EM_386        3 /* Intel 80386 */
++#define EM_486        6 /* Intel 80486 *//* Reserved for future use */
++#define EM_860        7 /* Intel 80860 */
++#define EM_960       19 /* Intel 80960 */
++#define EM_ARM       40 /* ARM */
++#define EM_IA_64     50 /* Intel IA-64 Processor */
++#define EM_8051     165 /* Intel 8051 and variants */
++#define EM_L1OM     180 /* Intel L1OM */
++#define EM_K1OM     181 /* Intel K1OM */
++#define EM_INTEL182 182 /* Reserved by Intel */
++#define EM_AARCH64  183 /* ARM 64-bit architecture */
++#define EM_ARM184   184 /* Reserved by ARM */
++#define EM_INTEL205 205 /* Reserved by Intel */
++#define EM_INTEL206 206 /* Reserved by Intel */
++#define EM_INTEL207 207 /* Reserved by Intel */
++#define EM_INTEL208 208 /* Reserved by Intel */
++#define EM_INTEL209 209 /* Reserved by Intel */
++
++    bool is_elf(const char* file_name);
++    bool is_arm_elf(const char* file_name);
++    bool is_elf_from_buffer(const char* buffer);
++    bool is_arm_elf_from_buffer(const char* buffer);
++}
++#endif
+diff --git a/core/jni/nativebridgehelper/OEMWhiteList b/core/jni/nativebridgehelper/OEMWhiteList
+new file mode 100644
+index 0000000..c690095
+--- /dev/null
++++ b/core/jni/nativebridgehelper/OEMWhiteList
+@@ -0,0 +1,5 @@
++"add.pkgname.here",
++"which.you.want.to",
++"install.as.default",
++"the.AOSP.way",
++"NEED.REMOVE.ABOVE.ALL",
+diff --git a/core/jni/nativebridgehelper/ThirdPartySO b/core/jni/nativebridgehelper/ThirdPartySO
+new file mode 100644
+index 0000000..8efac86
+--- /dev/null
++++ b/core/jni/nativebridgehelper/ThirdPartySO
+@@ -0,0 +1,309 @@
++    "aacdecoder",
++    "aac-encoder",
++    "aal",
++    "aal_honeycomb",
++    "aal_jellybean",
++    "ads",
++    "aisound",
++    "aitalk",
++    "almixer",
++    "amapv3",
++    "amapv301",
++    "amapv301ex",
++    "amrcodec",
++    "amrnb",
++    "analytics",
++    "andengine",
++    "andenginephysicsbox2dextension",
++    "androidgl20",
++    "app_baidumapapplib_v2_0_0",
++    "app_baidumapapplib_v2_1_0",
++    "app_baidumapapplib_v2_1_1",
++    "app_baidumapapplib_v2_1_2",
++    "app_baidunaviapplib",
++    "application",
++    "arm",
++    "armplugin",
++    "avcodec",
++    "avdevice",
++    "avfilter",
++    "avformat",
++    "aviary_exif",
++    "aviary_moalite",
++    "aviary_native",
++    "avutil",
++    "baidumapsdk_v2_1_3",
++    "baidumapsdk_v2_2_0",
++    "baidumapsdk_v2_3_0",
++    "baidumapsdk_v2_3_1",
++    "baidumapsdk_v2_3_5",
++    "baidumapvos_v2_1_3",
++    "bdmoplusmd5_v1",
++    "bdpush_v1_0",
++    "bdvoicerecognitionclient_v1",
++    "bdvoicesearchclient_v2",
++    "bmapapiengine",
++    "bmapapiengine_v1_3_0",
++    "bmapapiengine_v1_3_1",
++    "bmapapiengine_v1_3_2",
++    "bmapapiengine_v1_3_3",
++    "bmapapiengine_v1_3_4",
++    "bmapapiengine_v1_3_5",
++    "box2d",
++    "bspatch",
++    "bspatch",
++    "bullet",
++    "cardiodecider",
++    "cardiorecognizer",
++    "cardiorecognizer_tegra2",
++    "casdkjni",
++    "cat",
++    "cftutils",
++    "chaosvmp",
++    "chatscript001",
++    "chipmunk",
++    "cnpackage",
++    "cocos2d",
++    "cocos2dcpp",
++    "cocosdenshion",
++    "cocosdenshion",
++    "core",
++    "corona",
++    "coronaprovider.gamenetwork.corona",
++    "cpudetect",
++    "crittercism-ndk",
++    "crypto",
++    "cryptox",
++    "curl",
++    "cyberplayer",
++    "cyberplayer-core",
++    "database_sqlcipher",
++    "dejavu-1.0.1",
++    "des",
++    "dexhelper",
++    "dexhelper-x86",
++    "dianjin-jni",
++    "dodo",
++    "dropboxsync",
++    "ejtts",
++    "emu",
++    "emumedia",
++    "encode",
++    "entryex",
++    "exec",
++    "execmain",
++    "exif_extended",
++    "faceppapi",
++    "fastpay",
++    "fb_jpegturbo",
++    "ffmpeg",
++    "ffmpeg001",
++    "fmodevent",
++    "fmodex",
++    "freetype",
++    "game",
++    "game_logic",
++    "gamenetwork",
++    "gba",
++    "gbd",
++    "gdx",
++    "gdx-freetype",
++    "gif",
++    "gnustl_shared",
++    "gpuimage-library",
++    "gwallet",
++    "hci_asr",
++    "hci_asr_jni",
++    "hci_sys",
++    "hci_sys_jni",
++    "hci_tts",
++    "hci_tts_jni",
++    "hci_tts_local_n6_synth",
++    "hellolua",
++    "iap",
++    "iconv",
++    "identifyapp",
++    "immemulatorj",
++    "increment",
++    "iomx-gingerbread",
++    "iomx-hc",
++    "iomx-ics",
++    "jni",
++    "jni_latinime",
++    "jniavcodec",
++    "jniavdevice",
++    "jniavfilter",
++    "jniavformat",
++    "jniavutil",
++    "jnicvkernels",
++    "jnigraphics",
++    "jniopencv_core",
++    "jniopencv_imgproc",
++    "jnipostproc",
++    "jniswresample",
++    "jniswscale",
++    "jnlua5.1",
++    "jpush",
++    "json",
++    "jtopus",
++    "jtspeex",
++    "jtz",
++    "kinfoc",
++    "lame",
++    "lbs",
++    "lept",
++    "letter_xiaokun.n6.voclib",
++    "licensing",
++    "litedes",
++    "locsdk_2.2",
++    "locsdk_2.3",
++    "locsdk_2.4",
++    "locsdk_2_4",
++    "locsdk3",
++    "locsdk4",
++    "locsdk4b",
++    "lptcpjin",
++    "lthj_unipaybusiness20121012",
++    "lthj_unipaybusiness20121217",
++    "lthj_unipaybusiness20130328",
++    "lua",
++    "luajava",
++    "mad",
++    "main",
++    "mame4all",
++    "mame4all-jni",
++    "mapv3ex",
++    "md5",
++    "megjb",
++    "minimapv320",
++    "mmdb",
++    "mmsdkjni",
++    "mobage",
++    "mono",
++    "monodroid",
++    "moplusmd5",
++    "mp3lame",
++    "mpg123",
++    "msc",
++    "msfboot",
++    "native",
++    "nativerqd",
++    "nes",
++    "nexadaptation_layer_for_dlsdk",
++    "nexalfactory",
++    "nexcal_aac_armv5",
++    "nexcal_aac_armv6",
++    "nexcal_aac_armv7",
++    "nexcal_closedcaption",
++    "nexcal_h264_armv5",
++    "nexcal_h264_armv6",
++    "nexcal_h264_armv7",
++    "nexcal_mp3_armv6",
++    "nexcal_qcom_iomx",
++    "nexcal_ttml",
++    "nexcralbody_mc_jb",
++    "nexplayerengine",
++    "nexral_nw_jb",
++    "nexral_surf_gb",
++    "nexralbody_audio",
++    "nexralbody_audio_jb",
++    "nexralbody_video_cu",
++    "nexralbody_video_fr",
++    "nexralbody_video_fr3",
++    "nexralbody_video_hc",
++    "nexralbody_video_is",
++    "nexralbody_video_jb",
++    "nexralbody_video_opengl",
++    "nmsp_speex",
++    "objc",
++    "ocrengine",
++    "ogg",
++    "openal",
++    "opencv_core",
++    "opencv_imgproc",
++    "opensles",
++    "paypalm_app_plugin_jar_360game",
++    "pinguoimagesdk",
++    "pjsipjni",
++    "plugins",
++    "protectclass",
++    "protobuf",
++    "push-socket",
++    "qrcodedecoder",
++    "qvodbase",
++    "qvodnetjni",
++    "redlaser",
++    "rsjni",
++    "rssupport",
++    "rtmp",
++    "s3eandroidmarketbilling_ext",
++    "sapi_so_1",
++    "sdl",
++    "sdl_image",
++    "sdl_main",
++    "sdl_mixer",
++    "secexe",
++    "secexe.x86",
++    "secmain",
++    "secmain.x86",
++    "security",
++    "smsiap",
++    "smsprotocol",
++    "soundtouch",
++    "soundtouch",
++    "soundtouch001",
++    "speex",
++    "sqlcipher_android",
++    "sqlite3",
++    "ssl",
++    "stagefright_froyo",
++    "stagefright_honeycomb",
++    "stlport_shared",
++    "swresample",
++    "swscale",
++    "sync",
++    "sys",
++    "sys1.3.3",
++    "tbb",
++    "tbt",
++    "tenpay_utils",
++    "tersafe",
++    "tess",
++    "tests",
++    "top-sdk",
++    "uffmpeg",
++    "unionpay",
++    "unity",
++    "usedes",
++    "ustoolkit",
++    "util",
++    "utility",
++    "vadlib",
++    "vi_voslib",
++    "vinit",
++    "voandroidvr_s20",
++    "voandroidvr_s22",
++    "voandroidvr_s23",
++    "voh264dec",
++    "voh264dec_v7",
++    "vorbis",
++    "vorbisidec",
++    "voswrapper",
++    "vpx",
++    "webp",
++    "wiengine",
++    "wiengine_binding",
++    "winetwork",
++    "wiskia",
++    "wisound",
++    "xiaokun.n6.voclib",
++    "xml2",
++    "xmp",
++    "yeepaysdk",
++    "ysshared",
++    "yyutil",
++    "yzs_usc",
++    "zbarjni",
++    "zip",
++    "zxing-new",
++    "zxing-new-v7a",
+-- 
+1.7.9.5
+

@@ -1,0 +1,67 @@
+From 1ab185543964cb89632701939871b7df72212b44 Mon Sep 17 00:00:00 2001
+From: Leo Yan <leo.yan@intel.com>
+Date: Tue, 6 Jan 2015 10:09:07 +0800
+Subject: [PATCH 3/5] [2/22]x86, dts, sofia: Adapt GPU DT for Mali400 driver
+ r5p0-01rel0
+
+Change-Id: If0436f417ba9a792a4aeba0bb5e68530d6bd5349
+Tracked-On: https://jira01.devtools.intel.com/browse/IMINAN-17187
+Signed-off-by: Leo Yan <leo.yan@intel.com>
+---
+ .../bindings/intel/intel-compatibles.txt           |    2 ++
+ .../boot/dts/xgold/sofia_3g_soc/sofia_3g_soc.dtsi  |   25 ++++++++++++++++----
+ 2 files changed, 22 insertions(+), 5 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/intel/intel-compatibles.txt b/Documentation/devicetree/bindings/intel/intel-compatibles.txt
+index 007cfd8..6fa08c1 100644
+--- a/Documentation/devicetree/bindings/intel/intel-compatibles.txt
++++ b/Documentation/devicetree/bindings/intel/intel-compatibles.txt
+@@ -95,3 +95,5 @@ compatible = "st,lsm303dlhc_acc"
+ compatible = "st,lsm303dlhc_mag"
+ compatible = "avago,apds990x"
+ compatible = "inv,mpu6050"
++compatible = "arm,mali-400"
++compatible = "arm,mali-utgard"
+diff --git a/arch/x86/boot/dts/xgold/sofia_3g_soc/sofia_3g_soc.dtsi b/arch/x86/boot/dts/xgold/sofia_3g_soc/sofia_3g_soc.dtsi
+index b3b8fbb..0c60118 100644
+--- a/arch/x86/boot/dts/xgold/sofia_3g_soc/sofia_3g_soc.dtsi
++++ b/arch/x86/boot/dts/xgold/sofia_3g_soc/sofia_3g_soc.dtsi
+@@ -496,15 +496,30 @@
+ 					reg = <0xE2000000 0x1000000>;
+ 
+ #ifndef RECOVERY_KERNEL
+-					gpu{
+-						compatible = "intel,mali";
++					gpu@E2E00000 {
++						compatible = "arm,mali-400", "arm,mali-utgard";
+ 						reg = <0xE2E00000 0x100000>;
+-#if defined (SOFIA3G_ES2) || defined (SOFIA3G_MRD7S) || defined (SOFIA3G_MRD5S)
+-						intel,mali,cores = < 2 >;
++#if GPU_MALI_PMU
++						/* Mali400 MP2 with PMU */
++						interrupts = < GPU_INT IRQ_TYPE_DEFAULT >, < GPU_INT IRQ_TYPE_DEFAULT >,
++								< GPU_INT IRQ_TYPE_DEFAULT >, < GPU_INT IRQ_TYPE_DEFAULT >,
++								< GPU_INT IRQ_TYPE_DEFAULT >, < GPU_INT IRQ_TYPE_DEFAULT >,
++								< GPU_INT IRQ_TYPE_DEFAULT >;
++						interrupt-names = "IRQGP", "IRQGPMMU", "IRQPP0", "IRQPPMMU0", "IRQPP1", "IRQPPMMU1", "IRQPMU";
++						/*                    GP PP0 PP1 PP2 PP3 PP4 PP5 PP6 PP7 L2$0 L2$1 L2$2 */
++						pmu_domain_config = <0x1 0x1 0x1 0x0 0x0 0x0 0x0 0x0 0x0 0x1  0x0  0x0>;
++						pmu_switch_delay = <0x0>;
++#else
++						/* Mali400 MP2 no PMU */
++						interrupts = < GPU_INT IRQ_TYPE_DEFAULT >, < GPU_INT IRQ_TYPE_DEFAULT >,
++							< GPU_INT IRQ_TYPE_DEFAULT >, < GPU_INT IRQ_TYPE_DEFAULT >,
++							< GPU_INT IRQ_TYPE_DEFAULT >, < GPU_INT IRQ_TYPE_DEFAULT >;
++						interrupt-names = "IRQGP", "IRQGPMMU", "IRQPP0", "IRQPPMMU0", "IRQPP1", "IRQPPMMU1";
+ #endif
++						dvfs_off;
++						dvfs_clock_config = < 312 1000 >, < 416 2000 >, < 480 3000 >;
+ 						clocks = <&clk_gpu>, <&clk_ahb_per2>;
+ 						clock-names = "clk_kernel", "clk_ahb";
+-						interrupts = < GPU_INT IRQ_TYPE_DEFAULT >;
+ 						gpu-supply = <&vdd_gpu>;
+ 						pm,class-name = "gpu_class";
+ 						pm,user-name = "gpu";
+-- 
+1.7.9.5
+

@@ -1,0 +1,56 @@
+From d1ddaccaf1ddd37804f4f300136810d02bf20b17 Mon Sep 17 00:00:00 2001
+From: Jack Ren <jack.ren@intel.com>
+Date: Fri, 11 May 2012 17:46:02 +0800
+Subject: [PATCH] adb: access the android devices on the remote host
+
+Usage:
+On the remote host:
+connect the android devices, then run:
+$ adb start-server
+
+On the local host:
+$ export ADBHUB=<remote host>
+$ adb devices
+$ adb shell
+
+Change-Id: I315abaeda58d013dd9d9d34e7e37ce1107fc4994
+Signed-off-by: Jack Ren <jack.ren@intel.com>
+---
+ adb/adb.c        |    2 +-
+ adb/adb_client.c |    7 ++++++-
+ 2 files changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/adb/adb.c b/adb/adb.c
+index e35c334..720f306 100644
+--- a/adb/adb.c
++++ b/adb/adb.c
+@@ -485,7 +485,7 @@ int local_name_to_fd(const char *name)
+     if(!strncmp("tcp:", name, 4)){
+         int  ret;
+         port = atoi(name + 4);
+-        ret = socket_loopback_server(port, SOCK_STREAM);
++        ret = socket_inaddr_any_server(port, SOCK_STREAM);
+         return ret;
+     }
+ #ifndef HAVE_WIN32_IPC  /* no Unix-domain sockets on Win32 */
+diff --git a/adb/adb_client.c b/adb/adb_client.c
+index 9a812f0..c959e48 100644
+--- a/adb/adb_client.c
++++ b/adb/adb_client.c
+@@ -181,7 +181,12 @@ int _adb_connect(const char *service)
+     }
+     snprintf(tmp, sizeof tmp, "%04x", len);
+ 
+-    fd = socket_loopback_client(__adb_server_port, SOCK_STREAM);
++    const char *host = getenv("ADBHUB");
++    if (host) {
++        fd = socket_network_client(host, __adb_server_port, SOCK_STREAM);
++    } else {
++	 fd = socket_loopback_client(__adb_server_port, SOCK_STREAM);
++    }
+     if(fd < 0) {
+         strcpy(__adb_error, "cannot connect to daemon");
+         return -2;
+-- 
+1.7.9.5
+

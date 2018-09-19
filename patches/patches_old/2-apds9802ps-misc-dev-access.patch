@@ -1,0 +1,12 @@
+diff --git a/init.mfld_cdk.rc b/init.mfld_cdk.rc
+index d5212de..45b3e73 100644
+--- a/init.mfld_cdk.rc
++++ b/init.mfld_cdk.rc
+@@ -40,6 +40,7 @@ on boot
+     chmod 0660 /dev/ttyIFX0
+     chown system system /sys/class/rfkill/rfkill0/state
+     chmod 0660 /sys/class/rfkill/rfkill0/state
++    chmod 0777 /dev/apds9802ps
+ 
+ #  Permissions for RapidRIL Repository
+     chmod 0770 /system/etc/rril

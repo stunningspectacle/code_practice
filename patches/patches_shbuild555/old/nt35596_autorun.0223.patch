@@ -1,0 +1,92 @@
+diff --git a/arch/x86/boot/dts/Sf3gr_mrd_n1.dts b/arch/x86/boot/dts/Sf3gr_mrd_n1.dts
+index f019ef5..a05bd40 100644
+--- a/arch/x86/boot/dts/Sf3gr_mrd_n1.dts
++++ b/arch/x86/boot/dts/Sf3gr_mrd_n1.dts
+@@ -103,7 +103,7 @@
+ 	fb {
+ 		compatible = "rockchip,fb";
+ 		rockchip,disp-mode = <NO_DUAL>;
+-		rockchip,loader-logo-on = <0>;
++		rockchip,loader-logo-on = <1>;
+ 		rockchip,ion-drv = "rockchip";
+ 	};
+ 
+diff --git a/arch/x86/boot/dts/xgold/display/NT35596-3gr.dtsi b/arch/x86/boot/dts/xgold/display/NT35596-3gr.dtsi
+index 3c08908..f4d2304 100644
+--- a/arch/x86/boot/dts/xgold/display/NT35596-3gr.dtsi
++++ b/arch/x86/boot/dts/xgold/display/NT35596-3gr.dtsi
+@@ -1239,7 +1239,7 @@ display-panel@nt35596 {
+ 		};
+ 		nt35596_cmd235 {
+ 			intel,cmd-type = <0x15>;
+-			intel,cmd-data = <0x55 0x12>;
++			intel,cmd-data = <0xFF 0x05>;
+ 			intel,cmd-lp = <1>;
+ 		};
+ 		nt35596_cmd236 {
+@@ -2387,18 +2387,16 @@ display-panel@nt35596 {
+ 			intel,cmd-data = <0xFF 0x00>;
+ 			intel,cmd-lp = <1>;
+ 		};
+-		sleep-out {
+-			intel,cmd-type = <0x05>;
+-			intel,cmd-data = <0x11>;
+-			intel,cmd-delay = <300>;
+-			intel,cmd-lp = <1>;
+-		};
+-		display-on {
+-			intel,cmd-type = <0x05>;
+-			intel,cmd-data = <0x29>;
+-			intel,cmd-delay = <100>;
++		display-cmd465 {
++			intel,cmd-type = <0x15>;
++			intel,cmd-data = <0xFF 0x05>;
++ 			intel,cmd-lp = <1>;
++ 		};
++		display-cmd466 {
++			intel,cmd-type = <0x15>;
++			intel,cmd-data = <0xEC 0x01>;
+ 			intel,cmd-lp = <1>;
+-		};
++ 		};
+ 	};
+ 
+ 	gpio-power-on {
+@@ -2447,17 +2445,5 @@ display-panel@nt35596 {
+ 	};
+ 
+ 	cmd-sleep-out {
+-		sleep-out {
+-			intel,cmd-type = <0x05>;
+-			intel,cmd-data = <0x11>;
+-			intel,cmd-delay = <120>;
+-			intel,cmd-lp = <1>;
+-		};
+-		display-on {
+-			intel,cmd-type = <0x05>;
+-			intel,cmd-data = <0x29>;
+-			intel,cmd-delay = <20>;
+-			intel,cmd-lp = <1>;
+-		};
+ 	};
+ };
+diff --git a/drivers/video/xgold/dsi/dsi_dts.c b/drivers/video/xgold/dsi/dsi_dts.c
+index c03af88..78914bd 100644
+--- a/drivers/video/xgold/dsi/dsi_dts.c
++++ b/drivers/video/xgold/dsi/dsi_dts.c
+@@ -484,6 +484,7 @@ int dsi_of_parse_display(struct platform_device *pdev,
+ 	struct dsi_display *display;
+ 	struct dsi_display *display_curr;
+ 	int index = 0;
++	int count = 0;;
+ 	dsi_of_parse_gpio(pdev, mipi_dsi);
+ 	mipi_dsi->dsi_reset = devm_reset_control_get(&pdev->dev, "dsi");
+ 	if (IS_ERR(mipi_dsi->dsi_reset)) {
+@@ -608,6 +609,7 @@ int dsi_of_parse_display(struct platform_device *pdev,
+ 			}
+ 		};
+ 		list_add_tail(&display->list, &(mipi_dsi)->display_list);
++		pr_info("xxxxxxxxx %s: Add one display %d!\n", __func__, count++);
+ 	}
+ 
+ 

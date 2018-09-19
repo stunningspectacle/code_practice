@@ -1,0 +1,13 @@
+diff --git a/sofia_lte/BoardConfig.mk b/sofia_lte/BoardConfig.mk
+index acb6011..22a0e89 100644
+--- a/sofia_lte/BoardConfig.mk
++++ b/sofia_lte/BoardConfig.mk
+@@ -191,7 +191,7 @@ IMAS_VERSION := common_imas
+ 
+ BOARD_SYSTEMIMAGE_PARTITION_SIZE := 2147483648
+ BOARD_CACHEIMAGE_PARTITION_SIZE := 445644800
+-BOARD_USERDATAIMAGE_PARTITION_SIZE := 4891564544
++BOARD_USERDATAIMAGE_PARTITION_SIZE := 4881628160
+ 
+ BOARD_FLASH_BLOCK_SIZE := 4096
+ 

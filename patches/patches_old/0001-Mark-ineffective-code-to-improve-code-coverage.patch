@@ -1,0 +1,2818 @@
+From 428454ff76fa619ba6b1206001339e2a691dc3dd Mon Sep 17 00:00:00 2001
+From: Leo Yan <leo.yan@intel.com>
+Date: Thu, 23 Feb 2012 17:55:12 +0800
+Subject: [PATCH] Mark ineffective code to improve code coverage
+
+Change-Id: I66c66d18dc1c25e34e187fce1d4ce5d7e2276b5d
+---
+ drivers/input/keyboard/gpio_keys.c           |   29 +++++++--
+ drivers/input/touchscreen/rmi/rmi_bus.c      |   46 +++++++++++++
+ drivers/input/touchscreen/rmi/rmi_f01.c      |   40 ++++++++++++
+ drivers/input/touchscreen/rmi/rmi_f05.c      |    2 +
+ drivers/input/touchscreen/rmi/rmi_f11.c      |   62 ++++++++++++++++++
+ drivers/input/touchscreen/rmi/rmi_f19.c      |   48 ++++++++++++++
+ drivers/input/touchscreen/rmi/rmi_f34.c      |   28 ++++++++
+ drivers/input/touchscreen/rmi/rmi_f54.c      |   32 +++++++++
+ drivers/input/touchscreen/rmi/rmi_function.c |   22 +++++++
+ drivers/input/touchscreen/rmi/rmi_i2c.c      |   52 +++++++++++++++
+ drivers/input/touchscreen/rmi/rmi_sensor.c   |   88 ++++++++++++++++++++++++++
+ drivers/platform/x86/intel_mid_powerbtn.c    |   19 +++++-
+ 12 files changed, 458 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/input/keyboard/gpio_keys.c b/drivers/input/keyboard/gpio_keys.c
+index 851fd9e..11f4fdd 100644
+--- a/drivers/input/keyboard/gpio_keys.c
++++ b/drivers/input/keyboard/gpio_keys.c
+@@ -165,7 +165,7 @@ static ssize_t gpio_keys_attr_show_helper(struct gpio_keys_drvdata *ddata,
+ 
+ 	bits = kcalloc(BITS_TO_LONGS(n_events), sizeof(*bits), GFP_KERNEL);
+ 	if (!bits)
+-		return -ENOMEM;
++		return -ENOMEM;/* LCOV_EXCL_LINE TYPE E*/
+ 
+ 	for (i = 0; i < ddata->n_buttons; i++) {
+ 		struct gpio_button_data *bdata = &ddata->data[i];
+@@ -208,7 +208,7 @@ static ssize_t gpio_keys_attr_store_helper(struct gpio_keys_drvdata *ddata,
+ 
+ 	bits = kcalloc(BITS_TO_LONGS(n_events), sizeof(*bits), GFP_KERNEL);
+ 	if (!bits)
+-		return -ENOMEM;
++		return -ENOMEM;/* LCOV_EXCL_LINE TYPE E*/
+ 
+ 	error = bitmap_parselist(buf, bits, n_events);
+ 	if (error)
+@@ -435,17 +435,21 @@ static int __devinit gpio_keys_setup_key(struct platform_device *pdev,
+ 
+ 	error = gpio_request(button->gpio, desc);
+ 	if (error < 0) {
++		/* LCOV_EXCL_START TYPE E*/
+ 		dev_err(dev, "failed to request GPIO %d, error %d\n",
+ 			button->gpio, error);
+ 		goto fail2;
++		/* LCOV_EXCL_STOP TYPE E*/
+ 	}
+ 
+ 	error = gpio_direction_input(button->gpio);
+ 	if (error < 0) {
++		/* LCOV_EXCL_START TYPE E*/
+ 		dev_err(dev, "failed to configure"
+ 			" direction for GPIO %d, error %d\n",
+ 			button->gpio, error);
+ 		goto fail3;
++		/* LCOV_EXCL_STOP TYPE E*/
+ 	}
+ 
+ 	if (button->debounce_interval) {
+@@ -458,10 +462,12 @@ static int __devinit gpio_keys_setup_key(struct platform_device *pdev,
+ 
+ 	irq = gpio_to_irq(button->gpio);
+ 	if (irq < 0) {
++		/* LCOV_EXCL_START TYPE E*/
+ 		error = irq;
+ 		dev_err(dev, "Unable to get irq number for GPIO %d, error %d\n",
+ 			button->gpio, error);
+ 		goto fail3;
++		/* LCOV_EXCL_STOP TYPE E*/
+ 	}
+ 
+ 	irqflags = IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING;
+@@ -474,15 +480,17 @@ static int __devinit gpio_keys_setup_key(struct platform_device *pdev,
+ 
+ 	error = request_any_context_irq(irq, gpio_keys_isr, irqflags, desc, bdata);
+ 	if (error < 0) {
++		/* LCOV_EXCL_START TYPE E*/
+ 		dev_err(dev, "Unable to claim irq %d; error %d\n",
+ 			irq, error);
+ 		goto fail3;
++		/* LCOV_EXCL_STOP TYPE E*/
+ 	}
+ 
+ 	return 0;
+ 
+ fail3:
+-	gpio_free(button->gpio);
++	gpio_free(button->gpio);/* LCOV_EXCL_LINE TYPE E*/
+ fail2:
+ 	return error;
+ }
+@@ -516,9 +524,11 @@ static int __devinit gpio_keys_probe(struct platform_device *pdev)
+ 			GFP_KERNEL);
+ 	input = input_allocate_device();
+ 	if (!ddata || !input) {
++		/* LCOV_EXCL_START TYPE E*/
+ 		dev_err(dev, "failed to allocate state\n");
+ 		error = -ENOMEM;
+ 		goto fail1;
++		/* LCOV_EXCL_STOP TYPE E*/
+ 	}
+ 
+ 	ddata->input = input;
+@@ -566,16 +576,20 @@ static int __devinit gpio_keys_probe(struct platform_device *pdev)
+ 
+ 	error = sysfs_create_group(&pdev->dev.kobj, &gpio_keys_attr_group);
+ 	if (error) {
++		/* LCOV_EXCL_START TYPE E*/
+ 		dev_err(dev, "Unable to export keys/switches, error: %d\n",
+ 			error);
+ 		goto fail2;
++		/* LCOV_EXCL_STOP TYPE E*/
+ 	}
+ 
+ 	error = input_register_device(input);
+ 	if (error) {
++		/* LCOV_EXCL_START TYPE E*/
+ 		dev_err(dev, "Unable to register input device, error: %d\n",
+ 			error);
+ 		goto fail3;
++		/* LCOV_EXCL_STOP TYPE E*/
+ 	}
+ 
+ 	/* get current state of buttons */
+@@ -587,6 +601,7 @@ static int __devinit gpio_keys_probe(struct platform_device *pdev)
+ 
+ 	return 0;
+ 
++/* LCOV_EXCL_START TYPE E*/
+  fail3:
+ 	sysfs_remove_group(&pdev->dev.kobj, &gpio_keys_attr_group);
+  fail2:
+@@ -602,10 +617,11 @@ static int __devinit gpio_keys_probe(struct platform_device *pdev)
+  fail1:
+ 	input_free_device(input);
+ 	kfree(ddata);
+-
++/* LCOV_EXCL_STOP TYPE E*/
+ 	return error;
+ }
+ 
++/* LCOV_EXCL_START TYPE A*/
+ static int __devexit gpio_keys_remove(struct platform_device *pdev)
+ {
+ 	struct gpio_keys_platform_data *pdata = pdev->dev.platform_data;
+@@ -630,7 +646,7 @@ static int __devexit gpio_keys_remove(struct platform_device *pdev)
+ 
+ 	return 0;
+ }
+-
++/* LCOV_EXCL_STOP TYPE A*/
+ 
+ #ifdef CONFIG_PM
+ static int gpio_keys_suspend(struct device *dev)
+@@ -724,11 +740,12 @@ static int __init gpio_keys_init(void)
+ {
+ 	return platform_driver_register(&gpio_keys_device_driver);
+ }
+-
++/* LCOV_EXCL_START TYPE A*/
+ static void __exit gpio_keys_exit(void)
+ {
+ 	platform_driver_unregister(&gpio_keys_device_driver);
+ }
++/* LCOV_EXCL_STOP TYPE A*/
+ 
+ module_init(gpio_keys_init);
+ module_exit(gpio_keys_exit);
+diff --git a/drivers/input/touchscreen/rmi/rmi_bus.c b/drivers/input/touchscreen/rmi/rmi_bus.c
+index d74a0c7..fa9611c 100644
+--- a/drivers/input/touchscreen/rmi/rmi_bus.c
++++ b/drivers/input/touchscreen/rmi/rmi_bus.c
+@@ -70,19 +70,23 @@ static int rmi_bus_match(struct device *dev, struct device_driver *driver)
+ 
+ /* Stub for now.
+  */
++// LCOV_EXCL_START TYPE C
+ static int rmi_bus_suspend(struct device *dev, pm_message_t state)
+ {
+ 	dev_dbg(dev, "%s: RMI bus suspending.", __func__);
+ 	return 0;
+ }
++// LCOV_EXCL_STOP TYPE C
+ 
+ /* Stub for now.
+  */
++// LCOV_EXCL_START TYPE C
+ static int rmi_bus_resume(struct device *dev)
+ {
+ 	dev_dbg(dev, "%s: RMI bus resuming.", __func__);
+ 	return 0;
+ }
++// LCOV_EXCL_STOP TYPE C
+ 
+ /*
+  * This method is called, whenever a new device is added for this bus.
+@@ -113,28 +117,38 @@ int rmi_register_sensor(struct rmi_phys_driver *rpd,
+ 	   function pointers from whatever physical layer the sensor is on.
+ 	 */
+ 	if (!rpd->name) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: Physical driver must specify a name", __func__);
+ 		return -EINVAL;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 	if (!rpd->write) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: Physical driver %s must specify a writer.",
+ 		       __func__, rpd->name);
+ 		return -EINVAL;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 	if (!rpd->read) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: Physical driver %s must specify a reader.",
+ 		       __func__, rpd->name);
+ 		return -EINVAL;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 	if (!rpd->write_multiple) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: Physical driver %s must specify a "
+ 		       "multiple writer.", __func__, rpd->name);
+ 		return -EINVAL;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 	if (!rpd->read_multiple) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: Physical driver %s must specify a "
+ 		       "multiple reader.", __func__, rpd->name);
+ 		return -EINVAL;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 
+ 	/* Get some information from the device */
+@@ -164,7 +178,9 @@ int rmi_register_sensor(struct rmi_phys_driver *rpd,
+ 		    || rmi_fd.function_number == 0xff) {
+ 			/* A zero or 0xff in the function number
+ 			   signals the end of the PDT */
++// LCOV_EXCL_START TYPE D
+ 			pr_debug("%s:   Found End of PDT.", __func__);
++// LCOV_EXCL_STOP TYPE D
+ 			break;
+ 		}
+ 		pdt_entry_count++;
+@@ -177,12 +193,14 @@ int rmi_register_sensor(struct rmi_phys_driver *rpd,
+ 			rmi_sensor_dev =
+ 			    kzalloc(sizeof(*rmi_sensor_dev), GFP_KERNEL);
+ 			if (!rmi_sensor_dev) {
++// LCOV_EXCL_START TYPE D
+ 				pr_err
+ 				    ("%s: Error allocating memory for "
+ 				     "rmi_sensor_device",
+ 				     __func__);
+ 				retval = -ENOMEM;
+ 				goto exit_fail;
++// LCOV_EXCL_STOP TYPE D
+ 			}
+ 			rmi_sensor_dev->dev.bus = &rmi_bus_type;
+ 			dev_set_drvdata(&rmi_sensor_dev->dev, rmi_sensor_dev);
+@@ -190,28 +208,34 @@ int rmi_register_sensor(struct rmi_phys_driver *rpd,
+ 			retval =
+ 			    rmi_sensor_register_device(rmi_sensor_dev, index++);
+ 			if (retval < 0) {
++// LCOV_EXCL_START TYPE D
+ 				pr_err
+ 				    ("%s: Error %d registering sensor device.",
+ 				     __func__, retval);
+ 				goto exit_fail;
++// LCOV_EXCL_STOP TYPE D
+ 			}
+ 
+ 			rmi_sensor_dev->driver =
+ 			    rmi_sensor_create_driver(rmi_sensor_dev, rpd,
+ 						     sensordata);
+ 			if (!rmi_sensor_dev->driver) {
++// LCOV_EXCL_START TYPE D
+ 				pr_err("%s: Failed to create sensor driver.",
+ 				       __func__);
+ 				goto exit_fail;
++// LCOV_EXCL_STOP TYPE D
+ 			}
+ 
+ 			retval =
+ 			    rmi_sensor_register_driver(rmi_sensor_dev->driver);
+ 			if (retval < 0) {
++// LCOV_EXCL_START TYPE D
+ 				pr_err
+ 				    ("%s: Error %d registering sensor driver.",
+ 				     __func__, retval);
+ 				goto exit_fail;
++// LCOV_EXCL_STOP TYPE D
+ 			}
+ 
+ 			/* link the attn fn in the rpd to the sensor attn fn */
+@@ -233,22 +257,27 @@ int rmi_register_sensor(struct rmi_phys_driver *rpd,
+ 		pr_debug("%s: Registered sensor drivers.", __func__);
+ 		retval = 0;
+ 	} else {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: Failed to find sensor. PDT contained %d entries.",
+ 		       __func__, pdt_entry_count);
+ 		retval = -ENODEV;
+ 		goto exit_fail;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 
+ 	return 0;
+ 
+ exit_fail:
++// LCOV_EXCL_START TYPE D
+ 	if (rmi_sensor_dev)
+ 		rmi_sensor_destroy_driver(rmi_sensor_dev->driver);
+ 	kfree(rmi_sensor_dev);
+ 	return retval;
++// LCOV_EXCL_STOP TYPE D
+ }
+ EXPORT_SYMBOL(rmi_register_sensor);
+ 
++// LCOV_EXCL_START TYPE C
+ int rmi_unregister_sensors(struct rmi_phys_driver *rpd)
+ {
+ 	if (rpd->sensor) {
+@@ -259,13 +288,17 @@ int rmi_unregister_sensors(struct rmi_phys_driver *rpd)
+ 
+ 	return 0;
+ }
++// LCOV_EXCL_STOP TYPE C
+ EXPORT_SYMBOL(rmi_unregister_sensors);
+ 
++// LCOV_EXCL_START TYPE C
+ static void rmi_bus_dev_release(struct device *dev)
+ {
+ 	pr_debug("rmi bus device release\n");
+ }
++// LCOV_EXCL_STOP TYPE C
+ 
++// LCOV_EXCL_START TYPE C
+ int rmi_register_bus_device(struct device *rmibusdev)
+ {
+ 	pr_debug("%s: Registering RMI4 bus device.\n", __func__);
+@@ -284,14 +317,17 @@ int rmi_register_bus_device(struct device *rmibusdev)
+ 
+ 	return device_register(rmibusdev);
+ }
++// LCOV_EXCL_STOP TYPE C
+ EXPORT_SYMBOL(rmi_register_bus_device);
+ 
++// LCOV_EXCL_START TYPE C
+ void rmi_unregister_bus_device(struct device *rmibusdev)
+ {
+ 	dev_dbg(rmibusdev, "%s: Unregistering bus device.", __func__);
+ 
+ 	device_unregister(rmibusdev);
+ }
++// LCOV_EXCL_STOP TYPE C
+ EXPORT_SYMBOL(rmi_unregister_bus_device);
+ 
+ static int __init rmi_bus_init(void)
+@@ -307,9 +343,11 @@ static int __init rmi_bus_init(void)
+ 	rmi_bus_type.resume = rmi_bus_resume;
+ 	status = bus_register(&rmi_bus_type);
+ 	if (status < 0) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: Error %d registering the rmi bus.", __func__,
+ 		       status);
+ 		goto err_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 	pr_debug("%s: successfully registered bus.", __func__);
+ 
+@@ -318,6 +356,7 @@ err_exit:
+ 	return status;
+ }
+ 
++// LCOV_EXCL_START TYPE C
+ static void __exit rmi_bus_exit(void)
+ {
+ 	pr_debug("%s: RMI Bus Driver Exit.", __func__);
+@@ -325,12 +364,14 @@ static void __exit rmi_bus_exit(void)
+ 	rmi_unregister_bus_device(&rmi_bus_device);
+ 	bus_unregister(&rmi_bus_type);
+ }
++// LCOV_EXCL_STOP TYPE C
+ 
+ /* Utility routine to handle writes to read-only attributes.  Hopefully
+  * this will never happen, but if the user does something stupid, we don't
+  * want to accept it quietly (which is what can happen if you just put NULL
+  * for the attribute's store function).
+  */
++// LCOV_EXCL_START TYPE D
+ ssize_t rmi_store_error(struct device *dev,
+ 			struct device_attribute *attr,
+ 			const char *buf, size_t count)
+@@ -340,12 +381,14 @@ ssize_t rmi_store_error(struct device *dev,
+ 		"attribute %s.", count, attr->attr.name);
+ 	return -EPERM;
+ }
++// LCOV_EXCL_STOP TYPE D
+ 
+ /* Utility routine to handle reads of write-only attributes.  Hopefully
+  * this will never happen, but if the user does something stupid, we don't
+  * want to accept it quietly (which is what can happen if you just put NULL
+  * for the attribute's show function).
+  */
++// LCOV_EXCL_START TYPE D
+ ssize_t rmi_show_error(struct device *dev,
+ 		       struct device_attribute *attr,
+ 		       char *buf)
+@@ -355,6 +398,7 @@ ssize_t rmi_show_error(struct device *dev,
+ 		 attr->attr.name);
+ 	return -EPERM;
+ }
++// LCOV_EXCL_STOP TYPE D
+ 
+ /* Register a sensor driver on the bus.
+  */
+@@ -370,10 +414,12 @@ EXPORT_SYMBOL(rmi_bus_register_sensor_driver);
+ 
+ /* Remove a sensor driver from the bus.
+  */
++// LCOV_EXCL_START TYPE C
+ void rmi_bus_unregister_sensor_driver(struct rmi_sensor_driver *sensor_driver)
+ {
+ 	driver_unregister(&sensor_driver->drv);
+ }
++// LCOV_EXCL_STOP TYPE C
+ EXPORT_SYMBOL(rmi_bus_unregister_sensor_driver);
+ 
+ module_init(rmi_bus_init);
+diff --git a/drivers/input/touchscreen/rmi/rmi_f01.c b/drivers/input/touchscreen/rmi/rmi_f01.c
+index 56e9e73..e7b4094 100644
+--- a/drivers/input/touchscreen/rmi/rmi_f01.c
++++ b/drivers/input/touchscreen/rmi/rmi_f01.c
+@@ -169,6 +169,7 @@ static struct device_attribute attrs[] = {
+ 		rmi_fn_01_initreflash_show, rmi_fn_01_initreflash_store) /*RW*/
+ };
+ 
++// LCOV_EXCL_START TYPE C
+ static int set_report_rate(struct rmi_function_info *function_info,
+ 			   bool nonstandard)
+ {
+@@ -182,6 +183,7 @@ static int set_report_rate(struct rmi_function_info *function_info,
+ 			NONSTANDARD_REPORT_RATE);
+ 	}
+ }
++// LCOV_EXCL_STOP TYPE C
+ 
+ static void read_query_registers(struct rmi_function_info *rmifninfo)
+ {
+@@ -195,10 +197,12 @@ static void read_query_registers(struct rmi_function_info *rmifninfo)
+ 			  rmifninfo->function_descriptor.query_base_addr,
+ 		   query_buffer, ARRAY_SIZE(query_buffer));
+ 	if (retval) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s : Could not read F01 query registers at "
+ 			"0x%02x. Error %d.\n", __func__,
+ 			rmifninfo->function_descriptor.query_base_addr,
+ 			retval);
++// LCOV_EXCL_STOP TYPE D
+ 		/* Presumably if the read fails, the buffer should be all
+ 		 * zeros, so we're OK to continue. */
+ 	}
+@@ -254,13 +258,17 @@ void FN_01_inthandler(struct rmi_function_info *rmifninfo,
+ 	if (rmi_read
+ 	    (rmifninfo->sensor, rmifninfo->function_descriptor.data_base_addr,
+ 	     &instance_data->data_registers->device_status)) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s : Could not read F01 device status.\n", __func__);
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 	pr_info("%s: read device status register.  Value 0x%02X.", __func__,
+ 		instance_data->data_registers->device_status);
+ 
+ 	if (instance_data->data_registers->device_status & F01_UNCONFIGURED) {
++// LCOV_EXCL_START TYPE D
+ 		pr_info("%s: ++++ Device reset detected.", __func__);
++// LCOV_EXCL_STOP TYPE D
+ 		/* TODO: Handle device reset appropriately.
+ 		 */
+ 	}
+@@ -282,11 +290,13 @@ void FN_01_attention(struct rmi_function_info *rmifninfo)
+ 			    rmifninfo->function_descriptor.data_base_addr + 1,
+ 			    instance_data->data_registers->irqs, 1);
+ 	if (retval) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: Could not read interrupt status registers "
+ 			"at 0x%02x; code=%d.", __func__,
+ 			rmifninfo->function_descriptor.data_base_addr + 1,
+ 			retval);
+ 		return;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 
+ 	if (instance_data->data_registers->irqs[0] &
+@@ -316,18 +326,22 @@ int FN_01_config(struct rmi_function_info *rmifninfo)
+ 			 rmifninfo->function_descriptor.control_base_addr,
+ 			 F01_CONFIGURED);
+ 	if (retval)
++// LCOV_EXCL_START TYPE D
+ 		pr_warning("%s: failed to set configured bit, errno = %d.",
+ 			   __func__, retval);
++// LCOV_EXCL_STOP TYPE D
+ 
+ 	/* At config time, the device is presumably in its default state, so we
+ 	 * only need to write non-default configuration settings.
+ 	 */
+ 	if (instance_data->nonstandard_report_rate) {
++// LCOV_EXCL_START TYPE D
+ 		retval = set_report_rate(rmifninfo, true);
+ 		if (!retval)
+ 			pr_warning
+ 			    ("%s: failed to configure report rate, errno = %d.",
+ 			     __func__, retval);
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 
+ 	/* TODO: Check for reset! */
+@@ -350,27 +364,33 @@ int FN_01_init(struct rmi_function_device *function_device)
+ 	pr_debug("%s: RMI4 function $01 init\n", __func__);
+ 
+ 	if (functiondata)
++// LCOV_EXCL_START TYPE C
+ 		instance_data->nonstandard_report_rate =
+ 		    functiondata->nonstandard_report_rate;
++// LCOV_EXCL_STOP TYPE C
+ 
+ 	pr_debug("%s: Creating sysfs files.", __func__);
+ 	/* Set up sysfs device attributes. */
+ 	for (attr_count = 0; attr_count < ARRAY_SIZE(attrs); attr_count++) {
+ 		if (sysfs_create_file
+ 		    (&function_device->dev.kobj, &attrs[attr_count].attr) < 0) {
++// LCOV_EXCL_START TYPE D
+ 			pr_err("%s: Failed to create sysfs file for %s.",
+ 				__func__, attrs[attr_count].attr.name);
+ 			retval = -ENODEV;
+ 			goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 		}
+ 	}
+ 
+ 	return 0;
+ 
+ error_exit:
++// LCOV_EXCL_START TYPE D
+ 	for (attr_count--; attr_count >= 0; attr_count--)
+ 		sysfs_remove_file(&function_device->dev.kobj,
+ 				  &attrs[attr_count].attr);
++// LCOV_EXCL_STOP TYPE D
+ 	/* If you've allocated anything, free it here. */
+ 	return retval;
+ }
+@@ -390,25 +410,31 @@ int FN_01_detect(struct rmi_function_info *rmifninfo)
+ 	if (rmifninfo->fndata) {
+ 		/* detect routine should only ever be called once
+ 		 * per rmifninfo. */
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: WTF?!? F01 instance data is already present!",
+ 		       __func__);
+ 		return -EINVAL;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 	instance_data = kzalloc(sizeof(*instance_data), GFP_KERNEL);
+ 	if (!instance_data) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: Error allocating memory for F01 context data.\n",
+ 		       __func__);
+ 		retval = -ENOMEM;
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 	rmifninfo->fndata = instance_data;
+ 
+ 	query_registers = kzalloc(sizeof(*query_registers), GFP_KERNEL);
+ 	if (!query_registers) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: Error allocating memory for F01 query registers.",
+ 		       __func__);
+ 		retval = -ENOMEM;
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 	instance_data->query_registers = query_registers;
+ 	read_query_registers(rmifninfo);
+@@ -417,11 +443,13 @@ int FN_01_detect(struct rmi_function_info *rmifninfo)
+ 	 * See comment in rmi.h. */
+ 	control_registers = kzalloc(sizeof(*control_registers), GFP_KERNEL);
+ 	if (!control_registers) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err
+ 		    ("%s: Error allocating memory for F01 control registers.\n",
+ 		     __func__);
+ 		retval = -ENOMEM;
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 	instance_data->control_registers = control_registers;
+ 	retval =
+@@ -430,21 +458,25 @@ int FN_01_detect(struct rmi_function_info *rmifninfo)
+ 			      (char *)instance_data->control_registers,
+ 			      sizeof(struct rmi_F01_control));
+ 	if (retval) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err
+ 		    ("%s: Could not read F01 control registers at 0x%02x. "
+ 		     "Error %d.\n", __func__,
+ 		     rmifninfo->function_descriptor.control_base_addr,
+ 		     retval);
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 
+ 	/* TODO: size of data registers needs to be computed dynamically.
+ 	 * See comment in rmi.h. */
+ 	data_registers = kzalloc(sizeof(*data_registers), GFP_KERNEL);
+ 	if (!data_registers) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: Error allocating memory for F01 data registers.\n",
+ 		       __func__);
+ 		retval = -ENOMEM;
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 	instance_data->data_registers = data_registers;
+ 
+@@ -456,11 +488,13 @@ int FN_01_detect(struct rmi_function_info *rmifninfo)
+ 	return retval;
+ 
+ error_exit:
++// LCOV_EXCL_START TYPE D
+ 	kfree(instance_data);
+ 	kfree(query_registers);
+ 	kfree(control_registers);
+ 	kfree(data_registers);
+ 	rmifninfo->fndata = NULL;
++// LCOV_EXCL_STOP TYPE D
+ 	return retval;
+ }
+ EXPORT_SYMBOL(FN_01_detect);
+@@ -469,6 +503,7 @@ EXPORT_SYMBOL(FN_01_detect);
+  *  suspend handler for F01, this will be invoked in
+  *  suspend routine from sensor
+  */
++// LCOV_EXCL_START TYPE C
+ int FN_01_suspend(struct rmi_function_info *rmifninfo)
+ {
+ 	struct f01_instance_data *instance = rmifninfo->fndata;
+@@ -485,12 +520,14 @@ int FN_01_suspend(struct rmi_function_info *rmifninfo)
+ 			RMI_NO_SLEEP_DISABLE);
+ 	return 0;
+ }
++// LCOV_EXCL_STOP TYPE C
+ EXPORT_SYMBOL(FN_01_suspend);
+ 
+ /*
+  *  resume handler for F01, this will be invoked in
+  *  resume routine from sensor
+  */
++// LCOV_EXCL_START TYPE C
+ void FN_01_resume(struct rmi_function_info *rmifninfo)
+ {
+ 	struct f01_instance_data *instance = rmifninfo->fndata;
+@@ -498,9 +535,11 @@ void FN_01_resume(struct rmi_function_info *rmifninfo)
+ 	set_sensor_sleepmode(rmifninfo, instance->original_sleepmode,
+ 			instance->original_nosleep);
+ }
++// LCOV_EXCL_STOP TYPE C
+ EXPORT_SYMBOL(FN_01_resume);
+ 
+ 
++// LCOV_EXCL_START TYPE C
+ static ssize_t rmi_fn_01_productinfo_show(struct device *dev,
+ 					struct device_attribute *attr,
+ 					char *buf)
+@@ -877,3 +916,4 @@ static void set_sensor_sleepmode(struct rmi_function_info *functionInfo,
+ 		);
+ 	}
+ }
++// LCOV_EXCL_STOP TYPE C
+diff --git a/drivers/input/touchscreen/rmi/rmi_f05.c b/drivers/input/touchscreen/rmi/rmi_f05.c
+index 8f2808a..723c3b3 100644
+--- a/drivers/input/touchscreen/rmi/rmi_f05.c
++++ b/drivers/input/touchscreen/rmi/rmi_f05.c
+@@ -57,6 +57,7 @@ struct f05_instance_data {
+  * This is a stub for now, and will be fleshed out when the implementation
+  * is completed.
+  */
++// LCOV_EXCL_START TYPE C
+ void FN_05_inthandler(struct rmi_function_info *rmifninfo,
+ 		      unsigned int asserted_IRQs)
+ {
+@@ -125,3 +126,4 @@ int FN_05_detect(struct rmi_function_info *rmifninfo)
+ 	return retval;
+ }
+ EXPORT_SYMBOL(FN_05_detect);
++// LCOV_EXCL_STOP TYPE C
+diff --git a/drivers/input/touchscreen/rmi/rmi_f11.c b/drivers/input/touchscreen/rmi/rmi_f11.c
+index 5bdee0b..76f8358 100644
+--- a/drivers/input/touchscreen/rmi/rmi_f11.c
++++ b/drivers/input/touchscreen/rmi/rmi_f11.c
+@@ -267,10 +267,12 @@ static int read_device_query(struct rmi_function_info *rmifninfo)
+ 			rmifninfo->function_descriptor.query_base_addr,
+ 			&device_query);
+ 	if (retval) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: Could not read F11 device query at 0x%04x\n",
+ 		       __func__,
+ 			rmifninfo->function_descriptor.query_base_addr);
+ 		return retval;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 
+ 	/* Extract device data. */
+@@ -284,10 +286,12 @@ static int read_device_query(struct rmi_function_info *rmifninfo)
+ 		instance_data->device_info->number_of_sensors,
+ 		instance_data->device_info->has_query_9);
+ 	if (instance_data->device_info->number_of_sensors > 1)
++// LCOV_EXCL_START TYPE D
+ 		pr_warning("%s: WARNING device has %d sensors, but RMI4 "
+ 		"driver does not support multiple sensors yet.",
+ 		__func__,
+ 		instance_data->device_info->number_of_sensors);
++// LCOV_EXCL_STOP TYPE D
+ 
+ 	return retval;
+ }
+@@ -309,9 +313,11 @@ static int read_per_sensor_query(struct rmi_function_info *rmifninfo,
+ 	retval = rmi_read_multiple(rmifninfo->sensor, address,
+ 				   query_buffer, sizeof(query_buffer));
+ 	if (retval) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: Could not read F11 device query at 0x%04x\n",
+ 		       __func__, address);
+ 		return retval;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 
+ 	/* 2D data sources have only 3 bits for the number of fingers
+@@ -324,14 +330,18 @@ static int read_per_sensor_query(struct rmi_function_info *rmifninfo,
+ 	case 2:
+ 	case 3:
+ 	case 4:
++// LCOV_EXCL_START TYPE C
+ 		sensor_info->number_of_fingers = nr_fingers + 1;
+ 		break;
++// LCOV_EXCL_STOP TYPE C
+ 	case 5:
+ 		sensor_info->number_of_fingers = 10;
+ 		break;
+ 	default:
++// LCOV_EXCL_START TYPE D
+ 		pr_warning("%s: Invalid F11 nr fingers %d. Assuming %d.",
+ 			__func__, nr_fingers, DEFAULT_NR_OF_FINGERS);
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 	pr_debug("%s: Number of fingers: %d.", __func__,
+ 		sensor_info->number_of_fingers);
+@@ -367,10 +377,13 @@ static int read_per_sensor_query(struct rmi_function_info *rmifninfo,
+ 	 * doesn't contain anything.
+ 	 */
+ 	if (sensor_info->has_relative)
++// LCOV_EXCL_START TYPE C
+ 		query_offset++;
++// LCOV_EXCL_STOP TYPE C
+ 
+ 	/* The next two bytes are present if we have gestures. */
+ 	if (sensor_info->has_gestures) {
++// LCOV_EXCL_START TYPE C
+ 		sensor_info->has_pinch =
+ 			query_buffer[query_offset] & HAS_PINCH_MASK;
+ 		sensor_info->has_flick =
+@@ -408,6 +421,7 @@ static int read_per_sensor_query(struct rmi_function_info *rmifninfo,
+ 			query_buffer[query_offset] &
+ 			HAS_MULTIFINGER_SCROLL_INERTIA_MASK;
+ 		query_offset++;
++// LCOV_EXCL_STOP TYPE C
+ 	}
+ 
+ 	if (instance_data->device_info->has_query_9) {
+@@ -425,10 +439,12 @@ static int read_per_sensor_query(struct rmi_function_info *rmifninfo,
+ 	}
+ 
+ 	if (sensor_info->has_touch_shapes) {
++// LCOV_EXCL_START TYPE C
+ 		sensor_info->number_of_touch_shapes =
+ 			(query_buffer[query_offset] &
+ 			NUMBER_OF_TOUCH_SHAPES_MASK) + 1;
+ 		query_offset++;
++// LCOV_EXCL_STOP TYPE C
+ 	}
+ 
+ 	if (instance_data->device_info->has_query_11) {
+@@ -463,10 +479,12 @@ static void compute_finger_data_size(struct rmi_function_info *rmifninfo,
+ 			instance_data->abs_data_size = 5;
+ 			break;
+ 		default:
++// LCOV_EXCL_START TYPE C
+ 			instance_data->abs_data_size =
+ 				DEFAULT_ABS_BYTES_PER_FINGER;
+ 			pr_warning("%s: Unrecognized abs data size %d ignored.",
+ 				__func__, sensor_info->abs_data_size);
++// LCOV_EXCL_STOP TYPE C
+ 		}
+ 		data_buffer_size += sensor_info->number_of_fingers *
+ 			instance_data->abs_data_size;
+@@ -475,14 +493,17 @@ static void compute_finger_data_size(struct rmi_function_info *rmifninfo,
+ 	/* Then comes the relative data.  Once again, it's optional.
+ 	 */
+ 	if (sensor_info->has_relative) {
++// LCOV_EXCL_START TYPE C
+ 		instance_data->rel_data_offset = data_buffer_size;
+ 		data_buffer_size +=
+ 			sensor_info->number_of_fingers * REL_BYTES_PER_FINGER;
++// LCOV_EXCL_STOP TYPE C
+ 	}
+ 
+ 	/* Gesture data is next, and it's very optional and very complicated.
+ 	 */
+ 	if (sensor_info->has_gestures) {
++// LCOV_EXCL_START TYPE C
+ 		instance_data->gesture_data_offset = data_buffer_size;
+ 		if (sensor_info->has_pinch ||
+ 				sensor_info->has_press ||
+@@ -530,6 +551,7 @@ static void compute_finger_data_size(struct rmi_function_info *rmifninfo,
+ 			instance_data->data16_offset = data_buffer_size;
+ 			data_buffer_size += SCROLL_ZONE_DATA_BYTES;
+ 		}
++// LCOV_EXCL_STOP TYPE C
+ 	}
+ 
+ 	instance_data->finger_data_buffer_size = data_buffer_size;
+@@ -551,7 +573,9 @@ static int read_query_registers(struct rmi_function_info *rmifninfo)
+ 	retval = read_device_query(rmifninfo);
+ 
+ 	if (retval)
++// LCOV_EXCL_START TYPE D
+ 		return retval;
++// LCOV_EXCL_STOP TYPE D
+ 
+ 	query_address = query_address + DEVICE_QUERY_SIZE;
+ 
+@@ -559,7 +583,9 @@ static int read_query_registers(struct rmi_function_info *rmifninfo)
+ 			query_address);
+ 
+ 	if (retval)
++// LCOV_EXCL_START TYPE D
+ 		return retval;
++// LCOV_EXCL_STOP TYPE D
+ 
+ 	compute_finger_data_size(rmifninfo, instance_data->sensor_info);
+ 
+@@ -685,12 +711,16 @@ static void handle_absolute_reports(struct rmi_function_info *rmifninfo)
+ 					sensor_max_X_pos;
+ 			}
+ 			if (instance_data->flip_X)
++// LCOV_EXCL_START TYPE C
+ 				X = max(max_X - X, 0);
++// LCOV_EXCL_STOP TYPE C
+ 			X = X - instance_data->offset_X;
+ 			X = min(max(X, instance_data->clip_X_low),
+ 				instance_data->clip_X_high);
+ 			if (instance_data->flip_Y)
++// LCOV_EXCL_START TYPE C
+ 				Y = max(max_Y - Y, 0);
++// LCOV_EXCL_STOP TYPE C
+ 			Y = Y - instance_data->offset_Y;
+ 			Y = min(max(Y, instance_data->clip_Y_low),
+ 				instance_data->clip_Y_high);
+@@ -804,6 +834,7 @@ static void handle_absolute_reports(struct rmi_function_info *rmifninfo)
+ 
+ /* This function reads in relative data for first finger and
+  * sends it to input system */
++// LCOV_EXCL_START TYPE C
+ static void handle_relative_report(struct rmi_function_info *rmifninfo)
+ {
+ 	struct f11_instance_data *instance_data = rmifninfo->fndata;
+@@ -832,6 +863,7 @@ static void handle_relative_report(struct rmi_function_info *rmifninfo)
+ 	input_report_rel(function_device->input, REL_X, X);
+ 	input_report_rel(function_device->input, REL_Y, Y);
+ }
++// LCOV_EXCL_STOP TYPE C
+ 
+ /* This is a stub for now, and will be expanded as this implementation
+  * evolves.
+@@ -933,10 +965,13 @@ int FN_11_init(struct rmi_function_device *function_device)
+ 		instance_data->flip_Y = functiondata->flip_Y;
+ 		instance_data->swap_axes = functiondata->swap_axes;
+ 		if (functiondata->offset) {
++// LCOV_EXCL_START TYPE C
+ 			instance_data->offset_X = functiondata->offset->x;
+ 			instance_data->offset_Y = functiondata->offset->y;
++// LCOV_EXCL_STOP TYPE C
+ 		}
+ 		if (functiondata->clip_X) {
++// LCOV_EXCL_START TYPE C
+ 			if (functiondata->clip_X->min >=
+ 			    functiondata->clip_X->max) {
+ 				pr_warning
+@@ -950,8 +985,10 @@ int FN_11_init(struct rmi_function_device *function_device)
+ 				instance_data->clip_X_high =
+ 				    functiondata->clip_X->max;
+ 			}
++// LCOV_EXCL_STOP TYPE C
+ 		}
+ 		if (functiondata->clip_Y) {
++// LCOV_EXCL_START TYPE C
+ 			if (functiondata->clip_Y->min >=
+ 			    functiondata->clip_Y->max) {
+ 				pr_warning
+@@ -966,6 +1003,7 @@ int FN_11_init(struct rmi_function_device *function_device)
+ 				    functiondata->clip_Y->max;
+ 			}
+ 		}
++// LCOV_EXCL_STOP TYPE C
+ 	}
+ 
+ 	/* need to init the input abs params for the 2D */
+@@ -982,20 +1020,24 @@ int FN_11_init(struct rmi_function_device *function_device)
+ 	for (attr_count = 0; attr_count < ARRAY_SIZE(attrs); attr_count++) {
+ 		if (sysfs_create_file
+ 		    (&function_device->dev.kobj, &attrs[attr_count].attr) < 0) {
++// LCOV_EXCL_START TYPE D
+ 			pr_err
+ 			    ("%s: Failed to create sysfs file for %s.",
+ 			     __func__, attrs[attr_count].attr.name);
+ 			retval = -ENODEV;
+ 			goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 		}
+ 	}
+ 
+ 	return 0;
+ 
+ error_exit:
++// LCOV_EXCL_START TYPE D
+ 	for (attr_count--; attr_count >= 0; attr_count--)
+ 		sysfs_remove_file(&function_device->dev.kobj,
+ 				  &attrs[attr_count].attr);
++// LCOV_EXCL_STOP TYPE D
+ 	/* If you alloc anything, free it here. */
+ 	return retval;
+ }
+@@ -1012,62 +1054,78 @@ int FN_11_detect(struct rmi_function_info *rmifninfo)
+ 	if (rmifninfo->fndata) {
+ 		/* detect routine should only ever be called once
+ 		 * per rmifninfo. */
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: WTF?!? F11 instance data is already present!",
+ 		       __func__);
+ 		return -EINVAL;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 	instance_data = kzalloc(sizeof(struct f11_instance_data), GFP_KERNEL);
+ 	if (!instance_data) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: Error allocating F11 instance data.\n", __func__);
+ 		retval = -ENOMEM;
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 	rmifninfo->fndata = instance_data;
+ 
+ 	instance_data->device_info =
+ 	    kzalloc(sizeof(struct rmi_F11_device_query), GFP_KERNEL);
+ 	if (!instance_data->device_info) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: Error allocating F11 device query.\n", __func__);
+ 		retval = -ENOMEM;
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 	instance_data->sensor_info =
+ 	    kzalloc(sizeof(struct rmi_F11_sensor_query), GFP_KERNEL);
+ 	if (!instance_data->sensor_info) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: Error allocating F11 sensor query.\n", __func__);
+ 		retval = -ENOMEM;
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 	retval = read_query_registers(rmifninfo);
+ 	if (retval) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: Failed to read sensor query registers.", __func__);
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 
+ 	instance_data->finger_data_buffer =
+ 	    kcalloc(instance_data->finger_data_buffer_size,
+ 		    sizeof(unsigned char), GFP_KERNEL);
+ 	if (!instance_data->finger_data_buffer) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: Failed to allocate finger data buffer.", __func__);
+ 		retval = -ENOMEM;
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 
+ 	/* Grab a copy of the control registers. */
+ 	instance_data->control_registers =
+ 	    kzalloc(sizeof(struct rmi_F11_control), GFP_KERNEL);
+ 	if (!instance_data->control_registers) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: Error allocating F11 control registers.\n",
+ 		       __func__);
+ 		retval = -ENOMEM;
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 	retval = rmi_read_multiple(rmifninfo->sensor,
+ 			      rmifninfo->function_descriptor.control_base_addr,
+ 			      control_buffer, sizeof(control_buffer));
+ 	if (retval) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: Failed to read F11 control registers.", __func__);
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 	instance_data->control_registers->sensor_max_X_pos =
+ 	    (((int)control_buffer[7] & 0x0F) << 8) + control_buffer[6];
+@@ -1079,6 +1137,7 @@ int FN_11_detect(struct rmi_function_info *rmifninfo)
+ 	return 0;
+ 
+ error_exit:
++// LCOV_EXCL_START TYPE D
+ 	if (instance_data) {
+ 		kfree(instance_data->sensor_info);
+ 		kfree(instance_data->device_info);
+@@ -1087,10 +1146,12 @@ error_exit:
+ 	}
+ 	kfree(instance_data);
+ 	rmifninfo->fndata = NULL;
++// LCOV_EXCL_STOP TYPE D
+ 	return retval;
+ }
+ EXPORT_SYMBOL(FN_11_detect);
+ 
++// LCOV_EXCL_START TYPE C
+ static ssize_t rmi_fn_11_maxPos_show(struct device *dev,
+ 				struct device_attribute *attr,
+ 				char *buf)
+@@ -1254,3 +1315,4 @@ static ssize_t rmi_fn_11_clip_store(struct device *dev,
+ 
+ 	return count;
+ }
++// LCOV_EXCL_STOP TYPE C
+diff --git a/drivers/input/touchscreen/rmi/rmi_f19.c b/drivers/input/touchscreen/rmi/rmi_f19.c
+index ccd4a05..c4cb253 100644
+--- a/drivers/input/touchscreen/rmi/rmi_f19.c
++++ b/drivers/input/touchscreen/rmi/rmi_f19.c
+@@ -104,8 +104,10 @@ void FN_19_inthandler(struct rmi_function_info *rmifninfo,
+ 			rmifninfo->function_descriptor.data_base_addr,
+ 			instance_data->button_data_buffer,
+ 			instance_data->button_data_buffer_size)) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: Failed to read button data registers.\n", __func__);
+ 		return;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 
+ 	/* Generate events for buttons that change state. */
+@@ -174,14 +176,18 @@ int FN_19_init(struct rmi_function_device *function_device)
+ 	if (functiondata && functiondata->button_map) {
+ 		if (functiondata->button_map->nbuttons !=
+ 		    instance_data->device_info->button_count) {
++// LCOV_EXCL_START TYPE D
+ 			pr_warning
+ 			    ("%s: Platformdata button map size (%d) != number "
+ 			     "of buttons on device (%d) - ignored.",
+ 			     __func__, functiondata->button_map->nbuttons,
+ 			     instance_data->device_info->button_count);
++// LCOV_EXCL_STOP TYPE D
+ 		} else if (!functiondata->button_map->map) {
++// LCOV_EXCL_START TYPE D
+ 			pr_warning("%s: Platformdata button map is missing!",
+ 				   __func__);
++// LCOV_EXCL_STOP TYPE D
+ 		} else {
+ 			for (i = 0; i < functiondata->button_map->nbuttons; i++)
+ 				instance_data->button_map[i] =
+@@ -202,20 +208,24 @@ int FN_19_init(struct rmi_function_device *function_device)
+ 	for (attr_count = 0; attr_count < ARRAY_SIZE(attrs); attr_count++) {
+ 		if (sysfs_create_file
+ 		    (&function_device->dev.kobj, &attrs[attr_count].attr) < 0) {
++// LCOV_EXCL_START TYPE D
+ 			pr_err
+ 			    ("%s: Failed to create sysfs file for %s.",
+ 			     __func__, attrs[attr_count].attr.name);
+ 			retval = -ENODEV;
+ 			goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 		}
+ 	}
+ 
+ 	return 0;
+ 
+ error_exit:
++// LCOV_EXCL_START TYPE D
+ 	for (attr_count--; attr_count >= 0; attr_count--)
+ 		sysfs_remove_file(&function_device->dev.kobj,
+ 				  &attrs[attr_count].attr);
++// LCOV_EXCL_STOP TYPE D
+ 	/* If you alloc anything, free it here. */
+ 	return retval;
+ }
+@@ -228,20 +238,24 @@ static int init_control_registers(struct rmi_function_info *rmifninfo)
+ 	int retval = 0;
+ 
+ 	if (instance_data->control_registers) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err
+ 		    ("%s: WTF? F19 control regsiters are already initialized.",
+ 		     __func__);
+ 		return -EINVAL;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 
+ 	/* Allocate memory for the control registers. */
+ 	instance_data->control_registers =
+ 	    kzalloc(sizeof(struct rmi_F19_control), GFP_KERNEL);
+ 	if (!instance_data->control_registers) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: Error allocating F19 control registers.\n",
+ 		       __func__);
+ 		retval = -ENOMEM;
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 
+ 	instance_data->register_count_for_bit_per_button =
+@@ -263,12 +277,14 @@ static int init_control_registers(struct rmi_function_info *rmifninfo)
+ 	control_registers =
+ 	    kzalloc(instance_data->control_register_size, GFP_KERNEL);
+ 	if (!control_registers) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err
+ 		    ("%s: Error allocating temp storage to read "
+ 		     "fn19 control info.\n",
+ 		     __func__);
+ 		retval = -ENOMEM;
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 
+ 	/* Grab a copy of the control registers. */
+@@ -277,8 +293,10 @@ static int init_control_registers(struct rmi_function_info *rmifninfo)
+ 			      control_registers,
+ 			      instance_data->control_register_size);
+ 	if (retval) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: Failed to read F19 control registers.", __func__);
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 
+ 	/* Copy over control registers data to the instance data */
+@@ -297,10 +315,12 @@ static int init_control_registers(struct rmi_function_info *rmifninfo)
+ 	instance_data->control_registers->interrupt_enable_registers =
+ 	    kzalloc(instance_data->interrupt_enable_length, GFP_KERNEL);
+ 	if (!instance_data->control_registers->interrupt_enable_registers) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: Error allocating storage for interrupt "
+ 		     "enable control info.\n", __func__);
+ 		retval = -ENOMEM;
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 	memcpy(instance_data->control_registers->interrupt_enable_registers,
+ 	       &control_registers[instance_data->interrupt_enable_offset],
+@@ -315,10 +335,12 @@ static int init_control_registers(struct rmi_function_info *rmifninfo)
+ 	instance_data->control_registers->single_button_control =
+ 	    kzalloc(instance_data->single_button_control_length, GFP_KERNEL);
+ 	if (!instance_data->control_registers->single_button_control) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: Error allocating storage for single button "
+ 		     "participation control info.\n", __func__);
+ 		retval = -ENOMEM;
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 	memcpy(instance_data->control_registers->single_button_control,
+ 	       &control_registers[instance_data->single_button_control_offset],
+@@ -333,10 +355,12 @@ static int init_control_registers(struct rmi_function_info *rmifninfo)
+ 	instance_data->control_registers->sensor_map =
+ 	    kzalloc(instance_data->sensor_map_control_length, GFP_KERNEL);
+ 	if (!instance_data->control_registers->sensor_map) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: Error allocating storage for sensor map "
+ 		     "control info.", __func__);
+ 		retval = -ENOMEM;
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 	memcpy(instance_data->control_registers->sensor_map,
+ 	       &control_registers[instance_data->sensor_map_control_offset],
+@@ -351,12 +375,14 @@ static int init_control_registers(struct rmi_function_info *rmifninfo)
+ 	instance_data->control_registers->single_button_sensitivity =
+ 	    kzalloc(instance_data->single_button_sensor_length, GFP_KERNEL);
+ 	if (!instance_data->control_registers->single_button_sensitivity) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err
+ 		    ("%s: Error allocating storage for single button "
+ 		     "sensitivity control info.",
+ 		     __func__);
+ 		retval = -ENOMEM;
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 	memcpy(instance_data->control_registers->single_button_sensitivity,
+ 	       &control_registers[instance_data->single_button_sensor_offset],
+@@ -381,6 +407,7 @@ static int init_control_registers(struct rmi_function_info *rmifninfo)
+ 	return 0;
+ 
+ error_exit:
++// LCOV_EXCL_START TYPE D
+ 	if (instance_data->control_registers) {
+ 		kfree(
+ 		  instance_data->control_registers->single_button_sensitivity);
+@@ -391,6 +418,7 @@ error_exit:
+ 	}
+ 	kfree(instance_data->control_registers);
+ 	kfree(control_registers);
++// LCOV_EXCL_STOP TYPE D
+ 	return retval;
+ }
+ 
+@@ -404,24 +432,30 @@ int FN_19_detect(struct rmi_function_info *rmifninfo)
+ 	pr_debug("%s: RMI4 F19 detect\n", __func__);
+ 
+ 	if (rmifninfo->fndata) {
++// LCOV_EXCL_START TYPE D
+ 		/* detect routine should only ever be called once
+ 		 * per rmifninfo. */
+ 		pr_err("%s: WTF?!? F19 instance data is already present!",
+ 		       __func__);
+ 		return -EINVAL;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 	instance_data = kzalloc(sizeof(struct f19_instance_data), GFP_KERNEL);
+ 	if (!instance_data) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: Error allocating F19 instance data.\n", __func__);
+ 		retval = -ENOMEM;
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 	instance_data->device_info =
+ 	    kzalloc(sizeof(struct rmi_F19_query), GFP_KERNEL);
+ 	if (!instance_data->device_info) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: Error allocating F19 device query.\n", __func__);
+ 		retval = -ENOMEM;
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 	rmifninfo->fndata = instance_data;
+ 
+@@ -433,11 +467,13 @@ int FN_19_detect(struct rmi_function_info *rmifninfo)
+ 			      rmifninfo->function_descriptor.query_base_addr,
+ 			      query_buffer, sizeof(query_buffer));
+ 	if (retval) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: RMI4 F19 detect: "
+ 		       "Could not read function query registers 0x%x\n",
+ 		       __func__,
+ 		       rmifninfo->function_descriptor.query_base_addr);
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 
+ 	/* Extract device data. */
+@@ -455,10 +491,12 @@ int FN_19_detect(struct rmi_function_info *rmifninfo)
+ 	    kcalloc(instance_data->device_info->button_count, sizeof(bool),
+ 		    GFP_KERNEL);
+ 	if (!instance_data->button_down) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: Error allocating F19 button state buffer.\n",
+ 		       __func__);
+ 		retval = -ENOMEM;
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 
+ 	instance_data->button_data_buffer_size =
+@@ -467,18 +505,22 @@ int FN_19_detect(struct rmi_function_info *rmifninfo)
+ 	    kcalloc(instance_data->button_data_buffer_size,
+ 		    sizeof(unsigned char), GFP_KERNEL);
+ 	if (!instance_data->button_data_buffer) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: Failed to allocate button data buffer.", __func__);
+ 		retval = -ENOMEM;
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 
+ 	instance_data->button_map =
+ 	    kcalloc(instance_data->device_info->button_count,
+ 		    sizeof(unsigned char), GFP_KERNEL);
+ 	if (!instance_data->button_map) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: Error allocating F19 button map.\n", __func__);
+ 		retval = -ENOMEM;
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 
+ 	for (i = 0; i < instance_data->device_info->button_count; i++)
+@@ -487,14 +529,17 @@ int FN_19_detect(struct rmi_function_info *rmifninfo)
+ 	/* Grab the control register info. */
+ 	retval = init_control_registers(rmifninfo);
+ 	if (retval) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: Error %d getting fn19 control register info.\n",
+ 		       __func__, retval);
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 
+ 	return 0;
+ 
+ error_exit:
++// LCOV_EXCL_START TYPE D
+ 	if (instance_data) {
+ 		kfree(instance_data->button_map);
+ 		kfree(instance_data->button_data_buffer);
+@@ -502,10 +547,12 @@ error_exit:
+ 		kfree(instance_data->device_info);
+ 	}
+ 	kfree(instance_data);
++// LCOV_EXCL_STOP TYPE D
+ 	return retval;
+ }
+ EXPORT_SYMBOL(FN_19_detect);
+ 
++// LCOV_EXCL_START TYPE C
+ static ssize_t rmi_f19_button_count_show(struct device *dev,
+ 					struct device_attribute *attr,
+ 					char *buf)
+@@ -618,3 +665,4 @@ static ssize_t rmi_f19_buttonMap_store(struct device *dev,
+ err_ret:
+ 	return retval;
+ }
++// LCOV_EXCL_STOP TYPE C
+diff --git a/drivers/input/touchscreen/rmi/rmi_f34.c b/drivers/input/touchscreen/rmi/rmi_f34.c
+index 55c317e..2c70217 100644
+--- a/drivers/input/touchscreen/rmi/rmi_f34.c
++++ b/drivers/input/touchscreen/rmi/rmi_f34.c
+@@ -139,6 +139,7 @@ static void hstoba(unsigned char *dest, unsigned short src)
+ /*.
+  * The interrupt handler for Fn $34.
+  */
++// LCOV_EXCL_START TYPE C
+ void FN_34_inthandler(struct rmi_function_info *rmifninfo,
+ 		      unsigned int asserted_IRQs)
+ {
+@@ -160,6 +161,7 @@ void FN_34_inthandler(struct rmi_function_info *rmifninfo,
+ 	 * else is failure */
+ 	instance_data->status = status & 0xf0;
+ }
++// LCOV_EXCL_STOP TYPE C
+ EXPORT_SYMBOL(FN_34_inthandler);
+ 
+ /* This is a stub for now, and will be fleshed out or removed as the
+@@ -194,17 +196,21 @@ int FN_34_init(struct rmi_function_device *function_device)
+ 	if (rmifninfo->fndata) {
+ 		/* detect routine should only ever be called once
+ 		 * per rmifninfo. */
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: WTF?!? F34 instance data is already present!",
+ 		       __func__);
+ 		return -EINVAL;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 
+ 	instance_data = kzalloc(sizeof(struct rmi_fn_34_data), GFP_KERNEL);
+ 	if (!instance_data) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: Error allocating memory for rmi_fn_34_data.\n",
+ 		       __func__);
+ 		retval = -ENOMEM;
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 	rmifninfo->fndata = instance_data;
+ 
+@@ -213,10 +219,12 @@ int FN_34_init(struct rmi_function_device *function_device)
+ 		rmifninfo->function_descriptor.query_base_addr,
+ 		buf, ARRAY_SIZE(buf));
+ 	if (retval) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s : Could not read bootloaderid from 0x%04x\n",
+ 		       __func__,
+ 		       rmifninfo->function_descriptor.query_base_addr);
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 	batohs(&instance_data->bootloaderid, buf);
+ 
+@@ -224,10 +232,12 @@ int FN_34_init(struct rmi_function_device *function_device)
+ 			rmifninfo->function_descriptor.query_base_addr + 3,
+ 			buf, ARRAY_SIZE(buf));
+ 	if (retval) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: Could not read block size from 0x%04x\n",
+ 		       __func__,
+ 		       rmifninfo->function_descriptor.query_base_addr + 3);
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 	batohs(&instance_data->blocksize, buf);
+ 
+@@ -236,10 +246,12 @@ int FN_34_init(struct rmi_function_device *function_device)
+ 			rmifninfo->function_descriptor.query_base_addr + 5,
+ 			buf, ARRAY_SIZE(buf));
+ 	if (retval) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: Could not read image block count from 0x%x\n",
+ 		       __func__,
+ 		       rmifninfo->function_descriptor.query_base_addr + 5);
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 	batohs(&instance_data->imageblockcount, buf);
+ 
+@@ -248,11 +260,13 @@ int FN_34_init(struct rmi_function_device *function_device)
+ 			rmifninfo->function_descriptor.query_base_addr + 7,
+ 			buf, ARRAY_SIZE(buf));
+ 	if (retval) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: Could not read config block count from 0x%x, "
+ 			"error=%d.\n", __func__,
+ 			rmifninfo->function_descriptor.query_base_addr + 7,
+ 			retval);
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 	batohs(&instance_data->configblockcount, buf);
+ 
+@@ -263,11 +277,13 @@ int FN_34_init(struct rmi_function_device *function_device)
+ 	retval = sysfs_create_bin_file(&function_device->dev.kobj,
+ 				&dev_attr_data);
+ 	if (retval < 0) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err
+ 		    ("%s: Failed to create sysfs file for fn 34 data "
+ 		     "(error = %d).\n", __func__, retval);
+ 		retval = -ENODEV;
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 
+ 	pr_debug("%s: Creating sysfs files.", __func__);
+@@ -275,21 +291,25 @@ int FN_34_init(struct rmi_function_device *function_device)
+ 	for (attr_count = 0; attr_count < ARRAY_SIZE(attrs); attr_count++) {
+ 		if (sysfs_create_file
+ 		    (&function_device->dev.kobj, &attrs[attr_count].attr) < 0) {
++// LCOV_EXCL_START TYPE D
+ 			pr_err
+ 			    ("%s: Failed to create sysfs file for  %s.",
+ 			     __func__, attrs[attr_count].attr.name);
+ 			retval = -ENODEV;
+ 			goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 		}
+ 	}
+ 
+ 	return retval;
+ 
+ error_exit:
++// LCOV_EXCL_START TYPE D
+ 	for (attr_count--; attr_count >= 0; attr_count--)
+ 		sysfs_remove_file(&function_device->dev.kobj,
+ 				  &attrs[attr_count].attr);
+ 	kfree(instance_data);
++// LCOV_EXCL_STOP TYPE D
+ 	return retval;
+ }
+ EXPORT_SYMBOL(FN_34_init);
+@@ -300,8 +320,10 @@ int FN_34_detect(struct rmi_function_info *rmifninfo)
+ 
+ 	pr_debug("%s: RMI4 function $34 detect\n", __func__);
+ 	if (rmifninfo->sensor == NULL) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: NULL sensor passed in!", __func__);
+ 		return -EINVAL;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 
+ 	return retval;
+@@ -433,6 +455,7 @@ static ssize_t rmi_fn_34_cmd_store(struct device *dev,
+ 	case WRITE_CONFIG_BLOCK:
+ 		/* Issue a Write Firmware Block ($02) command to the Flash
+ 		 * Command (F34_Flash_Data3, bits 3:0) field. */
++// LCOV_EXCL_START TYPE C
+ 		error = rmi_write_multiple(fn->sensor, baseaddr + 3,
+ 					   &instance_data->cmd, 1);
+ 		/* return one if succeeds */
+@@ -442,6 +465,7 @@ static ssize_t rmi_fn_34_cmd_store(struct device *dev,
+ 				baseaddr + 3);
+ 			return error;
+ 		}
++// LCOV_EXCL_STOP TYPE C
+ 		break;
+ 	default:
+ 		dev_dbg(dev, "%s: RMI4 function $34 - "
+@@ -475,6 +499,7 @@ static ssize_t rmi_fn_34_data_read(struct file *data_file,
+ 	/* Read the data from flash into buf.  The app layer will be blocked
+ 	 * at reading from the sysfs file.  When we return the count (or
+ 	 * error if we fail) the app will resume. */
++// LCOV_EXCL_START TYPE C
+ 	error = rmi_read_multiple(fn->sensor,
+ 			fn->rfi->function_descriptor.data_base_addr + pos,
+ 			(unsigned char *)buf, count);
+@@ -484,6 +509,7 @@ static ssize_t rmi_fn_34_data_read(struct file *data_file,
+ 			fn->rfi->function_descriptor.data_base_addr + pos);
+ 		return error;
+ 	}
++// LCOV_EXCL_STOP TYPE C
+ 
+ 	return count;
+ }
+@@ -519,6 +545,7 @@ static ssize_t rmi_fn_34_data_write(struct file *data_file,
+ 	 * and do a (pos % instance_data->blocksize) because of a gcc
+ 	 * bug that results in undefined symbols.  So we have to compute
+ 	 * it the hard way.  Grumble. */
++// LCOV_EXCL_START TYPE C
+ 	div_u64_rem(pos, instance_data->blocksize, &remainder);
+ 	if (remainder) {
+ 		dev_err(dev,
+@@ -553,6 +580,7 @@ static ssize_t rmi_fn_34_data_write(struct file *data_file,
+ 			return error;
+ 		}
+ 	}
++// LCOV_EXCL_STOP TYPE C
+ 
+ 	return count;
+ }
+diff --git a/drivers/input/touchscreen/rmi/rmi_f54.c b/drivers/input/touchscreen/rmi/rmi_f54.c
+index 246683d..aae8a7f 100644
+--- a/drivers/input/touchscreen/rmi/rmi_f54.c
++++ b/drivers/input/touchscreen/rmi/rmi_f54.c
+@@ -133,17 +133,21 @@ int FN_54_init(struct rmi_function_device *function_device)
+ 	if (rmifninfo->fndata) {
+ 		/* detect routine should only ever be called once
+ 		 * per rmifninfo. */
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: WTF?!? F54 instance data is already present!",
+ 		       __func__);
+ 		return -EINVAL;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 
+ 	instance_data = kzalloc(sizeof(struct rmi_fn_54_data), GFP_KERNEL);
+ 	if (!instance_data) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: Error allocating memory for rmi_fn_54_data.\n",
+ 		       __func__);
+ 		retval = -ENOMEM;
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 	rmifninfo->fndata = instance_data;
+ 
+@@ -152,10 +156,12 @@ int FN_54_init(struct rmi_function_device *function_device)
+ 		rmifninfo->function_descriptor.query_base_addr,
+ 		&buf, 1);
+ 	if (retval) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s : Could not read NumberOfReceiverElectrodes from 0x%04x\n",
+ 		       __func__,
+ 		       rmifninfo->function_descriptor.query_base_addr);
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 	instance_data->numrxelectrodes = buf;
+ 
+@@ -163,10 +169,12 @@ int FN_54_init(struct rmi_function_device *function_device)
+ 			rmifninfo->function_descriptor.query_base_addr + 1,
+ 			&buf, 1);
+ 	if (retval) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: Could not read NumberOfTransmitterElectrodes from 0x%04x\n",
+ 		       __func__,
+ 		       rmifninfo->function_descriptor.query_base_addr + 1);
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 	instance_data->numtxelectrodes = buf;
+ 
+@@ -180,11 +188,13 @@ int FN_54_init(struct rmi_function_device *function_device)
+ 	retval = sysfs_create_bin_file(&function_device->dev.kobj,
+ 				&dev_rep_data);
+ 	if (retval < 0) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err
+ 		    ("%s: Failed to create sysfs file for fn 54 data "
+ 		     "(error = %d).\n", __func__, retval);
+ 		retval = -ENODEV;
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 
+ 	pr_debug("%s: Creating sysfs files.", __func__);
+@@ -192,26 +202,31 @@ int FN_54_init(struct rmi_function_device *function_device)
+ 	for (attr_count = 0; attr_count < ARRAY_SIZE(attrs); attr_count++) {
+ 		if (sysfs_create_file
+ 		    (&function_device->dev.kobj, &attrs[attr_count].attr) < 0) {
++// LCOV_EXCL_START TYPE D
+ 			pr_err
+ 			    ("%s: Failed to create sysfs file for  %s.",
+ 			     __func__, attrs[attr_count].attr.name);
+ 			retval = -ENODEV;
+ 			goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 		}
+ 	}
+ 
+ 	return retval;
+ 
+ error_exit:
++// LCOV_EXCL_START TYPE D
+ 	for (attr_count--; attr_count >= 0; attr_count--)
+ 		sysfs_remove_file(&function_device->dev.kobj,
+ 				  &attrs[attr_count].attr);
+ 	kfree(instance_data);
++// LCOV_EXCL_STOP TYPE D
+ 	return retval;
+ }
+ EXPORT_SYMBOL(FN_54_init);
+ 
+ 
++// LCOV_EXCL_START TYPE C
+ void FN_54_inthandler(struct rmi_function_info *rmifninfo,
+ 		      unsigned int asserted_IRQs)
+ {
+@@ -311,6 +326,7 @@ void FN_54_inthandler(struct rmi_function_info *rmifninfo,
+ 	else
+ 		instance_data->status = error;
+ }
++// LCOV_EXCL_STOP TYPE C
+ EXPORT_SYMBOL(FN_54_inthandler);
+ 
+ /* This is a stub for now, and will be fleshed out or removed as the
+@@ -329,8 +345,10 @@ int FN_54_detect(struct rmi_function_info *rmifninfo)
+ 
+ 	pr_debug("%s: RMI4 function $54 detect\n", __func__);
+ 	if (rmifninfo->sensor == NULL) {
++// LCOV_EXCL_START TYPE C
+ 		pr_err("%s: NULL sensor passed in!", __func__);
+ 		return -EINVAL;
++// LCOV_EXCL_STOP TYPE C
+ 	}
+ 
+ 	return retval;
+@@ -369,9 +387,11 @@ static ssize_t rmi_fn_54_reporttype_store(struct device *dev,
+ 			fn->rfi->function_descriptor.data_base_addr, &data, 1);
+ 	if (result != count) {
+ 		if (result < 0) {
++// LCOV_EXCL_START TYPE C
+ 			dev_err(dev, "%s : Could not write report type "
+ 				"to 0x%x\n", __func__,
+ 				fn->rfi->function_descriptor.data_base_addr);
++// LCOV_EXCL_STOP TYPE C
+ 		} else {
+ 			dev_err(dev, "%s : Unexpected number of lines written "
+ 				"to 0x%x\n", __func__,
+@@ -421,6 +441,7 @@ static ssize_t rmi_fn_54_cmd_store(struct device *dev,
+ 		 * going to eventually effect report sizes, so they're ignored
+ 		 * for now.
+ 		 */
++// LCOV_EXCL_START TYPE C
+ 		switch (instance_data->reporttype) {
+ 		case r8bit_image:
+ 		case r16bit_image:
+@@ -439,8 +460,10 @@ static ssize_t rmi_fn_54_cmd_store(struct device *dev,
+ 		default:
+ 			dev_err(dev, "%s : Report type invalid\n", __func__);
+ 			return -EINVAL;
++// LCOV_EXCL_STOP TYPE C
+ 		}
+ 	case FORCE_CAL:
++// LCOV_EXCL_START TYPE C
+ 		/* Write the command to the command register */
+ 		result = rmi_write_multiple(fn->sensor, baseaddr,
+ 					    &instance_data->cmd, 1);
+@@ -456,6 +479,7 @@ static ssize_t rmi_fn_54_cmd_store(struct device *dev,
+ 					result, count);
+ 			}
+ 		}
++// LCOV_EXCL_STOP TYPE C
+ 		break;
+ 	default:
+ 		dev_dbg(dev, "%s: RMI4 function $54 - "
+@@ -528,8 +552,10 @@ static ssize_t rmi_fn_54_control_store(struct device *dev,
+ 	result = rmi_write_multiple(fn->sensor, ctrlbase, &data, 1);
+ 	if (result != count) {
+ 		if (result < 0) {
++// LCOV_EXCL_START TYPE D
+ 			dev_err(dev, "%s : Could not write control to 0x%x\n",
+ 			       __func__, ctrlbase);
++// LCOV_EXCL_STOP TYPE D
+ 		} else {
+ 			dev_err(dev, "%s : Unexpected number of lines written "
+ 				"to 0x%x\n", __func__, ctrlbase);
+@@ -575,8 +601,10 @@ static ssize_t rmi_fn_54_fifoindexlo_store(struct device *dev,
+ 	result = rmi_write_multiple(fn->sensor, database + 1, &data, 1);
+ 	if (result != count) {
+ 		if (result < 0) {
++// LCOV_EXCL_START TYPE D
+ 			dev_err(dev, "%s : Could not write FIFOIndexLo "
+ 				"to 0x%x\n", __func__, database + 1);
++// LCOV_EXCL_STOP TYPE D
+ 		} else {
+ 			dev_err(dev, "%s : Unexpected number of lines written "
+ 				"to 0x%x\n", __func__, database + 1);
+@@ -622,8 +650,10 @@ static ssize_t rmi_fn_54_fifoindexhi_store(struct device *dev,
+ 	    rmi_write_multiple(fn->sensor, database + 2, &data, 1);
+ 	if (result != count) {
+ 		if (result < 0) {
++// LCOV_EXCL_START TYPE D
+ 			dev_err(dev, "%s : Could not write FIFOIndexHi to "
+ 				"0x%x\n", __func__, database + 2);
++// LCOV_EXCL_STOP TYPE D
+ 		} else {
+ 			dev_err(dev, "%s : Unexpected number of lines written "
+ 				" to 0x%x\n", __func__, database + 2);
+@@ -650,10 +680,12 @@ static ssize_t rmi_fn_54_data_read(struct file *filp, struct kobject *kobj,
+ 	/* May run into issues here is a new report type is set before reading
+ 	 * the old data. MAy need to keep track of 2. */
+ 	if (count < instance_data->reportsize) {
++// LCOV_EXCL_START TYPE D
+ 		dev_err(dev,
+ 			"%s: Incorrect F54 report size %d. Expected size %d.\n",
+ 			__func__, count, instance_data->reportsize);
+ 		return -EINVAL;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 
+ 	/* Copy data from instance_data to buffer */
+diff --git a/drivers/input/touchscreen/rmi/rmi_function.c b/drivers/input/touchscreen/rmi/rmi_function.c
+index a9737f3..f70b6d3 100644
+--- a/drivers/input/touchscreen/rmi/rmi_function.c
++++ b/drivers/input/touchscreen/rmi/rmi_function.c
+@@ -157,10 +157,12 @@ struct rmi_function_ops *rmi_find_function(int function_number)
+ }
+ EXPORT_SYMBOL(rmi_find_function);
+ 
++// LCOV_EXCL_START TYPE C
+ static int rmi_function_suspendable(struct rmi_function_info *rmifninfo)
+ {
+ 	return 1;
+ }
++// LCOV_EXCL_STOP TYPE C
+ 
+ static void rmi_function_config(struct rmi_function_device *function)
+ {
+@@ -169,20 +171,25 @@ static void rmi_function_config(struct rmi_function_device *function)
+ 
+ /* Just a stub for now.
+  */
++// LCOV_EXCL_START TYPE C
+ static int rmi_function_suspend(struct device *dev, pm_message_t state)
+ {
+ 	pr_info("%s: function suspend called.", __func__);
+ 	return 0;
+ }
++// LCOV_EXCL_STOP TYPE C
+ 
+ /* Just a stub for now.
+  */
++// LCOV_EXCL_START TYPE C
+ static int rmi_function_resume(struct device *dev)
+ {
+ 	pr_info("%s: function resume called.", __func__);
+ 	return 0;
+ }
++// LCOV_EXCL_STOP TYPE C
+ 
++// LCOV_EXCL_START TYPE C
+ int rmi_function_register_driver(struct rmi_function_driver *drv,
+ 				int function_number)
+ {
+@@ -218,8 +225,10 @@ int rmi_function_register_driver(struct rmi_function_driver *drv,
+ 
+ 	return retval;
+ }
++// LCOV_EXCL_STOP TYPE C
+ EXPORT_SYMBOL(rmi_function_register_driver);
+ 
++// LCOV_EXCL_START TYPE C
+ void rmi_function_unregister_driver(struct rmi_function_driver *drv)
+ {
+ 	char *driver_name =  (char *) drv->drv.name;
+@@ -230,6 +239,7 @@ void rmi_function_unregister_driver(struct rmi_function_driver *drv)
+ 	driver_unregister(&drv->drv);
+ 	kfree(driver_name);
+ }
++// LCOV_EXCL_STOP TYPE C
+ EXPORT_SYMBOL(rmi_function_unregister_driver);
+ 
+ int rmi_function_register_device(struct rmi_function_device *function_device,
+@@ -247,17 +257,21 @@ int rmi_function_register_device(struct rmi_function_device *function_device,
+ 	dev_set_drvdata(&function_device->dev, function_device);
+ 	retval = device_register(&function_device->dev);
+ 	if (retval) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s:  Failed device_register for function device.\n",
+ 		       __func__);
+ 		return retval;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 
+ 	input = input_allocate_device();
+ 	if (input == NULL) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s:  Failed to allocate memory for a "
+ 		       "new input device.\n", __func__);
+ 		retval = -ENOMEM;
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 
+ 	input->name = dev_name(&function_device->dev);
+@@ -269,8 +283,10 @@ int rmi_function_register_device(struct rmi_function_device *function_device,
+ 
+ 	retval = input_register_device(input);
+ 	if (retval) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s:  Failed input_register_device.\n", __func__);
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 
+ 	rmi_function_config(function_device);
+@@ -278,11 +294,14 @@ int rmi_function_register_device(struct rmi_function_device *function_device,
+ 	return retval;
+ 
+ error_exit:
++// LCOV_EXCL_START TYPE D
+ 	kfree(input);
++// LCOV_EXCL_STOP TYPE D
+ 	return retval;
+ }
+ EXPORT_SYMBOL(rmi_function_register_device);
+ 
++// LCOV_EXCL_START TYPE C
+ void rmi_function_unregister_device(struct rmi_function_device *dev)
+ {
+ 	pr_info("%s: Unregistering function device.n", __func__);
+@@ -290,6 +309,7 @@ void rmi_function_unregister_device(struct rmi_function_device *dev)
+ 	input_unregister_device(dev->input);
+ 	device_unregister(&dev->dev);
+ }
++// LCOV_EXCL_STOP TYPE C
+ EXPORT_SYMBOL(rmi_function_unregister_device);
+ 
+ static int __init rmi_function_init(void)
+@@ -299,10 +319,12 @@ static int __init rmi_function_init(void)
+ 	return 0;
+ }
+ 
++// LCOV_EXCL_START TYPE C
+ static void __exit rmi_function_exit(void)
+ {
+ 	pr_debug("%s: RMI Function Exit\n", __func__);
+ }
++// LCOV_EXCL_STOP TYPE C
+ 
+ module_init(rmi_function_init);
+ module_exit(rmi_function_exit);
+diff --git a/drivers/input/touchscreen/rmi/rmi_i2c.c b/drivers/input/touchscreen/rmi/rmi_i2c.c
+index ec25b18..291d13d 100644
+--- a/drivers/input/touchscreen/rmi/rmi_i2c.c
++++ b/drivers/input/touchscreen/rmi/rmi_i2c.c
+@@ -109,8 +109,10 @@ int rmi_set_page(struct instance_data *instance_data, unsigned int page)
+ 	retval = i2c_master_send(instance_data->i2cclient,
+ 				txbuf, ARRAY_SIZE(txbuf));
+ 	if (retval != ARRAY_SIZE(txbuf)) {
++// LCOV_EXCL_START TYPE D
+ 		dev_err(&instance_data->i2cclient->dev,
+ 			"%s: Set page failed: %d.", __func__, retval);
++// LCOV_EXCL_STOP TYPE D
+ 	} else {
+ 		retval = 0;
+ 		instance_data->page = page;
+@@ -166,10 +168,12 @@ retry:
+ 	retval = i2c_master_send(instance_data->i2cclient,
+ 				 txbuf, ARRAY_SIZE(txbuf));
+ 	if (retval != 1) {
++// LCOV_EXCL_START TYPE D
+ 		dev_err(&instance_data->i2cclient->dev, "%s: Write fail: %d\n",
+ 			__func__, retval);
+ 		physdrvr->tx_errors++;
+ 		goto exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 
+ 	physdrvr->rx_count++;
+@@ -177,6 +181,7 @@ retry:
+ 	retval = i2c_master_recv(instance_data->i2cclient, valp, size);
+ 
+ 	if (retval != size) {
++// LCOV_EXCL_START TYPE D
+ 		physdrvr->rx_errors++;
+ 		if (++retry_count == 5) {
+ 			dev_err(&instance_data->i2cclient->dev,
+@@ -187,6 +192,7 @@ retry:
+ 			rmi_set_page(instance_data, ((address >> 8) & 0xff));
+ 			goto retry;
+ 		}
++// LCOV_EXCL_STOP TYPE D
+ 	} else {
+ 		retval = 0;
+ 	}
+@@ -240,8 +246,10 @@ rmi_i2c_write_multiple(struct rmi_phys_driver *physdrvr, unsigned short address,
+ 		retval = rmi_set_page(instance_data, ((address >> 8) & 0xff));
+ 		if (retval) {
+ 			/* error occurs we change return value to -1 */
++// LCOV_EXCL_START TYPE D
+ 			retval = -1;
+ 			goto exit;
++// LCOV_EXCL_STOP TYPE D
+ 		}
+ 	}
+ 
+@@ -253,12 +261,14 @@ rmi_i2c_write_multiple(struct rmi_phys_driver *physdrvr, unsigned short address,
+ 
+ 	/* TODO: Add in retry on writes only in certain error return values */
+ 	if (retval != ARRAY_SIZE(txbuf)) {
++// LCOV_EXCL_START TYPE D
+ 		dev_err(&instance_data->i2cclient->dev, "%s: Write fail: %d\n",
+ 			__func__, retval);
+ 		physdrvr->tx_errors++;
+ 		/* error occurs we change return value to -2 */
+ 		retval = -2;
+ 		goto exit;
++// LCOV_EXCL_STOP TYPE D
+ 	} else
+ 		retval = 1; /* return one if succeeds */
+ 
+@@ -299,7 +309,9 @@ static irqreturn_t i2c_attn_isr(int irq, void *info)
+ 		instance_data->rmiphysdrvr.attention(
+ 			&instance_data->rmiphysdrvr);
+ 	} else {
++// LCOV_EXCL_START TYPE C
+ 		enable_irq(instance_data->irq);
++// LCOV_EXCL_STOP TYPE C
+ 	}
+ 
+ 	return IRQ_HANDLED;
+@@ -315,7 +327,9 @@ acquire_attn_irq(struct instance_data *instance_data)
+ 	retval = request_irq(instance_data->irq, i2c_attn_isr,
+ 			irq_type, "rmi_i2c", instance_data);
+ 	if (retval)
++// LCOV_EXCL_START TYPE D
+ 		return retval;
++// LCOV_EXCL_STOP TYPE D
+ 
+ 	dev_dbg(&instance_data->rmiphysdrvr.sensor->sensor_device->dev,
+ 		"got ATTN irq.\n");
+@@ -335,9 +349,11 @@ acquire_attn_irq(struct instance_data *instance_data)
+ 			instance_data->attn_polarity &&
+ 			instance_data->rmiphysdrvr.attention) {
+ 
++// LCOV_EXCL_START TYPE C
+ 			disable_irq(instance_data->irq);
+ 			instance_data->rmiphysdrvr.attention(
+ 					&instance_data->rmiphysdrvr);
++// LCOV_EXCL_STOP TYPE C
+ 		}
+ 
+ 	return retval;
+@@ -356,13 +372,16 @@ static void set_attn_handler (struct rmi_phys_driver *physdrvr,
+ 			gpio_get_value(instance_data->attn_gpio) ==
+ 			instance_data->attn_polarity &&
+ 			instance_data->rmiphysdrvr.attention) {
++// LCOV_EXCL_START TYPE C
+ 		disable_irq(instance_data->irq);
+ 		instance_data->rmiphysdrvr.attention(
+ 			&instance_data->rmiphysdrvr);
++// LCOV_EXCL_STOP TYPE C
+ 	}
+ }
+ 
+ 
++// LCOV_EXCL_START TYPE C
+ static void release_attn_irq(struct rmi_phys_driver *physdrvr)
+ {
+ 	struct instance_data *instance_data =
+@@ -373,6 +392,7 @@ static void release_attn_irq(struct rmi_phys_driver *physdrvr)
+ 	disable_irq(instance_data->irq);
+ 	free_irq(instance_data->irq, instance_data);
+ }
++// LCOV_EXCL_STOP TYPE C
+ 
+ 
+ static int
+@@ -385,6 +405,7 @@ enable_device(struct rmi_phys_driver *physdrvr)
+ 	if (instance_data->enabled)
+ 		return 0;
+ 
++// LCOV_EXCL_START TYPE C
+ 	retval = acquire_attn_irq(instance_data);
+ 	if (retval)
+ 		goto error_exit;
+@@ -396,10 +417,12 @@ enable_device(struct rmi_phys_driver *physdrvr)
+ error_exit:
+ 	dev_err(&physdrvr->sensor->sensor_device->dev,
+ 		"Failed to enable physical device.  Code=%d.\n", retval);
++// LCOV_EXCL_STOP TYPE C
+ 	return retval;
+ }
+ 
+ 
++// LCOV_EXCL_START TYPE C
+ static void
+ disable_device(struct rmi_phys_driver *physdrvr)
+ {
+@@ -414,6 +437,7 @@ disable_device(struct rmi_phys_driver *physdrvr)
+ 		"Physical device disabled.\n");
+ 	instance_data->enabled = false;
+ }
++// LCOV_EXCL_STOP TYPE C
+ 
+ /* The Driver probe function - will allocate and initialize the instance
+  * data and request the irq and set the instance data as the clients
+@@ -430,15 +454,19 @@ rmi_i2c_probe(struct i2c_client *client, const struct i2c_device_id *dev_id)
+ 	struct rmi_sensordata *sensordata;
+ 
+ 	if (client == NULL) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: Invalid NULL client received.", __func__);
+ 		return -EINVAL;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 
+ 	platformdata = client->dev.platform_data;
+ 	if (platformdata == NULL) {
++// LCOV_EXCL_START TYPE D
+ 		dev_err(&client->dev, "%s: CONFIGURATION ERROR - "
+ 		"platform data is NULL.\n", __func__);
+ 		retval = -EINVAL;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 	sensordata = platformdata->sensordata;
+ 
+@@ -448,10 +476,12 @@ rmi_i2c_probe(struct i2c_client *client, const struct i2c_device_id *dev_id)
+ 	/* Allocate and initialize the instance data for this client */
+ 	instance_data = kzalloc(sizeof(*instance_data), GFP_KERNEL);
+ 	if (!instance_data) {
++// LCOV_EXCL_START TYPE D
+ 		dev_err(&client->dev,
+ 			"%s: Failed to allocate instance_data.\n",
+ 			__func__);
+ 		return -ENOMEM;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 
+ 	__mutex_init(&instance_data->page_mutex, "page_mutex",
+@@ -483,12 +513,14 @@ rmi_i2c_probe(struct i2c_client *client, const struct i2c_device_id *dev_id)
+ 		sensordata->attn_gpio_number ?
+ 			gpio_to_irq(sensordata->attn_gpio_number) : -1);
+ 	if (client->addr != platformdata->i2c_address) {
++// LCOV_EXCL_START TYPE D
+ 		dev_err(&client->dev,
+ 			"%s: CONFIGURATION ERROR - client I2C address 0x%02x "
+ 			"doesn't match platform data address 0x%02x.\n",
+ 			__func__, client->addr, platformdata->i2c_address);
+ 		retval = -EINVAL;
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 
+ 	instance_data->instance_no = rmi_next_sensor_id();
+@@ -500,27 +532,35 @@ rmi_i2c_probe(struct i2c_client *client, const struct i2c_device_id *dev_id)
+ 
+ 	retval = gpio_request(sensordata->attn_gpio_number, "rmi");
+ 	if (retval < 0) {
++// LCOV_EXCL_START TYPE D
+ 		dev_err(&client->dev, "%s: Unable to request GPIO\n", __func__);
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 	retval = gpio_direction_input(sensordata->attn_gpio_number);
+ 	if (retval < 0) {
++// LCOV_EXCL_START TYPE D
+ 		dev_err(&client->dev, "%s: Unable to set GPIO direction\n",
+ 			__func__);
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 
+ 	retval = gpio_request(sensordata->rst_gpio_number, "rmi");
+ 	if (retval < 0) {
++// LCOV_EXCL_START TYPE D
+ 		dev_err(&client->dev, "%s: Unable to request RESET GPIO\n",
+ 			__func__);
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 	retval = gpio_direction_output(sensordata->rst_gpio_number, 1);
+ 	if (retval < 0) {
++// LCOV_EXCL_START TYPE D
+ 		dev_err(&client->dev, "%s: Unable to set RESET GPIO "
+ 			"direction\n", __func__);
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 	gpio_set_value(sensordata->rst_gpio_number, 1);
+ 
+@@ -562,10 +602,12 @@ rmi_i2c_probe(struct i2c_client *client, const struct i2c_device_id *dev_id)
+ 	if (sensordata && sensordata->rmi_sensor_setup) {
+ 		retval = sensordata->rmi_sensor_setup();
+ 		if (retval) {
++// LCOV_EXCL_START TYPE D
+ 			dev_err(&client->dev,
+ 				"%s: sensor setup failed with code %d.",
+ 			       __func__, retval);
+ 			goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 		}
+ 	}
+ 
+@@ -576,15 +618,18 @@ rmi_i2c_probe(struct i2c_client *client, const struct i2c_device_id *dev_id)
+ 	retval = rmi_register_sensor(&instance_data->rmiphysdrvr,
+ 				platformdata->sensordata);
+ 	if (retval) {
++// LCOV_EXCL_START TYPE D
+ 		dev_err(&client->dev,
+ 			"%s: Failed to register %s sensor drivers\n", __func__,
+ 			instance_data->rmiphysdrvr.name);
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 
+ 	if (instance_data->rmiphysdrvr.polling_required == false) {
+ 		retval = acquire_attn_irq(instance_data);
+ 		if (retval) {
++// LCOV_EXCL_START TYPE D
+ 			dev_warn(&client->dev,
+ 				"Failed to obtain IRQ %d. Result: %d.",
+ 				instance_data->irq, retval);
+@@ -594,6 +639,7 @@ rmi_i2c_probe(struct i2c_client *client, const struct i2c_device_id *dev_id)
+ 			/* TODO: Need to revert back to polling - create and
+ 			 * start timer. */
+ 			retval = 0;
++// LCOV_EXCL_STOP TYPE D
+ 		}
+ 
+ 		/* export GPIO for attention handling */
+@@ -632,11 +678,14 @@ rmi_i2c_probe(struct i2c_client *client, const struct i2c_device_id *dev_id)
+ 	return retval;
+ 
+ error_exit:
++// LCOV_EXCL_START TYPE D
+ 	kfree(instance_data);
++// LCOV_EXCL_STOP TYPE D
+ 	/* return error for clean-up*/
+ 	return retval;
+ }
+ 
++// LCOV_EXCL_START TYPE C
+ static int rmi_i2c_remove(struct i2c_client *client)
+ {
+ 	struct instance_data *instance_data = i2c_get_clientdata(client);
+@@ -659,6 +708,7 @@ static int rmi_i2c_remove(struct i2c_client *client)
+ 
+ 	return 0;
+ }
++// LCOV_EXCL_STOP TYPE C
+ 
+ #ifdef CONFIG_PM
+ static int rmi_i2c_suspend(struct i2c_client *client, pm_message_t mesg)
+@@ -700,10 +750,12 @@ static int __init rmi_phys_i2c_init(void)
+ 	return i2c_add_driver(&rmi_i2c_driver);
+ }
+ 
++// LCOV_EXCL_START TYPE C
+ static void __exit rmi_phys_i2c_exit(void)
+ {
+ 	i2c_del_driver(&rmi_i2c_driver);
+ }
++// LCOV_EXCL_STOP TYPE C
+ 
+ module_init(rmi_phys_i2c_init);
+ module_exit(rmi_phys_i2c_exit);
+diff --git a/drivers/input/touchscreen/rmi/rmi_sensor.c b/drivers/input/touchscreen/rmi/rmi_sensor.c
+index 71fe207..7cf77a1 100644
+--- a/drivers/input/touchscreen/rmi/rmi_sensor.c
++++ b/drivers/input/touchscreen/rmi/rmi_sensor.c
+@@ -122,11 +122,15 @@ int rmi_read(struct rmi_sensor_driver *sensor, unsigned short address,
+ 		/* we could read while instance_data is not ready */
+ 		if (instance_data)
+ 			if (!instance_data->enabled)
++// LCOV_EXCL_START TYPE D
+ 				return -ENODEV;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 
+ 	if (!rpd)
++// LCOV_EXCL_START TYPE D
+ 		return -ENODEV;
++// LCOV_EXCL_STOP TYPE D
+ 
+ 	return rpd->read(rpd, address, dest);
+ }
+@@ -145,11 +149,15 @@ int rmi_write(struct rmi_sensor_driver *sensor, unsigned short address,
+ 		/* we could write while instance_data is not ready */
+ 		if (instance_data)
+ 			if (!instance_data->enabled)
++// LCOV_EXCL_START TYPE D
+ 				return -ENODEV;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 
+ 	if (!rpd)
++// LCOV_EXCL_START TYPE D
+ 		return -ENODEV;
++// LCOV_EXCL_STOP TYPE D
+ 
+ 	return rpd->write(rpd, address, data);
+ }
+@@ -168,10 +176,14 @@ int rmi_read_multiple(struct rmi_sensor_driver *sensor, unsigned short address,
+ 		/* we could read while instance_data is not ready */
+ 		if (instance_data)
+ 			if (!instance_data->enabled)
++// LCOV_EXCL_START TYPE D
+ 				return -ENODEV;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 	if (!rpd)
++// LCOV_EXCL_START TYPE D
+ 		return -ENODEV;
++// LCOV_EXCL_STOP TYPE D
+ 
+ 	return rpd->read_multiple(rpd, address, dest, length);
+ }
+@@ -190,10 +202,14 @@ int rmi_write_multiple(struct rmi_sensor_driver *sensor, unsigned short address,
+ 		/* we could write while instance_data is not ready */
+ 		if (instance_data)
+ 			if (!instance_data->enabled)
++// LCOV_EXCL_START TYPE D
+ 				return -ENODEV;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 	if (!rpd)
++// LCOV_EXCL_START TYPE D
+ 		return -ENODEV;
++// LCOV_EXCL_STOP TYPE D
+ 
+ 	return rpd->write_multiple(rpd, address, data, length);
+ }
+@@ -208,24 +224,29 @@ int rmi_set_bits(struct rmi_sensor_driver *sensor, unsigned short address,
+ 
+ 	retval = rmi_read(sensor, address, &reg_contents);
+ 	if (retval) {
++// LCOV_EXCL_START TYPE D
+ 		pr_debug("%s: Read at 0x%04x failed, code: %d.\n",
+ 			__func__, address, retval);
+ 		return retval;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 	reg_contents = reg_contents | bits;
+ 	retval = rmi_write(sensor, address, reg_contents);
+ 	if (retval == 1)
+ 		return 0;
+ 	else if (retval == 0) {
++// LCOV_EXCL_START TYPE D
+ 		pr_debug("%s: Write at 0x%04x failed.\n",
+ 			__func__, address);
+ 		return -EINVAL;	/* TODO: What should this be? */
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 	return retval;
+ }
+ EXPORT_SYMBOL(rmi_set_bits);
+ 
+ /* Utility routine to clear bits in a register. */
++// LCOV_EXCL_START TYPE C
+ int rmi_clear_bits(struct rmi_sensor_driver *sensor, unsigned short address,
+ 		   unsigned char bits)
+ {
+@@ -243,9 +264,11 @@ int rmi_clear_bits(struct rmi_sensor_driver *sensor, unsigned short address,
+ 		return -EINVAL;	/* TODO: What should this be? */
+ 	return retval;
+ }
++// LCOV_EXCL_STOP TYPE C
+ EXPORT_SYMBOL(rmi_clear_bits);
+ 
+ /* Utility routine to set the value of a bit field in a register. */
++// LCOV_EXCL_START TYPE C
+ int rmi_set_bit_field(struct rmi_sensor_driver *sensor, unsigned short address,
+ 		      unsigned char field_mask, unsigned char bits)
+ {
+@@ -263,12 +286,15 @@ int rmi_set_bit_field(struct rmi_sensor_driver *sensor, unsigned short address,
+ 		return -EINVAL;	/* TODO: What should this be? */
+ 	return retval;
+ }
++// LCOV_EXCL_STOP TYPE C
+ EXPORT_SYMBOL(rmi_set_bit_field);
+ 
++// LCOV_EXCL_START TYPE C
+ bool rmi_polling_required(struct rmi_sensor_driver *sensor)
+ {
+ 	return sensor->polling_required;
+ }
++// LCOV_EXCL_STOP TYPE C
+ EXPORT_SYMBOL(rmi_polling_required);
+ 
+ /* Keeps track of how many sensors we've seen so far.  TODO: What happens
+@@ -316,6 +342,7 @@ static void attention(struct rmi_phys_driver *physdrvr)
+ 	schedule_work(&(physdrvr->sensor->work));
+ }
+ 
++// LCOV_EXCL_START TYPE C
+ static void disable_sensor(struct rmi_sensor_driver *sensor)
+ {
+ 	struct rmi_phys_driver *rpd = sensor->rpd;
+@@ -325,6 +352,7 @@ static void disable_sensor(struct rmi_sensor_driver *sensor)
+ 	rpd->disable_device(rpd);
+ 	instance_data->enabled = false;
+ }
++// LCOV_EXCL_STOP TYPE C
+ 
+ static int enable_sensor(struct rmi_sensor_driver *sensor)
+ {
+@@ -336,7 +364,9 @@ static int enable_sensor(struct rmi_sensor_driver *sensor)
+ 	retval = rpd->enable_device(rpd);
+ 	/* non-zero means error occurred */
+ 	if (retval)
++// LCOV_EXCL_START TYPE D
+ 		return retval;
++// LCOV_EXCL_STOP TYPE D
+ 	instance_data->enabled = true;
+ 
+ 	return 0;
+@@ -390,6 +420,7 @@ static void sensor_work_func(struct work_struct *work)
+ 
+ /* This is the timer function for polling - it simply has to schedule work
+  * and restart the timer. */
++// LCOV_EXCL_START TYPE C
+ static enum hrtimer_restart sensor_poll_timer_func(struct hrtimer *timer)
+ {
+ 	struct rmi_sensor_driver *sensor =
+@@ -400,6 +431,7 @@ static enum hrtimer_restart sensor_poll_timer_func(struct hrtimer *timer)
+ 	hrtimer_start(&sensor->timer, ktime_set(0, polltime), HRTIMER_MODE_REL);
+ 	return HRTIMER_NORESTART;
+ }
++// LCOV_EXCL_STOP TYPE C
+ 
+ /* This is the probe function passed to the RMI4 subsystem that gives us a
+  * chance to recognize an RMI4 device.  In this case, we're looking for
+@@ -408,6 +440,7 @@ static enum hrtimer_restart sensor_poll_timer_func(struct hrtimer *timer)
+  *
+  * TODO: Well, it used to do this.  I'm not sure it's required any more.
+  */
++// LCOV_EXCL_START TYPE C
+ static int probe(struct rmi_sensor_driver *sensor)
+ {
+ 	struct rmi_phys_driver *rpd = sensor->rpd;
+@@ -421,6 +454,7 @@ static int probe(struct rmi_sensor_driver *sensor)
+ 
+ 	return 0;
+ }
++// LCOV_EXCL_STOP TYPE C
+ 
+ static void config(struct rmi_sensor_driver *sensor)
+ {
+@@ -446,10 +480,12 @@ static void config(struct rmi_sensor_driver *sensor)
+ 			if (fn->config) {
+ 				fn->config(function_info);
+ 			} else {
++// LCOV_EXCL_START TYPE C
+ 				dev_warn(&sensor->sensor_device->dev,
+ 					"%s: no config function for "
+ 					"function 0x%02x.\n", __func__,
+ 					function_info->function_number);
++// LCOV_EXCL_STOP TYPE C
+ 			}
+ 		} else {
+ 			/* if no support found for this RMI4 function
+@@ -467,10 +503,12 @@ static void config(struct rmi_sensor_driver *sensor)
+ 	retval = rpd->read(rpd, PDT_PROPERTIES_LOCATION,
+ 			   (char *) &instance_data->pdt_props);
+ 	if (retval) {
++// LCOV_EXCL_START TYPE C
+ 		dev_warn(&sensor->sensor_device->dev,
+ 			"%s: Could not read PDT propertys from 0x%04x. "
+ 			"Assuming 0x00.\n",
+ 		       __func__, PDT_PROPERTIES_LOCATION);
++// LCOV_EXCL_STOP TYPE C
+ 	}
+ 
+ 
+@@ -480,29 +518,35 @@ static void config(struct rmi_sensor_driver *sensor)
+ 	for (attr_count = 0; attr_count < ARRAY_SIZE(attrs); attr_count++) {
+ 		if (device_create_file(&sensor->sensor_device->dev,
+ 					&attrs[attr_count]) < 0) {
++// LCOV_EXCL_START TYPE D
+ 			dev_err(&sensor->sensor_device->dev,
+ 				"%s: Failed to create sysfs file for %s.\n",
+ 				__func__, attrs[attr_count].attr.name);
+ 			goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 		}
+ 	}
+ 
+ 	if (rmi_polling_required(sensor)) {
+ 		/* We're polling driven, so set up the polling timer
+ 		   and timer function. */
++// LCOV_EXCL_START TYPE C
+ 		hrtimer_init(&sensor->timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+ 		sensor->timer.function = sensor_poll_timer_func;
+ 		hrtimer_start(&sensor->timer, ktime_set(1, 0),
+ 			      HRTIMER_MODE_REL);
++// LCOV_EXCL_STOP TYPE C
+ 	}
+ 
+ 	instance_data->enabled = true;
+ 	return;
+ 
+ error_exit:
++// LCOV_EXCL_START TYPE D
+ 	for (attr_count--; attr_count >= 0; attr_count--)
+ 		device_remove_file(&sensor->sensor_device->dev,
+ 				   &attrs[attr_count]);
++// LCOV_EXCL_STOP TYPE D
+ 	/* If you alloc anything, free it here. */
+ }
+ 
+@@ -512,7 +556,9 @@ void *rmi_sensor_get_functiondata(struct rmi_sensor_driver *driver,
+ 	int i;
+ 
+ 	if (!driver->perfunctiondata)
++// LCOV_EXCL_START TYPE D
+ 		return NULL;
++// LCOV_EXCL_STOP TYPE D
+ 
+ 	for (i = 0; i < driver->perfunctiondata->count; i++) {
+ 		if (driver->perfunctiondata->functiondata[i].function_index ==
+@@ -526,6 +572,7 @@ void *rmi_sensor_get_functiondata(struct rmi_sensor_driver *driver,
+ /*
+  *  final implementation of suspend/early_suspend function
+  */
++// LCOV_EXCL_START TYPE C
+ static int rmi_sensor_suspend(struct device *dev, pm_message_t state)
+ {
+ 	struct rmi_sensor_device *sensor_device =
+@@ -678,6 +725,7 @@ static int rmi_sensor_resume(struct device *dev)
+ 	mutex_unlock(&sensor_drvr->sensor_device->setup_suspend_flag);
+ 	return 0;
+ }
++// LCOV_EXCL_STOP TYPE C
+ 
+ #ifdef CONFIG_HAS_EARLYSUSPEND
+ /*
+@@ -759,10 +807,12 @@ static int rmi_sensor_register_functions(struct rmi_sensor_driver *sensor)
+ 				   an error here but the driver may still be
+ 				   viable for diagnostics and debugging so let's
+ 				   let it continue. */
++// LCOV_EXCL_START TYPE D
+ 				dev_err(dev,
+ 				    "%s: Read error %d at PDT entry 0x%02x, "
+ 				     "ending scan.\n", __func__, retval, i);
+ 				break;
++// LCOV_EXCL_STOP TYPE D
+ 			}
+ 
+ 			if (!RMI_IS_VALID_FUNCTION_ID(rmi_fd.function_number)) {
+@@ -792,11 +842,13 @@ static int rmi_sensor_register_functions(struct rmi_sensor_driver *sensor)
+ 			function_info = kzalloc(sizeof(*function_info),
+ 						GFP_KERNEL);
+ 			if (!function_info) {
++// LCOV_EXCL_START TYPE D
+ 				dev_err(dev,
+ 				    "%s: out of memory for function F%02x.",
+ 				     __func__, rmi_fd.function_number);
+ 				retval = -ENOMEM;
+ 				goto exit_fail;
++// LCOV_EXCL_STOP TYPE D
+ 			}
+ 			function_info->sensor = sensor;
+ 			function_info->function_number = rmi_fd.function_number;
+@@ -846,23 +898,27 @@ static int rmi_sensor_register_functions(struct rmi_sensor_driver *sensor)
+ 			} else {
+ 				retval = fops->detect(function_info);
+ 				if (retval)
++// LCOV_EXCL_START TYPE D
+ 					dev_err(dev,
+ 					    "%s: Function detect for F%02x "
+ 					    "failed with %d.",
+ 					     __func__, rmi_fd.function_number,
+ 					     retval);
++// LCOV_EXCL_STOP TYPE D
+ 
+ 				/* Create a function device and
+ 				 * function driver. */
+ 				function = kzalloc(sizeof(*function),
+ 						   GFP_KERNEL);
+ 				if (!function) {
++// LCOV_EXCL_START TYPE D
+ 					dev_err(dev,
+ 					    "%s: Error allocating memory for "
+ 					     "rmi_function_device.",
+ 					     __func__);
+ 					retval = -ENOMEM;
+ 					goto exit_fail;
++// LCOV_EXCL_STOP TYPE D
+ 				}
+ 
+ 				function->dev.parent =
+@@ -881,11 +937,13 @@ static int rmi_sensor_register_functions(struct rmi_sensor_driver *sensor)
+ 				 */
+ 				if (function_info->interrupt_mask == 0
+ 				    && fops->inthandler != NULL) {
++// LCOV_EXCL_START TYPE D
+ 					dev_warn(dev,
+ 					    "%s: Can't have a zero interrupt mask "
+ 					     "for function F%02x (which requires an "
+ 					     "interrupt handler).",
+ 					     __func__, rmi_fd.function_number);
++// LCOV_EXCL_STOP TYPE D
+ 				}
+ 
+ 				/* Check if we have a non-zero interrupt mask
+@@ -894,6 +952,7 @@ static int rmi_sensor_register_functions(struct rmi_sensor_driver *sensor)
+ 				 * have this.
+ 				 */
+ 				if (function_info->interrupt_mask != 0
++// LCOV_EXCL_START TYPE D
+ 				    && fops->inthandler == NULL) {
+ 					dev_warn(dev,
+ 					    "%s: Can't have a non-zero interrupt "
+@@ -902,16 +961,19 @@ static int rmi_sensor_register_functions(struct rmi_sensor_driver *sensor)
+ 					     __func__,
+ 					     function_info->interrupt_mask,
+ 					     rmi_fd.function_number);
++// LCOV_EXCL_STOP TYPE D
+ 				}
+ 
+ 				/* Register the rmi function device */
+ 				retval = rmi_function_register_device(function,
+ 							rmi_fd.function_number);
+ 				if (retval) {
++// LCOV_EXCL_START TYPE D
+ 					dev_err(dev,
+ 					    "%s: Failed to register function "
+ 					    " device.", __func__);
+ 					goto exit_fail;
++// LCOV_EXCL_STOP TYPE D
+ 				}
+ 			}
+ 
+@@ -956,9 +1018,11 @@ static int rmi_sensor_register_functions(struct rmi_sensor_driver *sensor)
+ 	return 0;
+ 
+ exit_fail:
++// LCOV_EXCL_START TYPE D
+ 	if (function_info)
+ 		kfree(function_info->function_device);
+ 	kfree(function_info);
++// LCOV_EXCL_STOP TYPE D
+ 	return retval;
+ }
+ 
+@@ -1055,9 +1119,11 @@ static ssize_t rmi_sensor_enabled_store(struct device *dev,
+ 	if (new_value) {
+ 		retval = enable_sensor(sensor->driver);
+ 		if (retval) {
++// LCOV_EXCL_START TYPE D
+ 			dev_err(dev, "Failed to ensable sensor, code=%d.\n",
+ 				retval);
+ 			return -EIO;
++// LCOV_EXCL_STOP TYPE D
+ 		}
+ 	} else {
+ 		disable_sensor(sensor->driver);
+@@ -1076,10 +1142,12 @@ struct rmi_sensor_driver *rmi_sensor_create_driver(
+ 	struct rmi_sensor_driver *driver =
+ 	    kzalloc(sizeof(struct rmi_sensor_driver), GFP_KERNEL);
+ 	if (!driver) {
++// LCOV_EXCL_START TYPE D
+ 		dev_err(&sensor_device->dev,
+ 			"%s: Out of memory for rmi_sensor_driver\n",
+ 		       __func__);
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 	driver->sensor_device = sensor_device;
+ 	driver->polling_required = physical_driver->polling_required;
+@@ -1111,10 +1179,12 @@ error_exit:
+  * pending actions, cancel any running threads or works, and release all
+  * storage.
+  */
++// LCOV_EXCL_START TYPE C
+ void rmi_sensor_destroy_driver(struct rmi_sensor_driver *driver)
+ {
+ 	kfree(driver);
+ }
++// LCOV_EXCL_STOP TYPE C
+ 
+ int rmi_sensor_register_device(struct rmi_sensor_device *dev, int index)
+ {
+@@ -1132,9 +1202,11 @@ int rmi_sensor_register_device(struct rmi_sensor_device *dev, int index)
+ 	dev->sensordata =
+ 	    kzalloc(sizeof(struct sensor_instance_data), GFP_KERNEL);
+ 	if (!dev->sensordata) {
++// LCOV_EXCL_START TYPE D
+ 		dev_err(&dev->dev,
+ 		    "%s: Out of memory for sensor instance data.\n", __func__);
+ 		return -ENOMEM;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 	instance_data = dev->sensordata;
+ 	/* let initial rmi_read_multiple/rmi_read happy */
+@@ -1143,9 +1215,11 @@ int rmi_sensor_register_device(struct rmi_sensor_device *dev, int index)
+ 	status = device_register(&dev->dev);
+ 
+ 	if (status < 0) {
++// LCOV_EXCL_START TYPE D
+ 		dev_err(&dev->dev, "%s: device register failed with %d.",
+ 			__func__, status);
+ 		goto error_exit;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 
+ 	mutex_init(&dev->setup_suspend_flag);
+@@ -1164,11 +1238,14 @@ int rmi_sensor_register_device(struct rmi_sensor_device *dev, int index)
+ 	return 0;
+ 
+ error_exit:
++// LCOV_EXCL_START TYPE D
+ 	kfree(dev->sensordata);
++// LCOV_EXCL_STOP TYPE D
+ 	return status;
+ }
+ EXPORT_SYMBOL(rmi_sensor_register_device);
+ 
++// LCOV_EXCL_START TYPE C
+ static void rmi_sensor_unregister_device(struct rmi_sensor_device *rmisensordev)
+ {
+ #ifdef CONFIG_HAS_EARLYSUSPEND
+@@ -1185,6 +1262,7 @@ static void rmi_sensor_unregister_device(struct rmi_sensor_device *rmisensordev)
+ 
+ 	device_unregister(&rmisensordev->dev);
+ }
++// LCOV_EXCL_STOP TYPE C
+ EXPORT_SYMBOL(rmi_sensor_unregister_device);
+ 
+ #define DRIVER_NAME_CHARS	16
+@@ -1206,10 +1284,12 @@ int rmi_sensor_register_driver(struct rmi_sensor_driver *driver)
+ 	/* Create a function device and function driver for this Fn */
+ 	drvrname = kzalloc(DRIVER_NAME_CHARS, GFP_KERNEL);
+ 	if (!drvrname) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err
+ 		    ("%s: Error allocating memory for rmi_sensor_driver name.",
+ 		     __func__);
+ 		return -ENOMEM;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 	snprintf(drvrname, DRIVER_NAME_CHARS, "sensor%02d", index++);
+ 
+@@ -1219,17 +1299,21 @@ int rmi_sensor_register_driver(struct rmi_sensor_driver *driver)
+ 	/* Register the sensor driver on the bus. */
+ 	ret = rmi_bus_register_sensor_driver(driver);
+ 	if (ret) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: Failed to register driver on bus, error = %d",
+ 		       __func__, ret);
+ 		goto exit_fail;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 
+ 	/* register the functions on the sensor */
+ 	ret = rmi_sensor_register_functions(driver);
+ 	if (ret) {
++// LCOV_EXCL_START TYPE D
+ 		pr_err("%s: Failed rmi_sensor_register_functions %d",
+ 		       __func__, ret);
+ 		goto exit_fail;
++// LCOV_EXCL_STOP TYPE D
+ 	}
+ 
+ 	/* configure the sensor - enable interrupts for each function,
+@@ -1247,6 +1331,7 @@ exit_fail:
+ }
+ EXPORT_SYMBOL(rmi_sensor_register_driver);
+ 
++// LCOV_EXCL_START TYPE C
+ static void rmi_sensor_unregister_driver(struct rmi_sensor_driver *driver)
+ {
+ #if defined(CONFIG_SYNA_RMI_DEV)
+@@ -1267,6 +1352,7 @@ static void rmi_sensor_unregister_driver(struct rmi_sensor_driver *driver)
+ 
+ 	rmi_bus_register_sensor_driver(driver);
+ }
++// LCOV_EXCL_STOP TYPE C
+ EXPORT_SYMBOL(rmi_sensor_unregister_driver);
+ 
+ static int __init rmi_sensor_init(void)
+@@ -1275,11 +1361,13 @@ static int __init rmi_sensor_init(void)
+ 	return 0;
+ }
+ 
++// LCOV_EXCL_START TYPE C
+ static void __exit rmi_sensor_exit(void)
+ {
+ 	pr_debug("%s: RMI Sensor Driver Exit\n", __func__);
+ 	flush_scheduled_work();	/* Make sure all scheduled work is stopped */
+ }
++// LCOV_EXCL_STOP TYPE C
+ 
+ module_init(rmi_sensor_init);
+ module_exit(rmi_sensor_exit);
+diff --git a/drivers/platform/x86/intel_mid_powerbtn.c b/drivers/platform/x86/intel_mid_powerbtn.c
+index 46f9dbb..9d3062e 100644
+--- a/drivers/platform/x86/intel_mid_powerbtn.c
++++ b/drivers/platform/x86/intel_mid_powerbtn.c
+@@ -70,13 +70,15 @@ static int __devinit mfld_pb_probe(struct platform_device *pdev)
+ 
+ 	irq = platform_get_irq(pdev, 0);
+ 	if (irq < 0)
+-		return -EINVAL;
++		return -EINVAL;/* LCOV_EXCL_LINE TYPE E*/
+ 
+ 	priv = kzalloc(sizeof(struct mfld_pb_priv), GFP_KERNEL);
+ 	input = input_allocate_device();
+ 	if (!priv || !input) {
++		/* LCOV_EXCL_START TYPE E */
+ 		ret = -ENOMEM;
+ 		goto fail;
++		/* LCOV_EXCL_STOP TYPE E */
+ 	}
+ 
+ 	priv->input = input;
+@@ -91,23 +93,29 @@ static int __devinit mfld_pb_probe(struct platform_device *pdev)
+ 
+ 	priv->pb_stat = ioremap(MSIC_PB_STAT, MSIC_PB_LEN);
+ 	if (!priv->pb_stat) {
++		/* LCOV_EXCL_START TYPE E */
+ 		ret = -ENOMEM;
+ 		goto fail;
++		/* LCOV_EXCL_STOP TYPE E */
+ 	}
+ 
+ 	ret = request_irq(priv->irq, mfld_pb_isr,
+ 			  IRQF_NO_SUSPEND, DRIVER_NAME, priv);
+ 	if (ret) {
++		/* LCOV_EXCL_START TYPE E */
+ 		dev_err(&pdev->dev,
+ 			"unable to request irq %d for power button\n", irq);
+ 		goto out_iounmap;
++		/* LCOV_EXCL_STOP TYPE E */
+ 	}
+ 
+ 	ret = input_register_device(input);
+ 	if (ret) {
++		/* LCOV_EXCL_START TYPE E */
+ 		dev_err(&pdev->dev,
+ 			"unable to register input dev, error %d\n", ret);
+ 		goto out_free_irq;
++		/* LCOV_EXCL_STOP TYPE E */
+ 	}
+ 
+ 	/* SCU firmware might send power button interrupts to IA core before
+@@ -124,7 +132,7 @@ static int __devinit mfld_pb_probe(struct platform_device *pdev)
+ 	ret = intel_scu_ipc_iowrite8(MSIC_IRQLVL1MSK, value);
+ 
+ 	return 0;
+-
++/* LCOV_EXCL_START TYPE E */
+ out_free_irq:
+ 	free_irq(priv->irq, priv);
+ out_iounmap:
+@@ -134,8 +142,10 @@ fail:
+ 	input_free_device(input);
+ 	kfree(priv);
+ 	return ret;
++/* LCOV_EXCL_STOP TYPE E */
+ }
+ 
++/* LCOV_EXCL_START TYPE A */
+ static int __devexit mfld_pb_remove(struct platform_device *pdev)
+ {
+ 	struct mfld_pb_priv *priv = platform_get_drvdata(pdev);
+@@ -147,7 +157,7 @@ static int __devexit mfld_pb_remove(struct platform_device *pdev)
+ 
+ 	return 0;
+ }
+-
++/* LCOV_EXCL_STOP TYPE A */
+ static struct platform_driver mfld_pb_driver = {
+ 	.driver = {
+ 		.name = DRIVER_NAME,
+@@ -162,11 +172,12 @@ static int __init mfld_pb_init(void)
+ 	return platform_driver_register(&mfld_pb_driver);
+ }
+ 
++/* LCOV_EXCL_START TYPE A */
+ static void __exit mfld_pb_exit(void)
+ {
+ 	platform_driver_unregister(&mfld_pb_driver);
+ }
+-
++/* LCOV_EXCL_STOP TYPE A */
+ module_init(mfld_pb_init);
+ module_exit(mfld_pb_exit);
+ 
+-- 
+1.7.1
+

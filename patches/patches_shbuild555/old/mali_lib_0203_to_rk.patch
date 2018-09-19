@@ -1,0 +1,100 @@
+diff --git a/driver/src/egl/egl_platform_android.cpp b/driver/src/egl/egl_platform_android.cpp
+index 8ea18d4..ebe18af 100644
+--- a/driver/src/egl/egl_platform_android.cpp
++++ b/driver/src/egl/egl_platform_android.cpp
+@@ -660,6 +660,13 @@ void __egl_platform_cancel_buffers(egl_surface *surface, mali_bool cancel_frameb
+ 				if (surface->buffer[i].flags == BUFFER_LOCKED || surface->buffer[i].flags == BUFFER_CLEAN)
+ 				{
+ 					mali_bool buffer_released = MALI_FALSE;
++					int window_type = -1;
++					int errnum = 0;
++					errnum = native_win->query(native_win, NATIVE_WINDOW_CONCRETE_TYPE, &window_type);
++					if (0 != errnum)
++					{
++						AERR("[%s] Querying window concrete type failed on window %p\n", MALI_FUNCTION, native_win);
++					}
+ 					native_buf = MALI_REINTERPRET_CAST(android_native_buffer_t *)surface->buffer[i].data;
+ 
+ 					/* Add NULL pointer check to avoid crash */
+@@ -668,7 +675,7 @@ void __egl_platform_cancel_buffers(egl_surface *surface, mali_bool cancel_frameb
+ 						AINF("%s: native buffer is already released.\n", __func__);
+ 						buffer_released = MALI_TRUE;
+ 					}
+-					else if (MALI_FALSE == IS_FRAMEBUFFER(native_buf))
++					else if (NATIVE_WINDOW_FRAMEBUFFER != window_type)
+ 					{
+ 						ADBG(2, "cancel UMP/dma_buf buffer at index %i buffer 0x%pn (flags: %i)\n", i, surface->buffer[i].data, surface->buffer[i].flags);
+ 						native_win->cancelBuffer(native_win, native_buf, -1);
+diff --git a/driver/src/opengles/gles_read_pixels.c b/driver/src/opengles/gles_read_pixels.c
+index b851d54..d28c2d2 100644
+--- a/driver/src/opengles/gles_read_pixels.c
++++ b/driver/src/opengles/gles_read_pixels.c
+@@ -223,6 +223,7 @@ void _mali_rotate_surface_ccw_linear(mali_convert_request *convert_request, u32
+ 	u32 i, j;
+ 	u8  *src;
+ 	u8  *dst;
++	u32 src_pitch;
+ 	u32 dst_pitch;
+ 	u32 width;
+ 	u32 height;
+@@ -238,6 +239,7 @@ void _mali_rotate_surface_ccw_linear(mali_convert_request *convert_request, u32
+ 	dst = (u8 *)convert_request->dst_ptr;
+ 	dx = convert_request->rect.dx;
+ 	dy = convert_request->rect.dy;
++	src_pitch = convert_request->src_pitch;
+ 	dst_pitch = convert_request->dst_pitch;
+ 	width = convert_request->rect.width;
+ 	height = convert_request->rect.height;
+@@ -252,9 +254,9 @@ void _mali_rotate_surface_ccw_linear(mali_convert_request *convert_request, u32
+ 			{
+ 				for (i = 0; i < width; i++)
+ 				{
++					src = (u8 *)convert_request->src_ptr + j * src_pitch + i * bytepp;
+ 					dst = (u8 *)convert_request->dst_ptr + (dy + width - i - 1) * dst_pitch + (dx + j) * bytepp;
+ 					_mali_sys_memcpy(dst, src, bytepp);
+-					src += bytepp;
+ 				}
+ 			}
+ 		}
+@@ -266,9 +268,9 @@ void _mali_rotate_surface_ccw_linear(mali_convert_request *convert_request, u32
+ 			{
+ 				for (i = 0; i < width; i++)
+ 				{
++					src = (u8 *)convert_request->src_ptr + j * src_pitch + i * bytepp;
+ 					dst = (u8 *)convert_request->dst_ptr + (dy + height - j - 1) * dst_pitch + (dx + width - i - 1) * bytepp;
+ 					_mali_sys_memcpy(dst, src, bytepp);
+-					src += bytepp;
+ 				}
+ 			}
+ 		}
+@@ -280,9 +282,9 @@ void _mali_rotate_surface_ccw_linear(mali_convert_request *convert_request, u32
+ 			{
+ 				for (i = 0; i < width; i++)
+ 				{
++					src = (u8 *)convert_request->src_ptr + j * src_pitch + i * bytepp;
+ 					dst = (u8 *)convert_request->dst_ptr + (dy + i) * dst_pitch + (dx + height - j - 1) * bytepp;
+ 					_mali_sys_memcpy(dst, src, bytepp);
+-					src += bytepp;
+ 				}
+ 			}
+ 		}
+diff --git a/driver/src/shared/essl_compiler/src/mali200/mali200_target.c b/driver/src/shared/essl_compiler/src/mali200/mali200_target.c
+index a07ef47..85fa59d 100644
+--- a/driver/src/shared/essl_compiler/src/mali200/mali200_target.c
++++ b/driver/src/shared/essl_compiler/src/mali200/mali200_target.c
+@@ -116,11 +116,11 @@ target_descriptor *_essl_mali200_new_target_descriptor(mempool *pool, target_kin
+ 	desc->get_op_weight_realistic = _essl_mali200_op_weight;
+ 	desc->serializer_opts = SERIALIZER_OPT_WRITE_STACK_USAGE;
+ 	desc->no_elimination_of_statically_indexed_arrays = ESSL_FALSE;
+-#if defined(PILOT_SHADER_OPT)
+-	desc->enable_proactive_shaders = ESSL_TRUE;
+-#else
++//#if defined(PILOT_SHADER_OPT)
++//	desc->enable_proactive_shaders = ESSL_TRUE;
++//#else
+ 	desc->enable_proactive_shaders = ESSL_FALSE;
+-#endif
++//#endif
+ 	desc->enable_vscpu_calc = ESSL_FALSE;
+ 
+ 	return desc;

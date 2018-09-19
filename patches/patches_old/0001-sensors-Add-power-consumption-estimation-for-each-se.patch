@@ -1,0 +1,82 @@
+From b059d3673ffa08dffbecfb77f48127d18a65c8cb Mon Sep 17 00:00:00 2001
+From: Leo Yan <leo.yan@intel.com>
+Date: Wed, 20 Apr 2011 14:58:52 +0800
+Subject: [PATCH] sensors: Add power consumption estimation for each sensor in sensor HAL
+
+Change-Id: I1f7bc15824135c22c9a8b7d6d42bae6ec887748f
+---
+ sensors_gaid_accel.c       |    2 +-
+ sensors_gaid_compass.c     |    2 +-
+ sensors_gaid_light.c       |    2 +-
+ sensors_gaid_orientation.c |    2 +-
+ sensors_gaid_proximity.c   |    2 +-
+ 5 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/sensors_gaid_accel.c b/sensors_gaid_accel.c
+index ca6df7c..82cd0ad 100644
+--- a/sensors_gaid_accel.c
++++ b/sensors_gaid_accel.c
+@@ -116,7 +116,7 @@ sensors_ops_t gaid_sensors_accelerometer = {
+         .type       = SENSOR_TYPE_ACCELEROMETER,
+         .maxRange   = 2.0 * GRAVITY_EARTH,
+         .resolution = GRAVITY_EARTH / 1000,
+-        .power      = 0.0f,
++        .power      = 0.011f,
+         .minDelay   = 20,
+         .reserved   = {}
+     },
+diff --git a/sensors_gaid_compass.c b/sensors_gaid_compass.c
+index 89abb03..a90c454 100644
+--- a/sensors_gaid_compass.c
++++ b/sensors_gaid_compass.c
+@@ -108,7 +108,7 @@ sensors_ops_t gaid_sensors_compass = {
+         .maxRange   = 614.0f,
+         .resolution = 0.3f,
+         .minDelay   = 50,
+-        .power      = 0.0f,
++        .power      = 1.0f,
+         .reserved   = {}
+     },
+ };
+diff --git a/sensors_gaid_light.c b/sensors_gaid_light.c
+index 7060978..3f87f27 100644
+--- a/sensors_gaid_light.c
++++ b/sensors_gaid_light.c
+@@ -121,7 +121,7 @@ sensors_ops_t gaid_sensors_als = {
+         .type       = SENSOR_TYPE_LIGHT,
+         .maxRange   = 65535.0f,
+         .resolution = 1.0f,
+-        .power      = 0.0f,
++        .power      = 0.08f,
+         .minDelay   = 0,
+         .reserved   = {}
+     },
+diff --git a/sensors_gaid_orientation.c b/sensors_gaid_orientation.c
+index a279b63..62e79cd 100644
+--- a/sensors_gaid_orientation.c
++++ b/sensors_gaid_orientation.c
+@@ -133,7 +133,7 @@ sensors_ops_t gaid_sensors_orientation = {
+         .maxRange   = 360.0f,
+         .resolution = 0.1f,
+         .minDelay   = 50,
+-        .power      = 0.0f,
++        .power      = 1.0f,
+         .reserved   = {}
+     },
+ };
+diff --git a/sensors_gaid_proximity.c b/sensors_gaid_proximity.c
+index 7f25f77..ad5022b 100644
+--- a/sensors_gaid_proximity.c
++++ b/sensors_gaid_proximity.c
+@@ -158,7 +158,7 @@ sensors_ops_t gaid_sensors_proximity = {
+         .maxRange   = 20.0f,
+         .resolution = 0.01f,
+         .minDelay   = 0,
+-        .power      = 0.0f,
++        .power      = 0.10f,
+         .reserved   = {}
+     },
+ };
+-- 
+1.7.1
+

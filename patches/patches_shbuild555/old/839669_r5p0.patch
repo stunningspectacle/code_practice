@@ -1,0 +1,27 @@
+Index: egl/egl_platform_android.cpp
+===================================================================
+--- egl/egl_platform_android.cpp	(revision 174883)
++++ egl/egl_platform_android.cpp	(working copy)
+@@ -99,7 +99,7 @@
+ #define PROP_MALI_TEST_TRANSFORM_HINT_IGNORE "mali.test.transform_hint.ignore"
+ 
+ #define IS_FRAMEBUFFER( native_buf_ptr ) \
+-	(((MALI_REINTERPRET_CAST(private_handle_t const*)(native_buf_ptr)->handle)->flags & private_handle_t::PRIV_FLAGS_FRAMEBUFFER) ? MALI_TRUE : MALI_FALSE)
++	(native_buf_ptr->handle && ((MALI_REINTERPRET_CAST(private_handle_t const*)(native_buf_ptr)->handle)->flags & private_handle_t::PRIV_FLAGS_FRAMEBUFFER) ? MALI_TRUE : MALI_FALSE)
+ 
+ /* global instance of gralloc module reference
+  * initialized at platform initialization time
+@@ -636,8 +636,12 @@
+ 					mali_bool buffer_released = MALI_FALSE;
+ 					native_buf = MALI_REINTERPRET_CAST(android_native_buffer_t *)surface->buffer[i].data;
+ 
+-					if (MALI_FALSE == IS_FRAMEBUFFER(native_buf))
++					if (native_buf == NULL || native_buf->handle == NULL)
+ 					{
++						buffer_released == MALI_TRUE;
++					}
++					else if (MALI_FALSE == IS_FRAMEBUFFER(native_buf))
++					{
+ 						ADBG(2, "cancel UMP/dma_buf buffer at index %i buffer 0x%pn (flags: %i)\n", i, surface->buffer[i].data, surface->buffer[i].flags);
+ 						native_win->cancelBuffer(native_win, native_buf, -1);
+ 						buffer_released = MALI_TRUE;

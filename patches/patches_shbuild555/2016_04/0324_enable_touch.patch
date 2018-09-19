@@ -1,0 +1,44 @@
+diff --git a/arch/x86/configs/i386_sofia_3gx_defconfig b/arch/x86/configs/i386_sofia_3gx_defconfig
+index af1a7f0..2284dc2 100644
+--- a/arch/x86/configs/i386_sofia_3gx_defconfig
++++ b/arch/x86/configs/i386_sofia_3gx_defconfig
+@@ -1505,7 +1505,8 @@ CONFIG_OF_TOUCHSCREEN=y
+ # CONFIG_TOUCHSCREEN_ZFORCE is not set
+ CONFIG_TOUCHSCREEN_HIMAX=y
+ CONFIG_TOUCHSCREEN_HIMAX_DEBUG=y
+-CONFIG_TOUCHSCREEN_FT3X27=y
++CONFIG_CC_TOUCHSCREEN_ICN87XX=y
++# CONFIG_TOUCHSCREEN_FT3X27 is not set
+ # CONFIG_TOUCHSCREEN_GT910 is not set
+ # CONFIG_TOUCHSCREEN_GT915 is not set
+ # CONFIG_TOUCHSCREEN_VTL_CT36X is not set
+diff --git a/drivers/input/touchscreen/Makefile b/drivers/input/touchscreen/Makefile
+index 0d81b4f..c757f2d 100644
+--- a/drivers/input/touchscreen/Makefile
++++ b/drivers/input/touchscreen/Makefile
+@@ -91,3 +91,4 @@ obj-$(CONFIG_TOUCHSCREEN_GT915)		+= gt910/
+ obj-$(CONFIG_TOUCHSCREEN_VTL_CT36X)		+= vtl_ts/
+ obj-$(CONFIG_TOUCHSCREEN_HIMAX)   	+= himax_platform.o himax_852xES.o
+ obj-$(CONFIG_TOUCHSCREEN_FT3X27)	+= ft3x27/
++obj-$(CONFIG_CC_TOUCHSCREEN_ICN87XX)    += icn87xx/
+diff --git a/drivers/video/xgold/dsi/dsi_device.c b/drivers/video/xgold/dsi/dsi_device.c
+index 4071dfe..5743624 100644
+--- a/drivers/video/xgold/dsi/dsi_device.c
++++ b/drivers/video/xgold/dsi/dsi_device.c
+@@ -41,6 +41,7 @@ static int xgold_mipi_dsi_enable(void)
+ 	if (unlikely(!mipi_dsi) || mipi_dsi->sys_state)
+ 		return 0;
+ 
++	reset_control_deassert(mipi_dsi->dsi_reset);
+ 	dsi_init(mipi_dsi);
+ 	if (mipi_dsi->power_on)
+ 		mipi_dsi->power_on(mipi_dsi);
+@@ -73,7 +74,7 @@ static int xgold_mipi_dsi_disable(void)
+ 	if (mipi_dsi->power_off)
+ 		mipi_dsi->power_off(mipi_dsi);
+ 
+-
++	reset_control_assert(mipi_dsi->dsi_reset);
+ 	mipi_dsi->sys_state = false;
+ 
+ 	return 0;

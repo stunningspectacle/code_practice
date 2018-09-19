@@ -1,0 +1,30 @@
+diff --git a/drivers/gpu/arm/mali/common/mali_timeline_fence_wait.c b/drivers/gpu/arm/mali/common/mali_timeline_fence_wait.c
+index 334e9d1..d27d1e2 100644
+--- a/drivers/gpu/arm/mali/common/mali_timeline_fence_wait.c
++++ b/drivers/gpu/arm/mali/common/mali_timeline_fence_wait.c
+@@ -163,9 +163,12 @@ mali_bool mali_timeline_fence_wait(struct mali_timeline_system *system, struct m
+ 
+ 	/* Wait for the tracker to be activated or time out. */
+ 	long remain = 0;
++	char points[64];
++	sprintf(points, "%s:%u, %s:%u, %s:%u", "GP", fence->points[0], "PP", fence->points[1], "SOFT", fence->points[2]);
++
+ 	MALI_DEBUG_PRINT(1, (
+-			"%s:Mali Timeline: wait on fence 0x%p, wait 0x%p, timeout=%ums, pid=%u\n",
+-			__func__, fence, wait, timeout, _mali_osk_get_pid()));
++			"%s:Mali Timeline: wait on tracker 0x%p(%s), timeout=%ums, pid=%u, fence points:%s\n",
++			__func__, wait, wait->tracker.sync_fence->name, timeout, _mali_osk_get_pid(), points));
+ 	if (MALI_TIMELINE_FENCE_WAIT_TIMEOUT_NEVER == timeout) {
+ 		_mali_osk_wait_queue_wait_event(system->wait_queue, mali_timeline_fence_wait_tracker_is_activated, (void *) wait);
+ 	} else {
+@@ -175,8 +178,8 @@ mali_bool mali_timeline_fence_wait(struct mali_timeline_system *system, struct m
+ 				(void *) wait, timeout);
+ 	}
+ 	MALI_DEBUG_PRINT(1, (
+-			"%s:Mali Timeline: return from fence 0x%p, wait 0x%p, remain=%ums, pid=%u\n",
+-			__func__, fence, wait,
++			"%s:Mali Timeline: return from tracker 0x%p(%s), remain=%ums, pid=%u\n",
++			__func__, wait, wait->tracker.sync_fence->name,
+ 			_mali_osk_time_tickstoms(remain),
+ 			_mali_osk_get_pid()));
+ 

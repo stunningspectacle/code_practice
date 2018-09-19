@@ -1,0 +1,89 @@
+From d1edd9d0cf5288f49db0943e3c20e161c235db4e Mon Sep 17 00:00:00 2001
+From: Xiaofei Wan <xiaofei.wan@intel.com>
+Date: Wed, 17 Sep 2014 16:18:42 +0800
+Subject: [PATCH 1/3] Implement getMaxNumStubs() for x86 and x86_64.
+
+Change-Id: I5e7a446d17d3bdf4e93fd8fdaf8fd3ef9c3de571
+Signed-off-by: Xiaofei Wan <xiaofei.wan@intel.com>
+Reviewed-on: https://android.intel.com/297624
+Reviewed-by: cactus <cactus@intel.com>
+Reviewed-by: Yao, Yong <yong.yao@intel.com>
+Tested-by: Yao, Yong <yong.yao@intel.com>
+---
+ .../linkloader/include/impl/ELFSectionRelTable.hxx |   35 ++++++++++++++++----
+ 1 file changed, 28 insertions(+), 7 deletions(-)
+
+diff --git a/cpu_ref/linkloader/include/impl/ELFSectionRelTable.hxx b/cpu_ref/linkloader/include/impl/ELFSectionRelTable.hxx
+index 42c7a7a..43c4980 100644
+--- a/cpu_ref/linkloader/include/impl/ELFSectionRelTable.hxx
++++ b/cpu_ref/linkloader/include/impl/ELFSectionRelTable.hxx
+@@ -90,11 +90,10 @@ ELFSectionRelTable<Bitwidth>::read(Archiver &AR,
+ template <unsigned Bitwidth>
+ size_t ELFSectionRelTable<Bitwidth>::
+ getMaxNumStubs(ELFObjectTy const *obj) const {
++  std::set<uint32_t> sym_index_set;
+   switch (obj->getHeader()->getMachine()) {
+   case EM_ARM:
+     {
+-      std::set<uint32_t> sym_index_set;
+-
+       for (size_t i = 0; i < size(); ++i) {
+         ELFRelocTy *rel = table[i];
+ 
+@@ -113,8 +112,6 @@ getMaxNumStubs(ELFObjectTy const *obj) const {
+ 
+   case EM_AARCH64:
+     {
+-      std::set<uint32_t> sym_index_set;
+-
+       for (size_t i = 0; i < size(); ++i) {
+         ELFRelocTy *rel = table[i];
+ 
+@@ -131,8 +128,6 @@ getMaxNumStubs(ELFObjectTy const *obj) const {
+ 
+   case EM_MIPS:
+     {
+-      std::set<uint32_t> sym_index_set;
+-
+       for (size_t i = 0; i < size(); ++i) {
+         ELFRelocTy *rel = table[i];
+ 
+@@ -145,8 +140,34 @@ getMaxNumStubs(ELFObjectTy const *obj) const {
+     }
+ 
+   case EM_386:
++    {
++      for (size_t i = 0; i < size(); ++i) {
++        ELFRelocTy *rel = table[i];
++
++        switch (rel->getType()) {
++        case R_386_PC32:
++          sym_index_set.insert(rel->getSymTabIndex());
++          break;
++        }
++      }
++
++      return sym_index_set.size();
++    }
++
+   case EM_X86_64:
+-    return 0;
++    {
++      for (size_t i = 0; i < size(); ++i) {
++        ELFRelocTy *rel = table[i];
++
++        switch (rel->getType()) {
++        case R_X86_64_PC32:
++          sym_index_set.insert(rel->getSymTabIndex());
++          break;
++        }
++      }
++
++      return sym_index_set.size();
++    }
+ 
+   default:
+     rsl_assert(0 && "Only support ARM, MIPS, X86, and X86_64 relocation.");
+-- 
+1.7.9.5
+

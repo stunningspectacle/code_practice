@@ -1,0 +1,40 @@
+From ff555fc9f419cefbd8f8b40a7c0244608abf5b7e Mon Sep 17 00:00:00 2001
+From: Leo Yan <leo.yan@intel.com>
+Date: Wed, 24 Dec 2014 15:50:40 +0800
+Subject: [PATCH] display: Apply the DCC Qos settings before the first frame
+
+BZ: 467
+
+Apply the DCC Qos settings before the first frame to avoid TX FIFO
+underflow which may cause screen disorder.
+
+Change-Id: Ie8bc66c3f3c3e0cb5e8d6f6c60b39a38ab6d6f32
+Signed-off-by: Leo Yan <leo.yan@intel.com>
+---
+ drivers/video/xgold/dcc-main.c |    3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/video/xgold/dcc-main.c b/drivers/video/xgold/dcc-main.c
+index cd5df80..6fa0803 100644
+--- a/drivers/video/xgold/dcc-main.c
++++ b/drivers/video/xgold/dcc-main.c
+@@ -38,6 +38,7 @@
+ #if defined(CONFIG_PM_SLEEP) || defined(CONFIG_PM_RUNTIME)
+ #include <linux/pm_runtime.h>
+ #endif
++#include <linux/xgold_noc.h>
+ 
+ #include "dcc-core.h"
+ #include "dcc-gra.h"
+@@ -804,6 +805,8 @@ long dcc_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+ 		for (ovl_id = 0; ovl_id < DCC_OVERLAY_NUM; ovl_id++)
+ 			updt.ovls[ovl_id].fence_release = -1;
+ 
++		if (pdata->timeline_current == 0)
++			xgold_noc_qos_set("DCC2");
+ 		if (err == 0) {
+ #ifdef CONFIG_SW_SYNC_USER
+ 			if (pdata->use_fences) {
+-- 
+1.7.9.5
+

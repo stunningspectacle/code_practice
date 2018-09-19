@@ -1,0 +1,53 @@
+diff --git a/core/jni/android/opengl/util.cpp b/core/jni/android/opengl/util.cpp
+index 89baef8..643e08e 100644
+--- a/core/jni/android/opengl/util.cpp
++++ b/core/jni/android/opengl/util.cpp
+@@ -26,6 +26,7 @@
+ 
+ #include <GLES/gl.h>
+ #include <ETC1/etc1.h>
++#include <cutils/log.h>
+ 
+ #include <SkBitmap.h>
+ 
+@@ -663,6 +664,8 @@ static jint util_texImage2D(JNIEnv *env, jclass clazz,
+     const int w = bitmap.width();
+     const int h = bitmap.height();
+     const void* p = bitmap.getPixels();
++    ALOGE("loooooog: w = %d, h = %d\n", w, h);
++    int myerr = 0;
+     if (internalformat == GL_PALETTE8_RGBA8_OES) {
+         if (sizeof(SkPMColor) != sizeof(uint32_t)) {
+             err = -1;
+@@ -685,6 +688,8 @@ static jint util_texImage2D(JNIEnv *env, jclass clazz,
+         }
+     } else {
+         glTexImage2D(target, level, internalformat, w, h, border, internalformat, type, p);
++        if ((myerr = glGetError()) != GL_NO_ERROR)
++            ALOGE("loooooog: %s: glTexImage2D failed (%d)\n", __func__, myerr);
+     }
+ error:
+     bitmap.unlockPixels();
+diff --git a/libs/hwui/Layer.cpp b/libs/hwui/Layer.cpp
+index 05259ff..43f4cdc 100644
+--- a/libs/hwui/Layer.cpp
++++ b/libs/hwui/Layer.cpp
+@@ -230,10 +230,18 @@ void Layer::allocateTexture() {
+ #if DEBUG_LAYERS
+     ALOGD("  Allocate layer: %dx%d", getWidth(), getHeight());
+ #endif
++    int err;
+     if (texture.id) {
++        ALOGE("looooong: %s called\n", __func__);
++
+         glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
++        if ((err = glGetError()) != GL_NO_ERROR)
++            ALOGE("looooong: %s glPixelStorei error (0x%x)\n", __func__, err);
++
+         glTexImage2D(renderTarget, 0, GL_RGBA, getWidth(), getHeight(), 0,
+                 GL_RGBA, GL_UNSIGNED_BYTE, NULL);
++        if ((err = glGetError()) != GL_NO_ERROR)
++            ALOGE("looooong: %s glTexImage2D error (0x%x)\n", __func__, err);
+     }
+ }
+ 

@@ -1,0 +1,12 @@
+diff --git a/sofia3gr/init.sofia3g.rc b/sofia3gr/init.sofia3g.rc
+index e13419e..0252961 100644
+--- a/sofia3gr/init.sofia3g.rc
++++ b/sofia3gr/init.sofia3g.rc
+@@ -284,6 +284,7 @@ service charger /sbin/healthd -c
+ on fs
+     mount_all ./fstab.sofia3g
+     setprop ro.crypto.fuse_sdcard true
++    setprop libc.debug.malloc 1
+ 
+ # virtual sdcard daemon running as media_rw (1023)
+ service sdcard /system/bin/sdcard -u 1023 -g 1023 -l /data/media /mnt/shell/emulated

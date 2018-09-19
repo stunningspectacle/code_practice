@@ -1,0 +1,137 @@
+diff --git a/driver/src/base/arch/arch_011_udd/base_arch_mem.c b/driver/src/base/arch/arch_011_udd/base_arch_mem.c
+index 91a5e5e..b938dbe 100644
+--- a/driver/src/base/arch/arch_011_udd/base_arch_mem.c
++++ b/driver/src/base/arch/arch_011_udd/base_arch_mem.c
+@@ -509,6 +509,23 @@ mali_err_code _mali_base_arch_mem_dma_buf_get_size(u32 *size, u32 mem_fd)
+ 	MALI_SUCCESS;
+ }
+ 
++mali_err_code _mali_base_arch_mem_dma_buf_sync_cpu(mali_mem *descriptor)
++{
++	arch_mem *mem = arch_mem_from_mali_mem(descriptor);
++	_mali_uk_dma_buf_sync_cpu_s call_arguments;
++	u32 mem_fd = descriptor->relationship.dma_buf_fd;
++
++	call_arguments.ctx = mali_uk_ctx;
++	call_arguments.mem_fd = mem_fd;
++
++	if (_MALI_OSK_ERR_OK != _mali_uku_dma_buf_sync_cpu(&call_arguments))
++	{
++		MALI_ERROR(MALI_ERR_FUNCTION_FAILED);
++	}
++
++	MALI_SUCCESS;
++}
++
+ mali_err_code _mali_base_arch_mem_dma_buf_attach(mali_mem *descriptor, u32 mem_fd)
+ {
+ 	arch_mem *mem = arch_mem_from_mali_mem(descriptor);
+@@ -590,6 +607,13 @@ mali_err_code _mali_base_arch_mem_dma_buf_map(mali_mem *descriptor)
+ {
+ 	arch_mem *mem = arch_mem_from_mali_mem(descriptor);
+ 	int mem_fd = descriptor->relationship.dma_buf_fd;
++	static mali_mem *last_mapped = NULL;
++
++	/* Flush CPU's cache if the memory is just accessed by CPU*/
++	if (last_mapped == descriptor)
++		_mali_base_arch_mem_dma_buf_sync_cpu(descriptor);
++	else
++		last_mapped = descriptor;
+ 
+ 	mem->mapping = mmap(0, mem->mapping_size, PROT_READ | PROT_WRITE, MAP_SHARED, mem_fd, 0);
+ 
+diff --git a/driver/src/base/os/linux/mali_uku.c b/driver/src/base/os/linux/mali_uku.c
+index 4426113..74cdc08 100644
+--- a/driver/src/base/os/linux/mali_uku.c
++++ b/driver/src/base/os/linux/mali_uku.c
+@@ -219,6 +219,11 @@ _mali_osk_errcode_t _mali_uku_dma_buf_get_size(_mali_uk_dma_buf_get_size_s *args
+ 	return mali_driver_ioctl(args->ctx, MALI_IOC_MEM_DMA_BUF_GET_SIZE, args);
+ }
+ 
++_mali_osk_errcode_t _mali_uku_dma_buf_sync_cpu(_mali_uk_dma_buf_sync_cpu_s *args)
++{
++	return mali_driver_ioctl(args->ctx, MALI_IOC_MEM_DMA_BUF_SYNC_CPU, args);
++}
++
+ _mali_osk_errcode_t _mali_uku_attach_dma_buf(_mali_uk_attach_dma_buf_s *args)
+ {
+ 	return mali_driver_ioctl(args->ctx, MALI_IOC_MEM_ATTACH_DMA_BUF, args);
+diff --git a/driver/src/base/os/mali_uku.h b/driver/src/base/os/mali_uku.h
+index c39380e..7969398 100644
+--- a/driver/src/base/os/mali_uku.h
++++ b/driver/src/base/os/mali_uku.h
+@@ -175,6 +175,12 @@ _mali_osk_errcode_t _mali_uku_unmap_external_mem(_mali_uk_unmap_external_mem_s *
+  */
+ _mali_osk_errcode_t _mali_uku_dma_buf_get_size(_mali_uk_dma_buf_get_size_s *args);
+ 
++/** Make a U/K call to _mali_ukk_dma_buf_sync_cpu().
++ * @param args see _mali_uk_dma_buf_get_size_s in mali_utgard_uk_types.h
++ * @return _MALI_OSK_ERR_OK on success, otherwise a suitable _mali_osk_errcode_t on failure.
++ */
++_mali_osk_errcode_t _mali_uku_dma_buf_sync_cpu(_mali_uk_dma_buf_sync_cpu_s *args);
++
+ /** Make a U/K call to _mali_ukk_attach_dma_buf().
+  * @param args see _mali_uk_attach_dma_buf_s in mali_utgard_uk_types.h
+  * @return _MALI_OSK_ERR_OK on success, otherwise a suitable _mali_osk_errcode_t on failure.
+diff --git a/driver/src/devicedrv/mali/include/linux/mali/mali_utgard_ioctl.h b/driver/src/devicedrv/mali/include/linux/mali/mali_utgard_ioctl.h
+index a3a9bb1..7fbe271 100644
+--- a/driver/src/devicedrv/mali/include/linux/mali/mali_utgard_ioctl.h
++++ b/driver/src/devicedrv/mali/include/linux/mali/mali_utgard_ioctl.h
+@@ -56,6 +56,7 @@ extern "C" {
+ #define MALI_IOC_MEM_ATTACH_DMA_BUF         _IOWR(MALI_IOC_MEMORY_BASE, _MALI_UK_ATTACH_DMA_BUF, _mali_uk_attach_dma_buf_s)
+ #define MALI_IOC_MEM_RELEASE_DMA_BUF        _IOW(MALI_IOC_MEMORY_BASE, _MALI_UK_RELEASE_DMA_BUF, _mali_uk_release_dma_buf_s)
+ #define MALI_IOC_MEM_DMA_BUF_GET_SIZE       _IOR(MALI_IOC_MEMORY_BASE, _MALI_UK_DMA_BUF_GET_SIZE, _mali_uk_dma_buf_get_size_s)
++#define MALI_IOC_MEM_DMA_BUF_SYNC_CPU       _IOR(MALI_IOC_MEMORY_BASE, _MALI_UK_DMA_BUF_SYNC_CPU, _mali_uk_dma_buf_sync_cpu_s)
+ #define MALI_IOC_MEM_ATTACH_UMP             _IOWR(MALI_IOC_MEMORY_BASE, _MALI_UK_ATTACH_UMP_MEM, _mali_uk_attach_ump_mem_s)
+ #define MALI_IOC_MEM_RELEASE_UMP            _IOW(MALI_IOC_MEMORY_BASE, _MALI_UK_RELEASE_UMP_MEM, _mali_uk_release_ump_mem_s)
+ #define MALI_IOC_MEM_QUERY_MMU_PAGE_TABLE_DUMP_SIZE _IOR (MALI_IOC_MEMORY_BASE, _MALI_UK_QUERY_MMU_PAGE_TABLE_DUMP_SIZE, _mali_uk_query_mmu_page_table_dump_size_s)
+diff --git a/driver/src/devicedrv/mali/include/linux/mali/mali_utgard_uk_types.h b/driver/src/devicedrv/mali/include/linux/mali/mali_utgard_uk_types.h
+index 11fe4b5..c90767a 100644
+--- a/driver/src/devicedrv/mali/include/linux/mali/mali_utgard_uk_types.h
++++ b/driver/src/devicedrv/mali/include/linux/mali/mali_utgard_uk_types.h
+@@ -103,6 +103,7 @@ typedef enum {
+ 	_MALI_UK_ATTACH_DMA_BUF,                 /**< _mali_ukk_attach_dma_buf() */
+ 	_MALI_UK_RELEASE_DMA_BUF,                /**< _mali_ukk_release_dma_buf() */
+ 	_MALI_UK_DMA_BUF_GET_SIZE,               /**< _mali_ukk_dma_buf_get_size() */
++	_MALI_UK_DMA_BUF_SYNC_CPU,               /**< _mali_ukk_dma_buf_sync_cpu() */
+ 	_MALI_UK_ATTACH_UMP_MEM,                 /**< _mali_ukk_attach_ump_mem() */
+ 	_MALI_UK_RELEASE_UMP_MEM,                /**< _mali_ukk_release_ump_mem() */
+ 	_MALI_UK_MAP_EXT_MEM,                    /**< _mali_uku_map_external_mem() */
+@@ -757,6 +758,11 @@ typedef struct {
+ 
+ typedef struct {
+ 	u64 ctx;                      /**< [in,out] user-kernel context (trashed on output) */
++	u32 mem_fd;                   /**< [in] Memory descriptor */
++} __attribute__((aligned(8))) _mali_uk_dma_buf_sync_cpu_s;
++
++typedef struct {
++	u64 ctx;                      /**< [in,out] user-kernel context (trashed on output) */
+ 	u64 cookie;                     /**< [in] identifier for mapped memory object in kernel space  */
+ } __attribute__((aligned(8))) _mali_uk_release_dma_buf_s;
+ 
+diff --git a/driver/src/egl/egl_config.c b/driver/src/egl/egl_config.c
+index c1da7f5..2fe7499 100644
+--- a/driver/src/egl/egl_config.c
++++ b/driver/src/egl/egl_config.c
+@@ -1165,7 +1165,7 @@ EGLBoolean _egl_choose_config(EGLDisplay __dpy,
+ 	if (EGL_DONT_CARE != config.config_id)
+ 	{
+ 		/* find config id in configs */
+-		if (config_size >= 1)
++		if (config_size >= 1 || NULL == __configs)
+ 		{
+ 			EGLConfig config_by_id;
+ 
+diff --git a/driver/src/shared/binary_shader/bs_symbol.c b/driver/src/shared/binary_shader/bs_symbol.c
+index 29a465f..a667a3c 100644
+--- a/driver/src/shared/binary_shader/bs_symbol.c
++++ b/driver/src/shared/binary_shader/bs_symbol.c
+@@ -340,7 +340,7 @@ MALI_STATIC struct bs_symbol *recursive_lookup_symbol(struct bs_symbol_table *ta
+ 
+ 			/* in addition to strncmp we need to check if symbol has a terminating zero at position 'namelen'
+ 			 * and that the symbol found is a struct */
+-			if (_mali_sys_memcmp(name, table->members[i]->name, symbol_namelen) == 0 &&
++			if (_mali_sys_strncmp(name, table->members[i]->name, symbol_namelen) == 0 &&
+ 			        table->members[i]->name[symbol_namelen] == '\0')
+ 			{
+ 				MALI_DEBUG_ASSERT(symbol_namelen != 0, ("We found a match for a symbol without any name. What?"));

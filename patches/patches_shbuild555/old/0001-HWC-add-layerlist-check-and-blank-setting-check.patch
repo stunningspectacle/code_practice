@@ -1,0 +1,172 @@
+From 4cfd1001fa0beeadb2cf7746d0dd37521a2dba6c Mon Sep 17 00:00:00 2001
+From: Lei Zhang <lei.zhang@intel.com>
+Date: Tue, 10 Feb 2015 10:41:59 +0800
+Subject: [PATCH] HWC: add layerlist check and blank setting check
+
+BZ: 776
+
+This patch adds below improvement to HWC.
+(1) check layer list to see if it is valid;
+(2) check blank status in prepare/set;
+(3) add HWC_HINT_CLEAR_FB if the layer goes through HWC.
+
+Change-Id: I80b5f35094e63151a27b3d59a15b9246eab4e421
+Signed-off-by: Lei Zhang <lei.zhang@intel.com>
+---
+ libhwcomposer/hwcomposer.cpp |   86 ++++++++++++++++++++++++++++++++++++------
+ 1 file changed, 74 insertions(+), 12 deletions(-)
+
+diff --git a/libhwcomposer/hwcomposer.cpp b/libhwcomposer/hwcomposer.cpp
+index fed65d1..ac2bca8 100644
+--- a/libhwcomposer/hwcomposer.cpp
++++ b/libhwcomposer/hwcomposer.cpp
+@@ -178,14 +178,41 @@ static void hwc_dump_layer(hwc_layer_1_t const* l, int i, bool verbose) {
+     }
+ 
+     ALOGV(
+-            "\t%d type=%s, flags=%08x, handle=%p, tr=%02x, blend=%s, [%d,%d,%d,%d : %d], {%d,%d,%d,%d}, fmt=%s, flags=%x",
+-            i, hwc_comp2str(l->compositionType), l->flags, l->handle,
++            "\t%d type=%s, flags=%08x, handle=%p, hints=%08x,tr=%02x, blend=%s, [%d,%d,%d,%d : %d], {%d,%d,%d,%d}, fmt=%s, flags=%x",
++            i, hwc_comp2str(l->compositionType), l->flags, l->handle, l->hints,
+             l->transform, hwc_blend2str(l->blending), l->sourceCrop.left,
+             l->sourceCrop.top, l->sourceCrop.right, l->sourceCrop.bottom, stride,
+             l->displayFrame.left, l->displayFrame.top, l->displayFrame.right,
+             l->displayFrame.bottom, hwc_fmt2str(format), flags);
+ }
+ 
++static void hwc_dump_layerlist(hwc_display_contents_1_t* display) {
++
++    ALOGV("  -----------------start of layer list --------------------- \n");
++
++    for (size_t i = 0; i < display->numHwLayers; i++) {
++        hwc_dump_layer(&display->hwLayers[i], i, true);
++    }
++
++    ALOGV("  -----------------end of layer list------------------------ \n");
++}
++
++static bool hwc_check_layerlist(hwc_display_contents_1_t* display) {
++
++    // if the layer on the list has null handler, return false
++    for (size_t i=0; i < display->numHwLayers; i++) {
++        hwc_layer_1_t const* l = &display->hwLayers[i];
++        if (!(l->flags&HWC_SKIP_LAYER)) {
++            if (l->handle == NULL) {
++                ALOGD("NULL handle in layerlist[%d]!\n", i);
++                return false;
++            }
++        }
++    }
++
++    return true;
++}
++
+ static void hwc_dump_buffer(hwc_layer_1_t const* l, const char* filename, int i) {
+ 	static FILE* buf_dump_file = 0;
+ 
+@@ -741,15 +768,19 @@ public:
+         if (conf.back != 0 &&
+                 display->hwLayers[conf.backIndex].compositionType != HWC_FRAMEBUFFER_TARGET)
+             display->hwLayers[conf.backIndex].compositionType = HWC_OVERLAY;
+-        // and mark as FrameBuffer the rest (except for the FBT, of course)
+-        for (i = 0; i < display->numHwLayers; i++) {
+-            if (display->hwLayers[i].compositionType != HWC_FRAMEBUFFER_TARGET
+-                    && display->hwLayers[i].compositionType != HWC_OVERLAY) {
+-                display->hwLayers[i].compositionType = HWC_FRAMEBUFFER;
+ 
+-                if (conf.fb_count < HWC_MAX_LAYER_NUM) {
+-                    conf.fbLayers[conf.fb_count] = &display->hwLayers[i];
+-                    conf.fb_count++;
++        for (i = 0; i < display->numHwLayers; i++) {
++            if (display->hwLayers[i].compositionType != HWC_FRAMEBUFFER_TARGET) {
++                if (display->hwLayers[i].compositionType == HWC_OVERLAY) {
++                    display->hwLayers[i].hints |= HWC_HINT_CLEAR_FB;
++                } else {
++                    // mark as FrameBuffer the rest (except for the FBT, of course)
++                    display->hwLayers[i].compositionType = HWC_FRAMEBUFFER;
++
++                    if (conf.fb_count < HWC_MAX_LAYER_NUM) {
++                        conf.fbLayers[conf.fb_count] = &display->hwLayers[i];
++                        conf.fb_count++;
++                    }
+                 }
+             }
+         }
+@@ -995,7 +1026,8 @@ struct hwc_context_t {
+         height(0),
+         xdpi(0),
+         ydpi(0),
+-        vsync_period(0)
++        vsync_period(0),
++        blank(0)
+     {
+     }
+ 
+@@ -1017,6 +1049,9 @@ struct hwc_context_t {
+ 	int ydpi;
+ 	int vsync_period;
+ 
++	/* power */
++	int blank;
++
+ 	/* VSYNC */
+ 	sp<IntelVsyncThread> mVsyncThread;
+ 
+@@ -1066,9 +1101,17 @@ static int hwc_prepare(hwc_composer_device_1_t *dev,
+ 			hwc_display_contents_1_t** displays) {
+     struct hwc_context_t *ctxt = (struct hwc_context_t *) dev;
+ 
++    // check if device is set blank
++    if (ctxt->blank)
++        return 0;
++
+     if (displays == 0 || displays[0] == 0)
+         return 0;
+ 
++    // check if it is a valid layer list
++    if (!hwc_check_layerlist(displays[0]))
++        return 0;
++
+     // for the time being only consider display 0
+     if (displays[0]->flags & HWC_GEOMETRY_CHANGED) {
+         ctxt->dcc_updater.configure(displays[0]);
+@@ -1083,6 +1126,13 @@ static int hwc_prepare(hwc_composer_device_1_t *dev,
+ 
+ static int hwc_blank(hwc_composer_device_1_t *dev, int disp, int blank)
+ {
++    struct hwc_context_t *pdev = (struct hwc_context_t *)dev;
++
++    if (disp == 0) {
++        ALOGV("  disp=%d, blank=%d \n", disp, blank);
++        pdev->blank = blank;
++    }
++
+     return 0;
+ }
+ 
+@@ -1207,9 +1257,21 @@ static int to_bpp_hal_fmt(int hal_pix_fmt) {
+ static int hwc_set(hwc_composer_device_1_t *dev,
+         size_t numDisplays, hwc_display_contents_1_t** displays) {
+ 	struct hwc_context_t *pdev = (struct hwc_context_t *)dev;
+-    if (displays && displays[0] && displays[0]->numHwLayers) {
++    // check if device is set blank
++    if (pdev->blank)
++        return 0;
++
++    if (displays == 0 || displays[0] == 0)
++        return 0;
++
++    // check if it is a valid layer list
++    if (!hwc_check_layerlist(displays[0]))
++        return 0;
++
++    if (displays[0]->numHwLayers) {
+         pdev->dcc_updater.render(displays[0]);
+     }
++
+     return 0;
+ }
+ 
+-- 
+1.7.9.5
+

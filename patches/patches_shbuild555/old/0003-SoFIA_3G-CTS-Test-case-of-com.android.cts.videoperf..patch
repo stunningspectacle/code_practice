@@ -1,0 +1,174 @@
+From 44a9128c1e699d0b0fb33a0c52af1399b60e7ce7 Mon Sep 17 00:00:00 2001
+From: Herbert Sereda <herbert.sereda@intel.com>
+Date: Mon, 17 Nov 2014 18:09:45 +0100
+Subject: [PATCH] [SoFIA_3G][CTS]Test case of
+ com.android.cts.videoperf.VideoEncoderDecoderTest always
+ Fails and...
+
+-Allow AVC H.264 GOP length up to 2045 (before 600/verisilicon orig 150)
+
+UTP-Id: SMS05880101
+---
+ src/vpu/intel_libdec_x170_h264.a  |  Bin 998068 -> 998068 bytes
+ src/vpu/intel_libdec_x170_mpeg4.a |  Bin 710434 -> 710434 bytes
+ src/vpu/intel_libdec_x170_pp.a    |  Bin 202262 -> 202262 bytes
+ src/vpu/intel_libdec_x170_vc1.a   |  Bin 400550 -> 400550 bytes
+ src/vpu/intel_libdec_x170_vp8.a   |  Bin 314682 -> 314682 bytes
+ src/vpu/intel_libenc_7280_h264.a  |  Bin 308666 -> 308666 bytes
+ src/vpu/intel_libenc_7280_mpeg4.a |  Bin 649324 -> 649324 bytes
+ src/vpu/intel_libg1common.a       |  Bin 283714 -> 283714 bytes
+ src/vpu/intel_libsecdwlx170.a     |  Bin 22178 -> 22178 bytes
+ src/vpu/intel_libsecewlx280.a     |  Bin 18616 -> 18616 bytes
+ src/vpu/intel_libsecvvpu.a        |  Bin 143788 -> 143788 bytes
+ 11 files changed, 0 insertions(+), 0 deletions(-)
+
+diff --git a/src/vpu/intel_libdec_x170_h264.a b/src/vpu/intel_libdec_x170_h264.a
+index 960a1b816575ea772a51f3fd73fe3dbc2e957e58..db12398de7c97cfa9f7ddd1e3785c728019f357f 100644
+GIT binary patch
+delta 481
+zcmdn;)n?0An+ekFW=6(lmKGKpm97dx*+$L(1h@YaWE4CM6)>LsPf)yF_bMY0Gi}$s
+z%FGstBqO#xK#%2kDokX%+!U5hCpd52H5OB4D9>a%kSD&K@fVAeB1{NqwAl6pX;%FX
+zBoT@2>lU+e>cK>|@4Luacmc)(>+o5`CR_&<F$IaV*C?=WuTkLmUVtPjzJ20Ejxbx8
+z$o6;VI8^OnJg_+ie4O4ebIiaZGkQ4LC825{B72r{Caa-{*qq_?UI!D|-dDwy=*k8O
+z$H{*MCE9rpaBb&3z%6zkNpQR4e4c&g$O5w0d5mBJ)AwFvmDrxk#~XJ7YODp=F)yz1
+eM#rOwB$)ACZi5;F(G|Ftk4p?iO~qwCn{)upt(buT
+
+delta 496
+zcmdn;)n?0An+ekFrWO_^W)_AUm97dx*yiTV{{*-H6J!)T3=^3APf)yF_bMY0Gi}$s
+z%FGstBqO#xK#%2kDjV1!^XV6_@rrLZnZi=+gd%d}8jHL#vdFeyEY6C^0^1X$S@k<m
+zMAj^3<<>(HxpI*;`T~lG&muPAI;e9jfesaGuTfy%UZcSAy#Ps6eEY<S9AUOFk?rr!
+zaj4qEcpzQd4fr^{QOwysqlc4S5=G6PrJTuXC?YmzIK9`wM7H-;aV5G!coqiWK;u2Y
+zwVn3>x7dAT(d~}&dG?v3h{#^&F@lRs-*=H!e0we*Z`=u}B15nfUtHsjjz<wmFyp)2
+X1`~m33*5`cB?c1$Ypb}-XOj*9!TX`r
+
+diff --git a/src/vpu/intel_libdec_x170_mpeg4.a b/src/vpu/intel_libdec_x170_mpeg4.a
+index ff4961cf8ee53c8a68a5745a09f8c3548887df16..3268e9d5a03c0c9bca9091448e9d1474e25c13b7 100644
+GIT binary patch
+delta 244
+zcmZ3qPJ7Wh?FrIsW=6(lmX;e8S8%aIm<F3KaQVhTIfj!jaEUcrWwu*oGH$oZWODaK
+zme@XT8`JDFFp=#J&CG?fpaxF2Z)TR*eqNU4R2x*@X#0XCEVa9#@{`YViMLxNux__X
+zU^}e~(=>kxi^O*2KDI>*pqh+9_HTcr$1eXENkn|Ryb#B(RH&}@`{f+l@0W9WF+l~k
+U>sN6)l|a>-fKBLo$2sK%07&6X{Qv*}
+
+delta 247
+zcmZ3qPJ7Wh?FrIsrWO_^W)>S2S8%aIm`0l~aQVi;IFm1Mi8Whgwp(Q~Znw&0a`#1+
+z*gkI?)9f=ak?ju6%!RX{Jmcv=p7{3jvMi_CU_#p$EMckL4da1KZnsKc-ENh@c3KxE
+zIvuD+e7kZV+oA<9A&|oDkM!8(A45e<fFk1C<%KwQr9z$Ge!rY!`~7lGFD9tKcKs?&
+QrxGOfV%z)PaZY&w04B*z*Z=?k
+
+diff --git a/src/vpu/intel_libdec_x170_pp.a b/src/vpu/intel_libdec_x170_pp.a
+index 770921cd2b3079c652127219a8e524896d40f7ad..95229f5a9800e9a301234a81124424de9453a117 100644
+GIT binary patch
+delta 59
+zcmbQXhG*Iuo(a<IW=6(lmX-z^mC~6YYzxcg2~683Ffsb7!Xzh8U=nNprOvqhmpYTo
+FI{^CC5t9G_
+
+delta 59
+zcmbQXhG*Iuo(a<IrWO_^W)_AUmC~7D?B)qf+b1wF`l`YNCQo1zYyYLrxc!$plgv8+
+D`}z@@
+
+diff --git a/src/vpu/intel_libdec_x170_vc1.a b/src/vpu/intel_libdec_x170_vc1.a
+index c36a6145fe4925a19b0836436de7d963335411ad..115a7a2b0bdf0872ddd3a6f77da6f1a85e36914d 100644
+GIT binary patch
+delta 163
+zcmZ3sQ)1api3!r|W=6(lmX_ulmCV_oY}4ihw(SXQjGj(V0kifE9*o;JcreYig^5f~
+zU=!P()y8!ADT;_!4zu<}sE9dO%_Liv;8Q3fOdPDmE+`_Cd|0L9P()6xV!cxc0MCss
+AmH+?%
+
+delta 159
+zcmZ3sQ)1api3!r|rWO_^W)@}}mCV_oY?I~$w(SXQjGj(V0n_#k9*o;JcreYiWrHZ6
+z9M2}cJ*$oB@Ka;~uN-FWi^u|#Y*~U&Aqy~Zuok<(tel*{CboT&536(>ipZ%|tal0l
+DHajiX
+
+diff --git a/src/vpu/intel_libdec_x170_vp8.a b/src/vpu/intel_libdec_x170_vp8.a
+index 3fdc23ea018508531ff7f3f4fb774cd3408e95a6..92e76be79757cd9c1c90c6c86faca905050161dd 100644
+GIT binary patch
+delta 169
+zcmdlrOL*5T;R(|0W=6*51_nkOmCmz(*k+cN7Sk`dFp4$vv2N#MWmFc2ids%@2xpSm
+z9w5V5sR7kwupOw7HyOqQYuo;7Ib;2LsF2}ypq^As7!PEE_;%(-raU{SkP%p@y?;N`
+W_Wu3MWn19FK!e4%E0?f{M*;wfnlIh}
+
+delta 169
+zcmdlrOL*5T;R(|0rWO_^W)>D3mCmz3*=Ex(xG;(}^RaH{V`Wqphl@6ZGf8X@kYTLU
+zfC+5}D&$Ru^31{7w*OkrSic@7v>m7?RTIXW4&;e%XKrN5vx5p*fQ8!o_cLwp-_KmO
+Q1uhIUSbV#335$3n0K_RUp8x;=
+
+diff --git a/src/vpu/intel_libenc_7280_h264.a b/src/vpu/intel_libenc_7280_h264.a
+index 13ab2ee149dc4952b43fedd9bbca90f091a1f7d1..0a48f2b9da273cf072b20428e92a30436a816f18 100644
+GIT binary patch
+delta 205
+zcmdn>T4>j6p$XFLW=19^2FB(amDJgRY-2M^bEC}x?52S*&g1}g@y&}P@^X;`#5U_4
+zdoPb7VD;=U$Skmapcb+1QcR4|TcIMxAVaoK-p=?d0ZBw``zi@0X&Imh*acu+k4%_6
+lS(yH?Z`ZYCdU6y+vEF~C<Bm`f6OiI|AxGxzLXIpeN&u<pI-LLj
+
+delta 205
+zcmdn>T4>j6p$XFLrWO_^X6A+)mDJfGY%|Nv0qmxMFwW!vcJa-NBl2>gDh+@FVw?4j
+zy_ZK3uzGeFW)@h*b}1&t=&eXf#J5l0&iE?<NknY>DhVcO85EI6CQP0zOyNx1buF2m
+c97U1R`_FXT5h`K`azwk3BlC74N0t>O0IeoEGXMYp
+
+diff --git a/src/vpu/intel_libenc_7280_mpeg4.a b/src/vpu/intel_libenc_7280_mpeg4.a
+index 02b7cd90192040c14f399390621f832a4efafa69..b5cd1d0464db87dd8567002b9d36984a37b55e78 100644
+GIT binary patch
+delta 454
+zcmaEJLH*4I^$F7KW=6(lmgW{4m0of~*{0L`I2gq@Yx2yqfr)HB=dp7?jI$jm-DwKv
+z$=NY73c`4k&v}S#xAA8@9u5<kK97-EV!P6E#-kcAq3!R^Gb-vsd1lk~Ub2gC*Zt2J
+zHw`8PHf6<BruW$}k?lZJ3e{meu)K~Yvv>|v#2h5jo-mbpd%{!}=R#!B?FZOcXT!W{
+zKAmqFhxqnNCDtr4m?DS}qa|w}LI~`nwf?L@m2g!+H%n}nJIQ(w=5UMYaVOcu+yDMx
+z-TwCno0&aSr3J)4ffnp+6JbKzfhteR!+Ai{3unT3V885X;_z06iEIbD(e@gQ2bRyM
+S;e4(N69Grh_S{9B|6Ku<A&I8|
+
+delta 454
+zcmaEJLH*4I^$F7KrWO_^X67avm0of~*@n~mI2gq@Yx2yqfr=PyKIgG>Ka8^-DBWoa
+z=gHYIG77?Ylh1jGZMX4fJRS}cnLdw^Sz^1=a>k<?Frn@5&NC|N!+6v6Ub2gC*Zt2J
+zHw`8PHf6<BruW$}k?lZJ3e{meu)K~Yvv>|v#26&fo-mbpd%{!}=R#!B?FZOcXT!W{
+zJe_YDhxqnNCDtr4m?DS}qa|w}LI~`nwf?L@m2g!+H%n}nJIQ(w=5XWbaVOcu+yDMx
+z-TwCno0&aaC0KKy1v}eBsF2Bapvsf-a2`-W;Y=70?3X=F9Nx+>k?lY?+Fpb4!15V2
+SoX=HZBH-xRp1X+izbgQ@risM>
+
+diff --git a/src/vpu/intel_libg1common.a b/src/vpu/intel_libg1common.a
+index 902cdc8f395622f91f4724112dbb9f45fd2a70a8..9a5fcf59985fa8fd69ad174b7dbb85fc2bad76ae 100644
+GIT binary patch
+delta 159
+zcmX@KLh#TE!3omrW=6(lmKKH^l~yxD*yfhgKQuFoZ+^|}GzThcFuh?Wqu6Gz1^Pc>
+zBHMu?9}8i+!Sd~W+)Ug1xS1~tAPb9cua{xYN{0z;2bx`53gdzGZSVTYTrUL^+Abi%
+HV&nh-%fK-1
+
+delta 159
+zcmX@KLh#TE!3omrrWO_^X69xal~yxD*{0J!G&75De$DJO2QJbulTmE5*8=^YFp=#*
+zk&lHi-P1wx?S0%#+xxhgFAE?Gi*K)&Va`g232g_OU0Vv{f%R?g`pH}`1rypXAi`qg
+F007}sF*g7J
+
+diff --git a/src/vpu/intel_libsecdwlx170.a b/src/vpu/intel_libsecdwlx170.a
+index 27ff38d5c1baea475683d8da81f83b4822e1b53c..b9fc265301415969756b356153270713a728eb05 100644
+GIT binary patch
+delta 33
+jcmZ3qmT}Qq#tG8wW=6(lmgbflmF_db*qb?+W`zI%u(AoP
+
+delta 33
+jcmZ3qmT}Qq#tG8wrWO_^X67avmF_db*qb?+W`zI%u<{A4
+
+diff --git a/src/vpu/intel_libsecewlx280.a b/src/vpu/intel_libsecewlx280.a
+index 89530162a5126e5bee8e9b7e9fbe0ea209814072..dfd925b1ccb862e4c252731ce3b5e4afcf18efe6 100644
+GIT binary patch
+delta 33
+jcmdlnk#WaF#tG8wW=6(lmgYtqmEJPK*qg<e7P$ccuha>s
+
+delta 33
+jcmdlnk#WaF#tG8wrWO_^W@eTfmEJPK*qg<e7P$ccu^I`!
+
+diff --git a/src/vpu/intel_libsecvvpu.a b/src/vpu/intel_libsecvvpu.a
+index 8fdbf0a285bceb38d63d779c3ec67d8896b0928f..5d27885ca6e3ddf6469653c474772313d8f0d31a 100644
+GIT binary patch
+delta 186
+zcmZ4Um}AXjjtSE2W=6(lmgbflm0Ve2?9F+s8;xL`>HDTIif^{HkdlOnY>o>&C;;P3
+z&SMqZY?H*D1rylpcSh0?#@U|7%jjqY;{nx*Z$InKc*+_kvVC4Nqog352ehgZZq0VP
+Sb&PB6VRB%-obMPHI|Bd&p)?@?
+
+delta 186
+zcmZ4Um}AXjjtSE2rWO`vmIme<m0Ve2?9F+s8;w956Eky@>HDTIif^{HkdlOnY>o>&
+zC;;P3&SMqZY?H*D1rylpcSh0?#@U|7%jjqY;(_b{sukaU)}8T`HB{bo`@CjGNkKRd
+aXjLW58q@7|>loMC!{oqvIo~lZb_M_lK{O};
+
+-- 
+1.7.9.5
+

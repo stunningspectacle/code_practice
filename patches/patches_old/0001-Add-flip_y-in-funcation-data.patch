@@ -1,0 +1,52 @@
+From 098bfce95eb78a8752d9114092301eebff3bf63f Mon Sep 17 00:00:00 2001
+From: Leo Yan <leo.yan@intel.com>
+Date: Thu, 22 Dec 2011 13:14:35 +0800
+Subject: [PATCH] Add flip_y in funcation data
+ Signed-off-by: Leo Yan <leo.yan@intel.com>
+
+---
+ rmi_i2c.c |   19 ++++++++++++++++++-
+ 1 files changed, 18 insertions(+), 1 deletions(-)
+
+diff --git a/rmi_i2c.c b/rmi_i2c.c
+index 61eef4a..4dbde93 100644
+--- a/rmi_i2c.c
++++ b/rmi_i2c.c
+@@ -318,7 +318,7 @@ acquire_attn_irq(struct instance_data *instance_data)
+ {
+ 	int retval;
+ 
+-	unsigned long irq_type = IRQ_TYPE_LEVEL_LOW;
++	unsigned long irq_type = IRQ_TYPE_EDGE_FALLING;
+ 	retval = request_irq(instance_data->irq, i2c_attn_isr,
+ 			irq_type, "rmi_i2c", instance_data);
+ 	if (retval)
+@@ -675,8 +675,25 @@ static struct i2c_driver rmi_i2c_driver = {
+ 	.id_table = rmi_i2c_id_table,
+ };
+ 
++static struct rmi_f11_functiondata synaptics_f11_data = {
++	.flip_Y = true,
++};
++
++static struct rmi_functiondata synaptics_functiondata[] = {
++	{
++		.function_index = RMI_F11_INDEX,
++		.data = &synaptics_f11_data,
++	},
++};
++
++static struct rmi_functiondata_list synaptics_perfunctiondata = {
++	.count = ARRAY_SIZE(synaptics_functiondata),
++	.functiondata = synaptics_functiondata,
++};
++
+ static struct rmi_sensordata s3200_sensordata = {
+ 	.attn_gpio_number = GPIO_IRQ_NUM,
++	.perfunctiondata = &synaptics_perfunctiondata,
+ };
+ 
+ static struct rmi_i2c_platformdata s3200_platform_data = {
+-- 
+1.7.1
+

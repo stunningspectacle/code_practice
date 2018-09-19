@@ -1,0 +1,51 @@
+#
+# (C) COPYRIGHT 2015 ARM Limited. All rights reserved.
+#
+# This program is free software and is provided to you under the terms of the
+# GNU General Public License version 2 as published by the Free Software
+# Foundation, and any use by you of this program is subject to the terms
+# of such GNU licence.
+#
+# A copy of the licence is included with the program, and can also be obtained
+# from Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+# Boston, MA  02110-1301, USA.
+#
+#
+
+
+* DRM slave encoder video-tx wrapper
+
+This node is for a virtual device which provides a shim to interface a DRM
+slave encoder with the video-tx framework.
+
+Required properties:
+- compatible: Should be "generic,slave_enc_video_tx"
+- i2c-slave: The phandle of the slave encoder's node
+
+Optional properties:
+- type: The connector type the transmitter uses
+  Allowed values: "HDMI", "DVI"
+- type-idx: The number of the connector of the given type, for instance
+  HDMI-0 and HDMI-1 would have type-idx = <0> and <1> respectively.
+
+The device node should contain one 'port' child node with one child 'endpoint'
+node according to the bindings defined in Documentation/devicetree/bindings/
+media/video-interfaces.txt. The endpoint has the following required
+properties:
+- remote-endpoint: The phandle of the 'output' endpoint of the attached video
+source device.
+
+Example:
+
+tx0: video_tx@0 {
+	compatible = "generic,slave_enc_video_tx";
+	reg = <0>;
+	i2c-slave = <&dvi2>;
+	type = "HDMI";
+	type-idx = <0>;
+	port {
+		tx0_in: endpoint {
+			remote-endpoint = <&dp0_out>;
+		};
+	};
+};

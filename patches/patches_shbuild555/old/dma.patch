@@ -1,0 +1,151 @@
+diff --git a/arch/x86/configs/i386_sofia_defconfig b/arch/x86/configs/i386_sofia_defconfig
+index 75cb482..f9dee18 100644
+--- a/arch/x86/configs/i386_sofia_defconfig
++++ b/arch/x86/configs/i386_sofia_defconfig
+@@ -2917,7 +2917,7 @@ CONFIG_XGOLD_CAPCOM_TIMER=y
+ # CONFIG_MAILBOX is not set
+ CONFIG_IOMMU_SUPPORT=y
+ CONFIG_OF_IOMMU=y
+-# CONFIG_ROCKCHIP_IOMMU is not set
++CONFIG_ROCKCHIP_IOMMU=y
+ 
+ #
+ # Remoteproc drivers
+diff --git a/arch/x86/kernel/pci-dma.c b/arch/x86/kernel/pci-dma.c
+index 69638d9..e07c5a7 100644
+--- a/arch/x86/kernel/pci-dma.c
++++ b/arch/x86/kernel/pci-dma.c
+@@ -167,7 +167,7 @@ again:
+ 	}
+ 
+ 	if (retried)
+-		pr_debug("__dma_alloc: We %s after aggressive reclaiming!\n",
++		trace_printk("__dma_alloc: We %s after aggressive reclaiming!\n",
+ 			(page ? "Succeed" : "Still Fail"));
+ #endif
+ 
+diff --git a/drivers/base/dma-contiguous.c b/drivers/base/dma-contiguous.c
+index 35c5a99..b5e5a9d 100644
+--- a/drivers/base/dma-contiguous.c
++++ b/drivers/base/dma-contiguous.c
+@@ -205,7 +205,7 @@ int __init dma_contiguous_reserve_area(phys_addr_t size, phys_addr_t base,
+ 	phys_addr_t alignment;
+ 	int ret = 0;
+ 
+-	pr_debug("%s(size %lx, base %08lx, limit %08lx)\n", __func__,
++	pr_info("%s(size %lx, base %08lx, limit %08lx)\n", __func__,
+ 		 (unsigned long)size, (unsigned long)base,
+ 		 (unsigned long)limit);
+ 
+@@ -380,14 +380,14 @@ struct cma *cma_area_lookup(phys_addr_t size, phys_addr_t base)
+ 	unsigned long base_pfn = PFN_DOWN(base);
+ 	unsigned long count = size >> PAGE_SHIFT;
+ 
+-	pr_debug("search area %ld MiB at %pa\n",
++	pr_info("search area %ld MiB at %pa\n",
+ 			(unsigned long)size / SZ_1M,
+ 			&base);
+ 	while (i < cma_area_count) {
+ 		struct cma *cmap = &cma_areas[i];
+ 
+ 		if ((cmap->base_pfn == base_pfn) && (cmap->count == count)) {
+-			pr_debug("found area %p(%d) base_pfn %lx count %lx\n",
++			pr_info("found area %p(%d) base_pfn %lx count %lx\n",
+ 					cmap, i, base_pfn, count);
+ 			return cmap;
+ 		}
+diff --git a/drivers/gpu/arm/mali/common/mali_kernel_common.h b/drivers/gpu/arm/mali/common/mali_kernel_common.h
+index f6e14f7..ee34b33 100644
+--- a/drivers/gpu/arm/mali/common/mali_kernel_common.h
++++ b/drivers/gpu/arm/mali/common/mali_kernel_common.h
+@@ -110,9 +110,11 @@
+ #if defined(CONFIG_MALI_QUIET)
+ #define MALI_PRINTF(args)
+ #else
+-#define MALI_PRINTF(args) _mali_osk_dbgmsg args;
++//#define MALI_PRINTF(args) _mali_osk_dbgmsg args;
++#define MALI_PRINTF(args) trace_printk args;
+ #endif
+ 
++
+ #define MALI_PRINT_ERROR(args) do{ \
+ 		MALI_PRINTF(("Mali: ERR: %s\n" ,__FILE__)); \
+ 		MALI_PRINTF(("           %s()%4d\n           ", __FUNCTION__, __LINE__)) ; \
+diff --git a/drivers/gpu/arm/mali/linux/mali_kernel_linux.c b/drivers/gpu/arm/mali/linux/mali_kernel_linux.c
+index 131e707..488ff8c 100644
+--- a/drivers/gpu/arm/mali/linux/mali_kernel_linux.c
++++ b/drivers/gpu/arm/mali/linux/mali_kernel_linux.c
+@@ -77,7 +77,7 @@ EXPORT_TRACEPOINT_SYMBOL_GPL(mali_sw_counters);
+ extern const char *__malidrv_build_info(void);
+ 
+ /* Module parameter to control log level */
+-int mali_debug_level = 2;
++int mali_debug_level = 10;
+ module_param(mali_debug_level, int, S_IRUSR | S_IWUSR | S_IWGRP | S_IRGRP | S_IROTH); /* rw-rw-r-- */
+ MODULE_PARM_DESC(mali_debug_level, "Higher number, more dmesg output");
+ 
+diff --git a/drivers/gpu/arm/mali/linux/mali_memory_os_alloc.c b/drivers/gpu/arm/mali/linux/mali_memory_os_alloc.c
+index f7c2bdd..1b88fb9 100644
+--- a/drivers/gpu/arm/mali/linux/mali_memory_os_alloc.c
++++ b/drivers/gpu/arm/mali/linux/mali_memory_os_alloc.c
+@@ -120,6 +120,7 @@ static void mali_mem_os_free(mali_mem_allocation *descriptor)
+ 
+ 	if (MALI_OS_MEMORY_KERNEL_BUFFER_SIZE_IN_PAGES < mali_mem_os_allocator.pool_count) {
+ 		MALI_DEBUG_PRINT(5, ("OS Mem: Starting pool trim timer %u\n", mali_mem_os_allocator.pool_count));
++		trace_printk("%s: OS Mem: Starting pool trim timer %u\n", __func__, mali_mem_os_allocator.pool_count);
+ 		queue_delayed_work(mali_mem_os_allocator.wq, &mali_mem_os_allocator.timed_shrinker, MALI_OS_MEMORY_POOL_TRIM_JIFFIES);
+ 	}
+ }
+@@ -660,6 +661,10 @@ static unsigned long mali_mem_os_shrink(struct shrinker *shrinker, struct shrink
+ #endif
+ 
+ 
++	trace_printk("shrink_control: gfp_mask=0x%x, nr_to_scan=%d, nodes_to_scan=%d, nid=%d, pool_count=%d\n",
++			sc->gfp_mask,
++			sc->nr_to_scan, sc->nodes_to_scan,
++			sc->nid, mali_mem_os_allocator.pool_count);
+ 	if (0 == nr) {
+ 		return mali_mem_os_shrink_count(shrinker, sc);
+ 	}
+@@ -709,6 +714,7 @@ static void mali_mem_os_trim_pool(struct work_struct *data)
+ 
+ 	MALI_DEBUG_PRINT(3, ("OS Mem: Trimming pool %u\n", mali_mem_os_allocator.pool_count));
+ 
++	trace_printk("looooooooooong: %s: pool_count=%d pages\n", __func__, mali_mem_os_allocator.pool_count);
+ 	/* Release from general page pool */
+ 	spin_lock(&mali_mem_os_allocator.pool_lock);
+ 	if (MALI_OS_MEMORY_KERNEL_BUFFER_SIZE_IN_PAGES < mali_mem_os_allocator.pool_count) {
+@@ -734,6 +740,7 @@ static void mali_mem_os_trim_pool(struct work_struct *data)
+ 
+ 	if (MALI_OS_MEMORY_KERNEL_BUFFER_SIZE_IN_PAGES < mali_mem_os_allocator.pool_count) {
+ 		MALI_DEBUG_PRINT(4, ("OS Mem: Starting pool trim timer %u\n", mali_mem_os_allocator.pool_count));
++		trace_printk("%s: OS Mem: Starting pool trim timer %u\n", __func__, mali_mem_os_allocator.pool_count);
+ 		queue_delayed_work(mali_mem_os_allocator.wq, &mali_mem_os_allocator.timed_shrinker, MALI_OS_MEMORY_POOL_TRIM_JIFFIES);
+ 	}
+ }
+diff --git a/drivers/of/of_reserved_mem.c b/drivers/of/of_reserved_mem.c
+index d52432f..5c69302 100644
+--- a/drivers/of/of_reserved_mem.c
++++ b/drivers/of/of_reserved_mem.c
+@@ -270,7 +270,7 @@ int of_get_reserved_memory_region(struct device_node *node,
+ 	else if (of_property_read_bool(nregion, "linux,cma-default"))
+ 		*cma_area = dma_contiguous_default_area;
+ 
+-	pr_debug("found cma area %p %d MiB at %pa\n",
++	pr_info("found cma area %p %d MiB at %pa\n",
+ 			*cma_area, array[1] / SZ_1M, base);
+ 
+ 	return (*cma_area) ? 0 : -EINVAL;
+diff --git a/drivers/staging/android/ion/ion_system_heap.c b/drivers/staging/android/ion/ion_system_heap.c
+index 85fe5b8..e4f28b5 100644
+--- a/drivers/staging/android/ion/ion_system_heap.c
++++ b/drivers/staging/android/ion/ion_system_heap.c
+@@ -159,6 +159,8 @@ static int ion_system_heap_allocate(struct ion_heap *heap,
+ 	if (size / PAGE_SIZE > totalram_pages / 2)
+ 		return -ENOMEM;
+ 
++	trace_printk("%s: size = %lu, align = %lu, flags = 0x%x\n",
++			__func__, size, align, flags);
+ 	INIT_LIST_HEAD(&pages);
+ 	while (size_remaining > 0) {
+ 		info = alloc_largest_available(sys_heap, buffer, size_remaining,

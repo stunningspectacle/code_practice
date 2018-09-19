@@ -1,0 +1,96 @@
+diff --git a/libhwcomposer/hwcomposer.cpp b/libhwcomposer/hwcomposer.cpp
+index fed65d1..e67a2ce 100644
+--- a/libhwcomposer/hwcomposer.cpp
++++ b/libhwcomposer/hwcomposer.cpp
+@@ -1095,7 +1095,7 @@ static int hwc_event_control(struct hwc_composer_device_1* dev, int disp,
+         stack.update();
+         stack.dump("");
+ #endif
+-	ALOGV("%s :: disp:%d | Event:%d | status:%d\n", __func__, disp, event, enabled);
++	//ALOGE("ooooo %s :: disp:%d | Event:%d | status:%d\n", __func__, disp, event, enabled);
+ 	struct hwc_context_t *pdev = (struct hwc_context_t *)dev;
+ 	switch (event) {
+ 	case HWC_EVENT_VSYNC:
+@@ -1419,6 +1419,10 @@ bool hwcVsyncThread::threadLoop()
+ 	int err = -1;
+ 	char buf[1024] = {0};
+ 	uint64_t ts = 0;
++        static nsecs_t prev = systemTime(CLOCK_MONOTONIC);
++        static uint64_t most_ms, last_log, last_count, vsync_count;
++        uint64_t diff_ms;
++        bool can_print = false;
+ 
+  	{ // scope for lock
+ 		Mutex::Autolock _l(mLock);
+@@ -1427,6 +1431,24 @@ bool hwcVsyncThread::threadLoop()
+ 		}
+ 	}
+ 
++        vsync_count++;
++        const nsecs_t now = systemTime(CLOCK_MONOTONIC);
++        diff_ms = (now - prev) / 1000000;
++        if (diff_ms > most_ms) {
++            most_ms = diff_ms;
++            //ALOGE("loooong: most ms = %llu\n", most_ms);
++        }
++        prev = now;
++        if (now - last_log > 1000000000)
++            can_print = true;
++
++        if (can_print) {
++            //ALOGE("loooong: diff_ms=%llu, vsync_count=%llu, %llu fps\n",
++                    //diff_ms, vsync_count, vsync_count - last_count);
++            last_log = now;
++            last_count = vsync_count;
++        }
++
+ 	err = poll(poll_fds, 1, -1);
+ 	if ((err > 0) && (poll_fds[0].revents & POLLPRI)) {
+ 		err = lseek(vsync_fd, 0, SEEK_SET);
+@@ -1442,6 +1464,7 @@ bool hwcVsyncThread::threadLoop()
+ 		buf[sizeof(buf) - 1] = '\0';
+ 		errno = 0;
+ 		ts = strtoull(buf, NULL, 0);
++                diff_ms = (now - ts) / 1000000;
+ 		if (!errno) {
+ 			if (p_hwc_context->procs)
+ 				p_hwc_context->procs->vsync(p_hwc_context->procs, 0, ts);
+@@ -1482,6 +1505,9 @@ void hwcFakeVsyncThread::onFirstRef()
+ 
+ bool hwcFakeVsyncThread::threadLoop()
+ {
++        static nsecs_t prev = systemTime(CLOCK_MONOTONIC);
++        static uint64_t most_ms, last_log, last_count, vsync_count;
++        uint64_t diff_ms;
+ 
+  	{ // scope for lock
+ 		Mutex::Autolock _l(mLock);
+@@ -1490,6 +1516,7 @@ bool hwcFakeVsyncThread::threadLoop()
+ 		}
+ 	}
+ 
++
+ 	int err = -1;
+ 	const nsecs_t period = mRefreshPeriod;
+ 	const nsecs_t now = systemTime(CLOCK_MONOTONIC);
+@@ -1502,6 +1529,20 @@ bool hwcFakeVsyncThread::threadLoop()
+ 	}
+ 	mNextFakeVsync = next_vsync + period;
+ 
++        vsync_count++;
++        diff_ms = (now - prev) / 1000000;
++        if (diff_ms > most_ms) {
++            most_ms = diff_ms;
++            ALOGE("loooong: most ms = %llu\n", most_ms);
++        }
++        prev = now;
++        if (now - last_log > 1000000000) {
++            ALOGE("loooong: diff_ms=%llu, vsync_count=%llu, %llu fps\n",
++                    diff_ms, vsync_count, vsync_count - last_count);
++            last_log = now;
++            last_count = vsync_count;
++        }
++
+ 	struct timespec spec;
+ 	spec.tv_sec = next_vsync / 1000000000;
+ 	spec.tv_nsec = next_vsync % 1000000000;

@@ -1,0 +1,3949 @@
+diff --git a/drivers/video/rockchip/rga/rga.h b/drivers/video/rockchip/rga/rga.h
+index 9c20b9f..889c0e1 100644
+--- a/drivers/video/rockchip/rga/rga.h
++++ b/drivers/video/rockchip/rga/rga.h
+@@ -380,6 +380,7 @@ struct rga_service_info {
+ 	atomic_t cmd_num;
+ 	atomic_t rga_working;
+ 	bool enable;
++	atomic_t already_queue;
+ 	short src_fence_fd;
+ 	short src_fence_flag;
+ 	short dst_fence_fd;
+diff --git a/drivers/video/rockchip/rga/rga_api.c b/drivers/video/rockchip/rga/rga_api.c
+index 5a55916..e0b6f32 100644
+--- a/drivers/video/rockchip/rga/rga_api.c
++++ b/drivers/video/rockchip/rga/rga_api.c
+@@ -139,8 +139,6 @@ int32_t rga_gen_two_pro(struct rga_req *msg, struct rga_req *msg1)
+ 		daw = msg->src.act_w;
+ 	}
+ 	pl = (RGA_pixel_width_init(msg->src.format));
+-	if (!pl)
+-		return -EINVAL;
+ 	stride = (pl * daw + 3) & (~3);
+ 	msg->dst.act_w = daw;
+ 	msg->dst.vir_w = stride / pl;
+diff --git a/drivers/video/rockchip/rga/rga_drv.c b/drivers/video/rockchip/rga/rga_drv.c
+index 462095c..627727f 100644
+--- a/drivers/video/rockchip/rga/rga_drv.c
++++ b/drivers/video/rockchip/rga/rga_drv.c
+@@ -43,11 +43,8 @@
+ #include <linux/fb.h>
+ #include <linux/wakelock.h>
+ 
+-#include <linux/xgold_noc.h>
+-
+ #if defined(CONFIG_ION_XGOLD) || defined(CONFIG_ION_ROCKCHIP)
+ #include "../../../staging/android/ion/ion.h"
+-#include <linux/rockchip_ion.h>
+ #endif
+ 
+ #if defined(CONFIG_MOBILEVISOR_VDRIVER_PIPE) && defined(CONFIG_SECURE_PLAYBACK)
+@@ -71,12 +68,11 @@
+ #define RGA_TEST_FLUSH_TIME 0
+ #define RGA_INFO_BUS_ERROR 1
+ 
+-#define PRE_SCALE_BUF_SIZE  (1024*1024*4)
+-#define USE_CMA_FOR_PRE_SCALE
++#define PRE_SCALE_BUF_SIZE  (2048*1024*4)
+ 
+ #define RGA_POWER_OFF_DELAY	(4*HZ)	/* 4s */
+ #define RGA_TIMEOUT_DELAY	(1*HZ)	/* 1s */
+-#define RGA_FENCE_TIMEOUT_DELAY	msecs_to_jiffies(400) 	/* 400ms */
++#define RGA_FENCE_TIMEOUT_DELAY	msecs_to_jiffies(220) 	/* 220ms */
+ 
+ #define RGA_MAJOR		255
+ 
+@@ -86,7 +82,7 @@
+ #define DRIVER_DESC		"RGA Device Driver"
+ #define DRIVER_NAME		"rga"
+ 
+-#define RGA_VERSION   "1.000"
++#define RGA_VERSION   "1.001"
+ 
+ #define RGA_GET_SRC_FENCE_ERROR     -190
+ #define RGA_GET_DST_FENCE_ERROR     -191
+@@ -130,7 +126,6 @@ struct rga_drvdata {
+ 
+ #if defined(CONFIG_ION_XGOLD) || defined(CONFIG_ION_ROCKCHIP)
+ 	struct ion_client *ion_client;
+-	struct ion_handle *handle;
+ #endif
+ };
+ 
+@@ -203,19 +198,10 @@ static void rga_soft_reset(void)
+ 	u32 i;
+ 	u32 reg;
+ 
+-#if !defined(RGA_SECURE_ACCESS)
+ 	rga_write(1, RGA_SYS_CTRL);
+-#else
+-	mv_svc_reg_write(RGA_BASE + RGA_SYS_CTRL, 0x1, BIT(1));
+-#endif
+ 
+ 	for (i = 0; i < RGA_RESET_TIMEOUT; i++) {
+-#if !defined(RGA_SECURE_ACCESS)
+ 		reg = rga_read(RGA_SYS_CTRL) & 1;
+-#else
+-		mv_svc_reg_read(RGA_BASE + RGA_SYS_CTRL, &reg, BIT(1));
+-		reg &= 1;
+-#endif
+ 		if (reg == 0)
+ 			break;
+ 		udelay(1);
+@@ -283,7 +269,6 @@ static void rga_power_on(void)
+ 	/*clk_prepare_enable(drvdata->pd_rga); */
+ #endif
+ 
+-	xgold_noc_qos_set("RGA");
+ 	wake_lock(&drvdata->wake_lock);
+ 	rga_service.enable = true;
+ }
+@@ -291,9 +276,18 @@ static void rga_power_on(void)
+ /* Caller must hold rga_service.lock */
+ static void rga_power_off(void)
+ {
++	int total_running;
++
+ 	if (!rga_service.enable)
+ 		return;
+ 
++	total_running = atomic_read(&rga_service.total_running);
++	if (total_running) {
++		pr_err("power off when %d task running!!\n", total_running);
++		mdelay(50);
++		pr_err("delay 50 ms for running task\n");
++		rga_dump();
++	}
+ #ifdef CONFIG_PLATFORM_DEVICE_PM
+ 	device_state_pm_set_state_by_name(drvdata->dev,
+ 					  drvdata->pm_platdata->
+@@ -309,25 +303,13 @@ static void rga_power_off(void)
+ 
+ static void rga_power_off_work(struct work_struct *work)
+ {
+-	int total_running;
+-
+ 	if (mutex_trylock(&rga_service.lock)) {
+-		total_running = atomic_read(&rga_service.total_running);
+-
+-	        if (total_running == 0) {
+-			/* power off only when no task running */
+-			rga_power_off();
+-			mutex_unlock(&rga_service.lock);
+-			return;
+-		} else {
+-			rga_dump();
+-			mutex_unlock(&rga_service.lock);
+-		}
++		rga_power_off();
++		mutex_unlock(&rga_service.lock);
++	} else {
++		/* Come back later if the device is busy... */
++		rga_queue_power_off_work();
+ 	}
+-
+-	/* Come back later if the device is busy... */
+-	rga_queue_power_off_work();
+-	return;
+ }
+ 
+ static int rga_flush(struct rga_session *session, unsigned long arg)
+@@ -563,8 +545,8 @@ static struct rga_reg *rga_reg_init_2(struct rga_session *session,
+ 		reg0->dst_fence = NULL;
+ 		reg1->fence = NULL;
+ 		reg1->dst_fence =
+-		    rga_service.dst_fence_flag > 0 ?
+-		    sync_fence_fdget(rga_service.dst_fence_fd) : NULL;
++			rga_service.dst_fence_flag > 0 ?
++			sync_fence_fdget(rga_service.dst_fence_fd) : NULL;
+ 
+ 		if (reg1->dst_fence != NULL)
+ 			sync_fence_put(reg1->dst_fence);
+@@ -619,14 +601,12 @@ static void rga_service_session_clear(struct rga_session *session)
+ static void rga_try_set_reg(void)
+ {
+ 	struct rga_reg *reg;
++	int err;
+ #if defined(RGA_SECURE_ACCESS)
+ 	struct vrga_secvm_cmd vcmd;
+ 	int vrga_ret;
+ #endif
+ 
+-	int err;
+-
+-
+ 	if (list_empty(&rga_service.running)) {
+ 		if (!list_empty(&rga_service.waiting)) {
+ 			/* RGA is idle */
+@@ -703,11 +683,15 @@ static void rga_try_set_reg(void)
+ 				cancel_delayed_work(&rga_service.fence_delayed_work);
+ 				atomic_set(&rga_service.delay_work_already_queue, 0);
+ 			}
+-
+-			rga_int_f_num++;
+-			rga_start = ktime_get();
+-			atomic_set(&rga_service.interrupt_flag, 1);
+- #if !defined(RGA_SECURE_ACCESS)
++			queue_delayed_work(rga_service.fence_workqueue,
++					&rga_service.fence_delayed_work,
++					RGA_FENCE_TIMEOUT_DELAY);
++			atomic_set(&rga_service.delay_work_already_queue, 1);
++					rga_int_f_num++;
++					rga_start = ktime_get();
++					atomic_set(&rga_service.interrupt_flag, 1);
++/* secvm change */
++#if !defined(RGA_SECURE_ACCESS)
+ 			rga_write(1, RGA_CMD_CTRL);
+ #else
+ 			/* call into secvm to update rga registers */
+@@ -725,10 +709,6 @@ static void rga_try_set_reg(void)
+ 				dev_err(drvdata->dev, "error rga registers writing");
+ 
+ #endif
+-			queue_delayed_work(rga_service.fence_workqueue,
+-					&rga_service.fence_delayed_work,
+-					RGA_FENCE_TIMEOUT_DELAY);
+-			atomic_set(&rga_service.delay_work_already_queue, 1);
+ 
+ /*RGA_TEST
+ 			{
+@@ -779,7 +759,7 @@ static void rga_del_running_list(void)
+ 		if (atomic_read(&rga_service.delay_work_already_queue)) {
+ 			cancel_delayed_work(&rga_service.fence_delayed_work);
+ 			atomic_set(&rga_service.delay_work_already_queue, 0);
+-		}
++	    }
+ 
+ 		if (list_empty(&reg->session->waiting)) {
+ 			atomic_set(&reg->session->done, 1);
+@@ -800,7 +780,7 @@ static void rga_del_running_list_timeout(struct work_struct *work)
+ 	struct rga_reg *reg;
+ 
+ 	mutex_lock(&rga_service.lock);
+-	pr_info("Warning RGA process task timeout\n");
++	/*pr_info("Warning RGA process task timeout\n");*/
+ 	rga_service.timeout_num++;
+ 	while (!list_empty(&rga_service.running)) {
+ 		reg =
+@@ -829,6 +809,17 @@ static void rga_del_running_list_timeout(struct work_struct *work)
+ 
+ 		rga_soft_reset();
+ 
++		device_state_pm_set_state_by_name(drvdata->dev,
++			drvdata->pm_platdata->
++			pm_state_D3_name);
++		udelay(10);
++		device_state_pm_set_state_by_name(drvdata->dev,
++			drvdata->pm_platdata->
++			pm_state_D0_name);
++
++		/*atomic_set(&reg->session->queue_work_done, 1);
++		wake_up(&reg->session->queue_work_wait);*/
++
+ 		if (list_empty(&reg->session->waiting)) {
+ 			atomic_set(&reg->session->done, 1);
+ 			wake_up(&reg->session->wait);
+@@ -1084,6 +1075,16 @@ static int rga_blit(struct rga_session *session, struct rga_req *req)
+ 		mutex_lock(&rga_service.lock);
+ 		atomic_add(num, &rga_service.total_running);
+ 		rga_try_set_reg();
++		/*already_queue =
++			atomic_read(&rga_service.already_queue);
++		if (list_empty(&rga_service.running) &&
++			(already_queue == 0)) {
++			queue_kthread_work(
++				&session->update_regs_worker,
++				&session->update_regs_work);
++			atomic_set(&rga_service.already_queue, 1);
++		}
++		*/
+ 		mutex_unlock(&rga_service.lock);
+ 
+ 		return 0;
+@@ -1202,10 +1203,10 @@ static long rga_ioctl(struct file *file, uint32_t cmd, unsigned long arg)
+ 
+ 	copy_to_user
+ 		(&req_p->line_draw_info.end_point.x,
+-	     &rga_service.dst_fence_fd, sizeof(short));
++		&rga_service.dst_fence_fd, sizeof(short));
+ 	copy_to_user
+ 		(&req_p->line_draw_info.start_point.x,
+-	     &rga_service.timeout_num, sizeof(short));
++		&rga_service.timeout_num, sizeof(short));
+ 	mutex_unlock(&rga_service.mutex);
+ 
+ 	return ret;
+@@ -1239,7 +1240,7 @@ static int rga_open(struct inode *inode, struct file *file)
+ 	mutex_unlock(&rga_service.lock);
+ 	atomic_set(&session->task_running, 0);
+ 	atomic_set(&session->num_done, 0);
+-    /*
++	/*
+ 	init_kthread_worker(&session->update_regs_worker);
+ 	session->update_regs_thread =
+ 		kthread_run(kthread_worker_fn,
+@@ -1301,6 +1302,7 @@ static irqreturn_t rga_irq_thread(int irq, void *dev_id)
+ 	if (rga_service.enable) {
+ 		rga_del_running_list();
+ 		rga_try_set_reg();
++		atomic_set(&rga_service.already_queue, 0);
+ 	}
+ 	mutex_unlock(&rga_service.lock);
+ 
+@@ -1350,11 +1352,6 @@ static int rga_drv_probe(struct platform_device *pdev)
+ 	struct rga_drvdata *data;
+ 	struct resource *res;
+ 	int ret = 0;
+-#ifdef USE_CMA_FOR_PRE_SCALE
+-	ion_phys_addr_t phy_addr;
+-	size_t len;
+-	int i;
+-#endif
+ 
+ 	mutex_init(&rga_service.lock);
+ 	mutex_init(&rga_service.mutex);
+@@ -1431,22 +1428,6 @@ static int rga_drv_probe(struct platform_device *pdev)
+ 		dev_err(&pdev->dev, "failed to create ion client for rga");
+ 		return PTR_ERR(data->ion_client);
+ 	}
+-
+-#ifdef USE_CMA_FOR_PRE_SCALE
+-	data->handle = ion_alloc(data->ion_client, (size_t)PRE_SCALE_BUF_SIZE,
+-				0, ION_HEAP_TYPE_SECURE_MASK, 0);
+-	if (IS_ERR(data->handle)) {
+-		dev_err(&pdev->dev, "failed to ion_alloc:%ld\n",
+-				PTR_ERR(data->handle));
+-		return -ENOMEM;
+-	}
+-
+-	/* prepare pre-scale buffer */
+-	ion_phys(data->ion_client, data->handle, &phy_addr, &len);
+-	for (i = 0; i < 1024; i++)
+-		rga_service.pre_scale_buf[i] = phy_addr + (i<<12);
+-#endif
+-
+ #elif defined(CONFIG_ION_XGOLD)
+ 	pr_info("create xgold ion client for RGA\n");
+ 	data->ion_client = xgold_ion_client_create("rga");
+@@ -1454,21 +1435,6 @@ static int rga_drv_probe(struct platform_device *pdev)
+ 		dev_err(&pdev->dev, "failed to create ion client for rga");
+ 		return PTR_ERR(data->ion_client);
+ 	}
+-
+-#ifdef USE_CMA_FOR_PRE_SCALE
+-	data->handle = ion_alloc(data->ion_client, (size_t)RGA_MMU_BUF_SIZE,
+-				0, ION_HEAP_TYPE_SECURE_MASK, 0);
+-	if (IS_ERR(data->handle)) {
+-		dev_err(&pdev->dev, "failed to ion_alloc:%ld\n",
+-				PTR_ERR(data->handle));
+-		return -ENOMEM;
+-	}
+-
+-	/* prepare pre-scale buffer */
+-	ion_phys(data->ion_client, data->handle, &phy_addr, &len);
+-	for (i = 0; i < 1024; i++)
+-		rga_service.pre_scale_buf[i] = phy_addr + (i<<12);
+-#endif
+ #endif
+ 
+ #if defined(RGA_SECURE_ACCESS)
+@@ -1518,9 +1484,6 @@ static int rga_drv_remove(struct platform_device *pdev)
+ {
+ 	struct rga_drvdata *data = platform_get_drvdata(pdev);
+ 
+-	if (!data)
+-		return -EINVAL;
+-
+ 	wake_lock_destroy(&data->wake_lock);
+ 	misc_deregister(&data->miscdev);
+ 	free_irq(data->irq, &data->miscdev);
+@@ -1535,14 +1498,6 @@ static int rga_drv_remove(struct platform_device *pdev)
+ 	devm_clk_put(&pdev->dev, data->hclk_rga);
+ #endif
+ 
+-#if defined(CONFIG_ION_XGOLD) || defined(CONFIG_ION_ROCKCHIP)
+-	if (data != NULL && data->ion_client) {
+-		if (data->handle)
+-			ion_free(data->ion_client, data->handle);
+-		ion_client_destroy(data->ion_client);
+-	}
+-#endif
+-
+ #if defined(RGA_SECURE_ACCESS)
+ 	vrga_fe_release(&pdev->dev);
+ #endif
+@@ -1567,12 +1522,14 @@ static int __init rga_init(void)
+ 	uint32_t i;
+ 	uint32_t *buf_p;
+ 
++	/* init rga_mmu_buf */
++	memset(&rga_mmu_buf, 0x0, sizeof(rga_mmu_buf));
++
+ 	/* malloc pre scale mid buf mmu table */
+ 	mmu_buf = kzalloc(1024 * 8, GFP_KERNEL);
+ 	if (mmu_buf == NULL)
+ 		return -1;
+ 
+-#ifndef USE_CMA_FOR_PRE_SCALE
+ 	/* malloc 4 M buf */
+ 	for (i = 0; i < 1024; i++) {
+ 		buf_p = (uint32_t *)__get_free_page(GFP_KERNEL | __GFP_ZERO);
+@@ -1583,14 +1540,12 @@ static int __init rga_init(void)
+ 
+ 		mmu_buf[i] = virt_to_phys((void *)((uint32_t)buf_p));
+ 	}
+-#endif
+ 
+ 	rga_service.pre_scale_buf = (uint32_t *)mmu_buf;
+ 
+ 	buf_p = kmalloc(1024*(512+32), GFP_KERNEL);
+-	if (buf_p == NULL)
+-		goto free_mmu_buf;
+-
++ 	if (buf_p == NULL)
++ 		goto free_mmu_buf;
+ 	rga_mmu_buf.buf_virtual = buf_p;
+ 	i = (virt_to_phys((void *)((uint32_t)buf_p)));
+ 	rga_mmu_buf.buf = (unsigned int *)i;
+@@ -1598,9 +1553,6 @@ static int __init rga_init(void)
+ 	rga_mmu_buf.back = 128*1024;
+ 	rga_mmu_buf.size = 128*1024;
+ 	rga_mmu_buf.pages = kmalloc((16384)*sizeof(struct page *), GFP_KERNEL);
+-	if (rga_mmu_buf.pages == NULL)
+-		goto free_mmu_buf;
+-
+ 	ret = platform_driver_register(&rga_driver);
+ 
+ 	if (ret != 0) {
+@@ -1629,7 +1581,7 @@ static int __init rga_init(void)
+ 				kthread_run(kthread_worker_fn,
+ 				&rga_session_global.update_regs_worker,
+ 				"rockchip-rga");
+-	if (IS_ERR(rga_session_global.update_regs_thread)) {
++		if (IS_ERR(rga_session_global.update_regs_thread)) {
+ 			int err =
+ 				PTR_ERR(rga_session_global.update_regs_thread);
+ 			rga_session_global.update_regs_thread = NULL;
+@@ -1649,36 +1601,37 @@ static int __init rga_init(void)
+ 	return 0;
+ 
+ free_mmu_buf:
+-#ifndef USE_CMA_FOR_PRE_SCALE
+ 	for (i = 0; i < 1024; i++) {
+ 		if ((uint32_t *)mmu_buf[i] != NULL)
+ 			__free_page((void *)mmu_buf[i]);
+ 	}
+-#endif
+ 
+ 	kfree(mmu_buf);
+-	return -ENOMEM;
+ 
++	if (rga_mmu_buf.buf_virtual != NULL)
++		kfree(rga_mmu_buf.buf_virtual);
++
++	if (rga_mmu_buf.pages != NULL)
++		kfree(rga_mmu_buf.pages);
++
++	return -ENOMEM;
+ }
+ 
+ static void __exit rga_exit(void)
+ {
+-#ifndef USE_CMA_FOR_PRE_SCALE
+ 	uint32_t i;
+-#endif
+ 
+ 	rga_power_off();
+ 
+-#ifndef USE_CMA_FOR_PRE_SCALE
+ 	if (rga_service.pre_scale_buf != NULL) {
+ 		for (i = 0; i < 1024; i++) {
+ 			if ((uint32_t *)rga_service.pre_scale_buf[i] != NULL)
+ 				__free_page(
+-				(void *)rga_service.pre_scale_buf[i]);
++					(void *)rga_service.pre_scale_buf[i]);
+ 		}
++
+ 		kfree((uint8_t *)rga_service.pre_scale_buf);
+ 	}
+-#endif
+ 
+ 	if (rga_mmu_buf.buf_virtual != NULL)
+ 		kfree(rga_mmu_buf.buf_virtual);
+@@ -1814,7 +1767,7 @@ void rga_remove_sysfs(struct device *dev)
+ 
+ 	for (t = 0; t < ARRAY_SIZE(rga_attrs); t++)
+ 		device_remove_file(dev,
+-				   &rga_attrs[t]);
++					&rga_attrs[t]);
+ }
+ 
+ module_init(rga_init);
+diff --git a/drivers/video/rockchip/rga/rga_mmu_info.c b/drivers/video/rockchip/rga/rga_mmu_info.c
+index 704841d..b6218c0 100644
+--- a/drivers/video/rockchip/rga/rga_mmu_info.c
++++ b/drivers/video/rockchip/rga/rga_mmu_info.c
+@@ -788,13 +788,244 @@ static int rga_mmu_info_color_fill_mode(struct rga_reg *reg,
+ static int rga_mmu_info_line_point_drawing_mode(struct rga_reg *reg,
+ 						struct rga_req *req)
+ {
++#if 1
+ 	return 0;
++#else
++	int dst_mem_size;
++	uint32_t dst_start;
++	struct page **pages = NULL;
++	uint32_t i;
++	uint32_t all_size;
++	uint32_t *mmu_base, *mmu_p;
++	int ret, status = 0;
++
++	mmu_base = NULL;
++
++	do {
++		dst_mem_size =
++		    rga_buf_size_cal(req->dst.yrgb_addr, req->dst.uv_addr,
++				     req->dst.v_addr, req->dst.format,
++				      req->dst.vir_w, req->dst.vir_h,
++				      &dst_start);
++		if (dst_mem_size == 0)
++			return -EINVAL;
++		all_size = dst_mem_size;
++		pages =
++		    kzalloc((all_size + 1) * sizeof(struct page *),
++			    GFP_KERNEL);
++		if (pages == NULL) {
++			pr_err("RGA MMU malloc pages mem failed\n");
++			status = RGA_MALLOC_ERROR;
++			break;
++		}
++		mmu_base =
++		    kzalloc((all_size + 1) * sizeof(uint32_t), GFP_KERNEL);
++		if (mmu_base == NULL) {
++			pr_err("RGA MMU malloc mmu_base point failed\n");
++			status = RGA_MALLOC_ERROR;
++			break;
++		}
++		if (req->dst.yrgb_addr < KERNEL_SPACE_VALID) {
++			ret =
++			    rga_map_user_memory(&pages[0], &mmu_base[0],
++						dst_start, dst_mem_size);
++			if (ret < 0) {
++				pr_err("rga map dst memory failed\n");
++				status = ret;
++				break;
++			}
++		} else {
++			mmu_p = mmu_base;
++			for (i = 0; i < dst_mem_size; i++) {
++				mmu_p[i] =
++				    (uint32_t)virt_to_phys(
++						(uint32_t *)((dst_start + i) <<
++								 PAGE_SHIFT));
++			}
++		}
++
++		/* zsq
++		 * change the buf address in req struct
++		 * for the reason of lie to MMU
++		 */
++		req->mmu_info.base_addr = (virt_to_phys(mmu_base) >> 2);
++		req->dst.yrgb_addr = (req->dst.yrgb_addr & (~PAGE_MASK));
++
++		/*record the malloc buf for the cmd end to release */
++		reg->MMU_base = mmu_base;
++
++		    /* flush data to DDR */
++#ifdef CONFIG_X86
++		clflush_cache_range(mmu_base, (all_size + 1) << 2);
++
++#else	/*  */
++		dmac_flush_range(mmu_base, (mmu_base + all_size + 1));
++		outer_flush_range(virt_to_phys(mmu_base),
++				  virt_to_phys(mmu_base + all_size + 1));
++
++#endif	/*  */
++
++		    /* Free the page table */
++		    if (pages != NULL)
++			kfree(pages);
++		return 0;
++	} while (0);
++	if (pages != NULL)
++		kfree(pages);
++	if (mmu_base != NULL)
++		kfree(mmu_base);
++	return status;
++#endif
+ }
+ 
+ static int rga_mmu_info_blur_sharp_filter_mode(struct rga_reg *reg,
+ 					       struct rga_req *req)
+ {
++#if 1
+ 	return 0;
++#else
++	int src_mem_size, dst_mem_size;
++	uint32_t src_start, dst_start;
++	struct page **pages = NULL;
++	uint32_t i;
++	uint32_t all_size;
++	uint32_t *mmu_base, *mmu_p;
++	int ret, status = 0;
++	uint32_t uv_size, v_size;
++
++	mmu_base = NULL;
++
++	do {
++		/* cal src buf mmu info */
++		src_mem_size =
++		    rga_buf_size_cal(req->src.yrgb_addr, req->src.uv_addr,
++				     req->src.v_addr, req->src.format,
++				      req->src.vir_w, req->src.vir_h,
++				      &src_start);
++		if (src_mem_size == 0)
++			return -EINVAL;
++
++		    /* cal dst buf mmu info */
++		    dst_mem_size =
++		    rga_buf_size_cal(req->dst.yrgb_addr, req->dst.uv_addr,
++				     req->dst.v_addr, req->dst.format,
++				      req->dst.vir_w, req->dst.vir_h,
++				      &dst_start);
++		if (dst_mem_size == 0)
++			return -EINVAL;
++
++		all_size = src_mem_size + dst_mem_size;
++		pages =
++		    kzalloc((all_size + 1) * sizeof(struct page *),
++			    GFP_KERNEL);
++		if (pages == NULL) {
++			pr_err("RGA MMU malloc pages mem failed\n");
++			status = RGA_MALLOC_ERROR;
++			break;
++		}
++		mmu_base =
++		    kzalloc((all_size + 1) * sizeof(uint32_t), GFP_KERNEL);
++		if (mmu_base == NULL) {
++			pr_err("RGA MMU malloc mmu_base point failed\n");
++			status = RGA_MALLOC_ERROR;
++			break;
++		}
++		if (req->src.yrgb_addr < KERNEL_SPACE_VALID) {
++			ret =
++			    rga_map_user_memory(&pages[0], &mmu_base[0],
++						src_start, src_mem_size);
++			if (ret < 0) {
++				pr_err("rga map src memory failed\n");
++				status = ret;
++				break;
++			}
++		} else {
++			mmu_p = mmu_base;
++			for (i = 0; i < src_mem_size; i++) {
++				mmu_p[i] = (uint32_t)virt_to_phys(
++						(uint32_t *)((src_start + i) <<
++								PAGE_SHIFT));
++			}
++		}
++		if (req->dst.yrgb_addr < KERNEL_SPACE_VALID) {
++			ret =
++			    rga_map_user_memory(&pages[src_mem_size],
++						&mmu_base[src_mem_size],
++						dst_start, dst_mem_size);
++			if (ret < 0) {
++				pr_err("rga map dst memory failed\n");
++				status = ret;
++				break;
++			}
++		} else {
++			mmu_p = mmu_base + src_mem_size;
++			for (i = 0; i < dst_mem_size; i++) {
++				mmu_p[i] =
++				    (uint32_t)virt_to_phys(
++						(uint32_t *)((dst_start + i) <<
++								PAGE_SHIFT));
++			}
++		}
++		mmu_base[all_size] = mmu_base[all_size - 1];
++
++		    /* zsq
++		     * change the buf address in req struct
++		     * for the reason of lie to MMU
++		     */
++		    req->mmu_info.base_addr = (virt_to_phys(mmu_base) >> 2);
++		uv_size =
++		    (req->src.uv_addr -
++		     (src_start << PAGE_SHIFT)) >> PAGE_SHIFT;
++		v_size =
++		    (req->src.v_addr -
++		      (src_start << PAGE_SHIFT)) >> PAGE_SHIFT;
++		req->src.yrgb_addr = (req->src.yrgb_addr & (~PAGE_MASK));
++		req->src.uv_addr =
++		    (req->src.uv_addr & (~PAGE_MASK)) |
++		    (uv_size << PAGE_SHIFT);
++		req->src.v_addr =
++		    (req->src.v_addr & (~PAGE_MASK)) | (v_size << PAGE_SHIFT);
++		uv_size =
++		    (req->dst.uv_addr -
++		     (dst_start << PAGE_SHIFT)) >> PAGE_SHIFT;
++		v_size =
++		    (req->dst.v_addr -
++		      (dst_start << PAGE_SHIFT)) >> PAGE_SHIFT;
++		req->dst.yrgb_addr =
++		    (req->dst.yrgb_addr & (~PAGE_MASK)) |
++		    (src_mem_size << PAGE_SHIFT);
++		req->dst.uv_addr =
++		    (req->dst.uv_addr & (~PAGE_MASK)) |
++		    ((src_mem_size +
++						   uv_size) << PAGE_SHIFT);
++		req->dst.v_addr =
++		    (req->dst.v_addr & (~PAGE_MASK)) |
++		    ((src_mem_size + v_size) << PAGE_SHIFT);
++
++		    /*record the malloc buf for the cmd end to release */
++		    reg->MMU_base = mmu_base;
++
++		    /* flush data to DDR */
++#ifdef CONFIG_X86
++		clflush_cache_range(mmu_base, (all_size + 1) << 2);
++#else	/*  */
++		dmac_flush_range(mmu_base, (mmu_base + all_size + 1));
++		outer_flush_range(virt_to_phys(mmu_base),
++				  virt_to_phys(mmu_base + all_size + 1));
++
++#endif	/*  */
++
++		    /* Free the page table */
++		    if (pages != NULL)
++			kfree(pages);
++		return 0;
++	} while (0);
++	if (pages != NULL)
++		kfree(pages);
++	if (mmu_base != NULL)
++		kfree(mmu_base);
++	return status;
++#endif
+ }
+ 
+ static int rga_mmu_info_pre_scale_mode(struct rga_reg *reg,
+@@ -830,6 +1061,7 @@ static int rga_mmu_info_pre_scale_mode(struct rga_reg *reg,
+ 				      &dst_start);
+ 		if (dst_mem_size == 0)
+ 			return -EINVAL;
++
+ 		src_mem_size = (src_mem_size + 15) & (~15);
+ 		all_size = src_mem_size + dst_mem_size + 1;
+ 
+@@ -841,10 +1073,10 @@ static int rga_mmu_info_pre_scale_mode(struct rga_reg *reg,
+ 			break;
+ 		}
+ 
+-		    /*
+-		     * Allocate MMU Index mem
+-		     * This mem release in run_to_done fun
+-		     */
++		/*
++		 * Allocate MMU Index mem
++		 * This mem release in run_to_done fun
++		 */
+ 		pages = rga_mmu_buf.pages;
+ 		mutex_lock(&rga_service.lock);
+ 		mmu_base = rga_mmu_buf.buf_virtual +
+@@ -1022,6 +1254,8 @@ static int rga_mmu_info_update_palette_table_mode(struct rga_reg *reg,
+ 						 src_start, src_mem_size);
+ 			if (ret < 0) {
+ 				pr_err("rga map src memory failed\n");
++				kfree(pages);
++				kfree(mmu_base);
+ 				return -EINVAL;
+ 			}
+ 		} else {
+diff --git a/drivers/video/rockchip/rga/rga_mmu_info.h b/drivers/video/rockchip/rga/rga_mmu_info.h
+index c275ff4..b049ab9 100644
+--- a/drivers/video/rockchip/rga/rga_mmu_info.h
++++ b/drivers/video/rockchip/rga/rga_mmu_info.h
+@@ -29,5 +29,4 @@
+ int rga_set_mmu_info(struct rga_reg *reg, struct rga_req *req);
+ 
+ extern struct rga_mmu_buf_t rga_mmu_buf;
+-
+ #endif	/*  */
+diff --git a/drivers/video/rockchip/rga/vrga_fe.c b/drivers/video/rockchip/rga/vrga_fe.c
+index 4286b98..83462e8 100644
+--- a/drivers/video/rockchip/rga/vrga_fe.c
++++ b/drivers/video/rockchip/rga/vrga_fe.c
+@@ -220,12 +220,6 @@ static int vrga_fe_call(struct device *dev,
+ 
+ 	int ret = 0;
+ 
+-	/*
+-	 * Adding variable loops_count to prevent dead cycle
+-	 * when vbpipe always can't be read
+-	 */
+-	int loops_count;
+-
+ 	/* Acquire mutex; on failure return immediately */
+ 	if (mutex_lock_interruptible(&vrga_mutex))
+ 		return -1;
+@@ -252,7 +246,6 @@ static int vrga_fe_call(struct device *dev,
+ 		datap	   = buf;
+ 		must	   = len;
+ 		done_total = 0;
+-		loops_count= 0;
+ 
+ 		while (must > 0) {
+ 			done = 0;
+@@ -269,13 +262,7 @@ static int vrga_fe_call(struct device *dev,
+ 
+ 			if (done < 0) {
+ 				dev_err(dev, "error %d writing fe", done);
+-				if ((done == -ERESTARTSYS) && (loops_count++ < 2))
+-					continue;
+-
+-				ret = -EBUSY;
+ 				break;
+-			} else {
+-				loops_count = 0;
+ 			}
+ 
+ 			datap	   += done;
+@@ -287,7 +274,6 @@ static int vrga_fe_call(struct device *dev,
+ 		datap	   = buf;
+ 		must	   = len;
+ 		done_total = 0;
+-		loops_count = 0;
+ 
+ 		while (must > 0) {
+ 			done = 0;
+@@ -304,13 +290,7 @@ static int vrga_fe_call(struct device *dev,
+ 
+ 			if (done < 0) {
+ 				dev_err(dev, "error %d reading fe", done);
+-				if ((done == -ERESTARTSYS) && (loops_count++ < 2))
+-					continue;
+-
+-				ret = -EBUSY;
+ 				break;
+-			} else {
+-				loops_count = 0;
+ 			}
+ 
+ 			datap	   += done;
+@@ -360,9 +340,8 @@ int vrga_call(struct device *dev, struct vrga_secvm_cmd *cmd_p)
+ 	tic = timespec_to_ns(&ts);
+ #endif
+ 
+-	ret = vrga_fe_call(dev, (unsigned char *)arg, size);
+-	/* return the size of transferred data */
+-	ret = (ret<0) ? 0 : size;
++	vrga_fe_call(dev, (unsigned char *)arg, size);
++	ret = size;
+ 
+ #ifdef __VERBOSE_RPC__
+ 	ktime_get_ts(&ts);
+diff --git a/drivers/video/rockchip/rockchip_disp_drv.c b/drivers/video/rockchip/rockchip_disp_drv.c
+index af0abc0a..9c2bf6d 100644
+--- a/drivers/video/rockchip/rockchip_disp_drv.c
++++ b/drivers/video/rockchip/rockchip_disp_drv.c
+@@ -1,8 +1,8 @@
+ /*
+  * rockchip display system driver
+  *
+- * Copyright (C) 2014 ROCKCHIP, Inc.
+- * Author:      Wenlong Zhuang <zwl@rock-chips.com>
++ * Copyright (C) 2014-2015 Rockchip Electronics Co., Ltd.
++ *
+  * This software is licensed under the terms of the GNU General Public
+  * License version 2, as published by the Free Software Foundation, and
+  * may be copied, distributed, and modified under those terms.
+diff --git a/drivers/video/rockchip/rockchip_disp_drv.h b/drivers/video/rockchip/rockchip_disp_drv.h
+index 1799758..9c8b431 100644
+--- a/drivers/video/rockchip/rockchip_disp_drv.h
++++ b/drivers/video/rockchip/rockchip_disp_drv.h
+@@ -1,6 +1,6 @@
+ /*
+- * Copyright (C) 2014 ROCKCHIP, Inc.
+- * Author:      Wenlong Zhuang <zwl@rock-chips.com>
++ * Copyright (C) 2014-2015 Rockchip Electronics Co., Ltd.
++ *
+  * This software is licensed under the terms of the GNU General Public
+  * License version 2, as published by the Free Software Foundation, and
+  * may be copied, distributed, and modified under those terms.
+diff --git a/drivers/video/rockchip/rockchip_fb.c b/drivers/video/rockchip/rockchip_fb.c
+index 908fd87..f1030d2 100644
+--- a/drivers/video/rockchip/rockchip_fb.c
++++ b/drivers/video/rockchip/rockchip_fb.c
+@@ -1,7 +1,7 @@
+ /*
+  * rockchip fb framework driver
+  *
+- * Copyright (C) 2010-2014 ROCKCHIP, Inc.
++ * Copyright (C) 2012-2015 Rockchip Electronics Co., Ltd.
+  *
+  * This software is licensed under the terms of the GNU General Public
+  * License version 2, as published by the Free Software Foundation, and
+@@ -422,6 +422,45 @@ static void rockchip_fb_fence_wait(struct rockchip_vop_driver *dev_drv,
+ 		dev_err(dev_drv->dev, "error waiting on fence\n");
+ }
+ 
++static int rockchip_fb_fence_create(struct rockchip_vop_driver *dev_drv,
++				    const char *name)
++{
++	int fd = get_unused_fd();
++	int err;
++	struct sync_pt *pt;
++	struct sync_fence *fence;
++
++	if (unlikely(!dev_drv) || unlikely(!name))
++		return -EINVAL;
++
++	if (fd < 0) {
++		pr_err("%s: get %s fd falied, fd=%d\n", __func__, name, fd);
++		return fd;
++	}
++
++	pt = sw_sync_pt_create(dev_drv->timeline, dev_drv->timeline_max);
++	if (pt == NULL) {
++		pr_err("%s: create sync pt falied!\n", __func__);
++		err = -ENOMEM;
++		goto err;
++	}
++
++	fence = sync_fence_create(name, pt);
++	if (fence == NULL) {
++		pr_err("%s: create %s fence falied!\n", __func__, name);
++		sync_pt_free(pt);
++		err = -ENOMEM;
++		goto err;
++	}
++
++	sync_fence_install(fence, fd);
++	return fd;
++
++err:
++	put_unused_fd(fd);
++	return err;
++}
++
+ static int rockchip_fb_check_config_var(struct rockchip_fb_area_par *area_par,
+ 				    struct rockchip_screen *screen)
+ {
+@@ -438,7 +477,7 @@ static int rockchip_fb_check_config_var(struct rockchip_fb_area_par *area_par,
+ 
+ 	if ((area_par->xpos + area_par->xsize > screen->mode.xres) ||
+ 	    (area_par->ypos + area_par->ysize > screen->mode.yres) ||
+-	    (area_par->xsize <= 0) || (area_par->ysize <= 0)) {
++	    (area_par->xsize <= 1) || (area_par->ysize <= 1)) {
+ 		pr_err("check config var fail 1:\n"
+ 		       "xpos=%d,xsize=%d,xres=%d\n"
+ 		       "ypos=%d,ysize=%d,yres=%d\n",
+@@ -474,17 +513,6 @@ int rockchip_fb_sysmmu_fault_handler(struct device *dev,
+ 
+ 	if ((page_fault_cnt++) >= 10)
+ 		return 0;
+-
+-	if (!dev_drv) {
+-		pr_err("vop dev not initialized.\n");
+-		return -EINVAL;
+-	}
+-
+-	if (!dev_drv->ops) {
+-		pr_err("vop dev ops not initialized.\n");
+-		return -EINVAL;
+-	}
+-
+ 	pr_err
+ 	    ("PAGE FAULT at 0x%lx (Page table base: 0x%lx),status=%d\n",
+ 	     fault_addr, pgtable_base, status);
+@@ -532,9 +560,11 @@ static void rockchip_fb_free_dma_buf(struct rockchip_vop_driver *dev_drv,
+ 				ion_unmap_iommu(dev_drv->dev,
+ 						sfb_info->ion_client,
+ 						area->ion_hdl);
++#if defined(CONFIG_SECURE_PLAYBACK)
+ 			else if (area->smem_start)
+ 				rockchip_iovmm_unmap_oto(dev_drv->dev,
+ 						area->smem_start);
++#endif
+ 
+ 			freed_addr[freed_index++] = area->smem_start;
+ 		}
+@@ -593,9 +623,7 @@ static int rockchip_fb_set_win_par(struct fb_info *info,
+ 	u8 ppixel_a = 0, global_a = 0;
+ 	int i = 0;
+ 	int buff_len;
+-#ifdef CONFIG_ROCKCHIP_IOMMU
+ 	int vaddr;
+-#endif
+ 
+ 	vop_win->id = win_par->win_id;
+ 	vop_win->z_order = win_par->z_order;
+@@ -630,12 +658,12 @@ static int rockchip_fb_set_win_par(struct fb_info *info,
+ 		vop_win->area[i].xvir = xvir;
+ 		vop_win->area[i].yvir = yvir;
+ 
+-#ifdef CONFIG_ROCKCHIP_IOMMU
++#if defined(CONFIG_SECURE_PLAYBACK)
+ 		if (win_par->area_par[i].phy_addr != 0) {
+ 			vop_win->area[i].buff_len = xvir *
+ 					vop_win->area[i].yact * pixel_width;
+-			vop_win->area[i].buff_len = ALIGN_N_TIMES(
+-					vop_win->area[i].buff_len, PAGE_SIZE);
++			vop_win->area[i].buff_len = PAGE_ALIGN(
++					vop_win->area[i].buff_len);
+ 			vaddr = rockchip_iovmm_map_oto(dev_drv->dev,
+ 						win_par->area_par[i].phy_addr,
+ 						vop_win->area[i].buff_len);
+@@ -826,11 +854,7 @@ static int rockchip_fb_set_win_buffer(struct fb_info *info,
+ 			vop_win->area_buf_num++;
+ 		}
+ 	} else {
+-#ifdef CONFIG_ROCKCHIP_IOMMU
+-		vop_win->area[0].smem_start = win_par->area_par[0].phy_addr;
+-#else
+ 		vop_win->area[0].smem_start = win_par->area_par[0].phy_addr;
+-#endif
+ 		vop_win->area_num = 1;
+ 	}
+ 
+@@ -1010,7 +1034,8 @@ static void rockchip_fb_update_regs_handler(struct kthread_work *work)
+ }
+ 
+ static void rockchip_fb_free_update_reg(struct rockchip_vop_driver *dev_drv,
+-				    struct rockchip_fb_reg_data *regs)
++					struct rockchip_fb_reg_data *regs,
++					bool timeline_inc)
+ {
+ 	int i = 0, j = 0;
+ 	struct rockchip_vop_win *win;
+@@ -1025,10 +1050,12 @@ static void rockchip_fb_free_update_reg(struct rockchip_vop_driver *dev_drv,
+ 		}
+ 	}
+ 
+-	dev_drv->timeline_max++;
++	if (timeline_inc || dev_drv->suspend_flag) {
++		dev_drv->timeline_max++;
+ #ifdef H_USE_FENCE
+-	sw_sync_timeline_inc(dev_drv->timeline, 1);
++		sw_sync_timeline_inc(dev_drv->timeline, 1);
+ #endif
++	}
+ 
+ #if defined(CONFIG_ROCKCHIP_IOMMU)
+ 	if (dev_drv->iommu_enabled) {
+@@ -1037,7 +1064,6 @@ static void rockchip_fb_free_update_reg(struct rockchip_vop_driver *dev_drv,
+ 	}
+ #endif
+ 	rockchip_fb_free_reg_data(dev_drv, regs);
+-
+ }
+ 
+ static int rockchip_fb_update_win_config(struct fb_info *info,
+@@ -1052,11 +1078,7 @@ static int rockchip_fb_update_win_config(struct fb_info *info,
+ 	int list_is_empty = 0;
+ 
+ #ifdef H_USE_FENCE
+-	struct sync_fence *release_fence[SFA_MAX_BUF_NUM];
+-	struct sync_fence *retire_fence;
+-	struct sync_pt *release_sync_pt[SFA_MAX_BUF_NUM];
+-	struct sync_pt *retire_sync_pt;
+-	char fence_name[20];
++	char fence_name[20] = {0};
+ #endif
+ 
+ 	regs = kzalloc(sizeof(*regs), GFP_KERNEL);
+@@ -1081,7 +1103,7 @@ static int rockchip_fb_update_win_config(struct fb_info *info,
+ 
+ 		ret = rockchip_fb_set_win_par(info, win_par, vop_win);
+ 		if (ret < 0) {
+-			rockchip_fb_free_update_reg(dev_drv, regs);
++			rockchip_fb_free_update_reg(dev_drv, regs, true);
+ 			return ret;
+ 		}
+ 
+@@ -1094,8 +1116,8 @@ static int rockchip_fb_update_win_config(struct fb_info *info,
+ 
+ 	mutex_lock(&dev_drv->cfg_lock);
+ 	if (!(dev_drv->suspend_flag == 0)) {
+-		rockchip_fb_free_update_reg(dev_drv, regs);
+-		pr_info("%s: error update frame when suspend!!!\n", __func__);
++		pr_err("%s: error update frame when suspend!!!\n", __func__);
++		ret = -EINVAL;
+ 		goto err_out;
+ 	}
+ 
+@@ -1104,40 +1126,25 @@ static int rockchip_fb_update_win_config(struct fb_info *info,
+ 	for (i = 0; i < SFA_MAX_BUF_NUM; i++) {
+ 		if (i < regs->buf_num) {
+ 			sprintf(fence_name, "fence%d", i);
+-			win_data->rel_fence_fd[i] = get_unused_fd();
++			win_data->rel_fence_fd[i] =
++				rockchip_fb_fence_create(dev_drv, fence_name);
+ 			if (win_data->rel_fence_fd[i] < 0) {
+-				pr_info("get fence fd failed,rel_fence_fd=%d\n",
+-					win_data->rel_fence_fd[i]);
++				dev_drv->timeline_max--;
+ 				ret = -EFAULT;
+ 				goto err_out;
+ 			}
+-			release_sync_pt[i] =
+-			    sw_sync_pt_create(dev_drv->timeline,
+-					      dev_drv->timeline_max);
+-			release_fence[i] =
+-			    sync_fence_create(fence_name, release_sync_pt[i]);
+-			sync_fence_install(release_fence[i],
+-					   win_data->rel_fence_fd[i]);
+ 		} else {
+ 			win_data->rel_fence_fd[i] = -1;
+ 		}
+ 	}
+ 
+-	win_data->ret_fence_fd = get_unused_fd();
++	win_data->ret_fence_fd =
++		rockchip_fb_fence_create(dev_drv, "ret_fence");
+ 	if (win_data->ret_fence_fd < 0) {
+-		pr_info("ret_fence_fd=%d\n", win_data->ret_fence_fd);
+-		ret = -EFAULT;
+-		goto err_out;
+-	}
+-	retire_sync_pt =
+-	    sw_sync_pt_create(dev_drv->timeline, dev_drv->timeline_max);
+-	retire_fence = sync_fence_create("ret_fence", retire_sync_pt);
+-	if (retire_fence == NULL) {
+-		pr_info("ret_fence pointer is NULL\n");
++		dev_drv->timeline_max--;
+ 		ret = -EFAULT;
+ 		goto err_out;
+ 	}
+-	sync_fence_install(retire_fence, win_data->ret_fence_fd);
+ #else
+ 	for (i = 0; i < SFA_MAX_BUF_NUM; i++)
+ 		win_data->rel_fence_fd[i] = -1;
+@@ -1169,7 +1176,11 @@ static int rockchip_fb_update_win_config(struct fb_info *info,
+ 		}
+ 	}
+ 
++	mutex_unlock(&dev_drv->cfg_lock);
++	return 0;
++
+ err_out:
++	rockchip_fb_free_update_reg(dev_drv, regs, false);
+ 	mutex_unlock(&dev_drv->cfg_lock);
+ 	return ret;
+ }
+@@ -1976,7 +1987,13 @@ int rockchip_fb_switch_screen(struct rockchip_screen *screen,
+ 	pr_info("hdmi %s vop%d\n", enable ? "connect to" : "remove from",
+ 		dev_drv->id);
+ 
+-	memcpy(dev_drv->cur_screen, screen, sizeof(struct rockchip_screen));
++	if (enable) {
++		memcpy(&dev_drv->screen1, screen, sizeof(*screen));
++
++		dev_drv->cur_screen = &dev_drv->screen1;
++	} else {
++		dev_drv->cur_screen = dev_drv->screen0;
++	}
+ 
+ 	/* the main fb of vop */
+ 	info = sfb_info->fb[dev_drv->fb_index_base];
+@@ -2067,20 +2084,19 @@ static int rockchip_fb_alloc_buffer_by_ion(struct fb_info *fbi,
+ 		return -ENODEV;
+ 	}
+ 
++	dev_dbg(fbi->dev, "ion type %d, enable %d\n",
++		sfb_info->ion_server_type, dev_drv->iommu_enabled);
+ 	if (sfb_info->ion_server_type == ION_DRV_RK) {
+ 		if (dev_drv->iommu_enabled) {
+-			pr_err("ion_alloc iommu enbled\n");
+ 			handle = ion_alloc(sfb_info->ion_client,
+ 				(size_t)fb_mem_size,
+ 				0, ION_HEAP_SYSTEM_MASK, 0);
+ 		} else {
+-			pr_err("ion_alloc iommu disabled\n");
+ 			handle = ion_alloc(sfb_info->ion_client,
+ 				(size_t)fb_mem_size,
+ 				0, ION_HEAP_TYPE_DMA_MASK, 0);
+ 		}
+ 	} else if (sfb_info->ion_server_type == ION_DRV_XGOLD) {
+-		pr_err("ion_alloc xgold\n");
+ 		handle = ion_alloc(sfb_info->ion_client, (size_t)fb_mem_size, 0,
+ 				ION_HEAP_TYPE_DMA_MASK, 0);
+ 	}
+@@ -2273,6 +2289,7 @@ static int init_vop_device_driver(struct rockchip_vop_driver *dev_drv,
+ 	dev_drv->first_frame = 1;
+ 
+ 	if (dev_drv->prop == PRMRY) {
++		rockchip_set_prmry_screen(screen);
+ 		rockchip_get_prmry_screen(screen);
+ 	}
+ 	dev_drv->trsm_ops = rockchip_fb_trsm_ops_get(screen->type);
+@@ -2319,7 +2336,6 @@ static int rockchip_fb_show_copy_from_loader(struct fb_info *info)
+ 	struct page **pages;
+ 	char *vaddr;
+ 	u32 i = 0, offset = 0;
+-	u32 line_len = 0, xact_len = 0;
+ 
+ 	dev_drv->ops->get_dsp_addr(dev_drv, dsp_addr);
+ 	src = dsp_addr[0];
+@@ -2347,21 +2363,7 @@ static int rockchip_fb_show_copy_from_loader(struct fb_info *info)
+ 		return -ENOMEM;
+ 	}
+ 
+-	if (info->var.xres % 32 == 0) {
+-		memcpy(dst, vaddr + offset, size);
+-	} else {
+-		/* format is ARGB888 in loader */
+-		line_len = ALIGN_N_TIMES(info->var.xres, 32) << 2;
+-		xact_len = win->area[0].xact << 2;
+-		for (i = 0; i < win->area[0].yact; i++)
+-			memcpy(dst + line_len * i,
+-			       vaddr + offset + xact_len * i,
+-			       xact_len);
+-
+-		if (dev_drv->ops->reg_writel)
+-			dev_drv->ops->reg_writel(dev_drv, 0x30, line_len >> 2);
+-	}
+-
++	memcpy(dst, vaddr + offset, size);
+ 	vunmap(vaddr);
+ 	kfree(pages);
+ 
+diff --git a/drivers/video/rockchip/rockchip_fb_sysfs.c b/drivers/video/rockchip/rockchip_fb_sysfs.c
+index 6123139..29e27cb 100644
+--- a/drivers/video/rockchip/rockchip_fb_sysfs.c
++++ b/drivers/video/rockchip/rockchip_fb_sysfs.c
+@@ -1,11 +1,9 @@
+ /*
+- * drivers/video/rockchip/rockchip_fb_sysfs.c
+- *	--sysfs entries for device fb
+- *
++* drivers/video/rockchip/rockchip_fb_sysfs.c
++*	--sysfs entries for device fb
+ *
+-* Copyright (C) 2012 Rockchip Corporation
+-* Author: yxj<yxj@rock-chips.com>
+-* Copyright (C) 2014-2015 Intel Mobile Communications GmbH
++*
++* Copyright (C) 2012-2015 Rockchip Electronics Co., Ltd.
+ *
+ * Some code and ideas taken from
+ * drivers/video/omap2/omapfb/omapfb-sys.c
+@@ -521,10 +519,10 @@ static ssize_t set_dsp_lut(struct device *dev, struct device_attribute *attr,
+ 			index++;
+ 			start++;
+ 			space_max--;
+-		} while ((*start != ' ') && space_max);
++		} while ((*start != ' ') && space_max && (index < 20));
+ 		strncpy(curr1, curr, index);
+ 		curr1[index] = '\0';
+-		kstrtoul(curr1, 16, (unsigned long *)&temp1);
++		kstrtoul(curr1, 0, (unsigned long *)&temp1);
+ 		dsp_lut[i] = temp1;
+ 		if (!space_max)
+ 			break;
+diff --git a/drivers/video/rockchip/rockchip_screen.c b/drivers/video/rockchip/rockchip_screen.c
+index f215b15..3006f1b 100644
+--- a/drivers/video/rockchip/rockchip_screen.c
++++ b/drivers/video/rockchip/rockchip_screen.c
+@@ -1,6 +1,7 @@
+ /*
+  * rockchip screen driver
+  *
++ * Copyright (C) 2014-2015 Rockchip Electronics Co., Ltd.
+  * Copyright (C) 2014-2015 Intel Mobile Communications GmbH
+  *
+  * This software is licensed under the terms of the GNU General Public
+@@ -39,8 +40,12 @@
+ #define PROP_DISPLAY_GPIOTYPE   "intel,gpio-type"
+ #define PROP_DISPLAY_GPIOVALUE  "intel,gpio-value-delay"
+ 
+-static LIST_HEAD(screen_list);
+-static struct rockchip_screen *cur_screen;
++static struct of_device_id display_of_match[] = {
++	{ .compatible = PROP_DISPLAY, },
++	{ },
++};
++
++static struct rockchip_screen *sfa_screen;
+ static int panel_source;
+ 
+ size_t get_fb_size(void)
+@@ -49,11 +54,11 @@ size_t get_fb_size(void)
+ 	u32 xres = 0;
+ 	u32 yres = 0;
+ 
+-	if (unlikely(!cur_screen))
++	if (unlikely(!sfa_screen))
+ 		return 0;
+ 
+-	xres = cur_screen->mode.xres;
+-	yres = cur_screen->mode.yres;
++	xres = sfa_screen->mode.xres;
++	yres = sfa_screen->mode.yres;
+ 
+ 	xres = ALIGN_N_TIMES(xres, 32);
+ 
+@@ -64,32 +69,20 @@ size_t get_fb_size(void)
+ 
+ int rockchip_get_prmry_screen(struct rockchip_screen *screen)
+ {
+-	if (unlikely(!cur_screen) || unlikely(!screen))
++	if (unlikely(!sfa_screen) || unlikely(!screen))
+ 		return -1;
+ 
+-	memcpy(screen, cur_screen, sizeof(struct rockchip_screen));
++	memcpy(screen, sfa_screen, sizeof(struct rockchip_screen));
+ 	return 0;
+ }
+ 
+ int rockchip_set_prmry_screen(struct rockchip_screen *screen)
+ {
+-	struct rockchip_screen *s_screen;
+-
+-	if (unlikely(!screen))
+-		return -ENODEV;
+-
+-	if (screen->index < 0)
+-		return -EINVAL;
+-
+-	list_for_each_entry(s_screen, &screen_list, panel_list) {
+-		if (s_screen->index == screen->index)
+-			cur_screen = s_screen;
+-	}
++	if (unlikely(!sfa_screen) || unlikely(!screen))
++		return -1;
+ 
+-	if (cur_screen) {
+-		cur_screen->vop_id = screen->vop_id;
+-		cur_screen->screen_id = screen->screen_id;
+-	}
++	sfa_screen->vop_id = screen->vop_id;
++	sfa_screen->screen_id = screen->screen_id;
+ 	return 0;
+ }
+ 
+@@ -299,12 +292,29 @@ static int rockchip_disp_pwr_ctr_parse_dt(struct device_node *np,
+ 					  struct rockchip_screen *screen)
+ {
+ 	int ret = 0;
++	struct device_node *panel_np;
+ 	struct device_node *child;
+ 
++#ifdef CONFIG_PLATFORM_DEVICE_PM
++	screen->pm_platdata = of_device_state_pm_setup(np);
++	if (IS_ERR(screen->pm_platdata)) {
++		dev_err(screen->dev, "Error during device state pm init.\n");
++		screen->pm_platdata = NULL;
++		return -EINVAL;
++	}
++#endif
++
+ 	if (screen->type != SCREEN_MIPI) {
+ 		rockchip_screen_parse_gpio(screen);
+ 
+-		for_each_child_of_node(np, child) {
++		panel_np  = of_get_child_by_name(np, NODE_DISPLAY_PANEL);
++		if (!panel_np) {
++			pr_err("%s: Can't find display-panel0 matching node\n",
++			       __func__);
++			return -EINVAL;
++		}
++
++		for_each_child_of_node(panel_np, child) {
+ 			if (!strcmp(child->name, GPIO_LIST_POWER_ON)) {
+ 				ret = rockchip_screen_parse_display_gpiolist(
+ 						screen, child,
+@@ -418,93 +428,70 @@ static int rockchip_fb_videomode_from_timing(const struct display_timing *dt,
+ 	return 0;
+ }
+ 
+-static struct rockchip_screen *
+-rockchip_prase_screen_dt(struct device_node *np,
+-			 struct platform_device *pdev)
+-
++static int rockchip_prase_timing_dt(struct device_node *np,
++				 struct rockchip_screen *screen)
+ {
+ 	struct display_timings *disp_timing;
+ 	struct display_timing *dt;
+-	struct rockchip_screen *screen = NULL;
++	struct device_node *display_dev_n;
++	int index = 0;
++
++	screen->index = panel_source;
++
++	for_each_matching_node(display_dev_n, display_of_match) {
++		if (screen->index < 0 || screen->index == index++)
++			break;
++	}
+ 
+-	disp_timing = of_get_display_timings(np);
++	disp_timing = of_get_display_timings(display_dev_n);
+ 	if (!disp_timing) {
+ 		pr_err("parse display timing err\n");
+-		return NULL;
++		return -EINVAL;
+ 	}
+ 
+ 	dt = display_timings_get(disp_timing, disp_timing->native_mode);
+-	if (!dt)
+-		return NULL;
++	if (dt)
++		rockchip_fb_videomode_from_timing(dt, screen);
+ 
+-	screen = devm_kzalloc(&pdev->dev,
+-			sizeof(struct rockchip_screen), GFP_KERNEL);
+-	if (!screen) {
+-		dev_err(&pdev->dev, "kmalloc for rockchip screen fail!\n");
+-		return NULL;
+-	}
+-	screen->dev = &pdev->dev;
+-	rockchip_fb_videomode_from_timing(dt, screen);
+-	rockchip_disp_pwr_ctr_parse_dt(np, screen);
+ 	display_timings_release(disp_timing);
+-
+-	return screen;
++	return 0;
+ }
+ 
+ static int rockchip_screen_probe(struct platform_device *pdev)
+ {
+ 	struct device_node *np = pdev->dev.of_node;
+-	struct device_node *display_np;
+-	struct rockchip_screen *screen;
+-	int ret = 0;
+-	int index = 0;
+-#ifdef CONFIG_PLATFORM_DEVICE_PM
+-	struct device_pm_platdata *pm_platdata;
+-#endif
++	int ret;
+ 
+ 	if (!np) {
+ 		dev_err(&pdev->dev, "Missing device tree node.\n");
+ 		return -EINVAL;
+ 	}
+-
+-#ifdef CONFIG_PLATFORM_DEVICE_PM
+-	pm_platdata = of_device_state_pm_setup(np);
+-	if (IS_ERR(pm_platdata)) {
+-		dev_err(&pdev->dev, "Error during device state pm init.\n");
+-		pm_platdata = NULL;
+-		return -EINVAL;
++	sfa_screen = devm_kzalloc(&pdev->dev,
++				  sizeof(struct rockchip_screen), GFP_KERNEL);
++	if (!sfa_screen) {
++		dev_err(&pdev->dev, "kmalloc for rockchip screen fail!\n");
++		return -ENOMEM;
+ 	}
+ 
+-	if (pm_platdata) {
++	sfa_screen->dev =  &pdev->dev;
++	ret = rockchip_prase_timing_dt(np, sfa_screen);
++	rockchip_disp_pwr_ctr_parse_dt(np, sfa_screen);
++
++	sfa_screen->power_on = rockchip_screen_power_on;
++	sfa_screen->power_off = rockchip_screen_power_off;
++
++#ifdef CONFIG_PLATFORM_DEVICE_PM
++	if (sfa_screen->pm_platdata) {
+ 		ret = device_state_pm_set_class(&pdev->dev,
+-					pm_platdata->pm_user_name);
++				sfa_screen->pm_platdata->pm_user_name);
+ 		if (ret < 0) {
+-			dev_err(&pdev->dev, "Fail to init PM state!\n");
+-			kfree(pm_platdata);
+-			pm_platdata = NULL;
+-			return -EINVAL;
++			dev_err(&pdev->dev, "ERROR while LVDS initialize its PM state!\n");
++			kfree(sfa_screen->pm_platdata);
++			sfa_screen->pm_platdata = NULL;
+ 		}
+ 	}
+ #endif
+ 
+-
+-	for_each_compatible_node(display_np, NULL, PROP_DISPLAY) {
+-		screen = rockchip_prase_screen_dt(display_np, pdev);
+-		if (screen) {
+-			screen->index = index;
+-			screen->power_on = rockchip_screen_power_on;
+-			screen->power_off = rockchip_screen_power_off;
+-			screen->pm_platdata = pm_platdata;
+-			list_add_tail(&screen->panel_list, &screen_list);
+-
+-			if (panel_source < 0 && screen->index == 0)
+-				screen->index = panel_source;
+-			if (screen->index == panel_source)
+-				cur_screen = screen;
+-		}
+-		index++;
+-	}
+-
+ 	dev_info(&pdev->dev, "rockchip screen probe %s\n",
+ 		 ret ? "failed" : "success");
+ 	return ret;
+diff --git a/drivers/video/rockchip/vop/rockchip_vop.c b/drivers/video/rockchip/vop/rockchip_vop.c
+index 407e14f..c476180 100644
+--- a/drivers/video/rockchip/vop/rockchip_vop.c
++++ b/drivers/video/rockchip/vop/rockchip_vop.c
+@@ -1,7 +1,7 @@
+ /*
+  * rockchip VOP(Video Output Processer) hardware driver.
+  *
+- * Copyright (C) 2014-2015 Intel Mobile Communications GmbH
++ * Copyright (C) 2014-2015 Rockchip Electronics Co., Ltd.
+  *
+  * This software is licensed under the terms of the GNU General Public
+  * License version 2, as published by the Free Software Foundation, and
+@@ -703,13 +703,33 @@ static int rockchip_vop_set_dclk(struct rockchip_vop_driver *dev_drv)
+ 	struct vop_device *vop_dev =
+ 	    container_of(dev_drv, struct vop_device, driver);
+ 	struct rockchip_screen *screen = dev_drv->cur_screen;
+-#if !defined(CONFIG_PLATFORM_DEVICE_PM)
+ 	int ret = 0;
+-#endif
+ 
+ #ifdef CONFIG_PLATFORM_DEVICE_PM
+ 	vop_dev->pixclock =
+ 		div_u64(1000000000000llu, screen->mode.pixclock);
++
++	/*
++	 * Mipi screen needs real dclk > screen->mode.pixclock,
++	 * otherwise the mipi controller will miss the fifo, and get error.
++	 */
++	if (screen->type == SCREEN_MIPI)
++		ret = device_state_pm_set_state_by_name(vop_dev->dev,
++							"ultra_high_perf");
++	else if (screen->mode.pixclock == 148500000)
++		ret = device_state_pm_set_state_by_name(vop_dev->dev,
++							"high_perf");
++	else if (screen->mode.pixclock == 74250000)
++		ret = device_state_pm_set_state_by_name(vop_dev->dev,
++							"mid_perf");
++	else if (screen->mode.pixclock == 27000000)
++		ret = device_state_pm_set_state_by_name(vop_dev->dev,
++							"low_perf");
++	else
++		ret = device_state_pm_set_state_by_name(vop_dev->dev,
++							"ultra_high_perf");
++	if (ret)
++		dev_err(dev_drv->dev, "set vop%d dclk failed\n", vop_dev->id);
+ #else
+ 	ret = clk_set_rate(vop_dev->dclk, screen->mode.pixclock);
+ 	if (ret)
+@@ -726,27 +746,53 @@ static int rockchip_vop_set_dclk(struct rockchip_vop_driver *dev_drv)
+ 	return 0;
+ }
+ 
+-static int rockchip_vop_standby(struct rockchip_vop_driver *dev_drv)
++static int rockchip_vop_standby(struct rockchip_vop_driver *dev_drv,
++				bool enable)
+ {
+ 	struct vop_device *vop_dev =
+ 		container_of(dev_drv, struct vop_device, driver);
+ 	int timeout;
+ 	unsigned long flags;
+ 
+-	if (vop_dev->clk_on) {
++	if (unlikely(!vop_dev->clk_on))
++		return 0;
++
++	if (!enable) {
++		spin_lock(&vop_dev->reg_lock);
++		/* Recovery EDPI halt en */
++		if (dev_drv->cur_screen->type == SCREEN_MIPI) {
++			vop_msk_reg(vop_dev, VOP_MIPI_EDPI_CTRL,
++				    M_EDPI_HALT_EN, V_EDPI_HALT_EN(1));
++			vop_cfg_done(vop_dev);
++		}
++
++		vop_msk_reg(vop_dev, VOP_SYS_CTRL, M_LCDC_STANDBY,
++			    V_LCDC_STANDBY(0));
++		spin_unlock(&vop_dev->reg_lock);
++	} else {
+ 		spin_lock_irqsave(&dev_drv->cpl_lock, flags);
+ 		reinit_completion(&dev_drv->frame_done);
+ 		spin_unlock_irqrestore(&dev_drv->cpl_lock, flags);
+ 
++		spin_lock(&vop_dev->reg_lock);
++		/* Disable EDPI halt to avoid vop standby time out */
++		if (dev_drv->cur_screen->type == SCREEN_MIPI) {
++			vop_msk_reg(vop_dev, VOP_MIPI_EDPI_CTRL,
++				    M_EDPI_HALT_EN, V_EDPI_HALT_EN(0));
++			vop_cfg_done(vop_dev);
++		}
++
+ 		vop_msk_reg(vop_dev, VOP_SYS_CTRL, M_LCDC_STANDBY,
+ 			    V_LCDC_STANDBY(1));
++		spin_unlock(&vop_dev->reg_lock);
++
+ 		/* wait for standby hold valid */
+ 		timeout = wait_for_completion_timeout(&dev_drv->frame_done,
+ 						      msecs_to_jiffies(25));
+ 
+ 		if (!timeout && (!dev_drv->frame_done.done)) {
+ 			dev_info(dev_drv->dev,
+-				 "wait for standy hold valid start time out!\n");
++				 "wait for standby hold valid start time out!\n");
+ 			return -ETIMEDOUT;
+ 		}
+ 	}
+@@ -822,24 +868,12 @@ static int rockchip_vop_pre_init(struct rockchip_vop_driver *dev_drv)
+ 
+ static void rockchip_vop_deinit(struct vop_device *vop_dev)
+ {
+-	u32 mask, val;
++	struct rockchip_vop_driver *dev_drv = &vop_dev->driver;
+ 
+-	spin_lock(&vop_dev->reg_lock);
+-	if (likely(vop_dev->clk_on)) {
+-		mask = M_FS_INT_CLEAR | M_FS_INT_EN |
+-		    M_LF_INT_CLEAR | M_LF_INT_EN |
+-		    M_BUS_ERR_INT_CLEAR | M_BUS_ERR_INT_EN;
+-		val = V_FS_INT_CLEAR(0) | V_FS_INT_EN(0) |
+-		    V_LF_INT_CLEAR(0) | V_LF_INT_EN(0) |
+-		    V_BUS_ERR_INT_CLEAR(0) | V_BUS_ERR_INT_EN(0);
+-		vop_msk_reg(vop_dev, VOP_INT_STATUS, mask, val);
+-		vop_set_bit(vop_dev, VOP_SYS_CTRL, M_LCDC_STANDBY);
+-		vop_cfg_done(vop_dev);
+-		spin_unlock(&vop_dev->reg_lock);
+-	} else {
+-		spin_unlock(&vop_dev->reg_lock);
+-	}
+-	mdelay(1);
++	rockchip_vop_standby(dev_drv, true);
++	rockchip_vop_disable_irq(vop_dev);
++	rockchip_vop_mmu_en(dev_drv, false);
++	/* rockchip_vop_clk_disable(vop_dev); */
+ }
+ 
+ static void rockchip_vop_select_bcsh(struct rockchip_vop_driver *dev_drv,
+@@ -912,25 +946,29 @@ static int rockchip_vop_load_screen(struct rockchip_vop_driver *dev_drv,
+ 	vop_msk_reg(vop_dev, VOP_DSP_CTRL0, M_SW_OVERLAY_MODE,
+ 		    V_SW_OVERLAY_MODE(dev_drv->overlay_mode));
+ 
++	mask = M_RGB_DCLK_EN | M_LVDS_DCLK_EN | M_MIPI_DCLK_EN;
+ 	switch (screen->type) {
+ 	case SCREEN_RGB:
+-		mask = M_RGB_DCLK_EN | M_RGB_DCLK_INVERT;
++		mask |= M_RGB_DCLK_INVERT;
+ 		val = V_RGB_DCLK_EN(1) | V_RGB_DCLK_INVERT(0);
+ 		vop_msk_reg(vop_dev, VOP_BUS_INTF_CTRL, mask, val);
+ 		break;
+ 	case SCREEN_LVDS:
+-		mask = M_LVDS_DCLK_EN | M_LVDS_DCLK_INVERT;
++		mask |= M_LVDS_DCLK_INVERT;
+ 		val = V_LVDS_DCLK_EN(1) | V_LVDS_DCLK_INVERT(0);
+ 		vop_msk_reg(vop_dev, VOP_BUS_INTF_CTRL, mask, val);
+ 		break;
+ 	case SCREEN_MIPI:
+-		mask = M_MIPI_DCLK_EN | M_MIPI_DCLK_INVERT;
++		mask |= M_MIPI_DCLK_INVERT;
+ 		val = V_MIPI_DCLK_EN(1) | V_MIPI_DCLK_INVERT(0);
+ 		vop_msk_reg(vop_dev, VOP_BUS_INTF_CTRL, mask, val);
+ 		vop_msk_reg(vop_dev, VOP_MIPI_EDPI_CTRL,
+ 			    M_EDPI_HALT_EN, V_EDPI_HALT_EN(1));
+ 		break;
+ 	case SCREEN_HDMI:
++		mask |= M_RGB_DCLK_INVERT;
++		val = V_RGB_DCLK_EN(1) | V_RGB_DCLK_INVERT(0);
++		vop_msk_reg(vop_dev, VOP_BUS_INTF_CTRL, mask, val);
+ 		rockchip_vop_select_bcsh(dev_drv, vop_dev);
+ 		break;
+ 	default:
+@@ -1102,17 +1140,6 @@ static int rockchip_vop_open(struct rockchip_vop_driver *dev_drv, int win_id,
+ 			rockchip_vop_enable_irq(dev_drv);
+ 		} else {
+ 			rockchip_vop_mmu_en(dev_drv, open);
+-			if (dev_drv->trsm_ops &&
+-			    dev_drv->trsm_ops->detect_panel) {
+-				dev_drv->cur_screen->index =
+-					dev_drv->trsm_ops->detect_panel();
+-				if (dev_drv->cur_screen->index >= 0) {
+-					rockchip_set_prmry_screen(
+-							dev_drv->cur_screen);
+-					rockchip_get_prmry_screen(
+-							dev_drv->cur_screen);
+-				}
+-			}
+ 			rockchip_vop_load_screen(dev_drv, 1);
+ 		}
+ 
+@@ -1128,12 +1155,9 @@ static int rockchip_vop_open(struct rockchip_vop_driver *dev_drv, int win_id,
+ 		dev_err(vop_dev->dev, "invalid win id:%d\n", win_id);
+ 
+ 	/* when all layer closed,disable clk */
+-	if ((!open) && (!vop_dev->atv_layer_cnt)) {
+-		rockchip_vop_standby(dev_drv);
+-		rockchip_vop_disable_irq(vop_dev);
+-		rockchip_vop_mmu_en(dev_drv, open);
+-		rockchip_vop_clk_disable(vop_dev);
+-	}
++	if ((!open) && (!vop_dev->atv_layer_cnt))
++		rockchip_vop_deinit(vop_dev);
++
+ 	return 0;
+ }
+ 
+@@ -1172,6 +1196,12 @@ static int rockchip_vop_set_par(struct rockchip_vop_driver *dev_drv, int win_id)
+ 		win->area[0].dsp_sty = win->area[0].ypos +
+ 		    screen->mode.upper_margin + screen->mode.vsync_len;
+ 	}
++
++	if (win->area[0].xsize == 1 || win->area[0].ysize == 1) {
++		dev_err(dev_drv->dev, "unsupported win number (x, y)=(%d, %d)\n",
++				win->area[0].xsize, win->area[0].ysize);
++	}
++
+ 	win->scale_yrgb_x = CALSCALE(win->area[0].xact, win->area[0].xsize);
+ 	win->scale_yrgb_y = CALSCALE(win->area[0].yact, win->area[0].ysize);
+ 
+@@ -1442,7 +1472,7 @@ static int rockchip_vop_early_suspend(struct rockchip_vop_driver *dev_drv)
+ 		return 0;
+ 	}
+ 
+-	rockchip_vop_standby(dev_drv);
++	rockchip_vop_standby(dev_drv, true);
+ 	rockchip_vop_mmu_en(dev_drv, false);
+ 	rockchip_vop_clk_disable(vop_dev);
+ 	rockchip_disp_pwr_disable(screen);
+@@ -1501,11 +1531,7 @@ static int rockchip_vop_early_resume(struct rockchip_vop_driver *dev_drv)
+ 		dev_drv->trsm_ops->enable();
+ 
+ 	/* VOP leave standby mode after DSI enable */
+-	spin_lock(&vop_dev->reg_lock);
+-	vop_msk_reg(vop_dev, VOP_SYS_CTRL, M_LCDC_STANDBY,
+-		V_LCDC_STANDBY(0));
+-	spin_unlock(&vop_dev->reg_lock);
+-
++	rockchip_vop_standby(dev_drv, false);
+ 	return 0;
+ }
+ 
+@@ -2226,10 +2252,7 @@ static void rockchip_vop_shutdown(struct platform_device *pdev)
+ 	    dev_drv->trsm_ops && dev_drv->trsm_ops->disable)
+ 		dev_drv->trsm_ops->disable();
+ 
+-	rockchip_vop_standby(dev_drv);
+ 	rockchip_vop_deinit(vop_dev);
+-	rockchip_vop_mmu_en(dev_drv, false);
+-	/* rockchip_vop_clk_disable(vop_dev); */
+ 	rockchip_disp_pwr_disable(vop_dev->driver.cur_screen);
+ }
+ 
+diff --git a/drivers/video/rockchip/vop/rockchip_vop.h b/drivers/video/rockchip/vop/rockchip_vop.h
+index c5b6ea3..040d6c6 100644
+--- a/drivers/video/rockchip/vop/rockchip_vop.h
++++ b/drivers/video/rockchip/vop/rockchip_vop.h
+@@ -1,7 +1,7 @@
+ /*
+  * Register definition file for rockchip VOP controller
+  *
+- * Copyright (C) 2014-2015 Intel Mobile Communications GmbH
++ * Copyright (C) 2014-2015 Rockchip Electronics Co., Ltd.
+  *
+  * This software is licensed under the terms of the GNU General Public
+  * License version 2, as published by the Free Software Foundation, and
+@@ -634,7 +634,7 @@ struct vop_device {
+ 	bool clk_on;		/* if vop clk on */
+ 	u8 atv_layer_cnt;	/* active layer counter,
+ 				 * when atv_layer_cnt = 0,vop is disable */
+-	unsigned int irq;
++	int irq;
+ 
+ 	struct clk *dclk;	/* vop dclk */
+ 	u32 pixclock;
+diff --git a/drivers/video/xgold/dsi/dsi_device.c b/drivers/video/xgold/dsi/dsi_device.c
+index 70c920b..2cdc77e 100644
+--- a/drivers/video/xgold/dsi/dsi_device.c
++++ b/drivers/video/xgold/dsi/dsi_device.c
+@@ -26,7 +26,6 @@
+ #include <linux/delay.h>
+ #include <linux/rockchip_fb.h>
+ #include <linux/reset.h>
+-#include <linux/gpio.h>
+ 
+ #include "dsi_device.h"
+ #include "dsi_hwregs.h"
+@@ -37,22 +36,23 @@ static struct xgold_mipi_dsi_device *xgold_mipi_dsi;
+ static int xgold_mipi_dsi_enable(void)
+ {
+ 	struct xgold_mipi_dsi_device *mipi_dsi = xgold_mipi_dsi;
++	struct dsi_display *display = &mipi_dsi->display;
+ 
+ 	if (unlikely(!mipi_dsi) || mipi_dsi->sys_state)
+ 		return 0;
++	reset_control_deassert(display->dsi_reset);
++	dsi_init(display);
++	if (display->power_on)
++		display->power_on(display);
+ 
+-	dsi_init(mipi_dsi);
+-	if (mipi_dsi->power_on)
+-		mipi_dsi->power_on(mipi_dsi);
++	dsi_config(display, DIF_TX_DATA);
++	if (display->panel_init)
++		display->panel_init(display);
+ 
+-	dsi_config(mipi_dsi, DIF_TX_DATA);
+-	if (mipi_dsi->panel_init)
+-		mipi_dsi->panel_init(mipi_dsi);
++	if (display->sleep_out)
++		display->sleep_out(display);
+ 
+-	if (mipi_dsi->sleep_out)
+-		mipi_dsi->sleep_out(mipi_dsi);
+-
+-	dsi_config(mipi_dsi, DIF_TX_PIXELS);
++	dsi_config(display, DIF_TX_PIXELS);
+ 	mipi_dsi->sys_state = true;
+ 
+ 	return 0;
+@@ -61,102 +61,27 @@ static int xgold_mipi_dsi_enable(void)
+ static int xgold_mipi_dsi_disable(void)
+ {
+ 	struct xgold_mipi_dsi_device *mipi_dsi = xgold_mipi_dsi;
++	struct dsi_display *display = &mipi_dsi->display;
+ 
+ 	if (unlikely(!mipi_dsi) || !mipi_dsi->sys_state)
+ 		return 0;
+ 
+-	dsi_config(mipi_dsi, DIF_TX_DATA);
+-	if (mipi_dsi->sleep_in)
+-		mipi_dsi->sleep_in(mipi_dsi);
+-
+-	dsi_stop(mipi_dsi);
+-	if (mipi_dsi->power_off)
+-		mipi_dsi->power_off(mipi_dsi);
+-
++	dsi_config(display, DIF_TX_DATA);
++	if (display->sleep_in)
++		display->sleep_in(display);
+ 
++	dsi_stop(display);
++	if (display->power_off)
++		display->power_off(display);
++	reset_control_assert(display->dsi_reset);
+ 	mipi_dsi->sys_state = false;
+ 
+ 	return 0;
+ }
+ 
+-static int xgold_mipi_dsi_detect_panel(void)
+-{
+-	struct xgold_mipi_dsi_device *mipi_dsi = xgold_mipi_dsi;
+-	int panel_id = -1, temp_id = -1;
+-	struct dsi_display *display;
+-	unsigned char *id = NULL;
+-	int ret = 0;
+-
+-	list_for_each_entry(display, &(mipi_dsi)->display_list, list) {
+-		temp_id++;
+-		mipi_dsi->cur_display = display;
+-
+-		if (!display->id_detect ||
+-		    display->id_detect->method == DETECT_METHOD_UNKNOWN ||
+-		    !display->id_detect->id_verification) {
+-			panel_id = temp_id;
+-			dev_err(mipi_dsi->dev,
+-				"not found panel detection/method/id\n");
+-			break;
+-		}
+-
+-		id = (unsigned char *)devm_kzalloc(mipi_dsi->dev,
+-				  display->id_detect->id_length * sizeof(u8),
+-				  GFP_KERNEL);
+-
+-		if (!id) {
+-			dev_err(mipi_dsi->dev, "kzalloc id failed\n");
+-			break;
+-		}
+-
+-		if (mipi_dsi->power_on)
+-			mipi_dsi->power_on(mipi_dsi);
+-
+-		if (display->id_detect->method == DETECT_METHOD_GPIO) {
+-			if (mipi_dsi->gpio_id0) {
+-				gpio_direction_input(mipi_dsi->gpio_id0);
+-				id[0] = gpio_get_value(mipi_dsi->gpio_id0);
+-			}
+-			if (mipi_dsi->gpio_id1) {
+-				gpio_direction_input(mipi_dsi->gpio_id1);
+-				id[1] = gpio_get_value(mipi_dsi->gpio_id1);
+-			}
+-		} else if (display->id_detect->method == DETECT_METHOD_MIPI) {
+-			dsi_init(mipi_dsi);
+-			dsi_config(mipi_dsi, DIF_TX_DATA);
+-			ret = dsi_read_cmd(mipi_dsi,
+-					   display->id_detect->cmd_type,
+-					   display->id_detect->cmd_datas,
+-					   display->id_detect->cmd_length,
+-					   id, display->id_detect->id_length);
+-			dsi_stop(mipi_dsi);
+-			if (ret != display->id_detect->id_length)
+-				dev_err(mipi_dsi->dev,
+-					"expect id len %d but get %d bytes\n",
+-					display->id_detect->id_length, ret);
+-		}
+-
+-		if (mipi_dsi->power_off)
+-			mipi_dsi->power_off(mipi_dsi);
+-
+-		if (!memcmp(id, display->id_detect->id_verification,
+-			    display->id_detect->id_length)) {
+-			devm_kfree(mipi_dsi->dev, id);
+-			panel_id = temp_id;
+-			dev_info(mipi_dsi->dev, "use panel source %d\n",
+-				 panel_id);
+-			break;
+-		}
+-		devm_kfree(mipi_dsi->dev, id);
+-	}
+-
+-	return panel_id;
+-}
+-
+ static struct rockchip_fb_trsm_ops trsm_mipi_dsi_ops = {
+ 	.enable = xgold_mipi_dsi_enable,
+ 	.disable = xgold_mipi_dsi_disable,
+-	.detect_panel = xgold_mipi_dsi_detect_panel,
+ };
+ 
+ static int xgold_mipi_dsi_probe(struct platform_device *pdev)
+@@ -192,16 +117,16 @@ static int xgold_mipi_dsi_probe(struct platform_device *pdev)
+ 
+ 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
+ 					   "mipi_dsi_phy");
+-	mipi_dsi->regbase = devm_ioremap_resource(&pdev->dev, res);
+-	if (IS_ERR(mipi_dsi->regbase)) {
++	mipi_dsi->display.regbase = devm_ioremap_resource(&pdev->dev, res);
++	if (IS_ERR(mipi_dsi->display.regbase)) {
+ 		dev_err(&pdev->dev, "ioremap xgold mipi_dsi_phy reg failed\n");
+-		return PTR_ERR(mipi_dsi->regbase);
++		return PTR_ERR(mipi_dsi->display.regbase);
+ 	}
+ 
+-	mipi_dsi->irq.err = platform_get_irq(pdev, 0);
+-	if (mipi_dsi->irq.err < 0) {
++	mipi_dsi->display.irq.err = platform_get_irq(pdev, 0);
++	if (mipi_dsi->display.irq.err < 0) {
+ 		dev_err(&pdev->dev, "Cannot find ERR IRQ for XGold MIPI DSI\n");
+-		return mipi_dsi->irq.err;
++		return mipi_dsi->display.irq.err;
+ 	}
+ 
+ 	xgold_mipi_dsi = mipi_dsi;
+@@ -211,23 +136,16 @@ static int xgold_mipi_dsi_probe(struct platform_device *pdev)
+ 
+ 	dev_info(&pdev->dev, "XGold MIPI DSI driver probe success\n");
+ 	dsi_of_parse_display(pdev, mipi_dsi);
+-	dsi_probe(mipi_dsi);
+-	dsi_irq_probe(mipi_dsi);
++	dsi_probe(&mipi_dsi->display);
++	dsi_irq_probe(&mipi_dsi->display);
+ 
+ 	return 0;
+ }
+ 
+ static int xgold_mipi_dsi_remove(struct platform_device *pdev)
+ {
+-	struct dsi_display *display_curr;
+-
+-	list_for_each_entry(display_curr,
+-			    &(xgold_mipi_dsi)->display_list, list) {
+-		devm_kfree(&pdev->dev, display_curr);
+-	}
+-	dsi_irq_remove(xgold_mipi_dsi);
++	dsi_irq_remove(&xgold_mipi_dsi->display);
+ 	devm_kfree(&pdev->dev, xgold_mipi_dsi);
+-
+ 	xgold_mipi_dsi = NULL;
+ 
+ 	return 0;
+diff --git a/drivers/video/xgold/dsi/dsi_device.h b/drivers/video/xgold/dsi/dsi_device.h
+index 118478d..49adf5d 100644
+--- a/drivers/video/xgold/dsi/dsi_device.h
++++ b/drivers/video/xgold/dsi/dsi_device.h
+@@ -22,62 +22,14 @@
+ #ifndef __XGOLD_MIPI_DSI_H__
+ #define __XGOLD_MIPI_DSI_H__
+ 
+-#include <linux/completion.h>
+ #include <linux/rockchip_screen.h>
+ #include "dsi_display.h"
+ 
+-struct dsi_irq {
+-	int rx;
+-	int tx;
+-	int err;
+-	int rx_breq;
+-};
+-
+-struct dsi_sync_obj_s {
+-	struct completion dsifin;
+-	int dsifin_to;
+-	struct completion dsitr1;
+-	int dsitr1_to;
+-};
+-
+-static inline int dsi_completion_timeout_ms(struct completion *comp, int to)
+-{
+-	long jiffies = msecs_to_jiffies(to);
+-
+-	return wait_for_completion_timeout(comp, jiffies);
+-}
+-
+-
+ struct xgold_mipi_dsi_device {
+ 	struct device *dev;
+ 	struct rockchip_screen screen;
+ 	bool sys_state;
+-	int gpio_vhigh;
+-	int gpio_vlow;
+-	int gpio_reset;
+-	int gpio_id0;
+-	int gpio_id1;
+-	int (*panel_init)(struct xgold_mipi_dsi_device *mipi_dsi);
+-	void (*power_on)(struct xgold_mipi_dsi_device *mipi_dsi);
+-	int (*sleep_in)(struct xgold_mipi_dsi_device *mipi_dsi);
+-	int (*sleep_out)(struct xgold_mipi_dsi_device *mipi_dsi);
+-	void (*power_off)(struct xgold_mipi_dsi_device *mipi_dsi);
+-	void __iomem *regbase;
+-	struct reset_control *dsi_reset;
+-	struct dsi_irq irq;
+-	struct dsi_sync_obj_s sync;
+-	struct dsi_display *cur_display;
+-	struct list_head display_list;
++	struct dsi_display display;
+ };
+ 
+-void dsi_start_video(struct dsi_display *display);
+-void dsi_interrupt_setup(struct xgold_mipi_dsi_device *mipi_dsi);
+-int dsi_probe(struct xgold_mipi_dsi_device *mipi_dsi);
+-int dsi_irq_probe(struct xgold_mipi_dsi_device *mipi_dsi);
+-int dsi_irq_remove(struct xgold_mipi_dsi_device *mipi_dsi);
+-int dsi_init(struct xgold_mipi_dsi_device *mipi_dsi);
+-void dsi_config(struct xgold_mipi_dsi_device *mipi_dsi, int type);
+-int dsi_stop(struct xgold_mipi_dsi_device *mipi_dsi);
+-int dsi_read_cmd(struct xgold_mipi_dsi_device *mipi_dsi, u32 type, u8 *cmd,
+-		 unsigned int cmd_len, u8 *data, unsigned int data_len);
+ #endif
+diff --git a/drivers/video/xgold/dsi/dsi_display.c b/drivers/video/xgold/dsi/dsi_display.c
+index 638659e..4c4a36f 100644
+--- a/drivers/video/xgold/dsi/dsi_display.c
++++ b/drivers/video/xgold/dsi/dsi_display.c
+@@ -27,7 +27,7 @@
+ 
+ #include "dsi_display.h"
+ #include "dsi_hwregs.h"
+-#include "dsi_device.h"
++
+ /* #define USE_DSI_ACKNOWLEDGE */
+ 
+ static int dbg_thresd;
+@@ -140,10 +140,9 @@ module_param(dbg_thresd, int, S_IRUGO | S_IWUSR);
+ /**
+  * Common TX functions
+  */
+-static void dsi_mipidsi_send_short_packet(
+-	struct xgold_mipi_dsi_device *mipi_dsi,
+-	struct display_msg *msg,
+-	unsigned int dsicfg)
++static void dsi_mipidsi_send_short_packet(struct dsi_display *display,
++					  struct display_msg *msg,
++					  unsigned int dsicfg)
+ {
+ 	unsigned char *data_msg = msg->datas;
+ 	unsigned int dsihead =
+@@ -156,24 +155,23 @@ static void dsi_mipidsi_send_short_packet(
+ 	DSI_DBG2("dsi short pkt: (head:0x%08x cfg:0x%08x)\n",
+ 		 dsihead, dsicfg);
+ 
+-	dsi_write_field(mipi_dsi, EXR_DSI_VID3,
++	dsi_write_field(display, EXR_DSI_VID3,
+ 			BITFLDS(EXR_DSI_VID3_PIXEL_PACKETS, 1));
+ 
+-	dsi_write_field(mipi_dsi, EXR_DSI_HEAD, dsihead);
+-	dsi_write_field(mipi_dsi, EXR_DSI_CFG,
++	dsi_write_field(display, EXR_DSI_HEAD, dsihead);
++	dsi_write_field(display, EXR_DSI_CFG,
+ 			dsicfg | BITFLDS(EXR_DSI_CFG_HEAD_LAT, 1));
+-	dsi_write_field(mipi_dsi, EXR_DSI_CFG, dsicfg);
+-	dsi_write_field(mipi_dsi, EXR_DSI_CFG,
++	dsi_write_field(display, EXR_DSI_CFG, dsicfg);
++	dsi_write_field(display, EXR_DSI_CFG,
+ 			dsicfg | BITFLDS(EXR_DSI_CFG_TX, 1) |
+ 			BITFLDS(EXR_DSI_CFG_CFG_LAT, 1));
+-	dsi_write_field(mipi_dsi, EXR_DSI_CFG,
++	dsi_write_field(display, EXR_DSI_CFG,
+ 			dsicfg | BITFLDS(EXR_DSI_CFG_TX, 1));
+ }
+ 
+-static void dsi_mipidsi_send_long_packet_dma(
+-	struct xgold_mipi_dsi_device *mipi_dsi,
+-	struct display_msg *msg,
+-	unsigned int dsicfg)
++static void dsi_mipidsi_send_long_packet_dma(struct dsi_display *display,
++					     struct display_msg *msg,
++					     unsigned int dsicfg)
+ {
+ 	unsigned char *data_msg = msg->datas;
+ 	unsigned int length = msg->length;
+@@ -190,11 +188,11 @@ static void dsi_mipidsi_send_long_packet_dma(
+ 	DSI_DBG2("dsi long dma pkt: wcnt:0x%04x (head:0x%08x cfg:0x%08x)\n",
+ 		 msg->length, dsihead, dsicfg);
+ 
+-	dsi_write_field(mipi_dsi, EXR_DSI_VID3,
++	dsi_write_field(display, EXR_DSI_VID3,
+ 			BITFLDS(EXR_DSI_VID3_PIXEL_PACKETS, 1));
+-	dsi_write_field(mipi_dsi, EXR_DSI_VID6,
++	dsi_write_field(display, EXR_DSI_VID6,
+ 			BITFLDS(EXR_DSI_VID6_LAST_PIXEL, length));
+-	dsi_write_field(mipi_dsi, EXR_DSI_TPS_CTRL,
++	dsi_write_field(display, EXR_DSI_TPS_CTRL,
+ 			BITFLDS(EXR_DSI_TPS_CTRL_TPS, length));
+ 
+ 	while (length > 0) {
+@@ -206,24 +204,22 @@ static void dsi_mipidsi_send_long_packet_dma(
+ 			reg |= ((uint8_t) *data_msg++)<<(j*8);
+ 		}
+ 
+-		dsi_write_field(mipi_dsi, EXR_DSI_TXD, reg);
++		dsi_write_field(display, EXR_DSI_TXD, reg);
+ 		DSI_DBG2("payload 0x%08x\n", reg);
+ 	}
+ 
+-	dsi_write_field(mipi_dsi, EXR_DSI_HEAD, dsihead);
+-	dsi_write_field(mipi_dsi, EXR_DSI_CFG,
++	dsi_write_field(display, EXR_DSI_HEAD, dsihead);
++	dsi_write_field(display, EXR_DSI_CFG,
+ 			dsicfg | BITFLDS(EXR_DSI_CFG_HEAD_LAT, 1));
+-	dsi_write_field(mipi_dsi, EXR_DSI_CFG, dsicfg);
+-	dsi_write_field(mipi_dsi, EXR_DSI_CFG,
++	dsi_write_field(display, EXR_DSI_CFG, dsicfg);
++	dsi_write_field(display, EXR_DSI_CFG,
+ 			dsicfg | BITFLDS(EXR_DSI_CFG_TX, 1) |
+ 			BITFLDS(EXR_DSI_CFG_CFG_LAT, 1));
+-	dsi_write_field(mipi_dsi, EXR_DSI_CFG, dsicfg |
++	dsi_write_field(display, EXR_DSI_CFG, dsicfg |
+ 			BITFLDS(EXR_DSI_CFG_TX, 1));
+ }
+ 
+-static void dsi_send_cmd(
+-	 struct xgold_mipi_dsi_device *mipi_dsi,
+-	 struct display_msg *msg)
++static void dsi_send_cmd(struct dsi_display *display, struct display_msg *msg)
+ {
+ 	int ret = 0;
+ 	unsigned int dsicfg;
+@@ -231,20 +227,19 @@ static void dsi_send_cmd(
+ 	if (msg->flags & LCD_MSG_LP)
+ 		dsicfg = DSI_CFG_TX_LP_DATA(1);
+ 	else
+-		dsicfg = DSI_CFG_TX_HS_DATA(
+-				mipi_dsi->cur_display->dif.dsi.nblanes);
++		dsicfg = DSI_CFG_TX_HS_DATA(display->dif.dsi.nblanes);
+ 
+ 	if (msg->length <= 2)
+-		dsi_mipidsi_send_short_packet(mipi_dsi, msg, dsicfg);
++		dsi_mipidsi_send_short_packet(display, msg, dsicfg);
+ 	else
+-		dsi_mipidsi_send_long_packet_dma(mipi_dsi, msg, dsicfg);
++		dsi_mipidsi_send_long_packet_dma(display, msg, dsicfg);
+ 
+ 	DSI_DBG2("wait for eoc\n");
+-	ret = dsi_completion_timeout_ms(&mipi_dsi->sync.dsifin,
+-					mipi_dsi->sync.dsifin_to);
++	ret = dsi_completion_timeout_ms(&display->sync.dsifin,
++					display->sync.dsifin_to);
+ 	if (!ret) {
+ 		DSI_DBG2("dsifin interrupt timedout %dms\n",
+-			 mipi_dsi->sync.dsifin_to);
++			 display->sync.dsifin_to);
+ 	} else {
+ 		DSI_DBG2("eoc received\n");
+ #ifdef USE_DSI_ACKNOWLEDGE
+@@ -256,7 +251,7 @@ static void dsi_send_cmd(
+ 	mdelay(msg->delay);
+ }
+ 
+-int dsi_read_cmd(struct xgold_mipi_dsi_device *mipi_dsi, u32 type, u8 *cmd,
++int dsi_read_cmd(struct dsi_display *display, u32 type, u8 *cmd,
+ 		 unsigned int cmd_len, u8 *data, unsigned int data_len)
+ {
+ 	struct display_msg msg;
+@@ -277,11 +272,11 @@ int dsi_read_cmd(struct xgold_mipi_dsi_device *mipi_dsi, u32 type, u8 *cmd,
+ 	msg.type = MIPI_DSI_SET_MAXIMUM_RETURN_PACKET_SIZE;
+ 	msg.datas = mrps_data;
+ 	msg.length = 2;
+-	dsi_mipidsi_send_short_packet(mipi_dsi, &msg, dsicfg);
+-	if (!dsi_completion_timeout_ms(&mipi_dsi->sync.dsifin,
+-		mipi_dsi->sync.dsifin_to)) {
++	dsi_mipidsi_send_short_packet(display, &msg, dsicfg);
++	if (!dsi_completion_timeout_ms(&display->sync.dsifin,
++		display->sync.dsifin_to)) {
+ 		DSI_ERR("dsifin interrupt timedout %dms\n",
+-			mipi_dsi->sync.dsifin_to);
++			display->sync.dsifin_to);
+ 		return -EBUSY;
+ 	}
+ 
+@@ -289,27 +284,27 @@ int dsi_read_cmd(struct xgold_mipi_dsi_device *mipi_dsi, u32 type, u8 *cmd,
+ 	msg.datas = cmd;
+ 	msg.length = cmd_len;
+ 	if (msg.length <= 2)
+-		dsi_mipidsi_send_short_packet(mipi_dsi, &msg, dsicfg);
++		dsi_mipidsi_send_short_packet(display, &msg, dsicfg);
+ 	else
+-		dsi_mipidsi_send_long_packet_dma(mipi_dsi, &msg, dsicfg);
++		dsi_mipidsi_send_long_packet_dma(display, &msg, dsicfg);
+ 
+-	if (!dsi_completion_timeout_ms(&mipi_dsi->sync.dsifin,
+-		mipi_dsi->sync.dsifin_to)) {
++	if (!dsi_completion_timeout_ms(&display->sync.dsifin,
++		display->sync.dsifin_to)) {
+ 		DSI_ERR("dsifin interrupt timedout %dms\n",
+-			mipi_dsi->sync.dsifin_to);
++			display->sync.dsifin_to);
+ 		return -EBUSY;
+ 	}
+ 
+ 	dsicfg |= BITFLDS(EXR_DSI_CFG_TURN, 1);
+-	dsi_write_field(mipi_dsi, EXR_DSI_CFG, dsicfg |
++	dsi_write_field(display, EXR_DSI_CFG, dsicfg |
+ 			BITFLDS(EXR_DSI_CFG_TX, 1) |
+ 			BITFLDS(EXR_DSI_CFG_CFG_LAT, 1));
+-	dsi_write_field(mipi_dsi, EXR_DSI_CFG, dsicfg |
++	dsi_write_field(display, EXR_DSI_CFG, dsicfg |
+ 			BITFLDS(EXR_DSI_CFG_TX, 1));
+-	dsi_wait_status(mipi_dsi, EXR_DSI_STAT_DSI_DIR, DSI_DIR_RX, 1, 0, 1000);
+-	dsi_wait_status(mipi_dsi, EXR_DSI_STAT_DSI_DIR, DSI_DIR_TX, 1, 0, 1000);
+-	nwords = dsi_read_field(mipi_dsi, EXR_DSI_FIFO_STAT_RXFFS);
+-	nbytes = dsi_read_field(mipi_dsi, EXR_DSI_RPS_STAT);
++	dsi_wait_status(display, EXR_DSI_STAT_DSI_DIR, DSI_DIR_RX, 1, 0, 1000);
++	dsi_wait_status(display, EXR_DSI_STAT_DSI_DIR, DSI_DIR_TX, 1, 0, 1000);
++	nwords = dsi_read_field(display, EXR_DSI_FIFO_STAT_RXFFS);
++	nbytes = dsi_read_field(display, EXR_DSI_RPS_STAT);
+ 
+ 	DSI_DBG3("EXR_DSI_FIFO_STAT_RXFFS = %#x\n", nwords);
+ 	DSI_DBG3("EXR_DSI_RPS_STAT = %#x\n", nbytes);
+@@ -317,7 +312,7 @@ int dsi_read_cmd(struct xgold_mipi_dsi_device *mipi_dsi, u32 type, u8 *cmd,
+ 	if (!nwords)
+ 		return 0;
+ 
+-	*((u32 *)rxdata) = dsi_read_field(mipi_dsi, EXR_DSI_RXD);
++	*((u32 *)rxdata) = dsi_read_field(display, EXR_DSI_RXD);
+ 
+ 	DSI_DBG3("RX DATA = %#x\n", *((u32 *)rxdata));
+ 
+@@ -342,7 +337,7 @@ int dsi_read_cmd(struct xgold_mipi_dsi_device *mipi_dsi, u32 type, u8 *cmd,
+ 
+ 		data[0] = rxdata[1];
+ 		data[1] = rxdata[2];
+-		i = 2;
++		i = 1;
+ 	} else if (rcv_type == MIPI_DSI_RX_GENERIC_LONG_READ_RESPONSE ||
+ 		rcv_type == MIPI_DSI_RX_DCS_LONG_READ_RESPONSE) {
+ 		int rx_i;
+@@ -351,7 +346,7 @@ int dsi_read_cmd(struct xgold_mipi_dsi_device *mipi_dsi, u32 type, u8 *cmd,
+ 			rx_i = i % 4;
+ 			if (!rx_i && --nwords) {
+ 				*((u32 *)rxdata) =
+-					dsi_read_field(mipi_dsi, EXR_DSI_RXD);
++					dsi_read_field(display, EXR_DSI_RXD);
+ 
+ 				DSI_DBG3("RX DATA = %#x\n", *((u32 *)rxdata));
+ 			}
+@@ -362,9 +357,14 @@ int dsi_read_cmd(struct xgold_mipi_dsi_device *mipi_dsi, u32 type, u8 *cmd,
+ 
+ 	/* Empty RX FIFO */
+ 	while (--nwords)
+-		dsi_read_field(mipi_dsi, EXR_DSI_RXD);
++		dsi_read_field(display, EXR_DSI_RXD);
+ 
+-	return i;
++	return i + 1;
++}
++
++static int dsi_get_rate(struct dsi_display *display)
++{
++	return DSI_RATE(display->dif.dsi.n, display->dif.dsi.m);
+ }
+ 
+ static int dsi_get_bllp(struct dsi_display *display,
+@@ -377,17 +377,19 @@ static int dsi_get_bllp(struct dsi_display *display,
+ 	/* maximum framerate */
+ 	unsigned int maxfrate = bitrate * nlanes / bitpframe;
+ 	/* shortest line time */
+-	unsigned int slt = NSEC_PER_SEC / (maxfrate * nlines);
++	unsigned int slt = NSEC_PER_SEC / maxfrate / nlines;
+ 	/* target line time */
+-	unsigned int tlt = NSEC_PER_SEC / (fps * nlines);
++	unsigned int tlt = NSEC_PER_SEC / (fps + 1) / nlines;
+ 	/* clock cycle duration in ps */
+-	unsigned int clk_time = 1000000000 / (clk / 1000);
++	unsigned int clk_time = 1000000 / (clk/1000000);
+ 
+-	*line_time = tlt * 1000 / clk_time;
+-	*bllp_time = *line_time - DIV_ROUND_UP(slt * 1000, clk_time);
+-	if (display->dif.dsi.video_mode != DSI_BURST || *bllp_time < 0)
++	if (display->dif.dsi.video_mode == DSI_BURST)
++		*bllp_time = ((tlt - slt) * 1000) / clk_time;
++	else
+ 		*bllp_time = 0;
+ 
++	*line_time = tlt * 1000 / clk_time;
++
+ 	DSI_DBG2("%d bytes / %d lines\n", bytes, nlines);
+ 	DSI_DBG2("bits / frame = %d bits\n", bitpframe);
+ 	DSI_DBG2("fps target %d fps (max=%d)\n", fps, maxfrate);
+@@ -397,246 +399,252 @@ static int dsi_get_bllp(struct dsi_display *display,
+ 	DSI_DBG2("bllp_time 0x%08x(%d)\n", *bllp_time, *bllp_time);
+ 	DSI_DBG2("line_time 0x%08x(%d)\n", *line_time, *line_time);
+ 
++	if (fps >= maxfrate) {
++		DSI_ERR("target framerate(%d) cannot be reached, max %d\n",
++				fps, maxfrate);
++		*bllp_time = 0;
++		return 0;
++	}
++
+ 	return 0;
+ }
+ 
+-static int dsi_configure_video_mode(struct xgold_mipi_dsi_device *mipi_dsi,
++static int dsi_configure_video_mode(struct dsi_display *display,
+ 				    int stride, int nlines)
+ {
+ 	unsigned int vid0, vid1, vid2, vid3, vid4, vid5, vid6;
+-	struct dsi_display_if_mipi_dsi *dif = &mipi_dsi->cur_display->dif.dsi;
++	struct dsi_display_if_mipi_dsi *dif = &display->dif.dsi;
+ 
+-	if (mipi_dsi->cur_display->dif.dsi.mode != DSI_VIDEO) {
++	if (display->dif.dsi.mode != DSI_VIDEO) {
+ 		DSI_DBG2("%s: not video mode\n", __func__);
+ 		return -EINVAL;
+ 	}
+ 
+-	vid0 = BITFLDS(EXR_DSI_VID0_HFP, !!dif->hfp)|
+-	       BITFLDS(EXR_DSI_VID0_HBP, !!dif->hbp)|
+-	       BITFLDS(EXR_DSI_VID0_HSA, !!dif->hsa)|
+-	       BITFLDS(EXR_DSI_VID0_HFP_LP, dif->hfp_lp)|
+-	       BITFLDS(EXR_DSI_VID0_HBP_LP, dif->hbp_lp)|
+-	       BITFLDS(EXR_DSI_VID0_HSA_LP, dif->hsa_lp)|
+-	       BITFLDS(EXR_DSI_VID0_HFP_BYTES, dif->hfp)|
+-	       BITFLDS(EXR_DSI_VID0_HBP_BYTES, dif->hbp)|
+-	       BITFLDS(EXR_DSI_VID0_HSA_BYTES, dif->hsa);
+-
+-	vid1 = BITFLDS(EXR_DSI_VID1_VACT_LINES, nlines)|
+-	       BITFLDS(EXR_DSI_VID1_MODE, dif->video_mode)|
+-	       BITFLDS(EXR_DSI_VID1_ID, dif->id)|
+-	       BITFLDS(EXR_DSI_VID1_PIXEL, dif->video_pixel)|
+-	       BITFLDS(EXR_DSI_VID1_FILL_BUFFER_TO, 0xFF);
+-
+-	vid2 = BITFLDS(EXR_DSI_VID2_VFP, dif->vfp)|
+-	       BITFLDS(EXR_DSI_VID2_VBP, dif->vbp)|
+-	       BITFLDS(EXR_DSI_VID2_VSA, dif->vsa);
+-
+-	vid3 = BITFLDS(EXR_DSI_VID3_PIXEL_BYTES, stride)|
+-	       BITFLDS(EXR_DSI_VID3_PIXEL_PACKETS, 1);
+-
+-	vid4 = BITFLDS(EXR_DSI_VID4_BLANK_BYTES, 0)|
+-	       BITFLDS(EXR_DSI_VID4_BLANK_PACKETS, 0);
+-
+-	vid5 = BITFLDS(EXR_DSI_VID5_LINE_TIME, dif->line_time)|
+-	       BITFLDS(EXR_DSI_VID5_BLLP_TIME, dif->bllp_time);
+-
+-	vid6 = BITFLDS(EXR_DSI_VID6_LAST_BLANK, stride)|
+-	       BITFLDS(EXR_DSI_VID6_LAST_PIXEL, stride);
++	dsi_get_bllp(display,
++		     nlines + dif->vfp + dif->vbp + dif->vsa,
++		     stride + dif->hfp + dif->hbp + dif->hsa,
++		     dif->dc_clk_rate,
++		     display->fps,
++		     dsi_get_rate(display),
++		     dif->nblanes, &dif->bllp_time, &dif->line_time);
++
++	vid0 =	BITFLDS(EXR_DSI_VID0_HFP, (!!display->dif.dsi.hfp))|
++		BITFLDS(EXR_DSI_VID0_HBP, (!!display->dif.dsi.hbp))|
++		BITFLDS(EXR_DSI_VID0_HSA, (!!display->dif.dsi.hsa))|
++		BITFLDS(EXR_DSI_VID0_HFP_LP, dif->hfp_lp)|
++		BITFLDS(EXR_DSI_VID0_HBP_LP, dif->hbp_lp)|
++		BITFLDS(EXR_DSI_VID0_HSA_LP, dif->hsa_lp)|
++		BITFLDS(EXR_DSI_VID0_HFP_BYTES, dif->hfp)|
++		BITFLDS(EXR_DSI_VID0_HBP_BYTES, dif->hbp)|
++		BITFLDS(EXR_DSI_VID0_HSA_BYTES, dif->hsa);
++
++	vid1 =	BITFLDS(EXR_DSI_VID1_VACT_LINES, nlines)|
++		BITFLDS(EXR_DSI_VID1_MODE, dif->video_mode)|
++		BITFLDS(EXR_DSI_VID1_ID, dif->id)|
++		BITFLDS(EXR_DSI_VID1_PIXEL, dif->video_pixel)|
++		BITFLDS(EXR_DSI_VID1_FILL_BUFFER_TO, 0xFF);
++
++	vid2 =	BITFLDS(EXR_DSI_VID2_VFP, dif->vfp)|
++		BITFLDS(EXR_DSI_VID2_VBP, dif->vbp)|
++		BITFLDS(EXR_DSI_VID2_VSA, dif->vsa);
++
++	vid3 =	BITFLDS(EXR_DSI_VID3_PIXEL_BYTES, stride)|
++		BITFLDS(EXR_DSI_VID3_PIXEL_PACKETS, 1);
++
++	vid4 =	BITFLDS(EXR_DSI_VID4_BLANK_BYTES, 0)|
++		BITFLDS(EXR_DSI_VID4_BLANK_PACKETS, 0);
++
++	vid5 =	BITFLDS(EXR_DSI_VID5_LINE_TIME, dif->line_time)|
++		BITFLDS(EXR_DSI_VID5_BLLP_TIME, dif->bllp_time);
++
++	vid6 =	BITFLDS(EXR_DSI_VID6_LAST_BLANK, stride)|
++		BITFLDS(EXR_DSI_VID6_LAST_PIXEL, stride);
+ 
+ 	DSI_DBG2(
+ 		"MIPI-DSI video:0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x)\n",
+ 		vid0, vid1, vid2, vid3, vid4, vid5, vid6);
+ 
+-	dsi_write_field(mipi_dsi, EXR_DSI_VID0, vid0);
+-	dsi_write_field(mipi_dsi, EXR_DSI_VID1, vid1);
+-	dsi_write_field(mipi_dsi, EXR_DSI_VID2, vid2);
+-	dsi_write_field(mipi_dsi, EXR_DSI_VID3, vid3);
+-	dsi_write_field(mipi_dsi, EXR_DSI_VID4, vid4);
+-	dsi_write_field(mipi_dsi, EXR_DSI_VID5, vid5);
+-	dsi_write_field(mipi_dsi, EXR_DSI_VID6, vid6);
++	dsi_write_field(display, EXR_DSI_VID0, vid0);
++	dsi_write_field(display, EXR_DSI_VID1, vid1);
++	dsi_write_field(display, EXR_DSI_VID2, vid2);
++	dsi_write_field(display, EXR_DSI_VID3, vid3);
++	dsi_write_field(display, EXR_DSI_VID4, vid4);
++	dsi_write_field(display, EXR_DSI_VID5, vid5);
++	dsi_write_field(display, EXR_DSI_VID6, vid6);
+ 
+ 	return 0;
+ }
+ 
+-/**
+- * Callbacks
+- */
+-static void dsi_set_phy(struct xgold_mipi_dsi_device *mipi_dsi, int on)
++static void dsi_set_phy(struct dsi_display *display, int on)
+ {
+ 	unsigned int phy0 = 0, phy1 = 0, phy2 = 0, phy3 = 0;
+ 
+ 	if (!on) {
+ 		phy0 = BITFLDS(EXR_DSI_PHY0_SHARE, 0x0) |
+-		       BITFLDS(EXR_DSI_PHY0_M, 0) |
+-		       BITFLDS(EXR_DSI_PHY0_N, 0xFF) |
+-		       BITFLDS(EXR_DSI_PHY0_POWERUP,
+-			       mipi_dsi->cur_display->dif.dsi.pwup) |
+-		       BITFLDS(EXR_DSI_PHY0_CALIB,
+-			       mipi_dsi->cur_display->dif.dsi.calib) |
+-		       BITFLDS(EXR_DSI_PHY0_TO_LP_HS_REQ,
+-			       mipi_dsi->cur_display->dif.dsi.to_lp_hs_req);
++			BITFLDS(EXR_DSI_PHY0_M, 0) |
++			BITFLDS(EXR_DSI_PHY0_N, 0xFF) |
++			BITFLDS(EXR_DSI_PHY0_POWERUP, display->dif.dsi.pwup) |
++			BITFLDS(EXR_DSI_PHY0_CALIB, display->dif.dsi.calib) |
++			BITFLDS(EXR_DSI_PHY0_TO_LP_HS_REQ,
++				display->dif.dsi.to_lp_hs_req);
+ 	} else {
+ 		phy0 = BITFLDS(EXR_DSI_PHY0_SHARE, 0x0) |
+-		       BITFLDS(EXR_DSI_PHY0_M,
+-			       mipi_dsi->cur_display->dif.dsi.m) |
+-		       BITFLDS(EXR_DSI_PHY0_N,
+-			       mipi_dsi->cur_display->dif.dsi.n) |
+-		       BITFLDS(EXR_DSI_PHY0_POWERUP,
+-			       mipi_dsi->cur_display->dif.dsi.pwup) |
+-		       BITFLDS(EXR_DSI_PHY0_CALIB,
+-			       mipi_dsi->cur_display->dif.dsi.calib) |
+-		       BITFLDS(EXR_DSI_PHY0_TO_LP_HS_REQ,
+-			       mipi_dsi->cur_display->dif.dsi.to_lp_hs_req);
++			BITFLDS(EXR_DSI_PHY0_M, display->dif.dsi.m) |
++			BITFLDS(EXR_DSI_PHY0_N, display->dif.dsi.n) |
++			BITFLDS(EXR_DSI_PHY0_POWERUP, display->dif.dsi.pwup) |
++			BITFLDS(EXR_DSI_PHY0_CALIB, display->dif.dsi.calib) |
++			BITFLDS(EXR_DSI_PHY0_TO_LP_HS_REQ,
++				display->dif.dsi.to_lp_hs_req);
+ 	}
+ 
+-	phy1 = BITFLDS(EXR_DSI_PHY1_TO_LP_HS_DIS,
+-		       mipi_dsi->cur_display->dif.dsi.to_lp_hs_dis) |
+-	       BITFLDS(EXR_DSI_PHY1_TO_LP_EOT,
+-		       mipi_dsi->cur_display->dif.dsi.to_lp_hs_eot) |
+-	       BITFLDS(EXR_DSI_PHY1_TO_HS_ZERO,
+-		       mipi_dsi->cur_display->dif.dsi.to_hs_zero) |
+-	       BITFLDS(EXR_DSI_PHY1_TO_HS_FLIP,
+-		       mipi_dsi->cur_display->dif.dsi.to_hs_flip) |
+-	       BITFLDS(EXR_DSI_PHY1_LP_CLK_DIV,
+-		       mipi_dsi->cur_display->dif.dsi.lp_clk_div);
+-
+-	phy2 = BITFLDS(EXR_DSI_PHY2_HS_CLK_PRE,
+-		       mipi_dsi->cur_display->dif.dsi.to_hs_clk_pre) |
+-	       BITFLDS(EXR_DSI_PHY2_HS_CLK_POST,
+-		       mipi_dsi->cur_display->dif.dsi.to_hs_clk_post) |
+-	       BITFLDS(EXR_DSI_PHY2_DAT_DELAY,
+-		       mipi_dsi->cur_display->dif.dsi.data_delay) |
+-	       BITFLDS(EXR_DSI_PHY2_CLK_DELAY,
+-		       mipi_dsi->cur_display->dif.dsi.clock_delay) |
+-	       BITFLDS(EXR_DSI_PHY2_LPTX_TFALL,
+-		       mipi_dsi->cur_display->dif.dsi.lp_tx_tfall);
+-
+-	phy3 = BITFLDS(EXR_DSI_PHY3_EN, 0x1) |
+-	       BITFLDS(EXR_DSI_PHY3_LPTX_TRISE,
+-		       mipi_dsi->cur_display->dif.dsi.lp_tx_trise) |
+-	       BITFLDS(EXR_DSI_PHY3_LPTX_VREF,
+-		       mipi_dsi->cur_display->dif.dsi.lp_tx_vref);
++	phy1 =	BITFLDS(EXR_DSI_PHY1_TO_LP_HS_DIS,
++			display->dif.dsi.to_lp_hs_dis) |
++		BITFLDS(EXR_DSI_PHY1_TO_LP_EOT,
++			display->dif.dsi.to_lp_hs_eot) |
++		BITFLDS(EXR_DSI_PHY1_TO_HS_ZERO,
++			display->dif.dsi.to_hs_zero) |
++		BITFLDS(EXR_DSI_PHY1_TO_HS_FLIP,
++			display->dif.dsi.to_hs_flip) |
++		BITFLDS(EXR_DSI_PHY1_LP_CLK_DIV,
++			display->dif.dsi.lp_clk_div);
++
++	phy2 =	BITFLDS(EXR_DSI_PHY2_HS_CLK_PRE,
++			display->dif.dsi.to_hs_clk_pre) |
++		BITFLDS(EXR_DSI_PHY2_HS_CLK_POST,
++			display->dif.dsi.to_hs_clk_post) |
++		BITFLDS(EXR_DSI_PHY2_DAT_DELAY,
++			display->dif.dsi.data_delay) |
++		BITFLDS(EXR_DSI_PHY2_CLK_DELAY,
++			display->dif.dsi.clock_delay) |
++		BITFLDS(EXR_DSI_PHY2_LPTX_TFALL,
++			display->dif.dsi.lp_tx_tfall);
++
++	phy3 =	BITFLDS(EXR_DSI_PHY3_EN, 0x1) |
++		BITFLDS(EXR_DSI_PHY3_LPTX_TRISE,
++			display->dif.dsi.lp_tx_trise) |
++		BITFLDS(EXR_DSI_PHY3_LPTX_VREF,
++			display->dif.dsi.lp_tx_vref);
+ 
+ 	DSI_DBG2("MIPI-DSI @%d bps (%d,%d): 0x%08x 0x%08x 0x%08x 0x%08x)\n",
+-		 mipi_dsi->cur_display->dif.dsi.bitrate,
+-		 mipi_dsi->cur_display->dif.dsi.n,
+-		 mipi_dsi->cur_display->dif.dsi.m,
++		 dsi_get_rate(display),
++		 display->dif.dsi.n, display->dif.dsi.m,
+ 		 phy0, phy1, phy2, phy3);
+ 
+-	dsi_write_field(mipi_dsi, EXR_DSI_PHY0, phy0);
+-	dsi_write_field(mipi_dsi, EXR_DSI_PHY1, phy1);
+-	dsi_write_field(mipi_dsi, EXR_DSI_PHY2, phy2);
+-	dsi_write_field(mipi_dsi, EXR_DSI_PHY3, phy3);
++	dsi_write_field(display, EXR_DSI_PHY0, phy0);
++	dsi_write_field(display, EXR_DSI_PHY1, phy1);
++	dsi_write_field(display, EXR_DSI_PHY2, phy2);
++	dsi_write_field(display, EXR_DSI_PHY3, phy3);
+ 
+ 	if (on) {
+ 		/* wait for PLL lock */
+-		dsi_wait_status(mipi_dsi, EXR_DSI_STAT_DSI_LOCK, 1, 1, 0, 1000);
++		dsi_wait_status(display, EXR_DSI_STAT_DSI_LOCK, 1, 1, 0, 1000);
+ 	}
+ }
+ 
+-static void dsi_send_msglist(struct xgold_mipi_dsi_device *mipi_dsi,
++static void dsi_send_msglist(struct dsi_display *display,
+ 			     struct display_msg *msgs)
+ {
+ 	struct display_msg *msg;
+ 
+ 	list_for_each_entry(msg, &msgs->list, list) {
++		/* mdelay(1); */
+ 		DSI_DBG2("Sending command 0x%02x of length %d\n",
+ 			 msg->type, msg->length);
+-		dsi_send_cmd(mipi_dsi, msg);
++		dsi_send_cmd(display, msg);
+ 	}
+ }
+ 
+-static int dsi_panel_init(struct xgold_mipi_dsi_device *mipi_dsi)
++static int dsi_panel_init(struct dsi_display *display)
+ {
+-	struct display_msg *msgs = mipi_dsi->cur_display->msgs_init;
++	struct display_msg *msgs = display->msgs_init;
+ 
+ 	if (msgs != NULL)
+-		dsi_send_msglist(mipi_dsi, msgs);
++		dsi_send_msglist(display, msgs);
+ 
+ 	return 0;
+ }
+ 
+-int dsi_stop(struct xgold_mipi_dsi_device *mipi_dsi)
++int dsi_stop(struct dsi_display *display)
+ {
+-
++#if 0
+ 	/* Reset and re-init for entering ULPS*/
+-	dsi_init(mipi_dsi);
+-	dsi_config(mipi_dsi, DIF_TX_DATA);
++	dsi_init(display);
++#else
++	dsi_write_field(display, EXR_DSI_CLK, 0x000F000F);
++	dsi_write_field(display, EXR_DSI_TO0, 0);
++	dsi_write_field(display, EXR_DSI_TO1, 0);
++	dsi_write_field(display, EXR_DSI_CFG, DSI_CFG_RX_LP_STP(1));
++	dsi_write_field(display, EXR_DSI_CLC,
++			BITFLDS(EXR_DSI_CLC_RUN, DSI_MODE_RUN));
++#endif
++	dsi_config(display, DIF_TX_DATA);
+ 
+ 	/* Enter ULPS */
+-	dsi_write_field(mipi_dsi, EXR_DSI_CFG_ULPS, 1);
++	dsi_write_field(display, EXR_DSI_CFG_ULPS, 1);
+ 
+ 	/* Swicth off PLL */
+-	dsi_set_phy(mipi_dsi, 0);
++	dsi_set_phy(display, 0);
+ 
+ 	/* Switch off phy */
+-	dsi_write_field(mipi_dsi, EXR_DSI_PHY3, BITFLDS(EXR_DSI_PHY3_EN, 0x0));
++	dsi_write_field(display, EXR_DSI_PHY3, BITFLDS(EXR_DSI_PHY3_EN, 0x0));
+ 
+ 	return 0;
+ }
+ 
+-int dsi_init(struct xgold_mipi_dsi_device *mipi_dsi)
++int dsi_init(struct dsi_display *display)
+ {
+ 	unsigned int clcstat;
+ 
+-	if (mipi_dsi->dsi_reset) {
+-		reset_control_assert(mipi_dsi->dsi_reset);
+-		udelay(10);
+-		reset_control_deassert(mipi_dsi->dsi_reset);
+-		usleep_range(8000, 8001);
++#if 0
++	if (display->dsi_reset) {
++		reset_control_assert(display->dsi_reset);
++		usleep_range(100, 101);
++		reset_control_deassert(display->dsi_reset);
++		usleep_range(2000, 2001);
+ 	}
++#endif
+ 
+-	dsi_write_field(mipi_dsi, EXR_DSI_CLC,
+-
++	dsi_write_field(display, EXR_DSI_CLC,
+ 			BITFLDS(EXR_DSI_CLC_RUN, DSI_MODE_RUN));
+ 	clcstat = BITFLDS(EXR_DSI_CLC_STAT_RUN, 1) |
+ 		BITFLDS(EXR_DSI_CLC_STAT_MODEN, 1) |
+ 		BITFLDS(EXR_DSI_CLC_STAT_KID, 1);
+-
+-	dsi_wait_status(mipi_dsi, EXR_DSI_CLC_STAT, clcstat, clcstat, 0, 1000);
+-	dsi_write_field(mipi_dsi, EXR_DSI_CLK, 0x000F000F);
+-	dsi_write_field(mipi_dsi, EXR_DSI_TO0, 0);
+-	dsi_write_field(mipi_dsi, EXR_DSI_TO1, 0);
+-	dsi_write_field(mipi_dsi, EXR_DSI_CFG, DSI_CFG_RX_LP_STP(1));
+-	dsi_interrupt_setup(mipi_dsi);
++	dsi_wait_status(display, EXR_DSI_CLC_STAT, clcstat, clcstat, 0, 1000);
++	dsi_write_field(display, EXR_DSI_CLK, 0x000F000F);
++	dsi_write_field(display, EXR_DSI_TO0, 0);
++	dsi_write_field(display, EXR_DSI_TO1, 0);
++	dsi_write_field(display, EXR_DSI_CFG, DSI_CFG_RX_LP_STP(1));
++	dsi_interrupt_setup(display);
+ 
+ 	return 0;
+ }
+ 
+ static void
+-dsi_set_gpiolist(
+-	struct xgold_mipi_dsi_device *mipi_dsi,
+-	struct display_gpio *gpios)
++dsi_set_gpiolist(struct dsi_display *display, struct display_gpio *gpios)
+ {
+ 	struct display_gpio *gpio;
+ 
+ 	list_for_each_entry(gpio, &gpios->list, list) {
+ 		switch (gpio->type) {
+ 		case DSI_GPIO_VHIGH:
+-			if (!mipi_dsi->gpio_vhigh)
++			if (!display->gpio_vhigh)
+ 				break;
+ 
+-			gpio_request(mipi_dsi->gpio_vhigh, "disp_vhigh");
+-			gpio_direction_output(
+-					mipi_dsi->gpio_vhigh, gpio->value);
++			gpio_direction_output(display->gpio_vhigh, gpio->value);
+ 			break;
+ 
+ 		case DSI_GPIO_VLOW:
+-			if (!mipi_dsi->gpio_vlow)
++			if (!display->gpio_vlow)
+ 				break;
+ 
+-			gpio_request(mipi_dsi->gpio_vlow, "disp_vlow");
+-			gpio_direction_output(
+-					mipi_dsi->gpio_vlow, gpio->value);
++			gpio_direction_output(display->gpio_vlow, gpio->value);
+ 			break;
+ 
+ 		case DSI_GPIO_RESET:
+-			if (!mipi_dsi->gpio_reset)
++			if (!display->gpio_reset)
+ 				break;
+ 
+-			gpio_request(mipi_dsi->gpio_reset, "disp_rst");
+-			gpio_direction_output(
+-					mipi_dsi->gpio_reset, gpio->value);
++			gpio_direction_output(display->gpio_reset, gpio->value);
+ 			break;
+ 		}
+ 
+@@ -645,72 +653,73 @@ dsi_set_gpiolist(
+ 	}
+ }
+ 
+-static void dsi_panel_power_on(struct xgold_mipi_dsi_device *mipi_dsi)
++static void dsi_panel_power_on(struct dsi_display *display)
+ {
+-	if (mipi_dsi->cur_display->gpios_power_on)
+-		dsi_set_gpiolist(
+-			mipi_dsi, mipi_dsi->cur_display->gpios_power_on);
++	if (display->gpios_power_on)
++		dsi_set_gpiolist(display, display->gpios_power_on);
+ }
+ 
+-static void dsi_panel_power_off(struct xgold_mipi_dsi_device *mipi_dsi)
++static void dsi_panel_power_off(struct dsi_display *display)
+ {
+-	if (mipi_dsi->cur_display->gpios_power_off)
+-		dsi_set_gpiolist(
+-			mipi_dsi, mipi_dsi->cur_display->gpios_power_off);
++	if (display->gpios_power_off)
++		dsi_set_gpiolist(display, display->gpios_power_off);
+ }
+ 
+-static int dsi_panel_sleep_in(struct xgold_mipi_dsi_device *mipi_dsi)
++static int dsi_panel_sleep_in(struct dsi_display *display)
+ {
+-	struct display_msg *msgs = mipi_dsi->cur_display->msgs_sleep_in;
++	struct display_msg *msgs = display->msgs_sleep_in;
+ 
+ 	if (msgs != NULL)
+-		dsi_send_msglist(mipi_dsi, msgs);
++		dsi_send_msglist(display, msgs);
+ 
+ 	return 0;
+ }
+ 
+-static int dsi_panel_sleep_out(struct xgold_mipi_dsi_device *mipi_dsi)
++static int dsi_panel_sleep_out(struct dsi_display *display)
+ {
+-	struct display_msg *msgs = mipi_dsi->cur_display->msgs_sleep_out;
++	struct display_msg *msgs = display->msgs_sleep_out;
+ 
+ 	if (msgs != NULL)
+-		dsi_send_msglist(mipi_dsi, msgs);
++		dsi_send_msglist(display, msgs);
+ 
+ 	return 0;
+ }
+ 
+-void dsi_config(struct xgold_mipi_dsi_device *mipi_dsi, int type)
++void dsi_config(struct dsi_display *display, int type)
+ {
+ 	unsigned int dsicfg;
+ 
+ 	if (type == DIF_TX_DATA) {
+-		dsi_write_field(mipi_dsi, EXR_DSI_CFG, DSI_CFG_OFF(DSI_CMD));
+-		dsi_write_field(mipi_dsi, EXR_DSI_IMSC, DSI_IRQ_ERR_MASK);
+-		dsi_set_phy(mipi_dsi, 1);
+-		dsi_write_field(mipi_dsi, EXR_DSI_CFG,
+-				DSI_CFG_INIT(
+-				mipi_dsi->cur_display->dif.dsi.nblanes));
++		dsi_write_field(display, EXR_DSI_CFG, DSI_CFG_OFF(DSI_CMD));
++		dsi_write_field(display, EXR_DSI_IMSC, DSI_IRQ_ERR_MASK);
++		dsi_set_phy(display, 1);
++		dsi_write_field(display, EXR_DSI_CFG,
++				DSI_CFG_INIT(display->dif.dsi.nblanes));
+ 		return;
+ 	}
+ 
+-	dsi_write_field(mipi_dsi, EXR_DSI_CFG, DSI_CFG_OFF(DSI_VIDEO));
+-	dsi_write_field(mipi_dsi, EXR_DSI_IMSC,
++	dsi_write_field(display, EXR_DSI_CFG, DSI_CFG_OFF(DSI_VIDEO));
++	dsi_write_field(display, EXR_DSI_IMSC,
+ 			DSI_IRQ_ERR_MASK & (~DSI_IRQ_ERR_DSIFIN));
+-	dsi_configure_video_mode(mipi_dsi,
+-			PIXELS_TO_BYTES(mipi_dsi->cur_display->xres,
+-			mipi_dsi->cur_display->bpp),
+-			mipi_dsi->cur_display->yres);
+-	dsi_set_phy(mipi_dsi, 1);
+-	dsicfg = DSI_CFG_TX_HS_PIXEL(mipi_dsi->cur_display->dif.dsi.nblanes,
+-					mipi_dsi->cur_display->dif.dsi.mode);
+-	dsi_write_field(mipi_dsi, EXR_DSI_CFG, dsicfg);
++	dsi_configure_video_mode(display,
++			PIXELS_TO_BYTES(display->xres, display->bpp),
++			display->yres);
++	dsi_set_phy(display, 1);
++	dsicfg = DSI_CFG_TX_HS_PIXEL(display->dif.dsi.nblanes,
++					display->dif.dsi.mode);
++	dsi_write_field(display, EXR_DSI_CFG, dsicfg);
+ }
+ 
+-static void dsi_dphy_calculation(struct dsi_display *display)
++static int dsi_dphy_calculation(struct dsi_display *display)
+ {
+ 	int ui_ps = 0, ths_prepare_ns, ths_trail_ns, ths_prepare_zero_ns,
+ 		tclk_post_ns, tclk_prepare_ns;
+ 
++	if (display->dif.dsi.display_if_dts) {
++		pr_info("dsi parameters in dts\n");
++		return 0;
++	}
++
+ 	if (display->dif.dsi.bitrate)
+ 		ui_ps = DIV_ROUND_CLOSEST(1000000000,
+ 					  display->dif.dsi.bitrate / 1000);
+@@ -775,19 +784,22 @@ static void dsi_dphy_calculation(struct dsi_display *display)
+ 	display->dif.dsi.to_hs_clk_pre =
+ 		DIV_ROUND_UP(display->dif.dsi.dc_clk_rate / 1000 *
+ 		tclk_prepare_ns, 1000000) + 5;
++
+ }
+ 
+ static void dsi_rate_calculation(struct dsi_display *display)
+ {
+ 	int diff, diff_min = DSI_RATE_MAX, n = 0, m = 0;
+ 
+-	display->dif.dsi.bitrate = DSI_RATE_OVERHEAD((display->xres +
+-		BYTES_TO_PIXELS(display->dif.dsi.hfp, display->bpp) +
+-		BYTES_TO_PIXELS(display->dif.dsi.hbp, display->bpp) +
+-		BYTES_TO_PIXELS(display->dif.dsi.hsa, display->bpp)) *
+-		(display->yres + display->dif.dsi.vfp +
+-		display->dif.dsi.vbp + display->dif.dsi.vsa) *
+-		display->fps / display->dif.dsi.nblanes * display->bpp);
++	if (!display->dif.dsi.display_if_dts) {
++		display->dif.dsi.bitrate = DSI_RATE_OVERHEAD((display->xres +
++			BYTES_TO_PIXELS(display->dif.dsi.hfp, display->bpp) +
++			BYTES_TO_PIXELS(display->dif.dsi.hbp, display->bpp) +
++			BYTES_TO_PIXELS(display->dif.dsi.hsa, display->bpp)) *
++			(display->yres + display->dif.dsi.vfp +
++			display->dif.dsi.vbp + display->dif.dsi.vsa) *
++			display->fps / display->dif.dsi.nblanes * display->bpp);
++	}
+ 
+ 	if (display->dif.dsi.bitrate > DSI_RATE_MAX)
+ 		display->dif.dsi.bitrate = DSI_RATE_MAX;
+@@ -808,34 +820,19 @@ static void dsi_rate_calculation(struct dsi_display *display)
+ 			}
+ 		}
+ 	}
+-
+-	display->dif.dsi.bitrate = DSI_RATE(display->dif.dsi.n,
+-					    display->dif.dsi.m);
+ }
+ 
+-int dsi_probe(struct xgold_mipi_dsi_device *mipi_dsi)
++int dsi_probe(struct dsi_display *display)
+ {
+-	struct dsi_display *display;
+-
+-	mipi_dsi->panel_init = dsi_panel_init;
+-	mipi_dsi->sleep_in = dsi_panel_sleep_in;
+-	mipi_dsi->sleep_out = dsi_panel_sleep_out;
+-	mipi_dsi->power_on = dsi_panel_power_on;
+-	mipi_dsi->power_off = dsi_panel_power_off;
+-	init_completion(&mipi_dsi->sync.dsifin);
+-	mipi_dsi->sync.dsifin_to = 200;
+-
+-	list_for_each_entry(display, &(mipi_dsi)->display_list, list) {
+-		struct dsi_display_if_mipi_dsi *dif = &display->dif.dsi;
+-
+-		dsi_rate_calculation(display);
+-		dsi_dphy_calculation(display);
+-		dsi_get_bllp(display, display->yres + dif->vfp + dif->vbp +
+-			     dif->vsa, PIXELS_TO_BYTES(display->xres,
+-			     display->bpp) + dif->hfp + dif->hbp + dif->hsa,
+-			     dif->dc_clk_rate, display->fps, dif->bitrate,
+-			     dif->nblanes, &dif->bllp_time, &dif->line_time);
+-	}
++	display->panel_init = dsi_panel_init;
++	display->sleep_in = dsi_panel_sleep_in;
++	display->sleep_out = dsi_panel_sleep_out;
++	display->power_on = dsi_panel_power_on;
++	display->power_off = dsi_panel_power_off;
++	init_completion(&display->sync.dsifin);
++	display->sync.dsifin_to = 200;
++	dsi_rate_calculation(display);
++	dsi_dphy_calculation(display);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/video/xgold/dsi/dsi_display.h b/drivers/video/xgold/dsi/dsi_display.h
+index c37afd1..5501335 100644
+--- a/drivers/video/xgold/dsi/dsi_display.h
++++ b/drivers/video/xgold/dsi/dsi_display.h
+@@ -23,8 +23,8 @@
+ #define __DSI_DISPLAY_H__
+ 
+ #include <linux/jiffies.h>
++#include <linux/completion.h>
+ 
+-#include "dsi_device.h"
+ #define DSI_ERR(x...)	pr_err("[dsi] "x)
+ 
+ #define BYTES_TO_PIXELS(bytes, bpp) (DIV_ROUND_CLOSEST(bytes * 8, bpp))
+@@ -62,12 +62,6 @@ enum dsi_video_mode_t {
+ 	DSI_BURST = 3,
+ };
+ 
+-enum panel_id_detect_method {
+-	DETECT_METHOD_GPIO = 0,
+-	DETECT_METHOD_MIPI = 1,
+-	DETECT_METHOD_UNKNOWN = -1,
+-};
+-
+ struct display_msg {
+ 	struct list_head list;
+ 	const char *name;
+@@ -86,7 +80,19 @@ struct display_gpio {
+ 	int delay;		/*in ms */
+ };
+ 
++struct dsi_irq {
++	int rx;
++	int tx;
++	int err;
++	int rx_breq;
++};
+ 
++struct dsi_sync_obj_s {
++	struct completion dsifin;
++	int dsifin_to;
++	struct completion dsitr1;
++	int dsitr1_to;
++};
+ 
+ struct dsi_display_if_mipi_dsi {
+ 	unsigned int dc_clk_rate;
+@@ -136,6 +142,7 @@ struct dsi_display_if_mipi_dsi {
+ 	int line_time;
+ 	int display_preinit;
+ 	u32 dsi_cfg_reg;
++	u32 display_if_dts;
+ };
+ 
+ struct dsi_display_if {
+@@ -143,15 +150,6 @@ struct dsi_display_if {
+ 	struct dsi_display_if_mipi_dsi dsi;
+ };
+ 
+-struct dsi_panel_id_detect {
+-	int method;
+-	unsigned char cmd_type;
+-	unsigned char *cmd_datas;
+-	int cmd_length;
+-	unsigned char *id_verification;
+-	int id_length;
+-};
+-
+ struct dsi_display {
+ 	int fps;	/* framerate */
+ 	int xres;	/* pixel width */
+@@ -159,18 +157,40 @@ struct dsi_display {
+ 	int bpp;
+ 	int xdpi;	/* pixel density per inch in x direction */
+ 	int ydpi;	/* pixel density per inch in y direction */
+-	struct dsi_panel_id_detect *id_detect;
++	int gpio_vhigh;
++	int gpio_vlow;
++	int gpio_reset;
+ 	struct display_gpio *gpios_power_on;
+ 	struct display_gpio *gpios_power_off;
+ 	struct display_msg *msgs_sleep_in;
+ 	struct display_msg *msgs_sleep_out;
+ 	struct display_msg *msgs_init;
+ 	struct display_msg *msgs_update;
++	int (*panel_init)(struct dsi_display *display);
++	void (*power_on)(struct dsi_display *display);
++	int (*sleep_in)(struct dsi_display *display);
++	int (*sleep_out)(struct dsi_display *display);
++	void (*power_off)(struct dsi_display *display);
+ 	struct dsi_display_if dif;
+-	struct list_head list;
++	void __iomem *regbase;
++	struct dsi_sync_obj_s sync;
++	struct dsi_irq irq;
++	struct reset_control *dsi_reset;
+ };
+ 
+-
+-
+-
++static inline int dsi_completion_timeout_ms(struct completion *comp, int to)
++{
++	long jiffies = msecs_to_jiffies(to);
++
++	return wait_for_completion_timeout(comp, jiffies);
++}
++
++void dsi_start_video(struct dsi_display *display);
++void dsi_interrupt_setup(struct dsi_display *display);
++int dsi_probe(struct dsi_display *display);
++int dsi_irq_probe(struct dsi_display *display);
++int dsi_irq_remove(struct dsi_display *display);
++int dsi_init(struct dsi_display *display);
++void dsi_config(struct dsi_display *display, int type);
++int dsi_stop(struct dsi_display *display);
+ #endif
+diff --git a/drivers/video/xgold/dsi/dsi_dts.c b/drivers/video/xgold/dsi/dsi_dts.c
+index c03af88..b3682be 100644
+--- a/drivers/video/xgold/dsi/dsi_dts.c
++++ b/drivers/video/xgold/dsi/dsi_dts.c
+@@ -26,8 +26,6 @@
+ #include <linux/of_address.h>
+ #include <linux/rockchip_fb.h>
+ #include <linux/reset.h>
+-#include <video/display_timing.h>
+-#include <video/of_display_timing.h>
+ 
+ #include "dsi_device.h"
+ #include "dsi_hwregs.h"
+@@ -45,17 +43,12 @@
+ #define PROP_DISPLAY_VIDEOID    "intel,display-vid-id"
+ #define PROP_DISPLAY_EOT        "intel,display-eot"
+ #define PROP_DISPLAY_GATE       "intel,display-gate"
++#define PROP_DISPLAY_INTERFACE	"intel,display-if"
++#define PROP_DISPLAY_INTERFACE_DTS    "intel,display-if-dts"
+ 
+ #define PROP_DISPLAY_GPIORST    "intel,display-gpio-reset"
+ #define PROP_DISPLAY_GPIOVH     "intel,display-gpio-vhigh"
+ #define PROP_DISPLAY_GPIOVL     "intel,display-gpio-vlow"
+-#define PROP_DISPLAY_GPIOID0    "intel,display-gpio-id0"
+-#define PROP_DISPLAY_GPIOID1    "intel,display-gpio-id1"
+-
+-#define PANEL_DETECT_NODE       "panel-detect"
+-
+-#define PROP_DETECT_METHOD      "intel,id-detect-method"
+-#define PROP_ID_VERIFICATION    "intel,id-verification"
+ 
+ #define GPIO_LIST_POWER_ON      "gpio-power-on"
+ #define GPIO_LIST_POWER_OFF     "gpio-power-off"
+@@ -73,10 +66,16 @@
+ #define PROP_DISPLAY_CMDDELAY   "intel,cmd-delay"
+ #define PROP_DISPLAY_CMDLP      "intel,cmd-lp"
+ 
+-#define DISPLAY_TIMINGS_NODE    "display-timings"
+-
+ #define PORCH_SYNC_MAX 0xFF
+ 
++#define OF_CHECK_GET_U32(_n_, _p_, _pval_, _e_) \
++	do { \
++		_e_ = of_property_read_u32(_n_, _p_, _pval_); \
++		if (_e_) \
++			pr_err("Can't read property:%s\n", _p_); \
++	} while (0)
++
++
+ static struct of_device_id display_of_match[] = {
+ 	{ .compatible = PROP_DISPLAY, },
+ 	{ },
+@@ -241,7 +240,7 @@ static int dsi_of_parse_display_gpiolist(struct platform_device *pdev,
+ }
+ 
+ static int dsi_of_parse_gpio(struct platform_device *pdev,
+-			     struct xgold_mipi_dsi_device *mipi_dsi)
++			     struct dsi_display *display)
+ {
+ 	struct device_node *screen_dev_n;
+ 	enum of_gpio_flags gpio_flags;
+@@ -254,77 +253,95 @@ static int dsi_of_parse_gpio(struct platform_device *pdev,
+ 		return -EINVAL;
+ 	}
+ 
+-	mipi_dsi->gpio_vhigh = of_get_named_gpio_flags(screen_dev_n,
++	display->gpio_vhigh = of_get_named_gpio_flags(screen_dev_n,
+ 		PROP_DISPLAY_GPIOVH, 0, &gpio_flags);
+-	if (!gpio_is_valid(mipi_dsi->gpio_vhigh))
+-		mipi_dsi->gpio_vhigh = 0;
++	if (gpio_is_valid(display->gpio_vhigh)) {
++		if (support_loader_display()) {
++			if (gpio_flags & OF_GPIO_ACTIVE_LOW)
++				flags = GPIOF_OUT_INIT_LOW;
++			else
++				flags = GPIOF_OUT_INIT_HIGH;
++		} else {
++			if (gpio_flags & OF_GPIO_ACTIVE_LOW)
++				flags = GPIOF_OUT_INIT_HIGH;
++			else
++				flags = GPIOF_OUT_INIT_LOW;
++		}
++		ret = gpio_request_one(display->gpio_vhigh, flags,
++				       "disp_vhigh");
++		if (ret) {
++			pr_err("%s: request display high power gpio fail: %d\n",
++			       __func__, ret);
++			display->gpio_vhigh = 0;
++		}
++	} else {
++		display->gpio_vhigh = 0;
++	}
+ 
+-	mipi_dsi->gpio_vlow = of_get_named_gpio_flags(screen_dev_n,
++	display->gpio_vlow = of_get_named_gpio_flags(screen_dev_n,
+ 			PROP_DISPLAY_GPIOVL, 0, &gpio_flags);
+-	if (!gpio_is_valid(mipi_dsi->gpio_vlow))
+-		mipi_dsi->gpio_vlow = 0;
+-
+-	mipi_dsi->gpio_reset = of_get_named_gpio_flags(screen_dev_n,
+-			PROP_DISPLAY_GPIORST, 0, &gpio_flags);
+-	if (!gpio_is_valid(mipi_dsi->gpio_reset))
+-		mipi_dsi->gpio_reset = 0;
+-
+-	mipi_dsi->gpio_id0 = of_get_named_gpio_flags(screen_dev_n,
+-			PROP_DISPLAY_GPIOID0, 0, &gpio_flags);
+-	if (gpio_is_valid(mipi_dsi->gpio_id0)) {
+-		flags = GPIOF_IN;
+-		ret = gpio_request_one(mipi_dsi->gpio_id0, flags, "disp_id0");
+-
++	if (gpio_is_valid(display->gpio_vlow)) {
++		if (support_loader_display()) {
++			if (gpio_flags & OF_GPIO_ACTIVE_LOW)
++				flags = GPIOF_OUT_INIT_LOW;
++			else
++				flags = GPIOF_OUT_INIT_HIGH;
++		} else {
++			if (gpio_flags & OF_GPIO_ACTIVE_LOW)
++				flags = GPIOF_OUT_INIT_HIGH;
++			else
++				flags = GPIOF_OUT_INIT_LOW;
++		}
++		ret = gpio_request_one(display->gpio_vlow, flags, "disp_vlow");
+ 		if (ret) {
+-			pr_err("%s: request display id0 gpio fail: %d\n",
++			pr_err("%s: request display low power gpio fail: %d\n",
+ 			       __func__, ret);
+-			mipi_dsi->gpio_id0 = 0;
++			display->gpio_vlow = 0;
+ 		}
+ 	} else {
+-		mipi_dsi->gpio_id0 = 0;
++		display->gpio_vlow = 0;
+ 	}
+ 
+-	mipi_dsi->gpio_id1 = of_get_named_gpio_flags(screen_dev_n,
+-			PROP_DISPLAY_GPIOID1, 0, &gpio_flags);
+-	if (gpio_is_valid(mipi_dsi->gpio_id1)) {
+-		flags = GPIOF_IN;
+-		ret = gpio_request_one(mipi_dsi->gpio_id1, flags, "disp_id1");
+-
++	display->gpio_reset = of_get_named_gpio_flags(screen_dev_n,
++			PROP_DISPLAY_GPIORST, 0, &gpio_flags);
++	if (gpio_is_valid(display->gpio_reset)) {
++		if (support_loader_display()) {
++			if (gpio_flags & OF_GPIO_ACTIVE_LOW)
++				flags = GPIOF_OUT_INIT_LOW;
++			else
++				flags = GPIOF_OUT_INIT_HIGH;
++		} else {
++			if (gpio_flags & OF_GPIO_ACTIVE_LOW)
++				flags = GPIOF_OUT_INIT_HIGH;
++			else
++				flags = GPIOF_OUT_INIT_LOW;
++		}
++		ret = gpio_request_one(display->gpio_reset, flags, "disp_rst");
+ 		if (ret) {
+-			pr_err("%s: request display id1 gpio fail: %d\n",
++			pr_err("%s: request display reset gpio fail: %d\n",
+ 			       __func__, ret);
+-			mipi_dsi->gpio_id1 = 0;
++			display->gpio_reset = 0;
+ 		}
+ 	} else {
+-		mipi_dsi->gpio_id1 = 0;
++		display->gpio_reset = 0;
+ 	}
+ 
+ 	return 0;
+ }
+ 
+-static int
+-dsi_of_parse_display_timing(struct dsi_display *display,
+-			    struct device_node *display_dev_n)
++static void
++dsi_of_parse_display_timing(struct xgold_mipi_dsi_device *mipi_dsi)
+ {
+-	struct display_timings *disp_timing;
+-	struct display_timing *dt;
++	struct rockchip_screen *screen = &mipi_dsi->screen;
++	struct dsi_display *display = &mipi_dsi->display;
+ 
+-	disp_timing = of_get_display_timings(display_dev_n);
+-	if (!disp_timing) {
+-		pr_err("parse display timing err\n");
+-		return -EINVAL;
+-	}
+-	dt = display_timings_get(disp_timing, disp_timing->native_mode);
+-	if (IS_ERR_OR_NULL(dt)) {
+-		pr_err("%s: Can't alloc display\n", __func__);
+-		return -ENOMEM;
+-	}
+-	display->xres = dt->hactive.typ;
+-	display->yres = dt->vactive.typ;
+-	if (dt->face == OUT_P565) {
++	rockchip_get_prmry_screen(screen);
++	display->xres = screen->mode.xres;
++	display->yres = screen->mode.yres;
++	if (screen->face == OUT_P565) {
+ 		display->bpp = 16;
+ 		display->dif.dsi.video_pixel = DSI_PIX_BIT16P;
+-	} else if (dt->face == OUT_P666) {
++	} else if (screen->face == OUT_P666) {
+ 		display->bpp = 18;
+ 		display->dif.dsi.video_pixel = DSI_PIX_BIT18P;
+ 	} else {
+@@ -332,292 +349,234 @@ dsi_of_parse_display_timing(struct dsi_display *display,
+ 		display->dif.dsi.video_pixel = DSI_PIX_BIT24P;
+ 	}
+ 
+-	display->dif.dsi.hfp = PIXELS_TO_BYTES(dt->hfront_porch.typ,
++	display->dif.dsi.hfp = PIXELS_TO_BYTES(screen->mode.right_margin,
+ 					       display->bpp);
+ 	if (display->dif.dsi.hfp > PORCH_SYNC_MAX) {
+ 		pr_info("%s: Warning! HFP = %d, MAX HFP is %d\n", __func__,
+-			dt->hfront_porch.typ,
++			screen->mode.right_margin,
+ 			BYTES_TO_PIXELS(PORCH_SYNC_MAX, display->bpp));
+ 		display->dif.dsi.hfp = PORCH_SYNC_MAX;
+ 	}
+ 
+-	display->dif.dsi.hbp = PIXELS_TO_BYTES(dt->hback_porch.typ,
++	display->dif.dsi.hbp = PIXELS_TO_BYTES(screen->mode.left_margin,
+ 					       display->bpp);
+ 	if (display->dif.dsi.hbp > PORCH_SYNC_MAX) {
+ 		pr_info("%s: Warning! HBP = %d, MAX HBP is %d\n", __func__,
+-			dt->hback_porch.typ,
++			screen->mode.left_margin,
+ 			BYTES_TO_PIXELS(PORCH_SYNC_MAX, display->bpp));
+ 		display->dif.dsi.hbp = PORCH_SYNC_MAX;
+ 	}
+ 
+-	display->dif.dsi.hsa = PIXELS_TO_BYTES(dt->hsync_len.typ,
++	display->dif.dsi.hsa = PIXELS_TO_BYTES(screen->mode.hsync_len,
+ 					       display->bpp);
+ 	if (display->dif.dsi.hsa > PORCH_SYNC_MAX) {
+ 		pr_info("%s: Warning! HSA = %d, MAX HSA is %d\n", __func__,
+-			dt->hsync_len.typ,
++			screen->mode.hsync_len,
+ 			BYTES_TO_PIXELS(PORCH_SYNC_MAX, display->bpp));
+ 		display->dif.dsi.hsa = PORCH_SYNC_MAX;
+ 	}
+ 
+-	display->dif.dsi.vfp = dt->vfront_porch.typ;
++	display->dif.dsi.vfp = screen->mode.lower_margin;
+ 	if (display->dif.dsi.vfp > PORCH_SYNC_MAX) {
+ 		pr_info("%s: Warning! VFP = %d, MAX VFP is %d\n", __func__,
+-			dt->vfront_porch.typ, PORCH_SYNC_MAX);
++			screen->mode.lower_margin, PORCH_SYNC_MAX);
+ 		display->dif.dsi.vfp = PORCH_SYNC_MAX;
+ 	}
+ 
+-	display->dif.dsi.vbp = dt->vback_porch.typ;
++	display->dif.dsi.vbp = screen->mode.upper_margin;
+ 	if (display->dif.dsi.vbp > PORCH_SYNC_MAX) {
+ 		pr_info("%s: Warning! VBP = %d, MAX VBP is %d\n", __func__,
+-			dt->vback_porch.typ, PORCH_SYNC_MAX);
++			screen->mode.upper_margin, PORCH_SYNC_MAX);
+ 		display->dif.dsi.vbp = PORCH_SYNC_MAX;
+ 	}
+ 
+-	display->dif.dsi.vsa = dt->vsync_len.typ;
++	display->dif.dsi.vsa = screen->mode.vsync_len;
+ 	if (display->dif.dsi.vsa > PORCH_SYNC_MAX) {
+ 		pr_info("%s: Warning! VSA = %d, MAX VSA is %d\n", __func__,
+-			dt->vsync_len.typ, PORCH_SYNC_MAX);
++			screen->mode.vsync_len, PORCH_SYNC_MAX);
+ 		display->dif.dsi.vsa = PORCH_SYNC_MAX;
+ 	}
++
+ 	display->dif.dsi.hfp_lp = 0;
+ 	display->dif.dsi.hbp_lp = 0;
+ 	display->dif.dsi.hsa_lp = 0;
+-	kfree(disp_timing);
+-	return 0;
+ }
+ 
+-static int dsi_of_parse_panel_detect_node(struct platform_device *pdev,
+-					  struct device_node *n,
+-					  struct dsi_panel_id_detect **det)
++int dsi_of_parse_display(struct platform_device *pdev,
++			 struct xgold_mipi_dsi_device *mipi_dsi)
+ {
+-	int ret, i;
++	int value, ret = 0;
+ 	const char *string;
+-	u32 val;
+-	const __be32 *p;
+-	struct property *prop;
+-	struct dsi_panel_id_detect *id_det;
++	struct device_node *display_dev_n, *child;
++	struct dsi_display *display = &mipi_dsi->display;
++	int index = 0;
++	struct device_node *nif;
+ 
+-	id_det = (struct dsi_panel_id_detect *) devm_kzalloc(&pdev->dev,
+-			sizeof(struct dsi_panel_id_detect), GFP_KERNEL);
+-	if (!id_det) {
+-		pr_err("%s: Can't alloc panel id struct\n", __func__);
+-		return -ENOMEM;
++	dsi_of_parse_gpio(pdev, display);
++	dsi_of_parse_display_timing(mipi_dsi);
++	display->dsi_reset = devm_reset_control_get(&pdev->dev, "dsi");
++	if (IS_ERR(display->dsi_reset)) {
++		pr_err("%s: get dsi reset control failed\n", __func__);
++		display->dsi_reset = NULL;
+ 	}
+-	*det = id_det;
+ 
+-	ret = of_property_read_string(n, PROP_DETECT_METHOD, &string);
+-	if (ret) {
+-		pr_err("%s: Get %s failed\n", __func__, PROP_DETECT_METHOD);
+-		id_det->method = DETECT_METHOD_UNKNOWN;
+-	} else if (!strcmp("gpio", string)) {
+-		id_det->method = DETECT_METHOD_GPIO;
+-	} else if (!strcmp("mipi", string)) {
+-		id_det->method = DETECT_METHOD_MIPI;
+-	} else {
+-		pr_err("%s: Get unknown method %s\n", __func__, string);
+-		id_det->method = DETECT_METHOD_UNKNOWN;
++	for_each_matching_node(display_dev_n, display_of_match) {
++		if (mipi_dsi->screen.index < 0 ||
++		    mipi_dsi->screen.index == index++)
++			break;
+ 	}
+ 
+-	id_det->cmd_length = 0;
+-	of_property_for_each_u32(n, PROP_DISPLAY_CMDDATA, prop, p, val) {
+-		id_det->cmd_length++;
+-	};
+-
+-	/* allocate data array if needed */
+-	if (id_det->cmd_length > 0) {
+-		id_det->cmd_datas = devm_kzalloc(&pdev->dev,
+-				id_det->cmd_length*sizeof(u8), GFP_KERNEL);
+-		if (!id_det->cmd_datas) {
+-			pr_err("%s: Can't alloc array for %s length %dbytes\n",
+-			       __func__, n->name, id_det->cmd_length);
+-			return -ENOMEM;
+-		}
++	if (!display_dev_n) {
++		pr_err("%s: Can't find display matching node\n", __func__);
++		return -EINVAL;
+ 	}
+ 
+-	/* populate header+data */
+-	i = 0;
+-	of_property_for_each_u32(n, PROP_DISPLAY_CMDDATA, prop, p, val) {
+-		if (id_det->cmd_datas)
+-			id_det->cmd_datas[i] = val;
+-		i++;
++	if (of_property_read_u32(display_dev_n, PROP_DISPLAY_DCCLK,
++		&display->dif.dsi.dc_clk_rate)) {
++		pr_err("%s: Can't get DC clock rate\n", __func__);
++		return -EINVAL;
+ 	}
+ 
+-	ret = of_property_read_u32(n, PROP_DISPLAY_CMDTYPE, &val);
+-	if (ret)
+-		id_det->cmd_type = 0;
++	/* DSI_CFG default value */
++	display->dif.dsi.dsi_cfg_reg = BITFLDS(EXR_DSI_CFG_VSYNC, 1) |
++		BITFLDS(EXR_DSI_CFG_PSYNC, 1);
++
++	ret = of_property_read_u32(display_dev_n, PROP_DISPLAY_RAMLESS, &value);
++	if (ret || value)
++		display->dif.dsi.mode = DSI_VIDEO;
+ 	else
+-		id_det->cmd_type = val;
++		display->dif.dsi.mode = DSI_CMD;
+ 
+-	id_det->id_length = 0;
+-	of_property_for_each_u32(n, PROP_ID_VERIFICATION, prop, p, val) {
+-		id_det->id_length++;
+-	};
++	ret = of_property_read_u32(display_dev_n, PROP_DISPLAY_FPS,
++				   &display->fps);
++	if (ret)
++		display->fps = 60;
+ 
+-	/* allocate data array if needed */
+-	if (id_det->id_length > 0) {
+-		id_det->id_verification = devm_kzalloc(&pdev->dev,
+-				id_det->id_length*sizeof(u8), GFP_KERNEL);
+-		if (!id_det->id_verification) {
+-			pr_err("%s: Can't alloc array for %s length %dbytes\n",
+-			       __func__, n->name, id_det->id_length);
+-			return -ENOMEM;
+-		}
+-	}
++	ret = of_property_read_u32(display_dev_n, PROP_DISPLAY_EOT, &value);
++	if (ret || value)
++		display->dif.dsi.dsi_cfg_reg |= BITFLDS(EXR_DSI_CFG_EOT, 1);
+ 
+-	/* populate header+data */
+-	i = 0;
+-	of_property_for_each_u32(n, PROP_ID_VERIFICATION, prop, p, val) {
+-		if (id_det->id_verification)
+-			id_det->id_verification[i] = val;
+-		i++;
++	ret = of_property_read_u32(display_dev_n, PROP_DISPLAY_GATE, &value);
++	if (ret || value)
++		display->dif.dsi.dsi_cfg_reg |= BITFLDS(EXR_DSI_CFG_GATE, 1);
++
++	ret = of_property_read_u32(display_dev_n, PROP_DISPLAY_PREINIT,
++				   &display->dif.dsi.display_preinit);
++	if (ret)
++		display->dif.dsi.display_preinit = 0;
++
++	ret = of_property_read_string(display_dev_n, PROP_DISPLAY_VIDEOMODE,
++				      &string);
++	if (ret) {
++		display->dif.dsi.video_mode = DSI_BURST;
++	} else if (!strcmp("active", string)) {
++		display->dif.dsi.video_mode = DSI_ACTIVE;
++	} else if (!strcmp("pulses", string)) {
++		display->dif.dsi.video_mode = DSI_PULSES;
++	} else if (!strcmp("events", string)) {
++		display->dif.dsi.video_mode = DSI_EVENTS;
++	} else if (!strcmp("burst", string)) {
++		display->dif.dsi.video_mode = DSI_BURST;
++	} else {
++		display->dif.dsi.video_mode = DSI_BURST;
++		pr_info("%s: Unknown dsi video mode type %s\n", __func__,
++			string);
+ 	}
+ 
+-	return 0;
+-}
++	ret = of_property_read_u32(display_dev_n, PROP_DISPLAY_VIDEOID,
++				   &display->dif.dsi.id);
++	if (ret)
++		display->dif.dsi.id = 0;
+ 
+-int dsi_of_parse_display(struct platform_device *pdev,
+-			 struct xgold_mipi_dsi_device *mipi_dsi)
+-{
+-	int value, ret = 0;
+-	const char *string;
+-	struct device_node *display_dev_n, *child;
+-	struct dsi_display *display;
+-	struct dsi_display *display_curr;
+-	int index = 0;
+-	dsi_of_parse_gpio(pdev, mipi_dsi);
+-	mipi_dsi->dsi_reset = devm_reset_control_get(&pdev->dev, "dsi");
+-	if (IS_ERR(mipi_dsi->dsi_reset)) {
+-		pr_err("%s: get dsi reset control failed\n", __func__);
+-		mipi_dsi->dsi_reset = NULL;
++	ret = of_property_read_u32(display_dev_n, PROP_DISPLAY_INTERFACE_DTS,
++				   &display->dif.dsi.display_if_dts);
++	if (ret)
++		display->dif.dsi.display_if_dts = 0;
++
++	/* interface */
++	nif = of_parse_phandle(display_dev_n, PROP_DISPLAY_INTERFACE, 0);
++	if (!nif) {
++		pr_err("Can't find node %s\n", PROP_DISPLAY_INTERFACE);
++		display->dif.dsi.display_if_dts = 0;
++		return -1;
+ 	}
+-	INIT_LIST_HEAD(&(mipi_dsi)->display_list);
+ 
+-	for_each_matching_node(display_dev_n, display_of_match) {
+-		if (!display_dev_n) {
+-			pr_err(
+-			       "%s: Can't find display matching node\n",
+-			       __func__);
+-			return -EINVAL;
+-		}
+-		display = (struct dsi_display *) devm_kzalloc(
+-				&pdev->dev, sizeof(struct dsi_display),
+-				GFP_KERNEL);
+-		if (IS_ERR_OR_NULL(display)) {
+-			pr_err("%s: Can't alloc display\n", __func__);
+-			list_for_each_entry(display,
+-					&(mipi_dsi)->display_list, list) {
+-				devm_kfree(&pdev->dev, display);
+-			}
+-			return -ENOMEM;
+-		}
+-		dsi_of_parse_display_timing(display, display_dev_n);
+-		if (of_property_read_u32(display_dev_n, PROP_DISPLAY_DCCLK,
+-			&display->dif.dsi.dc_clk_rate)) {
+-			pr_err("%s: Can't get DC clock rate\n", __func__);
+-			return -EINVAL;
++	pr_info("Display interface %s using dts %d\n", nif->name,
++		display->dif.dsi.display_if_dts);
++
++	if (strcmp(nif->name, "mipi-dsi") == 0) {
++		OF_CHECK_GET_U32(nif, "intel,display-if-rate",
++				&display->dif.dsi.bitrate, ret);
++		OF_CHECK_GET_U32(nif, "intel,display-if-phy-calib",
++				&display->dif.dsi.calib, ret);
++		OF_CHECK_GET_U32(nif, "intel,display-if-phy-pwup",
++				&display->dif.dsi.pwup, ret);
++		OF_CHECK_GET_U32(nif, "intel,display-if-phy-to_lp_hs_req",
++				&display->dif.dsi.to_lp_hs_req, ret);
++		OF_CHECK_GET_U32(nif, "intel,display-if-phy-to_lp_hs_dis",
++				&display->dif.dsi.to_lp_hs_dis, ret);
++		OF_CHECK_GET_U32(nif, "intel,display-if-phy-to_lp_hs_eot",
++				&display->dif.dsi.to_lp_hs_eot, ret);
++		OF_CHECK_GET_U32(nif, "intel,display-if-phy-to_hs_zero",
++				&display->dif.dsi.to_hs_zero, ret);
++		OF_CHECK_GET_U32(nif, "intel,display-if-phy-to_hs_flip",
++				&display->dif.dsi.to_hs_flip, ret);
++		OF_CHECK_GET_U32(nif, "intel,display-if-phy-lp_clk_div",
++				&display->dif.dsi.lp_clk_div, ret);
++		OF_CHECK_GET_U32(nif, "intel,display-if-phy-to_hs_clk_pre",
++				&display->dif.dsi.to_hs_clk_pre, ret);
++		OF_CHECK_GET_U32(nif, "intel,display-if-phy-to_hs_clk_post",
++				&display->dif.dsi.to_hs_clk_post, ret);
++		OF_CHECK_GET_U32(nif, "intel,display-if-phy-data_delay",
++				&display->dif.dsi.data_delay, ret);
++		OF_CHECK_GET_U32(nif, "intel,display-if-phy-clock_delay",
++				&display->dif.dsi.clock_delay, ret);
++		OF_CHECK_GET_U32(nif, "intel,display-if-phy-lp_tx_tfall",
++				&display->dif.dsi.lp_tx_tfall, ret);
++		OF_CHECK_GET_U32(nif, "intel,display-if-phy-lp_tx_rise",
++				&display->dif.dsi.lp_tx_trise, ret);
++		OF_CHECK_GET_U32(nif, "intel,display-if-phy-lp_tx_vref",
++				&display->dif.dsi.lp_tx_vref, ret);
++		OF_CHECK_GET_U32(nif, "intel,display-if-nblanes",
++				&display->dif.dsi.nblanes, ret);
+ 		}
+-		/* DSI_CFG default value */
+-		display->dif.dsi.dsi_cfg_reg = BITFLDS(EXR_DSI_CFG_VSYNC, 1) |
+-					       BITFLDS(EXR_DSI_CFG_PSYNC, 1);
+-		ret = of_property_read_u32(
+-					   display_dev_n, PROP_DISPLAY_RAMLESS,
+-					   &value);
+-		if (ret || value)
+-			display->dif.dsi.mode = DSI_VIDEO;
+-		else
+-			display->dif.dsi.mode = DSI_CMD;
+-		ret = of_property_read_u32(display_dev_n, PROP_DISPLAY_FPS,
+-					   &display->fps);
+-		if (ret)
+-			display->fps = 60;
+-		ret = of_property_read_u32(display_dev_n, PROP_DISPLAY_LANES,
+-					   &display->dif.dsi.nblanes);
+-		if (ret)
+-			display->dif.dsi.nblanes = 4;
+-		ret = of_property_read_u32(
+-					   display_dev_n, PROP_DISPLAY_EOT,
+-					   &value);
+-		if (ret || value)
+-			display->dif.dsi.dsi_cfg_reg |=
+-				BITFLDS(EXR_DSI_CFG_EOT, 1);
+-		ret = of_property_read_u32(
+-					   display_dev_n,
+-					   PROP_DISPLAY_GATE, &value);
+-		if (ret || value)
+-			display->dif.dsi.dsi_cfg_reg |=
+-				BITFLDS(EXR_DSI_CFG_GATE, 1);
+-		ret = of_property_read_u32(display_dev_n, PROP_DISPLAY_PREINIT,
+-					   &display->dif.dsi.display_preinit);
+-		if (ret)
+-			display->dif.dsi.display_preinit = 0;
+-			ret = of_property_read_string(
+-						      display_dev_n,
+-						      PROP_DISPLAY_VIDEOMODE,
+-						      &string);
+-		if (ret) {
+-			display->dif.dsi.video_mode = DSI_BURST;
+-		} else if (!strcmp("active", string)) {
+-			display->dif.dsi.video_mode = DSI_ACTIVE;
+-		} else if (!strcmp("pulses", string)) {
+-			display->dif.dsi.video_mode = DSI_PULSES;
+-		} else if (!strcmp("events", string)) {
+-			display->dif.dsi.video_mode = DSI_EVENTS;
+-		} else if (!strcmp("burst", string)) {
+-			display->dif.dsi.video_mode = DSI_BURST;
+-		} else {
+-			display->dif.dsi.video_mode = DSI_BURST;
+-			pr_info("%s: Unknown dsi video mode type %s\n",
+-				__func__, string);
+-		}
+-		ret = of_property_read_u32(display_dev_n, PROP_DISPLAY_VIDEOID,
+-					   &display->dif.dsi.id);
+-		if (ret)
+-			display->dif.dsi.id = 0;
+-		for_each_child_of_node(display_dev_n, child) {
+-			if (!strcmp(child->name, CMD_LIST_INIT)) {
+-				ret = dsi_of_parse_display_msglist(pdev, child,
+-					&display->msgs_init);
+-			} else if (!strcmp(child->name, CMD_LIST_UPDATE)) {
+-				ret = dsi_of_parse_display_msglist(pdev, child,
+-					&display->msgs_update);
+-			} else if (!strcmp(child->name, GPIO_LIST_POWER_ON)) {
+-				ret = dsi_of_parse_display_gpiolist(pdev, child,
+-					&display->gpios_power_on);
+-			} else if (!strcmp(child->name, GPIO_LIST_POWER_OFF)) {
+-				ret = dsi_of_parse_display_gpiolist(pdev, child,
+-					&display->gpios_power_off);
+-			} else if (!strcmp(child->name, CMD_LIST_SLEEP_IN)) {
+-				ret = dsi_of_parse_display_msglist(pdev, child,
+-					&display->msgs_sleep_in);
+-			} else if (!strcmp(child->name, CMD_LIST_SLEEP_OUT)) {
+-				ret = dsi_of_parse_display_msglist(pdev, child,
+-					&display->msgs_sleep_out);
+-			} else if (!strcmp(child->name, PANEL_DETECT_NODE)) {
+-				ret = dsi_of_parse_panel_detect_node(pdev,
+-					child, &display->id_detect);
+-			} else if (!strcmp(child->name, DISPLAY_TIMINGS_NODE)) {
+-				continue;
+-			} else {
+-				pr_info("%s: In node %s, unexpected child %s !\n",
+-					__func__, display_dev_n->name,
+-					child->name);
+-			}
+-			if (ret) {
+-				pr_info("%s: Node %s parsing failed %d\n",
+-				 __func__, child->name, ret);
+-			}
+-		};
+-		list_add_tail(&display->list, &(mipi_dsi)->display_list);
++
++	if (ret) {
++		pr_err("Node %s parsing failed\n", nif->name);
++		return -EINVAL;
+ 	}
+ 
+ 
+-	list_for_each_entry(display_curr, &(mipi_dsi)->display_list, list) {
+-		if (mipi_dsi->screen.index < 0 ||
+-		    mipi_dsi->screen.index == index++) {
+-			mipi_dsi->cur_display = display_curr;
+-			break;
++	for_each_child_of_node(display_dev_n, child) {
++		if (!strcmp(child->name, CMD_LIST_INIT)) {
++			ret = dsi_of_parse_display_msglist(pdev, child,
++				&display->msgs_init);
++		} else if (!strcmp(child->name, CMD_LIST_UPDATE)) {
++			ret = dsi_of_parse_display_msglist(pdev, child,
++				&display->msgs_update);
++		} else if (!strcmp(child->name, GPIO_LIST_POWER_ON)) {
++			ret = dsi_of_parse_display_gpiolist(pdev, child,
++				&display->gpios_power_on);
++		} else if (!strcmp(child->name, GPIO_LIST_POWER_OFF)) {
++			ret = dsi_of_parse_display_gpiolist(pdev, child,
++				&display->gpios_power_off);
++		} else if (!strcmp(child->name, CMD_LIST_SLEEP_IN)) {
++			ret = dsi_of_parse_display_msglist(pdev, child,
++				&display->msgs_sleep_in);
++		} else if (!strcmp(child->name, CMD_LIST_SLEEP_OUT)) {
++			ret = dsi_of_parse_display_msglist(pdev, child,
++				&display->msgs_sleep_out);
++		} else {
++			pr_info("%s: In node %s, unexpected child %s !\n",
++				__func__, display_dev_n->name, child->name);
+ 		}
+-	}
++
++		if (ret) {
++			pr_info("%s: Node %s parsing failed %d\n", __func__,
++				child->name, ret);
++		}
++	};
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/video/xgold/dsi/dsi_hwregs.c b/drivers/video/xgold/dsi/dsi_hwregs.c
+index 921d087..5699fd9 100644
+--- a/drivers/video/xgold/dsi/dsi_hwregs.c
++++ b/drivers/video/xgold/dsi/dsi_hwregs.c
+@@ -263,7 +263,7 @@ struct dsi_command dsi_regs[] = {
+ 	EXTREG(EXR_DSI_RXD, DSI_RXD, 0xFFFFFFFF, 0),
+ };
+ 
+-int dsi_wait_status(struct xgold_mipi_dsi_device *mipi_dsi, unsigned int reg,
++int dsi_wait_status(struct dsi_display *display, unsigned int reg,
+ 		     unsigned int value, unsigned int mask, unsigned int delay,
+ 		     unsigned int count)
+ {
+@@ -271,7 +271,7 @@ int dsi_wait_status(struct xgold_mipi_dsi_device *mipi_dsi, unsigned int reg,
+ 	int found = 0;
+ 
+ 	do {
+-		read_value = dsi_read_field(mipi_dsi, reg);
++		read_value = dsi_read_field(display, reg);
+ 		if ((read_value & mask) == value) {
+ 			found = 1;
+ 			break;
+@@ -294,33 +294,31 @@ int dsi_wait_status(struct xgold_mipi_dsi_device *mipi_dsi, unsigned int reg,
+ /**
+  * Read DSI register
+  */
+-unsigned int dsi_read_field(struct xgold_mipi_dsi_device *mipi_dsi,
+-			    unsigned int id)
++unsigned int dsi_read_field(struct dsi_display *display, unsigned int id)
+ {
+ 	struct dsi_command *cmd = &dsi_regs[id];
+ 
+-	return (ioread32(mipi_dsi->regbase + cmd->addr) >> cmd->shift) &
++	return (ioread32(display->regbase + cmd->addr) >> cmd->shift) &
+ 		cmd->mask;
+ }
+ 
+ /**
+  * Write DSI register
+  */
+-void dsi_write_field(struct xgold_mipi_dsi_device *mipi_dsi,
+-		     unsigned int id, u32 val)
++void dsi_write_field(struct dsi_display *display, unsigned int id, u32 val)
+ {
+ 	u32 regval = 0;
+ 	struct dsi_command *cmd = &dsi_regs[id];
+ 
+ 	if (id == EXR_DSI_CFG)
+-		val |= mipi_dsi->cur_display->dif.dsi.dsi_cfg_reg;
++		val |= display->dif.dsi.dsi_cfg_reg;
+ 
+ 	if (cmd->mask == 0xFFFFFFFF) {
+-		iowrite32(val, mipi_dsi->regbase + cmd->addr);
++		iowrite32(val, display->regbase + cmd->addr);
+ 	} else {
+ 		val = (val << cmd->shift) & (cmd->mask << cmd->shift);
+-		regval = ioread32(mipi_dsi->regbase + cmd->addr) &
++		regval = ioread32(display->regbase + cmd->addr) &
+ 			~(cmd->mask << cmd->shift);
+-		iowrite32(val | regval, mipi_dsi->regbase + cmd->addr);
++		iowrite32(val | regval, display->regbase + cmd->addr);
+ 	}
+ }
+diff --git a/drivers/video/xgold/dsi/dsi_hwregs.h b/drivers/video/xgold/dsi/dsi_hwregs.h
+index 3196d44..3b891fb 100644
+--- a/drivers/video/xgold/dsi/dsi_hwregs.h
++++ b/drivers/video/xgold/dsi/dsi_hwregs.h
+@@ -253,11 +253,9 @@ extern struct dsi_command dsi_regs[];
+ #define BITFLDS(_id_, _val_) \
+ 	(((_val_) & dsi_regs[_id_].mask) << (dsi_regs[_id_].shift))
+ 
+-int dsi_wait_status(struct xgold_mipi_dsi_device *mipi_dsi, unsigned int reg,
++int dsi_wait_status(struct dsi_display *display, unsigned int reg,
+ 		     unsigned int value, unsigned int mask, unsigned int delay,
+ 		     unsigned int count);
+-unsigned int dsi_read_field(struct xgold_mipi_dsi_device *mipi_dsi,
+-			    unsigned int id);
+-void dsi_write_field(struct xgold_mipi_dsi_device *mipi_dsi,
+-		     unsigned int id, u32 val);
++unsigned int dsi_read_field(struct dsi_display *display, unsigned int id);
++void dsi_write_field(struct dsi_display *display, unsigned int id, u32 val);
+ #endif
+diff --git a/drivers/video/xgold/dsi/dsi_irqs.c b/drivers/video/xgold/dsi/dsi_irqs.c
+index 0f1d667..2ec8c01 100644
+--- a/drivers/video/xgold/dsi/dsi_irqs.c
++++ b/drivers/video/xgold/dsi/dsi_irqs.c
+@@ -41,19 +41,19 @@
+ 
+ #include "dsi_hwregs.h"
+ 
+-static inline void dsi_hal_irq_dsi_fin(struct xgold_mipi_dsi_device *mipi_dsi)
++static inline void dsi_hal_irq_dsi_fin(struct dsi_display *display)
+ {
+-	complete(&mipi_dsi->sync.dsifin);
++	complete(&display->sync.dsifin);
+ }
+ 
+-static inline void dsi_hal_irq_dsi_tr1(struct xgold_mipi_dsi_device *mipi_dsi)
++static inline void dsi_hal_irq_dsi_tr1(struct dsi_display *display)
+ {
+-	complete(&mipi_dsi->sync.dsitr1);
++	complete(&display->sync.dsitr1);
+ }
+ 
+-static inline void dsi_hal_irq_dsi_tr2(struct xgold_mipi_dsi_device *mipi_dsi)
++static inline void dsi_hal_irq_dsi_tr2(struct dsi_display *display)
+ {
+-	dsi_write_field(mipi_dsi, EXR_DSI_CFG, BITFLDS(EXR_DSI_CFG_TX, 1) |
++	dsi_write_field(display, EXR_DSI_CFG, BITFLDS(EXR_DSI_CFG_TX, 1) |
+ 		BITFLDS(EXR_DSI_CFG_LP, 1) |
+ 		BITFLDS(EXR_DSI_CFG_MODE, 1) |
+ 		BITFLDS(EXR_DSI_CFG_EOT, 1) |
+@@ -87,7 +87,7 @@ if (dsi_irq_status & _irq_) { \
+ 	stat = dsi_read_field(_p_, EXR_DSI_STAT); \
+ 	ris = dsi_read_field(_p_, EXR_DSI_RIS); \
+ 	txffs = dsi_read_field(_p_, EXR_DSI_FIFO_STAT); \
+-pr_info_ratelimited("[dsi]"#_irq_\
++pr_info("[dsi]"#_irq_\
+ " DSI_STAT:0x%08x DSI_RIS:0x%08x DSI_FIFO_STAT:0x%08x\n",\
+ 	stat, ris, txffs); \
+ 		dsi_irq_clear |= _irq_; \
+@@ -97,32 +97,31 @@ static irqreturn_t dsi_hal_irq_err(int irq, void *dev_id)
+ {
+ 	unsigned int dsi_irq_status = 0;
+ 	unsigned int dsi_irq_clear = 0;
+-	struct xgold_mipi_dsi_device *mipi_dsi =
+-		(struct xgold_mipi_dsi_device *)dev_id;
++	struct dsi_display *display = (struct dsi_display *)dev_id;
+ 
+-	dsi_irq_status = dsi_read_field(mipi_dsi, EXR_DSI_RIS);
++	dsi_irq_status = dsi_read_field(display, EXR_DSI_RIS);
+ 
+ 	/*pr_info("%s: Hardware Interrupt EXR_DSI_RIS = 0x%08x\n",
+ 		__func__, dsi_irq_status);*/
+ 
+ 	DSI_INTERRUPT_CLEAR(DSI_IRQ_ERR_IDLE);
+-	DSI_LOG_INTERRUPT_ERROR(DSI_IRQ_ERR_DSITR0, mipi_dsi);
++	DSI_LOG_INTERRUPT_ERROR(DSI_IRQ_ERR_DSITR0, display);
+ 	DSI_LOG_INTERRUPT_DEBUG_DBG_CB(DSI_IRQ_ERR_DSITR1,
+-				       dsi_hal_irq_dsi_tr1, mipi_dsi);
++				       dsi_hal_irq_dsi_tr1, display);
+ 	DSI_LOG_INTERRUPT_DEBUG_DBG_CB(DSI_IRQ_ERR_DSITR2,
+-				       dsi_hal_irq_dsi_tr2, mipi_dsi);
+-	DSI_LOG_INTERRUPT_ERROR(DSI_IRQ_ERR_DSITR3, mipi_dsi);
+-	DSI_LOG_INTERRUPT_ERROR(DSI_IRQ_ERR_DSIUFL, mipi_dsi);
++				       dsi_hal_irq_dsi_tr2, display);
++	DSI_LOG_INTERRUPT_ERROR(DSI_IRQ_ERR_DSITR3, display);
++	DSI_LOG_INTERRUPT_ERROR(DSI_IRQ_ERR_DSIUFL, display);
+ 	DSI_LOG_INTERRUPT_DEBUG_HW_CB(DSI_IRQ_ERR_DSIFIN,
+-				       dsi_hal_irq_dsi_fin, mipi_dsi);
+-	DSI_LOG_INTERRUPT_ERROR(DSI_IRQ_ERR_DSILTO, mipi_dsi);
+-	DSI_LOG_INTERRUPT_ERROR(DSI_IRQ_ERR_DSIHTO, mipi_dsi);
+-	DSI_LOG_INTERRUPT_ERROR(DSI_IRQ_ERR_DSIRTO, mipi_dsi);
+-	DSI_LOG_INTERRUPT_ERROR(DSI_IRQ_ERR_DSIESC, mipi_dsi);
+-	DSI_LOG_INTERRUPT_ERROR(DSI_IRQ_ERR_DSISYN, mipi_dsi);
+-	DSI_LOG_INTERRUPT_ERROR(DSI_IRQ_ERR_DSICTR, mipi_dsi);
++				       dsi_hal_irq_dsi_fin, display);
++	DSI_LOG_INTERRUPT_ERROR(DSI_IRQ_ERR_DSILTO, display);
++	DSI_LOG_INTERRUPT_ERROR(DSI_IRQ_ERR_DSIHTO, display);
++	DSI_LOG_INTERRUPT_ERROR(DSI_IRQ_ERR_DSIRTO, display);
++	DSI_LOG_INTERRUPT_ERROR(DSI_IRQ_ERR_DSIESC, display);
++	DSI_LOG_INTERRUPT_ERROR(DSI_IRQ_ERR_DSISYN, display);
++	DSI_LOG_INTERRUPT_ERROR(DSI_IRQ_ERR_DSICTR, display);
+ 	DSI_INTERRUPT_CLEAR(DSI_IRQ_ERR_DSICON);
+-	DSI_LOG_INTERRUPT_ERROR(DSI_IRQ_ERR_DSIOFL, mipi_dsi);
++	DSI_LOG_INTERRUPT_ERROR(DSI_IRQ_ERR_DSIOFL, display);
+ 
+ /*	if (dif_err_irqss != dif_err_irqsc)
+ 		dsi_err("unhandled error interrupts\n"
+@@ -133,17 +132,17 @@ static irqreturn_t dsi_hal_irq_err(int irq, void *dev_id)
+ 			dif_err_irqss & ~dif_err_irqsc);*/
+ 
+ 	/* clear treated handled interrupts */
+-	dsi_write_field(mipi_dsi, EXR_DSI_ICR, dsi_irq_clear);
++	dsi_write_field(display, EXR_DSI_ICR, dsi_irq_clear);
+ 	return IRQ_HANDLED;
+ }
+ 
+-static void dsi_hal_unregister_irq(struct xgold_mipi_dsi_device *mipi_dsi)
++static void dsi_hal_unregister_irq(struct dsi_display *display)
+ {
+ 	/* TODO gra_write_field(EXR_DIF_IMSC,0); */
+-	free_irq(mipi_dsi->irq.rx_breq, 0);
+-	free_irq(mipi_dsi->irq.err, 0);
+-	free_irq(mipi_dsi->irq.tx, 0);
+-	free_irq(mipi_dsi->irq.rx, 0);
++	free_irq(display->irq.rx_breq, 0);
++	free_irq(display->irq.err, 0);
++	free_irq(display->irq.tx, 0);
++	free_irq(display->irq.rx, 0);
+ }
+ 
+ static struct irqaction dsi_err_irq = {
+@@ -164,40 +163,40 @@ static struct irqaction dsi_err_irq = {
+ 		} \
+ 	} }
+ 
+-static int dsi_hal_install_irqs(struct xgold_mipi_dsi_device *mipi_dsi)
++static int dsi_hal_install_irqs(struct dsi_display *display)
+ {
+ 	int ret = 0;
+ 
+-	dsi_write_field(mipi_dsi, EXR_DSI_ICR, 0x7FFFFF);
+-	DSI_SETUP_IRQ(mipi_dsi->irq.err, dsi_err_irq, mipi_dsi);
++	dsi_write_field(display, EXR_DSI_ICR, 0x7FFFFF);
++	DSI_SETUP_IRQ(display->irq.err, dsi_err_irq, display);
+ 
+ 	return 0;
+ 
+ exit_stage_1:
+-	dsi_hal_unregister_irq(mipi_dsi);
++	dsi_hal_unregister_irq(display);
+ 	return ret;
+ }
+ 
+-int dsi_irq_probe(struct xgold_mipi_dsi_device *mipi_dsi)
++int dsi_irq_probe(struct dsi_display *display)
+ {
+-	dsi_write_field(mipi_dsi, EXR_DSI_IMSC, 0); /* mask interrupt */
++	dsi_write_field(display, EXR_DSI_IMSC, 0); /* mask interrupt */
+ 
+-	return dsi_hal_install_irqs(mipi_dsi);
++	return dsi_hal_install_irqs(display);
+ }
+ 
+-int dsi_irq_remove(struct xgold_mipi_dsi_device *mipi_dsi)
++int dsi_irq_remove(struct dsi_display *display)
+ {
+ 	/* unregister irq's */
+ 	/* to detect errors on mode switching unregistering irqs must be done
+ 	 * after switching to config mode */
+-	dsi_hal_unregister_irq(mipi_dsi);
++	dsi_hal_unregister_irq(display);
+ 
+ 	pr_info("dsi irq exit successfully!\n");
+ 	return 0;
+ }
+ 
+-void dsi_interrupt_setup(struct xgold_mipi_dsi_device *mipi_dsi)
++void dsi_interrupt_setup(struct dsi_display *display)
+ {
+-	dsi_write_field(mipi_dsi, EXR_DSI_ICR, 0x7FFFFF);
++	dsi_write_field(display, EXR_DSI_ICR, 0x7FFFFF);
+ }
+ 
+diff --git a/include/linux/rockchip_fb.h b/include/linux/rockchip_fb.h
+index 7e4d00c..032e195 100644
+--- a/include/linux/rockchip_fb.h
++++ b/include/linux/rockchip_fb.h
+@@ -1,6 +1,6 @@
+ /* Definitions of rockchip framebuffer
+  *
+- * Copyright (C) 2010-2014 ROCKCHIP, Inc.
++ * Copyright (C) 2012-2015 Rockchip Electronics Co., Ltd.
+  *
+  * This software is licensed under the terms of the GNU General Public
+  * License version 2, as published by the Free Software Foundation, and
+@@ -334,7 +334,6 @@ struct rockchip_fb_reg_data {
+ struct rockchip_fb_trsm_ops {
+ 	int (*enable)(void);
+ 	int (*disable)(void);
+-	int (*detect_panel)(void);
+ };
+ 
+ struct rockchip_vop_driver;
+@@ -411,6 +410,7 @@ struct rockchip_vop_driver {
+ 	u8 fb_index_base;	/* the first fb index of the vop device */
+ 
+ 	struct rockchip_screen *screen0;
++	struct rockchip_screen screen1;
+ 	struct rockchip_screen *cur_screen;
+ 	u32 pixclock;
+ 
+diff --git a/include/linux/rockchip_screen.h b/include/linux/rockchip_screen.h
+index 9540c96..444f977 100644
+--- a/include/linux/rockchip_screen.h
++++ b/include/linux/rockchip_screen.h
+@@ -1,6 +1,6 @@
+ /* Definitions of rockchip screen
+  *
+- * Copyright (C) 2014 ROCKCHIP, Inc.
++ * Copyright (C) 2014-2015 Rockchip Electronics Co., Ltd.
+  *
+  * This software is licensed under the terms of the GNU General Public
+  * License version 2, as published by the Free Software Foundation, and
+@@ -107,9 +107,6 @@ struct rockchip_screen {
+ 	struct display_pwr_gpio *gpios_power_off;
+ 
+ 	struct rockchip_screen *ext_screen;
+-
+-	struct list_head panel_list;
+-
+ 	/* Operation function */
+ 	int (*init)(void);
+ 	int (*standby)(u8 enable);

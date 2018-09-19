@@ -1,0 +1,67 @@
+From 577ee7ddaa79480e5918fd8973466bc46c21108f Mon Sep 17 00:00:00 2001
+From: Lei Zhang <lei.zhang@intel.com>
+Date: Thu, 24 Sep 2015 14:02:14 +0800
+Subject: [PATCH] port from Rockchip iommu driver for crash issue
+
+sofia-3gr: iommu: Should NOT use GFP_KERNEL flag to alloc page when irq disabled
+or kernel may crash as the following
+
+    [   67.692203] BUG: sleeping function called from invalid context at mm/page_alloc.c:2806
+    [   67.699961] in_atomic(): 1, irqs_disabled(): 1, pid: 151, name: surfaceflinger
+    [   67.707072] INFO: lockdep is turned off.
+    [   67.710950] CPU: 0 PID: 151 Comm: surfaceflinger Not tainted 3.14.0 #5
+    [   67.717394]  00000000 00000000 b470baf0 82c8368d b46d8aa0 b470bb14 82658e46 82e24258
+    [   67.725054]  00000001 00000001 00000097 b46d8d80 00000001 00000000 b470bb24 82658ea2
+    [   67.732706]  000080d0 11800000 b470bbc8 826c5441 00000070 00001b4c b470bb3c 828407fa
+    [   67.740367] Call Trace:
+    [   67.742807]  [<82c8368d>] dump_stack+0x48/0x69
+    [   67.747203]  [<82658e46>] __might_sleep.part.77+0xa6/0xb0
+    [   67.752522]  [<82658ea2>] __might_sleep+0x52/0x80
+    [   67.757179]  [<826c5441>] __alloc_pages_nodemask+0x151/0x860
+    [   67.762808]  [<826c5bc7>] __get_free_pages+0x17/0x30
+    [   67.767678]  [<82adf59f>] rockchip_alloc_lv2entry+0x4f/0x90
+    [   67.773199]  [<82adf62c>] rockchip_iommu_map+0x4c/0xd0
+    [   67.778266]  [<82addca7>] iommu_map+0xa7/0x110
+    [   67.782655]  [<82ade639>] rockchip_iovmm_map+0x199/0x2c0
+    [   67.787908]  [<82acf417>] ion_system_map_iommu+0x27/0x60
+    [   67.793149]  [<82accc1e>] ion_map_iommu+0xee/0x1e0
+    [   67.797888]  [<8288a99d>] rockchip_fb_set_win_buffer.isra.7+0xad/0x1d0
+    [   67.804350]  [<8288b2fc>] rockchip_fb_update_win_config+0xec/0x400
+    [   67.810453]  [<8288ba43>] rockchip_fb_ioctl+0x433/0x530
+    [   67.815622]  [<8286d23d>] do_fb_ioctl+0x8d/0x4f0
+    [   67.820238]  [<8286d6e3>] fb_ioctl+0x43/0x50
+    [   67.824390]  [<8270b3fd>] do_vfs_ioctl+0x6d/0x2f0
+    [   67.829036]  [<8270b708>] SyS_ioctl+0x88/0x90
+    [   67.833340]  [<82c8e264>] syscall_call+0x7/0x7
+
+UTP-Id: SMS08371348
+Signed-off-by: Lei Zhang <lei.zhang@intel.com>
+---
+ drivers/iommu/rockchip-iommu.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/iommu/rockchip-iommu.c b/drivers/iommu/rockchip-iommu.c
+index 41b1cc7..d168007 100644
+--- a/drivers/iommu/rockchip-iommu.c
++++ b/drivers/iommu/rockchip-iommu.c
+@@ -608,7 +608,7 @@ static int rockchip_iommu_enable(struct iommu_drvdata *data,
+ 		}
+ 
+ 		spin_unlock_irqrestore(&data->data_lock, flags);
+-		dev_info(data->iommu, "(%s) Already enabled\n", data->dbgname);
++		dev_info(data->iommu, "(%s) Already enabled with pagtable 0x%lx\n", data->dbgname, data->pgtable);
+ 
+ 		return ret;
+ 	}
+@@ -763,7 +763,7 @@ static unsigned long *rockchip_alloc_lv2entry(unsigned long *sent,
+ 	if (rockchip_lv1ent_fault(sent)) {
+ 		unsigned long *pent;
+ 
+-		pent = (unsigned long *)__get_free_pages(GFP_KERNEL |
++		pent = (unsigned long *)__get_free_pages(GFP_ATOMIC |
+ 				__GFP_ZERO, 0);
+ 		BUG_ON((unsigned long)pent & (LV2TABLE_SIZE - 1));
+ 		if (!pent)
+-- 
+1.9.4
+

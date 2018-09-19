@@ -1,0 +1,40 @@
+diff --git a/devices/pm/power_control/pow/src/board_sf_3g_tab_ext_pmic/pow_bootcore.c b/devices/pm/power_control/pow/src/board_sf_3g_tab_ext_pmic/pow_bootcore.c
+index b84b68b..800eb06 100644
+--- a/devices/pm/power_control/pow/src/board_sf_3g_tab_ext_pmic/pow_bootcore.c
++++ b/devices/pm/power_control/pow/src/board_sf_3g_tab_ext_pmic/pow_bootcore.c
+@@ -190,8 +190,14 @@ void pmu_bootcore_display_power_enable(void)
+   spcu_phy_isolation_disable();
+ }
+ 
+-void pmu_bootcore_enable_backlight(void)
++void pmu_bootcore_enable_backlight(U32 on)
+ {
++    if (on == FALSE) {
++#if defined (AG620_ES2_0_DEFINED_FOR_BL)
++        pow_iowrite(0xE650182C, 0x200);
++#endif
++        return;
++    }
+ #if !defined (AG620_ES2_0_DEFINED_FOR_BL)
+     pow_iowrite(0xE650092C, 0xA00);
+ 
+diff --git a/devices/pm/power_control/pow/src/sf_3g_soc_agold620/pow_bootcore.c b/devices/pm/power_control/pow/src/sf_3g_soc_agold620/pow_bootcore.c
+index a33726a..0c5d0f8 100644
+--- a/devices/pm/power_control/pow/src/sf_3g_soc_agold620/pow_bootcore.c
++++ b/devices/pm/power_control/pow/src/sf_3g_soc_agold620/pow_bootcore.c
+@@ -190,8 +190,14 @@ void pmu_bootcore_display_power_enable(void)
+   spcu_phy_isolation_disable();
+ }
+ 
+-void pmu_bootcore_enable_backlight(void)
++void pmu_bootcore_enable_backlight(U32 on)
+ {
++    if (on == FALSE) {
++#if defined (AG620_ES2_0_DEFINED_FOR_BL)
++        pow_iowrite(0xE650182C, 0x200);
++#endif
++        return;
++    }
+ #if !defined (AG620_ES2_0_DEFINED_FOR_BL)
+     pow_iowrite(0xE650092C, 0xA00);
+ 

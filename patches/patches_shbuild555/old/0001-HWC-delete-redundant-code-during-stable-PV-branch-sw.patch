@@ -1,0 +1,79 @@
+From 62e0c47c3c77b0791bf4e49387af257a5562aa1c Mon Sep 17 00:00:00 2001
+From: Lei Zhang <lei.zhang@intel.com>
+Date: Thu, 12 Feb 2015 21:47:40 +0800
+Subject: [PATCH] HWC: delete redundant code during stable-PV branch switch
+
+This redundant code is introduced in patch
+http://ctegerrit.sh.intel.com:8080/#/c/2444/
+
+Change-Id: I7ea295bec5da29fadc63a755f648aa5e45d7d55b
+Signed-off-by: Lei Zhang <lei.zhang@intel.com>
+---
+ libhwcomposer/hwcomposer.cpp |   23 ++---------------------
+ 1 file changed, 2 insertions(+), 21 deletions(-)
+
+diff --git a/libhwcomposer/hwcomposer.cpp b/libhwcomposer/hwcomposer.cpp
+index ac2bca8..d346c5d 100644
+--- a/libhwcomposer/hwcomposer.cpp
++++ b/libhwcomposer/hwcomposer.cpp
+@@ -259,6 +259,7 @@ public:
+         configuratorName(DEFAULT_CONFIGURATOR_NAME),
+         fbt_index(0),
+         fbt_enabled(true),
++        ppLayerIndex(HWC_OVERLAY_INVALID),
+         back(0),
+         backIndex(0),
+         overlay_count(0),
+@@ -723,7 +724,7 @@ public:
+         // set default: no overlays
+         conf.reset(display);
+ 
+-        if (!disable_hw_composition) {
++        if (!disable_hw_composition && hwc_check_layerlist(display)) {
+             // try supported use cases in priority order.
+             for (size_t i = 0; i < HWC_COMPOSITOR_NUM ; i++) {
+                 conf.reset(display);
+@@ -734,18 +735,6 @@ public:
+             }
+         }
+ 
+-        // setup layer post-processing if needed
+-        if (conf.ppLayerIndex != HWC_OVERLAY_INVALID) {
+-            if (activatePP()) {
+-                feedPP(conf);
+-            } else {
+-                ALOGE("Can not activate PP4HWC: fall back to OpenGL (configurator was %s)", conf.configuratorName);
+-                conf.reset(display);
+-            }
+-        } else {
+-            deactivatePP();
+-        }
+-
+         // logging
+         configure_count++;
+         ALOGV("cnf@%5d (lc=%d oc=%d overlays fbt=%d)", configure_count,
+@@ -1108,10 +1097,6 @@ static int hwc_prepare(hwc_composer_device_1_t *dev,
+     if (displays == 0 || displays[0] == 0)
+         return 0;
+ 
+-    // check if it is a valid layer list
+-    if (!hwc_check_layerlist(displays[0]))
+-        return 0;
+-
+     // for the time being only consider display 0
+     if (displays[0]->flags & HWC_GEOMETRY_CHANGED) {
+         ctxt->dcc_updater.configure(displays[0]);
+@@ -1264,10 +1249,6 @@ static int hwc_set(hwc_composer_device_1_t *dev,
+     if (displays == 0 || displays[0] == 0)
+         return 0;
+ 
+-    // check if it is a valid layer list
+-    if (!hwc_check_layerlist(displays[0]))
+-        return 0;
+-
+     if (displays[0]->numHwLayers) {
+         pdev->dcc_updater.render(displays[0]);
+     }
+-- 
+1.7.9.5
+

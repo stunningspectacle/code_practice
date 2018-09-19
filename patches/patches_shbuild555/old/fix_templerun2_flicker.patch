@@ -1,0 +1,13 @@
+diff --git a/driver/src/opengles/mali_gp_geometry_common/gles_gb_bounding_box.c b/driver/src/opengles/mali_gp_geometry_common/gles_gb_bounding_box.c
+index 9757ae6..e2cd82a 100644
+--- a/driver/src/opengles/mali_gp_geometry_common/gles_gb_bounding_box.c
++++ b/driver/src/opengles/mali_gp_geometry_common/gles_gb_bounding_box.c
+@@ -746,7 +746,7 @@ MALI_STATIC mali_bool _gles_check_bounding_box(gles_vertex_attrib *attr_array,
+  * @param po  - binary shader program
+  * Note: this function is local to this file so could be static but we don't want the compiler inlining it.
+  */
+-void parse_cpupretrans_patterns(bs_program *po)
++void __attribute__((noinline)) parse_cpupretrans_patterns(bs_program *po)
+ {
+ 	struct binary_shader_chunk_vertex_operand *stack[BS_MAXMEMORY_FOR_PATTERNS] = { NULL };
+ 	struct binary_shader_expression_item *entry = NULL;

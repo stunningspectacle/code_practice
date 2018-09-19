@@ -1,0 +1,510 @@
+diff --git a/src/daemon/main.c b/src/daemon/main.c
+index 600d40d..30d715f 100644
+--- a/src/daemon/main.c
++++ b/src/daemon/main.c
+@@ -161,7 +161,7 @@ static void daemonize()
+ 	}
+ 	setuid(pw->pw_uid);
+ 
+-	log_message(DEBUG, "sensorhubd is started in daemon mode. \n");
++	log_message(CRITICAL, "sensorhubd is started in daemon mode. \n");
+ }
+ 
+ static sensor_state_t* get_sensor_state_with_name(char *name)
+@@ -195,7 +195,7 @@ static session_state_t* get_session_state_with_session_id(
+ {
+ 	int i;
+ 
+-	log_message(DEBUG, "get_session_state_with_session_id(): "
++	log_message(CRITICAL, "get_session_state_with_session_id(): "
+ 				"session_id %d\n", session_id);
+ 
+ 	for (i = 0; i < current_sensor_index; i ++) {
+@@ -456,10 +456,10 @@ static int send_control_cmd(int tran_id, int cmd_id, int sensor_id,
+ 	if (size <= 0)
+ 		return -1;
+ 
+-	log_message(DEBUG, "cmd to sysfs is: %s\n", cmd_string);
++	log_message(CRITICAL, "cmd to sysfs is: %s\n", cmd_string);
+ 	/* TODO: error handling if (size <= 0 || size > MAX_STRING_SIZE) */
+ 	ret = write(ctlfd, cmd_string, size);
+-	log_message(DEBUG, "cmd return value is %d\n", ret);
++	log_message(CRITICAL, "cmd return value is %d\n", ret);
+ 	if (ret < 0)
+ 		return -1;
+ 
+@@ -501,9 +501,9 @@ static int send_set_property(sensor_state_t *p_sensor_state, property_type prop_
+ 			size += snprintf(cmd_string + size, MAX_STRING_SIZE - size, " %d", p[i]);
+ 		}
+ 
+-		log_message(DEBUG, "cmd to sysfs is: %s\n", cmd_string);
++		log_message(CRITICAL, "cmd to sysfs is: %s\n", cmd_string);
+ 		ret = write(ctlfd, cmd_string, size);
+-		log_message(DEBUG, "cmd return value is %d\n", ret);
++		log_message(CRITICAL, "cmd return value is %d\n", ret);
+ 
+                 while (ret < 0)
+ 			return -1;
+@@ -541,7 +541,7 @@ static void start_streaming(sensor_state_t *p_sensor_state,
+ 
+ 	log_message(CRITICAL, "requested data rate is %d, arbitered is %d \n", data_rate, data_rate_arbitered);
+ 
+-	log_message(DEBUG, "CMD_START_STREAMING, data_rate_arbitered "
++	log_message(CRITICAL, "CMD_START_STREAMING, data_rate_arbitered "
+ 				"is %d, buffer_delay_arbitered is %d \n",
+ 				data_rate_arbitered, buffer_delay_arbitered);
+ 
+@@ -648,7 +648,7 @@ static void stop_streaming(sensor_state_t *p_sensor_state,
+ 
+ //	sensor_list[sensor_type].count = 0;
+ 
+-	log_message(DEBUG, "CMD_STOP_STREAMING, data_rate_arbitered is %d, "
++	log_message(CRITICAL, "CMD_STOP_STREAMING, data_rate_arbitered is %d, "
+ 			"buffer_delay_arbitered is %d \n", data_rate_arbitered,
+ 			buffer_delay_arbitered);
+ }
+@@ -744,7 +744,7 @@ static int fw_verion_compare()
+ static void get_single(sensor_state_t *p_sensor_state,
+ 				session_state_t *p_session_state)
+ {
+-	log_message(DEBUG, "get_single is called with sensor_type %s \n",
++	log_message(CRITICAL, "get_single is called with sensor_type %s \n",
+ 							p_sensor_state->name);
+ 
+ 	if (p_sensor_state == NULL) {
+@@ -752,7 +752,7 @@ static void get_single(sensor_state_t *p_sensor_state,
+ 		return;
+ 	}
+ 
+-	log_message(DEBUG, "get_single is called with %s \n", p_sensor_state->name);
++	log_message(CRITICAL, "get_single is called with %s \n", p_sensor_state->name);
+ 
+ 	/* send CMD_GET_SINGLE to sysfs control node */
+ 	p_session_state->get_single = 1;
+@@ -772,7 +772,7 @@ static void get_calibration(sensor_state_t *p_sensor_state,
+ 	int ret, len;
+ 
+ 	if (p_sensor_state == NULL) {
+-		log_message(DEBUG, "%s: p_sensor_state is NULL \n", __func__);
++		log_message(CRITICAL, "%s: p_sensor_state is NULL \n", __func__);
+ 		return;
+ 	}
+ 
+@@ -787,10 +787,10 @@ static void get_calibration(sensor_state_t *p_sensor_state,
+ 		return;
+ 	}
+ 
+-	log_message(DEBUG, "Send to control node :%s\n", cmdstring);
++	log_message(CRITICAL, "Send to control node :%s\n", cmdstring);
+ 	ret = write(ctlfd, cmdstring, len);
+ 	if (ret != len)
+-		log_message(DEBUG, "[%s]Error in sending cmd:%d\n", __func__, ret);
++		log_message(CRITICAL, "[%s]Error in sending cmd:%d\n", __func__, ret);
+ 
+ 	if (p_session_state)
+ 		p_session_state->get_calibration = 1;
+@@ -803,14 +803,14 @@ static void set_calibration(sensor_state_t *p_sensor_state,
+ 	int ret, len = 0;
+ 
+ 	if (p_sensor_state == NULL) {
+-		log_message(DEBUG, "%s: p_sensor_state is NULL \n", __func__);
++		log_message(CRITICAL, "%s: p_sensor_state is NULL \n", __func__);
+ 		return;
+ 	}
+ 
+ 	/* Too bad we cannot use send_control_cmd, send cmd by hand. */
+ 	// echo trans cmd sensor [sensor subcmd calibration [struct parameter info]]
+ 
+-	log_message(DEBUG, "Begin to form command string.\n");
++	log_message(CRITICAL, "Begin to form command string.\n");
+ 	len = snprintf (cmdstring, MAX_STRING_SIZE, "%d %d %d %d ",
+ 			0,			// tran_id
+ 			cmd_type_to_cmd_id[CMD_SET_CALIBRATION],	// cmd_id
+@@ -826,16 +826,16 @@ static void set_calibration(sensor_state_t *p_sensor_state,
+ 		// 30 parameters, horrible Orz...
+ 		int i;
+ 		unsigned char* p;
+-		log_message(DEBUG, "Set calibration, sensor_type %s\n", p_sensor_state->name);
++		log_message(CRITICAL, "Set calibration, sensor_type %s\n", p_sensor_state->name);
+ 
+ 		if (param->sub_cmd != SUBCMD_CALIBRATION_SET) {
+-			log_message(DEBUG, "Set calibration with confused parameter,"
++			log_message(CRITICAL, "Set calibration with confused parameter,"
+ 						"sub_cmd is %d\n",param->sub_cmd);
+ 			return;
+ 		}
+ 
+ 		if (param->calibrated != SUBCMD_CALIBRATION_TRUE) {
+-			log_message(DEBUG, "Set calibration with confused parameter,"
++			log_message(CRITICAL, "Set calibration with confused parameter,"
+ 						"calibrated is %u\n",param->calibrated);
+ 			return;
+ 		}
+@@ -867,10 +867,10 @@ static void set_calibration(sensor_state_t *p_sensor_state,
+ 		}
+ 
+ 	} else if (param->sub_cmd == SUBCMD_CALIBRATION_START) {
+-		log_message(DEBUG, "Calibration START, sensor_type %s\n", p_sensor_state->name);
++		log_message(CRITICAL, "Calibration START, sensor_type %s\n", p_sensor_state->name);
+ 
+ 	} else if (param->sub_cmd == SUBCMD_CALIBRATION_STOP) {
+-		log_message(DEBUG, "Calibration STOP, sensor_type %s\n", p_sensor_state->name);
++		log_message(CRITICAL, "Calibration STOP, sensor_type %s\n", p_sensor_state->name);
+ 
+ 	}
+ 
+@@ -882,7 +882,7 @@ static void set_calibration(sensor_state_t *p_sensor_state,
+ 	LOGI("Send to control node :%s\n", cmdstring);
+ 	ret = write(ctlfd, cmdstring, len);
+ 	if (ret != len)
+-		log_message(DEBUG, "[%s]Error in sending cmd:%d\n", __func__, ret);
++		log_message(CRITICAL, "[%s]Error in sending cmd:%d\n", __func__, ret);
+ }
+ 
+ static void load_calibration_from_file(sensor_state_t *p_sensor_state,
+@@ -892,7 +892,7 @@ static void load_calibration_from_file(sensor_state_t *p_sensor_state,
+ 	char file_name[MAX_CAL_FILE_PATH];
+ 
+ 	if (p_sensor_state == NULL) {
+-		log_message(DEBUG, "%s: p_sensor_state is NULL \n", __func__);
++		log_message(CRITICAL, "%s: p_sensor_state is NULL \n", __func__);
+ 		return;
+ 	}
+ 
+@@ -904,7 +904,7 @@ static void load_calibration_from_file(sensor_state_t *p_sensor_state,
+ 
+ 	if (!conf) {
+ 		/* calibration file doesn't exist, creat a new file */
+-		log_message(DEBUG, "Open file %s failed, create a new one!\n", file_name);
++		log_message(CRITICAL, "Open file %s failed, create a new one!\n", file_name);
+ 		conf = fopen(file_name, "w");
+ 		if (conf == NULL) {
+ 			LOGE("load_calibration_from_file(): failed to open file \n");
+@@ -928,7 +928,7 @@ static void store_calibration_to_file(sensor_state_t *p_sensor_state,
+ 	char file_name[MAX_CAL_FILE_PATH];
+ 
+ 	if (p_sensor_state == NULL) {
+-		log_message(DEBUG, "%s: p_sensor_state is NULL \n", __func__);
++		log_message(CRITICAL, "%s: p_sensor_state is NULL \n", __func__);
+ 		return;
+ 	}
+ 
+@@ -938,7 +938,7 @@ static void store_calibration_to_file(sensor_state_t *p_sensor_state,
+ 
+ 	if (!conf) {
+ 		/* calibration file doesn't exist, creat a new file */
+-		log_message(DEBUG, "Can not Open file %s for writing\n", file_name);
++		log_message(CRITICAL, "Can not Open file %s for writing\n", file_name);
+ 		return;
+ 	}
+ 
+@@ -962,7 +962,7 @@ static int set_calibration_status(sensor_state_t *p_sensor_state, int status,
+ 					struct cmd_calibration_param *param)
+ {
+ 	if (p_sensor_state == NULL) {
+-		log_message(DEBUG, "%s: p_sensor_state is NULL \n", __func__);
++		log_message(CRITICAL, "%s: p_sensor_state is NULL \n", __func__);
+ 		return -1;
+ 	}
+ 
+@@ -1056,7 +1056,7 @@ static session_state_t* get_session_state_with_trans_id(
+ 	session_state_t *p_session_state;
+ 
+ 	if (p_sensor_state == NULL) {
+-		log_message(DEBUG, "%s: p_sensor_state is NULL \n", __func__);
++		log_message(CRITICAL, "%s: p_sensor_state is NULL \n", __func__);
+ 		return NULL;
+ 	}
+ 
+@@ -1099,7 +1099,7 @@ static void handle_add_event(session_state_t *p_session_state, cmd_event* p_cmd)
+ 	char cmd_string[MAX_STRING_SIZE];
+ 	int len, ret;
+ 
+-	log_message(DEBUG, "[%s] Ready to handle command %d\n", __func__, p_cmd->cmd);
++	log_message(CRITICAL, "[%s] Ready to handle command %d\n", __func__, p_cmd->cmd);
+ 
+ 	/* allocate a tran_id, send cmd to PSH */
+ 	struct cmd_event_param *evt_param = (struct cmd_event_param *)p_cmd->buf;
+@@ -1159,7 +1159,7 @@ static void handle_add_event(session_state_t *p_session_state, cmd_event* p_cmd)
+ 
+ 	ret = write(ctlfd, cmd_string, len);
+ 	if (ret != len)
+-		log_message(DEBUG, "[%s]Error in sending cmd:%d\n", __func__, ret);
++		log_message(CRITICAL, "[%s]Error in sending cmd:%d\n", __func__, ret);
+ 
+ 	return;
+ }
+@@ -1187,7 +1187,7 @@ static void handle_clear_event(session_state_t *p_session_state)
+ 
+ 	ret = write(ctlfd, cmd_string, len);
+ 	if (ret != len)
+-		log_message(DEBUG, "[%s]Error in sending cmd:%d\n", __func__, ret);
++		log_message(CRITICAL, "[%s]Error in sending cmd:%d\n", __func__, ret);
+ 
+ 	return;
+ }
+@@ -1197,7 +1197,7 @@ static int recalculate_data_rate(sensor_state_t *p_sensor_state, int data_rate)
+ 	short freq_max;
+ 
+ 	if (p_sensor_state == NULL) {
+-		log_message(DEBUG, "%s: p_sensor_state is NULL \n", __func__);
++		log_message(CRITICAL, "%s: p_sensor_state is NULL \n", __func__);
+ 		return -1;
+ 	}
+ 
+@@ -1229,7 +1229,7 @@ static ret_t handle_cmd(int fd, cmd_event* p_cmd, int parameter, int parameter1,
+ 	if (ret != 0)
+ 		return ERR_SESSION_NOT_EXIST;
+ 
+-	log_message(DEBUG, "[%s] Ready to handle command %d\n", __func__, cmd);
++	log_message(CRITICAL, "[%s] Ready to handle command %d\n", __func__, cmd);
+ 
+ 	if (cmd == CMD_START_STREAMING) {
+ 		data_rate_calculated = recalculate_data_rate(p_sensor_state, parameter);
+@@ -1256,7 +1256,7 @@ static ret_t handle_cmd(int fd, cmd_event* p_cmd, int parameter, int parameter1,
+ 			return ERROR_WRONG_ACTION_ON_SENSOR_TYPE;
+ 
+ 		if (!parameter) {
+-			log_message(DEBUG, "ERR: This CMD need take parameter\n");
++			log_message(CRITICAL, "ERR: This CMD need take parameter\n");
+ 			return ERR_CMD_NOT_SUPPORT;
+ 		}
+ 
+@@ -1311,7 +1311,7 @@ static void handle_message(int fd, char *message)
+ {
+ 	int event_type = *((int *) message);
+ 
+-	log_message(DEBUG, "handle_message(): fd is %d, event_type is %d\n",
++	log_message(CRITICAL, "handle_message(): fd is %d, event_type is %d\n",
+ 							fd, event_type);
+ 
+ 	if (event_type == EVENT_HELLO_WITH_SENSOR_TYPE) {
+@@ -1397,7 +1397,11 @@ static void handle_message(int fd, char *message)
+ 
+ 		cmd_ack.event_type = EVENT_CMD_ACK;
+ 		cmd_ack.ret = ret;
+-		send(fd, &cmd_ack, sizeof(cmd_ack), 0);
++		log_message(CRITICAL, "%s iiiiiiiiiiiiii fd=%d, ret=%d\n",
++				__func__, fd, ret);
++		ret = send(fd, &cmd_ack, sizeof(cmd_ack), 0);
++		log_message(CRITICAL, "%s jjjjjjjjjjjjjj, fd=%d, ret=%d\n",
++				__func__, fd, ret);
+ 	} else {
+ 		/* TODO: unknown message and drop it */
+ 	}
+@@ -1463,7 +1467,7 @@ static void reset_sensorhub()
+ 		magic_string[31] = '\0';
+ 		close(fd);
+ 
+-		log_message(DEBUG, "magic_string is %s \n", magic_string);
++		log_message(CRITICAL, "magic_string is %s \n", magic_string);
+ 
+ 		if (strstr(magic_string, "11A4") != NULL) {
+ 			platform = MERRIFIELD;
+@@ -1484,7 +1488,7 @@ static void reset_sensorhub()
+ 		exit(EXIT_FAILURE);
+ 	}
+ 
+-	log_message(DEBUG, "detected node dir is %s \n", entry->d_name);
++	log_message(CRITICAL, "detected node dir is %s \n", entry->d_name);
+ 
+ 	/* open control node */
+ 	snprintf(node_path, MAX_STRING_SIZE, "/sys/class/hwmon/%s/device/control", entry->d_name);
+@@ -1703,6 +1707,7 @@ static void dispatch_flush()
+ 		}
+ 
+         }
++	log_message(CRITICAL, "%s: -------------\n", __func__);
+ 
+ 	return;
+ }
+@@ -1720,7 +1725,7 @@ static void handle_calibration(struct cmd_calibration_param * param, unsigned ch
+ 	}
+ 	p_session_state = p_sensor_state->list;
+ 
+-	log_message(DEBUG, "Subcmd:%d.  Calibrated? %u\n", param->sub_cmd, param->calibrated);
++	log_message(CRITICAL, "Subcmd:%d.  Calibrated? %u\n", param->sub_cmd, param->calibrated);
+ 
+ 	for (; p_session_state != NULL;
+ 			p_session_state = p_session_state->next){
+@@ -1761,7 +1766,7 @@ fail:
+ 		// SUBCMD_CALIBRATION_FALSE
+ 		struct cmd_calibration_param param_temp;
+ 
+-		log_message(DEBUG, "Get calibration message, but calibrated not done.\n");
++		log_message(CRITICAL, "Get calibration message, but calibrated not done.\n");
+ 		memset(&param_temp, 0, sizeof(struct cmd_calibration_param));
+                 /* clear the parameter file */
+ 		store_calibration_to_file(p_sensor_state, &param_temp);
+@@ -1803,7 +1808,7 @@ static void handle_add_event_resp(struct cmd_resp *p_cmd_resp)
+ 			send(p_session_state->ctlfd, p_cmd_ack, sizeof(cmd_ack_event)
+ 				+ p_cmd_resp->data_len, 0);
+ 
+-			log_message(DEBUG, "event id is %d \n", p_cmd_resp->buf[0]);
++			log_message(CRITICAL, "event id is %d \n", p_cmd_resp->buf[0]);
+ 			free(p_cmd_ack);
+ 
+ 			p_session_state->event_id = p_cmd_resp->buf[0];
+@@ -1856,6 +1861,7 @@ static void dispatch_data()
+ 	struct cmd_resp *p_cmd_resp;
+ 	struct timeval tv, tv1;
+ 	char datasize_buf[8];
++	static int count;
+ 
+ 	if (buf == NULL)
+ 		buf = (char *)malloc(128 * 1024);
+@@ -1867,8 +1873,9 @@ static void dispatch_data()
+ 
+ 	gettimeofday(&tv, NULL);
+ 
+-	log_message(DEBUG, "Got a packet, timestamp is %d, %d \n",
+-					tv.tv_sec, tv.tv_usec);
++	if (count++ % 50 == 0)
++		log_message(CRITICAL, "Got a packet, timestamp is %d, %d count=%d\n",
++						tv.tv_sec, tv.tv_usec, count);
+ 
+ 	/* read data_size node */
+ 	lseek(datasizefd, 0, SEEK_SET);
+@@ -1895,7 +1902,7 @@ static void dispatch_data()
+ 
+ 	ret = data_size;
+ 
+-//	log_message(DEBUG, "data_size is: %d, read() return value is %d \n",
++//	log_message(CRITICAL, "data_size is: %d, read() return value is %d \n",
+ //							data_size, ret);
+ 
+ 	p_cmd_resp = (struct cmd_resp *) buf;
+@@ -1929,13 +1936,13 @@ static void dispatch_data()
+ 			struct resp_calibration *p = (struct resp_calibration*)p_cmd_resp->buf;
+ 
+ 			if (p_cmd_resp->data_len != sizeof(struct resp_calibration) + p->info.size)
+-				log_message(DEBUG, "Get a calibration_get response with wrong data_len:%d\n",
++				log_message(CRITICAL, "Get a calibration_get response with wrong data_len:%d\n",
+ 											p_cmd_resp->data_len);
+ 
+ 			param.sub_cmd = SUBCMD_CALIBRATION_GET;
+ 			param.calibrated = p->calib_result;
+ 			memcpy(&param.cal_param, &p->info, sizeof(p->info) + p->info.size);
+-			log_message(DEBUG, "sensor_id is %d, result is %d, size is %d \n", p_cmd_resp->sensor_id, param.calibrated, p->info.size);
++			log_message(CRITICAL, "sensor_id is %d, result is %d, size is %d \n", p_cmd_resp->sensor_id, param.calibrated, p->info.size);
+ 			handle_calibration(&param, p_cmd_resp->sensor_id);
+ 		} else if (p_cmd_resp->cmd_type == RESP_ADD_EVENT) {
+ 			/* TODO: record event id, match client with trans id, send return value to client */
+@@ -1946,19 +1953,17 @@ static void dispatch_data()
+ 			/* dispatch event */
+ 			dispatch_event(p_cmd_resp);
+ 		} else
+-			log_message(DEBUG,
++			log_message(CRITICAL,
+ 			    "%d: not support this response currently\n", p_cmd_resp->cmd_type);
+ 
+ 		ret = ret - (sizeof(struct cmd_resp) + p_cmd_resp->data_len);
+-//		log_message(DEBUG, "remain data len is %d\n", ret);
++//		log_message(CRITICAL, "remain data len is %d\n", ret);
+ 
+ 		p = p + sizeof(struct cmd_resp) + p_cmd_resp->data_len;
+ 		p_cmd_resp = (struct cmd_resp *)p;
+ 	}
+ 
+ 	gettimeofday(&tv1, NULL);
+-	log_message(DEBUG, "Done with dispatching a packet, latency is "
+-					"%d \n", tv1.tv_usec - tv.tv_usec);
+ }
+ 
+ static void remove_session_by_fd(int fd)
+@@ -2009,7 +2014,7 @@ static void remove_session_by_fd(int fd)
+ 				}
+ 			}
+ #endif
+-			log_message(DEBUG, "session with datafd %d, ctlfd %d "
++			log_message(CRITICAL, "session with datafd %d, ctlfd %d "
+ 				"is removed \n", p_session_state->datafd,
+ 				p_session_state->ctlfd);
+ 			free(p_session_state);
+@@ -2100,10 +2105,11 @@ static void start_sensorhubd()
+ 				/* release session resource if necessary */
+ 				remove_session_by_fd(i);
+ 				close(i);
+-				log_message(DEBUG, "fd %d:error reading message \n", i);
++				log_message(CRITICAL, "fd %d:error reading message \n", i);
+ 				FD_CLR(i, &listen_fds);
+ 			} else {
+ 				/* process message */
++	log_message(CRITICAL, "%s: hhhhhhhhhhhh length=%d\n", __func__, length);
+ 				handle_message(i, message);
+ 			}
+ 		}
+@@ -2272,7 +2278,7 @@ int main(int argc, char **argv)
+ 		case 'l':
+ 			if (optarg != NULL)
+ 				log_level = strtod(optarg, NULL);
+-			log_message(DEBUG, "log_level is %d \n", log_level);
++			log_message(CRITICAL, "log_level is %d \n", log_level);
+ 			set_log_level(log_level);
+ 			break;
+ 		case 'h':
+diff --git a/src/lib/libsensorhub.c b/src/lib/libsensorhub.c
+index 707b24c..78964bb 100644
+--- a/src/lib/libsensorhub.c
++++ b/src/lib/libsensorhub.c
+@@ -182,7 +182,8 @@ void psh_close_session(handle_t handle)
+ 
+ error_t psh_start_streaming(handle_t handle, int data_rate, int buffer_delay)
+ {
+-
++	LOGE("%s:xxxx handle=%d, data_rate=%d, buffer_delay=%d",
++			handle, data_rate, buffer_delay);
+ 	return psh_start_streaming_with_flag(handle, data_rate, buffer_delay, 0);
+ }
+ 
+@@ -210,13 +211,23 @@ error_t psh_start_streaming_with_flag(handle_t handle, int data_rate, int buffer
+ 	cmd.parameter1 = buffer_delay;
+ 	cmd.parameter2 = flag;
+ 
++	log_message(CRITICAL, "%s: aaaaaaaaaaaaaaaaaaaa, fd=%d, ret=%d\n",
++			__func__, session_context->ctlfd, ret);
+ 	ret = send(session_context->ctlfd, &cmd, sizeof(cmd), 0);
+-	if (ret <= 0)
++	if (ret <= 0) {
++		log_message(CRITICAL, "%s: bbbbbbbbbbbbbbbbbbbb\n", __func__);
+ 		return ERROR_MESSAGE_NOT_SENT;
++	}
+ 
++	log_message(CRITICAL, "%s: ccccccccccccccccccccc, fd=%d, ret=%d\n",
++			__func__, session_context->ctlfd, ret);
+ 	ret = recv(session_context->ctlfd, message, MAX_MESSAGE_LENGTH, 0);
+-	if (ret <= 0)
++	if (ret <= 0) {
++		log_message(CRITICAL, "%s: ddddddddddddddddddddd\n", __func__);
+ 		return ERROR_CAN_NOT_GET_REPLY;
++	}
++	log_message(CRITICAL, "%s: eeeeeeeeeeeeeeeeeeeee, fd=%d, ret=%d\n",
++			__func__, session_context->ctlfd, ret);
+ 
+ 	event_type = *((int *) message);
+ 	if (event_type != EVENT_CMD_ACK)
+@@ -248,13 +259,22 @@ error_t psh_flush_streaming(handle_t handle, unsigned int data_unit_size)
+ 	cmd.cmd = CMD_FLUSH_STREAMING;
+ 	cmd.parameter = data_unit_size;
+ 
++	log_message(CRITICAL, "%s: 111111111111111111111 fd=%d\n", 
++			__func__, session_context->ctlfd);
+ 	ret = send(session_context->ctlfd, &cmd, sizeof(cmd), 0);
+-	if (ret <= 0)
++	if (ret <= 0) {
++		log_message(CRITICAL, "%s: 2222222222222222222222\n", __func__);
+ 		return ERROR_MESSAGE_NOT_SENT;
++	}
++	log_message(CRITICAL, "%s: 3333333333333333333333, fd=%d\n",
++			__func__, session_context->ctlfd);
+ 
+ 	ret = recv(session_context->ctlfd, message, MAX_MESSAGE_LENGTH, 0);
+-	if (ret <= 0)
++	if (ret <= 0) {
++		log_message(CRITICAL, "%s: 4444444444444444444444\n", __func__);
+ 		return ERROR_CAN_NOT_GET_REPLY;
++	}
++	log_message(CRITICAL, "%s: 5555555555555555555555\n", __func__);
+ 
+ 	event_type = *((int *) message);
+ 	if (event_type != EVENT_CMD_ACK)

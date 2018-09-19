@@ -1,0 +1,34 @@
+diff --git a/drivers/display/src/display_drv.c b/drivers/display/src/display_drv.c
+index 04438a1..e9444b7 100644
+--- a/drivers/display/src/display_drv.c
++++ b/drivers/display/src/display_drv.c
+@@ -102,12 +102,29 @@ __SECTION("DISPLAY_BUFFER") __align(32) U8 img_raw_buf[SPALSH_IMAGE_SIZE_IN_BYTE
+ __SECTION("DISPLAY_BUFFER") __align(32) U8 font_raw_buf[FONT_IMAGE_MAX_LEN]={0};
+ 
+ static unsigned char index = 1;
++extern unsigned int g_cgu_dcc_clk_rate;
+ 
+ /*****************************************************************************/
+ /* EXPORTED FUNCTIONS                                                        */
+ /*****************************************************************************/
+ T_ENUM_DISPLAY_DRV_RETURN_TYPE display_drv_update_screen(T_ENUM_SELECT_IMG img)
+ {
++
++	*((volatile int *)0xe4700a3c) = 0x1c;
++	bl_display_fp.bl_lcd_power_on();
++	g_cgu_dcc_clk_rate = 297000000;
++	bl_display_fp.bl_dcc_power_on();
++	*((volatile int *)0xe4700a3c) = 0x10;
++
++  if(!is_backlight_enabled)
++  {
++    if(onkey_status == FALSE)
++      display_backlight_control(1);
++    is_backlight_enabled = TRUE;
++  }
++
++    return DISPLAY_DRV_RETURN_TYPE_OK;
++
+ #if defined(DISPLAY_DRIVER_SUPPORT)
+   bl_dcc_result_type error;
+   T_SPASH_CONFIG* splash_config;

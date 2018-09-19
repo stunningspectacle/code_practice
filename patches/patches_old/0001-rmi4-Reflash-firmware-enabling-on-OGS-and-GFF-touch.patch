@@ -1,0 +1,244 @@
+From d5ee9655dfb5be9956c79fcd82a4f0640e221c4b Mon Sep 17 00:00:00 2001
+From: Leo Yan <leo.yan@intel.com>
+Date: Fri, 26 Oct 2012 19:00:22 +0800
+Subject: [PATCH] rmi4: Reflash firmware enabling on OGS and GFF touch
+
+BZ: 64213
+
+Distinguish the different type of touch hardware and flash the
+correct firmware if needed.
+
+Change-Id: I7c7d04aab98be4e337bb7795d683b734100133e0
+Signed-off-by: Leo Yan <leo.yan@intel.com>
+---
+ drivers/staging/ste_rmi4/rmi4_fw_reflash.c    |   61 +++++++++++++++++-------
+ drivers/staging/ste_rmi4/synaptics_i2c_rmi4.c |   16 ++++---
+ drivers/staging/ste_rmi4/synaptics_i2c_rmi4.h |    5 ++-
+ 3 files changed, 57 insertions(+), 25 deletions(-)
+
+diff --git a/drivers/staging/ste_rmi4/rmi4_fw_reflash.c b/drivers/staging/ste_rmi4/rmi4_fw_reflash.c
+index ea89ada..4a9251f 100644
+--- a/drivers/staging/ste_rmi4/rmi4_fw_reflash.c
++++ b/drivers/staging/ste_rmi4/rmi4_fw_reflash.c
+@@ -23,6 +23,7 @@
+ #include <linux/moduleparam.h>
+ #include <linux/time.h>
+ #include <linux/i2c.h>
++#include <linux/string.h>
+ #include <linux/earlysuspend.h>
+ #include <linux/synaptics_i2c_rmi4.h>
+ #include "synaptics_i2c_rmi4.h"
+@@ -60,6 +61,12 @@
+ #define IS_IDLE(ctl_ptr)      ((!ctl_ptr->status) && (!ctl_ptr->command))
+ #define extract_u32(ptr)      (le32_to_cpu(*(__le32 *)(ptr)))
+ 
++#define FIRMWARE_NAME_OGS	"s3202_ogs.img"
++#define FIRMWARE_NAME_GFF	"s3202_gff.img"
++#define FIRMWARE_NAME_FORCE	"s3202.img"
++
++#define PRODUCT_ID_OGS "DS4 R3.0"
++
+ /** Image file V5, Option 0
+  */
+ struct image_header {
+@@ -612,7 +619,7 @@ static bool go_nogo(struct reflash_data *data, struct image_header *header)
+ 	return device_status.flash_prog || force;
+ }
+ 
+-void rmi4_fw_update(struct rmi4_data *pdata,
++int rmi4_fw_update(struct rmi4_data *pdata,
+ 		struct rmi4_fn_desc *f01_pdt, struct rmi4_fn_desc *f34_pdt)
+ {
+ #ifdef DEBUG
+@@ -620,7 +627,8 @@ void rmi4_fw_update(struct rmi4_data *pdata,
+ 	struct timespec end;
+ 	s64 duration_ns;
+ #endif
+-	int retval;
++	int retval, hardware_type;
++	bool need_flash = false;
+ 	char firmware_name[PRODUCT_ID_SIZE + 12];
+ 	const struct firmware *fw_entry = NULL;
+ 	struct i2c_client *client = pdata->i2c_client;
+@@ -647,35 +655,44 @@ void rmi4_fw_update(struct rmi4_data *pdata,
+ 	if (pdt_props.has_bsr) {
+ 		dev_warn(&client->dev,
+ 			 "Firmware update for LTS not currently supported.\n");
+-		return;
++		return 0;
+ 	}
+ 
+ 	retval = read_f01_queries(&data);
+ 	if (retval) {
+ 		dev_err(&client->dev, "F01 queries failed, code = %d.\n",
+ 			retval);
+-		return;
++		return 0;
++	}
++	if (data.product_id[0] == 0) {
++		snprintf(firmware_name, sizeof(firmware_name), "%s",
++			FIRMWARE_NAME_GFF);
++		dev_info(&client->dev, "Need flash %s.\n", firmware_name);
++		hardware_type = HARDWARE_TYPE_GFF;
++	} else if (!strcmp(data.product_id, PRODUCT_ID_OGS)) {
++		need_flash = true;
++		snprintf(firmware_name, sizeof(firmware_name), "%s",
++			FIRMWARE_NAME_OGS);
++		dev_info(&client->dev, "Need flash %s.\n", firmware_name);
++		hardware_type = HARDWARE_TYPE_OGS;
++	} else {
++		snprintf(firmware_name, sizeof(firmware_name), "%s",
++			FIRMWARE_NAME_FORCE);
+ 	}
++
+ 	retval = read_f34_queries(&data);
+ 	if (retval) {
+ 		dev_err(&client->dev, "F34 queries failed, code = %d.\n",
+ 			retval);
+-		return;
++		return 0;
+ 	}
+-	if (pdata->board->fw_name && strlen(pdata->board->fw_name))
+-		snprintf(firmware_name, sizeof(firmware_name), "%s",
+-			pdata->board->fw_name);
+-	else
+-		snprintf(firmware_name, sizeof(firmware_name), "%s",
+-			(img_name &&
+-			 strlen(img_name)) ? img_name : data.product_id);
+ 	dev_info(&client->dev, "Requesting %s.\n", firmware_name);
+ 	retval = request_firmware(&fw_entry, firmware_name, &client->dev);
+ 	if (retval != 0) {
+ 		dev_err(&client->dev,
+ 				"Firmware %s not available, code = %d\n",
+ 				firmware_name, retval);
+-		return;
++		return 0;
+ 	}
+ 
+ 	extract_header(fw_entry->data, 0, &header);
+@@ -700,11 +717,18 @@ void rmi4_fw_update(struct rmi4_data *pdata,
+ 		data.config_data = fw_entry->data + F34_FW_IMAGE_OFFSET +
+ 			header.image_size;
+ 
+-	if (go_nogo(&data, &header)) {
+-		reflash_firmware(&data);
+-		reset_device(&data);
+-	} else
+-		dev_info(&client->dev, "Go/NoGo said don't reflash.\n");
++	dev_info(&client->dev, "family: %d, %d     firmware: %d, %d\n",
++					data.f01_queries.productinfo_1,
++					header.product_info[0],
++					data.f01_queries.productinfo_2,
++					header.product_info[1]);
++	if (!need_flash && !force) {
++		dev_info(&client->dev, "Don't need firmware reflash.\n");
++		return hardware_type;
++	}
++
++	reflash_firmware(&data);
++	reset_device(&data);
+ 
+ 	if (fw_entry)
+ 		release_firmware(fw_entry);
+@@ -713,4 +737,5 @@ void rmi4_fw_update(struct rmi4_data *pdata,
+ 	duration_ns = timespec_to_ns(&end) - timespec_to_ns(&start);
+ 	dev_info(&client->dev, "Time to reflash: %lld ns.\n", duration_ns);
+ #endif
++	return hardware_type;
+ }
+diff --git a/drivers/staging/ste_rmi4/synaptics_i2c_rmi4.c b/drivers/staging/ste_rmi4/synaptics_i2c_rmi4.c
+index c5d228e..3ff7be4 100644
+--- a/drivers/staging/ste_rmi4/synaptics_i2c_rmi4.c
++++ b/drivers/staging/ste_rmi4/synaptics_i2c_rmi4.c
+@@ -348,13 +348,16 @@ int rmi4_touchpad_irq_handler(struct rmi4_data *pdata, struct rmi4_fn *rfi)
+ 			wx = (data[3] & MASK_4BIT);
+ 			wy = (data[3] >> 4) & MASK_4BIT;
+ 
++/*
+ 			if (pdata->board->swap_axes)
+ 				swap(x, y);
+ 			if (pdata->board->x_flip)
+ 				x = pdata->sensor_max_x - x;
+ 			if (pdata->board->y_flip)
+ 				y = pdata->sensor_max_y - y;
++*/
+ 
++            x = pdata->sensor_max_x - x;
+ 			input_report_abs(pdata->input_ts_dev,
+ 					ABS_MT_TRACKING_ID, finger + 1);
+ 			input_report_abs(pdata->input_ts_dev,
+@@ -362,9 +365,9 @@ int rmi4_touchpad_irq_handler(struct rmi4_data *pdata, struct rmi4_fn *rfi)
+ 			input_report_abs(pdata->input_ts_dev,
+ 					ABS_MT_TOUCH_MINOR, min(wx , wy));
+ 			input_report_abs(pdata->input_ts_dev,
+-					ABS_MT_POSITION_X, x);
++					ABS_MT_POSITION_Y, x);
+ 			input_report_abs(pdata->input_ts_dev,
+-					ABS_MT_POSITION_Y, y);
++					ABS_MT_POSITION_X, y);
+ 
+ 			input_mt_sync(pdata->input_ts_dev);
+ 
+@@ -737,7 +740,7 @@ int rmi4_touchpad_config(struct rmi4_data *pdata, struct rmi4_fn *rfi)
+ 					((data[9] & MASK_4BIT) << 8);
+ 	if (pdata->board->swap_axes)
+ 		swap(pdata->sensor_max_x, pdata->sensor_max_y);
+-	dev_dbg(&client->dev, "sensor_max_x=%d, sensor_max_y=%d\n",
++	dev_info(&client->dev, "sensor_max_x=%d, sensor_max_y=%d\n",
+ 				pdata->sensor_max_x, pdata->sensor_max_y);
+ 	return retval;
+ }
+@@ -895,7 +898,8 @@ static int do_init_reset(struct rmi4_data *pdata)
+ 			__func__);
+ 		return -ENODEV;
+ 	}
+-	rmi4_fw_update(pdata, &f01_fd, &f34_fd);
++	pdata->hardware_type = rmi4_fw_update(pdata, &f01_fd, &f34_fd);
++	dev_info(&client->dev, "1 hardware type is %d\n", pdata->hardware_type);
+ 	return 0;
+ }
+ 
+@@ -1429,9 +1433,9 @@ static int __devinit rmi4_probe(struct i2c_client *client,
+ 	set_bit(EV_KEY, rmi4_data->input_key_dev->evbit);
+ 
+ 	input_set_abs_params(rmi4_data->input_ts_dev,
+-			ABS_MT_POSITION_X, 0, rmi4_data->sensor_max_x, 0, 0);
++			ABS_MT_POSITION_Y, 0, rmi4_data->sensor_max_x, 0, 0);
+ 	input_set_abs_params(rmi4_data->input_ts_dev,
+-			ABS_MT_POSITION_Y, 0, rmi4_data->sensor_max_y, 0, 0);
++			ABS_MT_POSITION_X, 0, rmi4_data->sensor_max_y, 0, 0);
+ 	input_set_abs_params(rmi4_data->input_ts_dev,
+ 			ABS_MT_TOUCH_MAJOR, 0, MAX_TOUCH_MAJOR, 0, 0);
+ 	input_set_abs_params(rmi4_data->input_ts_dev,
+diff --git a/drivers/staging/ste_rmi4/synaptics_i2c_rmi4.h b/drivers/staging/ste_rmi4/synaptics_i2c_rmi4.h
+index 2808f8e..d443b49 100644
+--- a/drivers/staging/ste_rmi4/synaptics_i2c_rmi4.h
++++ b/drivers/staging/ste_rmi4/synaptics_i2c_rmi4.h
+@@ -48,6 +48,8 @@
+ #define RMI4_SLEEP_MODE_NORMAL      (0x00)
+ #define RMI4_END_OF_PDT(id)         ((id) == 0x00 || (id) == 0xff)
+ 
++#define HARDWARE_TYPE_OGS           1
++#define HARDWARE_TYPE_GFF           2
+ struct rmi4_fn_ops;
+ /**
+  * struct rmi4_fn_desc - contains the function descriptor information
+@@ -169,6 +171,7 @@ struct rmi4_data {
+ 	int			current_page;
+ 	int			sensor_max_x;
+ 	int			sensor_max_y;
++	int			hardware_type;
+ 	struct regulator	*regulator;
+ 	int			irq;
+ 	struct early_suspend	es;
+@@ -324,6 +327,6 @@ int rmi4_button_detect(struct rmi4_data *pdata,
+ int rmi4_button_irq_handler(struct rmi4_data *pdata, struct rmi4_fn *rfi);
+ void rmi4_button_remove(struct rmi4_fn *);
+ 
+-void rmi4_fw_update(struct rmi4_data *pdata,
++int rmi4_fw_update(struct rmi4_data *pdata,
+ 		struct rmi4_fn_desc *f01_pdt, struct rmi4_fn_desc *f34_pdt);
+ #endif
+-- 
+1.7.1
+

@@ -1,0 +1,43 @@
+From 9f62ec9a0afb5700d9b2e019209641045f8ed6fe Mon Sep 17 00:00:00 2001
+From: Leo Yan <leo.yan@intel.com>
+Date: Tue, 9 Dec 2014 15:53:26 +0800
+Subject: [PATCH] HWC: Fix file descriptor leakage issue
+
+BZ: 395
+
+Close all the HWC_OVERLAY layer's acquire fence after rendering, no
+matter it is a real overlay layer or just set for smart compostion,
+since SurfaceFlinger will not do it for us.
+
+Change-Id: Idc996bc242737c2ae54346d98b98616927840155
+Signed-off-by: Leo Yan <leo.yan@intel.com>
+---
+ libhwcomposer/hwcomposer.cpp |    8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/libhwcomposer/hwcomposer.cpp b/libhwcomposer/hwcomposer.cpp
+index 6b447e0..dcb30cb 100644
+--- a/libhwcomposer/hwcomposer.cpp
++++ b/libhwcomposer/hwcomposer.cpp
+@@ -793,13 +793,15 @@ public:
+ 
+         // close fences for all layers we directly render, *after* calling
+         // the dcc compose, lest we free the fences before dcc uses them.
+-        for (size_t i = 0; i < conf.overlay_count; i++) {
+-            hwc_layer_1_t * layer = overlays[i];
+-            if (layer->acquireFenceFd >= 0) {
++        for (size_t i = 0; i < display->numHwLayers; i++) {
++            hwc_layer_1_t* layer = &display->hwLayers[i];
++            if (layer->compositionType == HWC_OVERLAY &&
++                    layer->acquireFenceFd >= 0) {
+                 close(layer->acquireFenceFd);
+                 layer->acquireFenceFd = -1;
+             }
+         }
++
+         if (conf.back && conf.back->acquireFenceFd >= 0) {
+             close(back->acquireFenceFd);
+             back->acquireFenceFd = -1;
+-- 
+1.7.9.5
+

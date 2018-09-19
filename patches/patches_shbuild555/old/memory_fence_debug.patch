@@ -1,0 +1,273 @@
+From 7b5387582a0ff44e9a36c43ac406d56f7396eb6a Mon Sep 17 00:00:00 2001
+From: "wang, biao" <biao.wang@intel.com>
+Date: Wed, 13 May 2015 15:12:34 +0800
+Subject: [PATCH] debug patch for fence timeout
+
+Change-Id: Ie1ce3eaf0e9e3a68d8485b0c342929efa76f3160
+Signed-off-by: wang, biao <biao.wang@intel.com>
+Signed-off-by: Zhang Di <di.zhang@intel.com>
+---
+ arch/x86/kernel/pci-dma.c                  |    8 ++++++--
+ drivers/base/dma-contiguous.c              |   11 +++++++----
+ drivers/staging/android/ion/ion.c          |   26 ++++++++++++++++++++------
+ drivers/staging/android/ion/ion_cma_heap.c |    6 +++++-
+ mm/page_alloc.c                            |    9 +++++++++
+ mm/page_isolation.c                        |    1 +
+ 6 files changed, 48 insertions(+), 13 deletions(-)
+
+diff --git a/arch/x86/kernel/pci-dma.c b/arch/x86/kernel/pci-dma.c
+index 542594c..69638d9 100644
+--- a/arch/x86/kernel/pci-dma.c
++++ b/arch/x86/kernel/pci-dma.c
+@@ -138,16 +138,20 @@ static void *__dma_alloc(struct device *dev, size_t size,
+ 	dma_mask = dma_alloc_coherent_mask(dev, flag);
+ 
+ 	flag |= __GFP_ZERO;
++	trace_printk("dma alloc flag %x, size %d, order %d\n",
++			flag, size, get_order(size));
+ again:
+ 	page = NULL;
+ 	/* CMA can be used only in the context which permits sleeping */
+ 	if (flag & __GFP_WAIT)
+ 		page = dma_alloc_from_contiguous(dev, count, get_order(size));
+-
+ 	/* fallback */
+-	if (!page)
++	if (!page) {
++		trace_printk("fallback size %d\n", size);
+ 		page = alloc_pages_node(dev_to_node(dev), flag,
+ 				get_order(size));
++		 trace_printk("fallback ret %p\n", page);
++	}
+ 
+ #ifdef CONFIG_SOFIA_LOWMEM_DEV
+ 	if (!page && !retried && (flag & __GFP_WAIT)) {
+diff --git a/drivers/base/dma-contiguous.c b/drivers/base/dma-contiguous.c
+index 7f834e3..35c5a99 100644
+--- a/drivers/base/dma-contiguous.c
++++ b/drivers/base/dma-contiguous.c
+@@ -290,7 +290,7 @@ struct page *dma_alloc_from_contiguous(struct device *dev, int count,
+ 	if (align > CONFIG_CMA_ALIGNMENT)
+ 		align = CONFIG_CMA_ALIGNMENT;
+ 
+-	pr_debug("%s(cma %p, count %d, align %d)\n", __func__, (void *)cma,
++	trace_printk("%s(cma %p, count %d, align %d)\n", __func__, (void *)cma,
+ 		 count, align);
+ 
+ 	if (!count)
+@@ -303,8 +303,11 @@ struct page *dma_alloc_from_contiguous(struct device *dev, int count,
+ 	for (;;) {
+ 		pageno = bitmap_find_next_zero_area(cma->bitmap, cma->count,
+ 						    start, count, mask);
+-		if (pageno >= cma->count)
++		if (pageno >= cma->count) {
++			trace_printk("pageno %u, cma->count %u\n",
++				pageno, cma->count);
+ 			break;
++		}
+ 
+ 		pfn = cma->base_pfn + pageno;
+ 		ret = alloc_contig_range(pfn, pfn + count, MIGRATE_CMA);
+@@ -315,14 +318,14 @@ struct page *dma_alloc_from_contiguous(struct device *dev, int count,
+ 		} else if (ret != -EBUSY) {
+ 			break;
+ 		}
+-		pr_debug("%s(): memory range at %p is busy, retrying\n",
++		trace_printk("%s(): memory range at %p is busy, retrying\n",
+ 			 __func__, pfn_to_page(pfn));
+ 		/* try again with a bit different memory target */
+ 		start = pageno + mask + 1;
+ 	}
+ 
+ 	mutex_unlock(&cma_mutex);
+-	pr_debug("%s(): returned %p\n", __func__, page);
++	trace_printk("%s(): returned %p\n", __func__, page);
+ 	return page;
+ }
+ 
+diff --git a/drivers/staging/android/ion/ion.c b/drivers/staging/android/ion/ion.c
+index 37460b0..4a232b8 100644
+--- a/drivers/staging/android/ion/ion.c
++++ b/drivers/staging/android/ion/ion.c
+@@ -195,6 +195,7 @@ static struct ion_buffer *ion_buffer_create(struct ion_heap *heap,
+ 	int i, ret;
+ 
+ 	buffer = kzalloc(sizeof(struct ion_buffer), GFP_KERNEL);
++
+ 	if (!buffer)
+ 		return ERR_PTR(-ENOMEM);
+ 
+@@ -284,6 +285,10 @@ static struct ion_buffer *ion_buffer_create(struct ion_heap *heap,
+ 	mutex_lock(&dev->buffer_lock);
+ 	ion_buffer_add(dev, buffer);
+ 	mutex_unlock(&dev->buffer_lock);
++	trace_printk("dennis buffer create %p, heap %p, phys %p, id %d, name %s\n",
++			buffer, buffer->heap, buffer->heap->ops->phys,
++			buffer->heap->id,
++			buffer->heap->name);
+ 	return buffer;
+ 
+ err:
+@@ -518,8 +523,9 @@ struct ion_handle *ion_alloc(struct ion_client *client, size_t len,
+ 	struct ion_heap *heap;
+ 	int ret;
+ 
+-	pr_debug("%s: len %zu align %zu heap_id_mask %u flags %x\n", __func__,
+-		 len, align, heap_id_mask, flags);
++	trace_printk("dennis mask %s: len %zu align %zu heap_id_mask %u flags %x\n",
++		__func__,
++		len, align, heap_id_mask, flags);
+ 	/*
+ 	 * traverse the list of heaps available in this system in priority
+ 	 * order.  If the heap type is supported by the client, and matches the
+@@ -530,7 +536,8 @@ struct ion_handle *ion_alloc(struct ion_client *client, size_t len,
+ 
+ 	if (!len)
+ 		return ERR_PTR(-EINVAL);
+-
++	/*if (heap_id_mask == 1)
++		return ERR_PTR(PTR_ERR(buffer));*/
+ 	down_write(&dev->lock);
+ 	plist_for_each_entry(heap, &dev->heaps, node) {
+ 		/* if the caller didn't specify this heap id */
+@@ -539,6 +546,10 @@ struct ion_handle *ion_alloc(struct ion_client *client, size_t len,
+ 		buffer = ion_buffer_create(heap, dev, len, align, flags);
+ 		if (!IS_ERR(buffer))
+ 			break;
++		else {
++			up_write(&dev->lock);
++			return ERR_PTR(PTR_ERR(buffer));
++		}
+ 	}
+ 	up_write(&dev->lock);
+ 
+@@ -605,8 +616,12 @@ int ion_phys(struct ion_client *client, struct ion_handle *handle,
+ 	buffer = handle->buffer;
+ 
+ 	if (!buffer->heap->ops->phys) {
+-		pr_err("%s: ion_phys is not implemented by this heap.\n",
+-		       __func__);
++		pr_err("%s: %p dennis buffer ion_phys is not implemented by this heap.\n",
++				__func__, buffer);
++		trace_printk("dennis ion_phys buffer %p, heap %p, phys %p, id %d, name %s\n",
++				buffer, buffer->heap, buffer->heap->ops->phys,
++				buffer->heap->id,
++				buffer->heap->name);
+ 		mutex_unlock(&client->lock);
+ 		return -ENODEV;
+ 	}
+@@ -1363,7 +1378,6 @@ int ion_share_dma_buf_fd(struct ion_client *client, struct ion_handle *handle)
+ 	return fd;
+ }
+ EXPORT_SYMBOL(ion_share_dma_buf_fd);
+-
+ struct ion_handle *ion_import_dma_buf(struct ion_client *client, int fd)
+ {
+ 	struct dma_buf *dmabuf;
+diff --git a/drivers/staging/android/ion/ion_cma_heap.c b/drivers/staging/android/ion/ion_cma_heap.c
+index c6159ee..0c2b3f9 100644
+--- a/drivers/staging/android/ion/ion_cma_heap.c
++++ b/drivers/staging/android/ion/ion_cma_heap.c
+@@ -73,6 +73,7 @@ static int ion_cma_allocate(struct ion_heap *heap, struct ion_buffer *buffer,
+ 	struct ion_cma_buffer_info *info;
+ 
+ 	dev_dbg(dev, "Request buffer allocation len %ld\n", len);
++	trace_printk("dennis cma alloc %ld, %x\n", len, align);
+ 
+ 	/* set cma_area */
+ 	dev_set_cma_area(dev, cma_heap->cma_area);
+@@ -100,7 +101,10 @@ static int ion_cma_allocate(struct ion_heap *heap, struct ion_buffer *buffer,
+ #endif
+ 
+ 	if (!info->cpu_addr) {
+-		dev_err(dev, "Fail to allocate buffer\n");
++		dev_err(dev, "Fail to allocate buffer %ld, %x, %x\n",
++				len, align, buffer->flags);
++		dump_stack();
++		show_mem(SHOW_MEM_FILTER_NODES);
+ 		goto err;
+ 	}
+ 
+diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+index 1c0b990..5b33e5b 100644
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -6241,6 +6241,7 @@ static int __alloc_contig_migrate_range(struct compact_control *cc,
+ 	while (pfn < end || !list_empty(&cc->migratepages)) {
+ 		if (fatal_signal_pending(current)) {
+ 			ret = -EINTR;
++			trace_printk("dennis cong %d at %d\n", ret, __LINE__);
+ 			break;
+ 		}
+ 
+@@ -6249,12 +6250,15 @@ static int __alloc_contig_migrate_range(struct compact_control *cc,
+ 			pfn = isolate_migratepages_range(cc->zone, cc,
+ 							 pfn, end, true);
+ 			if (!pfn) {
++				trace_printk("dennis cong %d at %d\n",
++						ret, __LINE__);
+ 				ret = -EINTR;
+ 				break;
+ 			}
+ 			tries = 0;
+ 		} else if (++tries == 5) {
+ 			ret = ret < 0 ? ret : -EBUSY;
++			trace_printk("dennis cong %d at %d\n", ret, __LINE__);
+ 			break;
+ 		}
+ 
+@@ -6334,6 +6338,7 @@ int alloc_contig_range(unsigned long start, unsigned long end,
+ 	ret = start_isolate_page_range(pfn_max_align_down(start),
+ 				       pfn_max_align_up(end), migratetype,
+ 				       false);
++	trace_printk("dennis cong %d at %d\n", ret, __LINE__);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -6341,6 +6346,7 @@ int alloc_contig_range(unsigned long start, unsigned long end,
+ 	if (ret)
+ 		goto done;
+ 
++	trace_printk("dennis cong %d at %d\n", ret, __LINE__);
+ 	/*
+ 	 * Pages from [start, end) are within a MAX_ORDER_NR_PAGES
+ 	 * aligned blocks that are marked as MIGRATE_ISOLATE.  What's
+@@ -6366,6 +6372,7 @@ int alloc_contig_range(unsigned long start, unsigned long end,
+ 	while (!PageBuddy(pfn_to_page(outer_start))) {
+ 		if (++order >= MAX_ORDER) {
+ 			ret = -EBUSY;
++			trace_printk("dennis cong %d at %d\n", ret, __LINE__);
+ 			goto done;
+ 		}
+ 		outer_start &= ~0UL << order;
+@@ -6376,6 +6383,7 @@ int alloc_contig_range(unsigned long start, unsigned long end,
+ 		pr_warn("alloc_contig_range test_pages_isolated(%lx, %lx) failed\n",
+ 		       outer_start, end);
+ 		ret = -EBUSY;
++		trace_printk("dennis cong %d at %d\n", ret, __LINE__);
+ 		goto done;
+ 	}
+ 
+@@ -6384,6 +6392,7 @@ int alloc_contig_range(unsigned long start, unsigned long end,
+ 	outer_end = isolate_freepages_range(&cc, outer_start, end);
+ 	if (!outer_end) {
+ 		ret = -EBUSY;
++		trace_printk("dennis cong %d at %d\n", ret, __LINE__);
+ 		goto done;
+ 	}
+ 
+diff --git a/mm/page_isolation.c b/mm/page_isolation.c
+index d1473b2..87cd1f7 100644
+--- a/mm/page_isolation.c
++++ b/mm/page_isolation.c
+@@ -130,6 +130,7 @@ int start_isolate_page_range(unsigned long start_pfn, unsigned long end_pfn,
+ 		if (page &&
+ 		    set_migratetype_isolate(page, skip_hwpoisoned_pages)) {
+ 			undo_pfn = pfn;
++			trace_printk("dennis cong %d at %d\n", 1, __LINE__);
+ 			goto undo;
+ 		}
+ 	}
+-- 
+1.7.9.5
+

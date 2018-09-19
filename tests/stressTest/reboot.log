@@ -1,0 +1,72 @@
+<15>[  155.299468] type=1400 audit(1444287008.275:17): avc: granted { append } for pid=2718 comm=".factory.reboot" name="reboot-thermal-log.csv" dev="mmcblk0p18" ino=17 scontext=u:r:system_app:s0 tcontext=u:object_r:system_data_file:s0 tclass=file
+<15>[  155.330887] type=1400 audit(1444287008.275:18): avc: granted { append } for pid=2718 comm=".factory.reboot" path="/data/reboot-thermal-log.csv" dev="mmcblk0p18" ino=17 scontext=u:r:system_app:s0 tcontext=u:object_r:system_data_file:s0 tclass=file
+<5>[  182.185707] REBOOT driver: Event code: 1!  reboot cmd: 
+<5>[  182.190754] REBOOT driver: next_mode_transition 0x2, reboot cmd: 
+<5>[  182.260659] REBOOT driver: all other guest os reboot successfully!
+<0>[  183.803538] reboot: Restarting system with command ''
+<15>[  154.354589] type=1400 audit(1444287201.619:17): avc: granted { append } for pid=2702 comm=".factory.reboot" name="reboot-thermal-log.csv" dev="mmcblk0p18" ino=17 scontext=u:r:system_app:s0 tcontext=u:object_r:system_data_file:s0 tclass=file
+<15>[  154.378903] type=1400 audit(1444287201.619:18): avc: granted { append } for pid=2702 comm=".factory.reboot" path="/data/reboot-thermal-log.csv" dev="mmcblk0p18" ino=17 scontext=u:r:system_app:s0 tcontext=u:object_r:system_data_file:s0 tclass=file
+<5>[  179.508694] REBOOT driver: Event code: 1!  reboot cmd: 
+<5>[  179.513733] REBOOT driver: next_mode_transition 0x2, reboot cmd: 
+<5>[  179.571609] REBOOT driver: all other guest os reboot successfully!
+<15>[  156.207029] type=1400 audit(1444287386.722:17): avc: granted { append } for pid=2674 comm=".factory.reboot" name="reboot-thermal-log.csv" dev="mmcblk0p18" ino=17 scontext=u:r:system_app:s0 tcontext=u:object_r:system_data_file:s0 tclass=file
+<15>[  156.230122] type=1400 audit(1444287386.722:18): avc: granted { append } for pid=2674 comm=".factory.reboot" path="/data/reboot-thermal-log.csv" dev="mmcblk0p18" ino=17 scontext=u:r:system_app:s0 tcontext=u:object_r:system_data_file:s0 tclass=file
+<5>[  183.010624] REBOOT driver: Event code: 1!  reboot cmd: 
+<5>[  183.015909] REBOOT driver: next_mode_transition 0x2, reboot cmd: 
+<5>[  183.178635] REBOOT driver: all other guest os reboot successfully!
+<0>[  184.645920] reboot: Restarting system with command ''
+<15>[  155.973829] type=1400 audit(1444287581.634:17): avc: granted { append } for pid=2701 comm=".factory.reboot" name="reboot-thermal-log.csv" dev="mmcblk0p18" ino=17 scontext=u:r:system_app:s0 tcontext=u:object_r:system_data_file:s0 tclass=file
+<15>[  155.996239] type=1400 audit(1444287581.664:18): avc: granted { append } for pid=2701 comm=".factory.reboot" path="/data/reboot-thermal-log.csv" dev="mmcblk0p18" ino=17 scontext=u:r:system_app:s0 tcontext=u:object_r:system_data_file:s0 tclass=file
+<5>[  182.218331] REBOOT driver: Event code: 1!  reboot cmd: 
+<5>[  182.223485] REBOOT driver: next_mode_transition 0x2, reboot cmd: 
+<5>[  182.280699] REBOOT driver: all other guest os reboot successfully!
+<0>[  183.806349] reboot: Restarting system with command ''
+<15>[  161.725712] type=1400 audit(1444287781.330:17): avc: granted { append } for pid=2411 comm=".factory.reboot" name="reboot-thermal-log.csv" dev="mmcblk0p18" ino=17 scontext=u:r:system_app:s0 tcontext=u:object_r:system_data_file:s0 tclass=file
+<15>[  161.747576] type=1400 audit(1444287781.330:18): avc: granted { append } for pid=2411 comm=".factory.reboot" path="/data/reboot-thermal-log.csv" dev="mmcblk0p18" ino=17 scontext=u:r:system_app:s0 tcontext=u:object_r:system_data_file:s0 tclass=file
+<5>[  187.678085] REBOOT driver: Event code: 1!  reboot cmd: 
+<5>[  187.683318] REBOOT driver: next_mode_transition 0x2, reboot cmd: 
+<5>[  187.741101] REBOOT driver: all other guest os reboot successfully!
+<15>[  156.880060] type=1400 audit(1444287968.318:17): avc: granted { append } for pid=2738 comm=".factory.reboot" name="reboot-thermal-log.csv" dev="mmcblk0p18" ino=17 scontext=u:r:system_app:s0 tcontext=u:object_r:system_data_file:s0 tclass=file
+<15>[  156.901619] type=1400 audit(1444287968.318:18): avc: granted { append } for pid=2738 comm=".factory.reboot" path="/data/reboot-thermal-log.csv" dev="mmcblk0p18" ino=17 scontext=u:r:system_app:s0 tcontext=u:object_r:system_data_file:s0 tclass=file
+<5>[  183.735355] REBOOT driver: Event code: 1!  reboot cmd: 
+<5>[  183.740472] REBOOT driver: next_mode_transition 0x2, reboot cmd: 
+<5>[  183.805568] REBOOT driver: all other guest os reboot successfully!
+<15>[  155.325318] type=1400 audit(1444288162.499:17): avc: granted { append } for pid=2717 comm=".factory.reboot" name="reboot-thermal-log.csv" dev="mmcblk0p18" ino=17 scontext=u:r:system_app:s0 tcontext=u:object_r:system_data_file:s0 tclass=file
+<15>[  155.348316] type=1400 audit(1444288162.529:18): avc: granted { append } for pid=2717 comm=".factory.reboot" path="/data/reboot-thermal-log.csv" dev="mmcblk0p18" ino=17 scontext=u:r:system_app:s0 tcontext=u:object_r:system_data_file:s0 tclass=file
+<5>[  181.543745] REBOOT driver: Event code: 1!  reboot cmd: 
+<5>[  181.548782] REBOOT driver: next_mode_transition 0x2, reboot cmd: 
+<5>[  181.611031] REBOOT driver: all other guest os reboot successfully!
+<15>[  153.772814] type=1400 audit(1444288354.516:14): avc: granted { append } for pid=2635 comm=".factory.reboot" name="reboot-thermal-log.csv" dev="mmcblk0p18" ino=17 scontext=u:r:system_app:s0 tcontext=u:object_r:system_data_file:s0 tclass=file
+<15>[  153.795975] type=1400 audit(1444288354.516:15): avc: granted { append } for pid=2635 comm=".factory.reboot" path="/data/reboot-thermal-log.csv" dev="mmcblk0p18" ino=17 scontext=u:r:system_app:s0 tcontext=u:object_r:system_data_file:s0 tclass=file
+<5>[  179.636558] REBOOT driver: Event code: 1!  reboot cmd: 
+<5>[  179.641599] REBOOT driver: next_mode_transition 0x2, reboot cmd: 
+<5>[  179.704197] REBOOT driver: all other guest os reboot successfully!
+<0>[  181.164499] reboot: Restarting system with command ''
+<15>[  154.973378] type=1400 audit(1444288539.096:17): avc: granted { append } for pid=2572 comm=".factory.reboot" name="reboot-thermal-log.csv" dev="mmcblk0p18" ino=17 scontext=u:r:system_app:s0 tcontext=u:object_r:system_data_file:s0 tclass=file
+<15>[  154.997342] type=1400 audit(1444288539.096:18): avc: granted { append } for pid=2572 comm=".factory.reboot" path="/data/reboot-thermal-log.csv" dev="mmcblk0p18" ino=17 scontext=u:r:system_app:s0 tcontext=u:object_r:system_data_file:s0 tclass=file
+<5>[  182.132472] REBOOT driver: Event code: 1!  reboot cmd: 
+<5>[  182.137775] REBOOT driver: next_mode_transition 0x2, reboot cmd: 
+<5>[  182.200658] REBOOT driver: all other guest os reboot successfully!
+<0>[  183.702962] reboot: Restarting system with command ''
+<15>[  161.915766] type=1400 audit(1444288739.420:17): avc: granted { append } for pid=2393 comm=".factory.reboot" name="reboot-thermal-log.csv" dev="mmcblk0p18" ino=17 scontext=u:r:system_app:s0 tcontext=u:object_r:system_data_file:s0 tclass=file
+<15>[  161.938629] type=1400 audit(1444288739.440:18): avc: granted { append } for pid=2393 comm=".factory.reboot" path="/data/reboot-thermal-log.csv" dev="mmcblk0p18" ino=17 scontext=u:r:system_app:s0 tcontext=u:object_r:system_data_file:s0 tclass=file
+<5>[  188.038798] REBOOT driver: Event code: 1!  reboot cmd: 
+<5>[  188.045102] REBOOT driver: next_mode_transition 0x2, reboot cmd: 
+<5>[  188.105195] REBOOT driver: all other guest os reboot successfully!
+<0>[  189.492687] reboot: Restarting system with command ''
+<15>[  141.989142] type=1400 audit(1444288911.250:13): avc: granted { append } for pid=2337 comm=".factory.reboot" name="reboot-thermal-log.csv" dev="mmcblk0p18" ino=17 scontext=u:r:system_app:s0 tcontext=u:object_r:system_data_file:s0 tclass=file
+<15>[  142.014879] type=1400 audit(1444288911.270:14): avc: granted { append } for pid=2337 comm=".factory.reboot" path="/data/reboot-thermal-log.csv" dev="mmcblk0p18" ino=17 scontext=u:r:system_app:s0 tcontext=u:object_r:system_data_file:s0 tclass=file
+<5>[  168.442059] REBOOT driver: Event code: 1!  reboot cmd: 
+<5>[  168.447099] REBOOT driver: next_mode_transition 0x2, reboot cmd: 
+<5>[  168.609374] REBOOT driver: all other guest os reboot successfully!
+<15>[  160.568376] type=1400 audit(1444289102.060:17): avc: granted { append } for pid=2394 comm=".factory.reboot" name="reboot-thermal-log.csv" dev="mmcblk0p18" ino=17 scontext=u:r:system_app:s0 tcontext=u:object_r:system_data_file:s0 tclass=file
+<15>[  160.590663] type=1400 audit(1444289102.060:18): avc: granted { append } for pid=2394 comm=".factory.reboot" path="/data/reboot-thermal-log.csv" dev="mmcblk0p18" ino=17 scontext=u:r:system_app:s0 tcontext=u:object_r:system_data_file:s0 tclass=file
+<5>[  186.367552] REBOOT driver: Event code: 1!  reboot cmd: 
+<5>[  186.372680] REBOOT driver: next_mode_transition 0x2, reboot cmd: 
+<5>[  186.429366] REBOOT driver: all other guest os reboot successfully!
+<0>[  187.836020] reboot: Restarting system with command ''
+<15>[  160.185371] type=1400 audit(1444289291.780:17): avc: granted { append } for pid=2405 comm=".factory.reboot" name="reboot-thermal-log.csv" dev="mmcblk0p18" ino=17 scontext=u:r:system_app:s0 tcontext=u:object_r:system_data_file:s0 tclass=file
+<15>[  160.207177] type=1400 audit(1444289291.780:18): avc: granted { append } for pid=2405 comm=".factory.reboot" path="/data/reboot-thermal-log.csv" dev="mmcblk0p18" ino=17 scontext=u:r:system_app:s0 tcontext=u:object_r:system_data_file:s0 tclass=file
+<5>[  186.006369] REBOOT driver: Event code: 1!  reboot cmd: 
+<5>[  186.011408] REBOOT driver: next_mode_transition 0x2, reboot cmd: 
+<5>[  186.067195] REBOOT driver: all other guest os reboot successfully!

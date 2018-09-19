@@ -1,0 +1,29 @@
+diff --git a/debuggerd/tombstone.cpp b/debuggerd/tombstone.cpp
+index 0c1b80f..63e71db 100644
+--- a/debuggerd/tombstone.cpp
++++ b/debuggerd/tombstone.cpp
+@@ -372,6 +372,24 @@ static void dump_nearby_maps(BacktraceMap* map, log_t* log, pid_t tid) {
+   if (has_fault_address && (addr >= (*prev).end)) {
+     _LOG(log, logtype::MAPS, "--->Fault address falls at %" PRIPTR " after any mapped regions\n", addr);
+   }
++
++  {
++        char path[sizeof(pid_t)*3 + sizeof("/proc//smaps") + 1];
++        char line[1024];
++        snprintf(path, sizeof(path), "/proc/%d/smaps", tid);
++        FILE* fp = fopen(path, "r");
++
++        if (fp == NULL) {
++        _LOG(log, logtype::MAPS, "Can't open %s \n",path);
++        }
++
++        while(fgets(line, sizeof(line), fp)) {
++        _LOG(log, logtype::MAPS, "%s \n", line);
++        }
++
++        fclose(fp);
++  }
++
+ }
+ 
+ static void dump_thread(Backtrace* backtrace, log_t* log) {

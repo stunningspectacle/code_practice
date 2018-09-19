@@ -1,0 +1,80 @@
+From 3d20c57260b53381545e2c0e290c4359f31b845c Mon Sep 17 00:00:00 2001
+From: Yao Cheng <yao.cheng@intel.com>
+Date: Thu, 18 Sep 2014 21:08:41 +0800
+Subject: [PATCH 10/12] Add a hook for intel's additional SkImageDecoder.
+
+Changes:
+Android.mk: add intel's static libraries to link flag
+SkForceLinking.cpp: force link intel's skImageDecoder lib
+SkImageDecoder.h: add decoder declaration
+
+Change-Id: Idd322180902610deaa526056b95485fe16c9b2f5
+Old-Change-ID: Id310587b3d042b55d7d55f9f5ccac9fc58e20054
+Ori-Change-ID: Iaad74e3ecbc4ed514f10d707f31233265e849051
+Orig-Change-Id: Ic58f30274fa632c44a181d5f8dc9b54bd5060dd1
+Tracked-On: https://jira01.devtools.intel.com/browse/CTEAN-1950
+Orig-Tracked-On: https://jira01.devtools.intel.com/browse/IMINAN-2495
+Category: aosp improvement
+Domain: Video.Media-jpeg
+Origin: internal
+Upstream-Candidate: no, proprietary
+Signed-off-by: Yao Cheng <yao.cheng@intel.com>
+Old-Reviewed-on: https://android.intel.com:443/374230
+Signed-off-by: Xinyun Liu <xinyun.liu@intel.com>
+---
+ Android.mk                    |    7 +++++++
+ include/core/SkImageDecoder.h |    4 ++++
+ src/images/SkForceLinking.cpp |    4 ++++
+ 3 files changed, 15 insertions(+)
+
+diff --git a/Android.mk b/Android.mk
+index ec81c39..7a097fb 100644
+--- a/Android.mk
++++ b/Android.mk
+@@ -532,6 +532,13 @@ LOCAL_STATIC_LIBRARIES := \
+ 	libgif \
+ 	libsfntly
+ 
++ifeq ($(ADD_INTEL_SKIMAGEDECODER), true)
++LOCAL_STATIC_LIBRARIES += libskia_ext libjpeg-turbo-static libsimd \
++	libippj libippi libipps libippcore
++LOCAL_SHARED_LIBRARIES += libva libva-android libhardware libcutils libmix_imagedecoder libutils
++LOCAL_CFLAGS += -DADD_INTEL_SKIMAGEDECODER
++endif
++
+ LOCAL_C_INCLUDES := \
+ 	$(LOCAL_PATH)/include/config \
+ 	$(LOCAL_PATH)/include/core \
+diff --git a/include/core/SkImageDecoder.h b/include/core/SkImageDecoder.h
+index c054d46..f8f5a3f 100644
+--- a/include/core/SkImageDecoder.h
++++ b/include/core/SkImageDecoder.h
+@@ -539,6 +539,10 @@ DECLARE_DECODER_CREATOR(BMPImageDecoder);
+ DECLARE_DECODER_CREATOR(GIFImageDecoder);
+ DECLARE_DECODER_CREATOR(ICOImageDecoder);
+ DECLARE_DECODER_CREATOR(JPEGImageDecoder);
++#ifdef ADD_INTEL_SKIMAGEDECODER
++DECLARE_DECODER_CREATOR(JPEGMixImageDecoder);
++DECLARE_DECODER_CREATOR(JPEGTurboImageDecoder);
++#endif
+ DECLARE_DECODER_CREATOR(PNGImageDecoder);
+ DECLARE_DECODER_CREATOR(WBMPImageDecoder);
+ DECLARE_DECODER_CREATOR(WEBPImageDecoder);
+diff --git a/src/images/SkForceLinking.cpp b/src/images/SkForceLinking.cpp
+index 402d359..825241b 100644
+--- a/src/images/SkForceLinking.cpp
++++ b/src/images/SkForceLinking.cpp
+@@ -15,6 +15,10 @@ int SkForceLinking(bool doNotPassTrue) {
+     if (doNotPassTrue) {
+         SkASSERT(false);
+         CreateJPEGImageDecoder();
++#ifdef ADD_INTEL_SKIMAGEDECODER
++        CreateJPEGTurboImageDecoder();
++        CreateJPEGMixImageDecoder();
++#endif
+         CreateWEBPImageDecoder();
+         CreateBMPImageDecoder();
+         CreateICOImageDecoder();
+-- 
+1.7.9.5
+

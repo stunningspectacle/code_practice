@@ -1,0 +1,27 @@
+#
+# (C) COPYRIGHT ARM Limited. All rights reserved.
+#
+# This program is free software and is provided to you under the terms of the
+# GNU General Public License version 2 as published by the Free Software
+# Foundation, and any use by you of this program is subject to the terms
+# of such GNU licence.
+#
+# A copy of the licence is included with the program, and can also be obtained
+# from Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+# Boston, MA  02110-1301, USA.
+#
+#
+
+config MALI_DP
+	depends on ADF
+	select VIDEO_TX
+	tristate "Mali-DPxxx ADF driver"
+	---help---
+	  This Atomic Display Framework driver is for the Mali-DP series
+	  of display processors.
+
+config MALI_DP_DEBUG
+	depends on MALI_DP
+	bool "Mali-DP driver debug output enable"
+	---help---
+	  This enables debug output for the Mali-DP driver

@@ -1,0 +1,28 @@
+commit 7b8007d9c00b381be6f77935549fc40dd0779ca0
+Author: Gregoire Etienne <gregoire.etienne@intel.com>
+Date:   Thu Aug 7 13:05:00 2014 +0800
+
+    power: control display status
+    
+    Signed-off-by: Gregoire Etienne <gregoire.etienne@intel.com>
+
+diff --git a/power/power.c b/power/power.c
+index e88fdf4..13d0675 100644
+--- a/power/power.c
++++ b/power/power.c
+@@ -29,6 +29,7 @@
+ #include <hardware/power.h>
+ 
+ #define SYSFS_TS_ENABLE_FILE "/sys/class/i2c-adapter/i2c-1/1-0038/enable"
++#define SYSFS_DISPLAY_ENABLE_FILE "/sys/bus/platform/drivers/dcc/e1000000.dcc/enable"
+ 
+ static void sysfs_write(const char *path, char *s)
+ {
+@@ -60,6 +61,7 @@ static void power_set_interactive(struct power_module *module, int on)
+ {
+     ALOGI("%s %s\n", __func__, (on ? "ON" : "OFF"));
+     sysfs_write(SYSFS_TS_ENABLE_FILE, on ? "1" : "0");
++    sysfs_write(SYSFS_DISPLAY_ENABLE_FILE, on ? "1" : "0");
+     ALOGI("%s done\n", __func__);
+ }
+ 

@@ -1,0 +1,168 @@
+diff --git a/drivers/gpu/arm/mali/common/mali_osk.h b/drivers/gpu/arm/mali/common/mali_osk.h
+index 184564e..98f58ab 100644
+--- a/drivers/gpu/arm/mali/common/mali_osk.h
++++ b/drivers/gpu/arm/mali/common/mali_osk.h
+@@ -1192,7 +1192,8 @@ void _mali_osk_wait_queue_wait_event(_mali_osk_wait_queue_t *queue, mali_bool(*c
+  * thread only woken up if the condition is now true.  Will return if time
+  * exceeds timeout.
+  */
+-void _mali_osk_wait_queue_wait_event_timeout(_mali_osk_wait_queue_t *queue, mali_bool(*condition)(void *), void *data, u32 timeout);
++long _mali_osk_wait_queue_wait_event_timeout(_mali_osk_wait_queue_t *queue,
++	mali_bool(*condition)(void *), void *data, u32 timeout);
+ 
+ /** @brief Wake up all threads in wait queue if their respective conditions are
+  * true
+diff --git a/drivers/gpu/arm/mali/common/mali_soft_job.c b/drivers/gpu/arm/mali/common/mali_soft_job.c
+index e8ad737..23495d5 100644
+--- a/drivers/gpu/arm/mali/common/mali_soft_job.c
++++ b/drivers/gpu/arm/mali/common/mali_soft_job.c
+@@ -345,7 +345,9 @@ mali_scheduler_mask mali_soft_job_system_timeout_job(struct mali_soft_job *job)
+ 	MALI_DEBUG_ASSERT_POINTER(job->system->session);
+ 	MALI_DEBUG_ASSERT(MALI_TRUE == job->activated);
+ 
+-	MALI_DEBUG_PRINT(4, ("Mali Soft Job: Timeline timeout for soft job %u (0x%08X).\n", job->id, job));
++	trace_printk(
++		"Mali Soft Job: Timeline timeout for soft job %u (0x%08X).\n",
++		job->id, job);
+ 
+ 	mali_soft_job_system_lock(job->system);
+ 
+@@ -364,7 +366,9 @@ mali_scheduler_mask mali_soft_job_system_timeout_job(struct mali_soft_job *job)
+ 		MALI_DEBUG_ASSERT(MALI_SOFT_JOB_STATE_SIGNALED == job->state);
+ 
+ 		/* The job is about to be signaled, ignore timeout. */
+-		MALI_DEBUG_PRINT(4, ("Mali Soft Job: Timeout on soft job %u (0x%08X) in signaled state.\n", job->id, job));
++		trace_printk(
++			"Mali Soft Job: Timeout on soft job %u (0x%08X) in signaled state.\n",
++			 job->id, job);
+ 		mali_soft_job_system_unlock(job->system);
+ 		return schedule_mask;
+ 	}
+diff --git a/drivers/gpu/arm/mali/common/mali_timeline_fence_wait.c b/drivers/gpu/arm/mali/common/mali_timeline_fence_wait.c
+index dc22ccf..cdb5938 100644
+--- a/drivers/gpu/arm/mali/common/mali_timeline_fence_wait.c
++++ b/drivers/gpu/arm/mali/common/mali_timeline_fence_wait.c
+@@ -162,11 +162,23 @@ mali_bool mali_timeline_fence_wait(struct mali_timeline_system *system, struct m
+ 	MALI_IGNORE(point);
+ 
+ 	/* Wait for the tracker to be activated or time out. */
++	long remain = 0;
++	trace_printk(
++		"Mali Timeline: wait on fence 0x%p, wait 0x%p, timeout=%ums, pid=%u\n",
++		fence, wait, timeout, _mali_osk_get_pid());
+ 	if (MALI_TIMELINE_FENCE_WAIT_TIMEOUT_NEVER == timeout) {
+ 		_mali_osk_wait_queue_wait_event(system->wait_queue, mali_timeline_fence_wait_tracker_is_activated, (void *) wait);
+ 	} else {
+-		_mali_osk_wait_queue_wait_event_timeout(system->wait_queue, mali_timeline_fence_wait_tracker_is_activated, (void *) wait, timeout);
++		remain = _mali_osk_wait_queue_wait_event_timeout(
++				system->wait_queue,
++				mali_timeline_fence_wait_tracker_is_activated,
++				(void *) wait, timeout);
+ 	}
++	trace_printk(
++		"Mali Timeline: return from fence 0x%p, wait 0x%p, remain=%ums, pid=%u\n",
++		fence, wait,
++		_mali_osk_time_tickstoms(remain),
++		_mali_osk_get_pid());
+ 
+ 	ret = wait->activated;
+ 
+@@ -184,7 +196,9 @@ void mali_timeline_fence_wait_activate(struct mali_timeline_fence_wait_tracker *
+ 	MALI_DEBUG_ASSERT_POINTER(wait);
+ 	MALI_DEBUG_ASSERT_POINTER(wait->system);
+ 
+-	MALI_DEBUG_PRINT(4, ("Mali Timeline: activation for fence wait tracker\n"));
++	trace_printk(
++		"Mali Timeline: activation for fence wait tracker 0x%p\n",
++		wait);
+ 
+ 	MALI_DEBUG_ASSERT(MALI_FALSE == wait->activated);
+ 	wait->activated = MALI_TRUE;
+diff --git a/drivers/gpu/arm/mali/linux/mali_kernel_linux.c b/drivers/gpu/arm/mali/linux/mali_kernel_linux.c
+index 28b533c..131e707 100644
+--- a/drivers/gpu/arm/mali/linux/mali_kernel_linux.c
++++ b/drivers/gpu/arm/mali/linux/mali_kernel_linux.c
+@@ -77,7 +77,7 @@ EXPORT_TRACEPOINT_SYMBOL_GPL(mali_sw_counters);
+ extern const char *__malidrv_build_info(void);
+ 
+ /* Module parameter to control log level */
+-int mali_debug_level = 1;
++int mali_debug_level = 2;
+ module_param(mali_debug_level, int, S_IRUSR | S_IWUSR | S_IWGRP | S_IRGRP | S_IROTH); /* rw-rw-r-- */
+ MODULE_PARM_DESC(mali_debug_level, "Higher number, more dmesg output");
+ 
+diff --git a/drivers/gpu/arm/mali/linux/mali_osk_wait_queue.c b/drivers/gpu/arm/mali/linux/mali_osk_wait_queue.c
+index d14b7d5..3a30161 100644
+--- a/drivers/gpu/arm/mali/linux/mali_osk_wait_queue.c
++++ b/drivers/gpu/arm/mali/linux/mali_osk_wait_queue.c
+@@ -47,11 +47,13 @@ void _mali_osk_wait_queue_wait_event(_mali_osk_wait_queue_t *queue, mali_bool(*c
+ 	wait_event(queue->wait_queue, condition(data));
+ }
+ 
+-void _mali_osk_wait_queue_wait_event_timeout(_mali_osk_wait_queue_t *queue, mali_bool(*condition)(void *), void *data, u32 timeout)
++long _mali_osk_wait_queue_wait_event_timeout(_mali_osk_wait_queue_t *queue,
++		mali_bool(*condition)(void *), void *data, u32 timeout)
+ {
+ 	MALI_DEBUG_ASSERT_POINTER(queue);
+ 	MALI_DEBUG_PRINT(6, ("Adding to wait queue %p\n", queue));
+-	wait_event_timeout(queue->wait_queue, condition(data), _mali_osk_time_mstoticks(timeout));
++	return wait_event_timeout(queue->wait_queue, condition(data),
++			_mali_osk_time_mstoticks(timeout));
+ }
+ 
+ void _mali_osk_wait_queue_wake_up(_mali_osk_wait_queue_t *queue)
+diff --git a/drivers/gpu/arm/mali/platform/xgold/platform_intern.h b/drivers/gpu/arm/mali/platform/xgold/platform_intern.h
+index b23b203..2513d8d 100644
+--- a/drivers/gpu/arm/mali/platform/xgold/platform_intern.h
++++ b/drivers/gpu/arm/mali/platform/xgold/platform_intern.h
+@@ -28,7 +28,7 @@
+ #define mali_err(fmt, arg...)	pr_err(MALI_PLF_NAME" [ERROR]: " fmt, ##arg)
+ #define mali_info(fmt, arg...)	pr_info(MALI_PLF_NAME": " fmt, ##arg)
+ #define mali_warn(fmt, arg...)	pr_warn(MALI_PLF_NAME" [W]: " fmt, ##arg)
+-#define mali_dbg(fmt, arg...)	pr_debug(MALI_PLF_NAME" [D]: " fmt, ##arg)
++#define mali_dbg(fmt, arg...)	pr_info(MALI_PLF_NAME" [D]: " fmt, ##arg)
+ 
+ #define GPU_NUM_PM_STATES 5
+ 
+diff --git a/drivers/video/xgold/dsi/dsi_display.c b/drivers/video/xgold/dsi/dsi_display.c
+index dff9506..6919d6d 100644
+--- a/drivers/video/xgold/dsi/dsi_display.c
++++ b/drivers/video/xgold/dsi/dsi_display.c
+@@ -556,6 +556,7 @@ static void dsi_send_msglist(struct dsi_display *display,
+ 
+ static int dsi_panel_init(struct dsi_display *display)
+ {
++	pr_err("%s -->\n", __func__);
+ 	struct display_msg *msgs = display->msgs_init;
+ 
+ 	if (msgs != NULL)
+@@ -646,18 +647,21 @@ dsi_set_gpiolist(struct dsi_display *display, struct display_gpio *gpios)
+ 
+ static void dsi_panel_power_on(struct dsi_display *display)
+ {
++	pr_err("%s -->\n", __func__);
+ 	if (display->gpios_power_on)
+ 		dsi_set_gpiolist(display, display->gpios_power_on);
+ }
+ 
+ static void dsi_panel_power_off(struct dsi_display *display)
+ {
++	pr_err("%s -->\n", __func__);
+ 	if (display->gpios_power_off)
+ 		dsi_set_gpiolist(display, display->gpios_power_off);
+ }
+ 
+ static int dsi_panel_sleep_in(struct dsi_display *display)
+ {
++	pr_err("%s -->\n", __func__);
+ 	struct display_msg *msgs = display->msgs_sleep_in;
+ 
+ 	if (msgs != NULL)
+@@ -670,6 +674,7 @@ static int dsi_panel_sleep_out(struct dsi_display *display)
+ {
+ 	struct display_msg *msgs = display->msgs_sleep_out;
+ 
++	pr_err("%s -->\n", __func__);
+ 	if (msgs != NULL)
+ 		dsi_send_msglist(display, msgs);
+ 

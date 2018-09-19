@@ -1,0 +1,67 @@
+diff --git a/input/touchscreen/synaptics_dsx/synaptics_dsx_fw_update.c b/input/touchscreen/synaptics_dsx/synaptics_dsx_fw_update.c
+index e7fe266..9380b69 100644
+--- a/input/touchscreen/synaptics_dsx/synaptics_dsx_fw_update.c
++++ b/input/touchscreen/synaptics_dsx/synaptics_dsx_fw_update.c
+@@ -55,6 +55,9 @@
+ #define V6_FLASH_COMMAND_OFFSET 2
+ #define V6_FLASH_STATUS_OFFSET 3
+ 
++#define V6_BLK_SIZE_REG 2
++#define V6_BLK_CNT_REG  4
++
+ #define LOCKDOWN_BLOCK_COUNT 5
+ 
+ #define REG_MAP (1 << 0)
+@@ -468,27 +471,27 @@ static int fwu_read_f34_queries(void)
+ 		return retval;
+ 	}
+ 
+-	count = 4;
++	count = sizeof(fwu->fw_block_count) + sizeof(fwu->config_block_count);
+ 
+ 	if (fwu->flash_properties & HAS_PERM_CONFIG) {
+ 		fwu->has_perm_config = 1;
+-		count += 2;
++		count += sizeof(fwu->perm_config_block_count);
+ 	}
+ 
+ 	if (fwu->flash_properties & HAS_BL_CONFIG) {
+ 		fwu->has_bl_config = 1;
+-		count += 2;
++		count += sizeof(fwu->bl_config_block_count);
+ 	}
+ 
+ 	if (fwu->flash_properties & HAS_DISP_CONFIG) {
+ 		fwu->has_disp_config = 1;
+-		count += 2;
++		count += sizeof(fwu->disp_config_size);
+ 	}
+ 
+ 	retval = synaptics_rmi4_reg_read(rmi4_data,
+ 			fwu->f34_fd.query_base_addr + fwu->blk_size_off,
+ 			buf,
+-			2);
++			sizeof(fwu->fw_block_count));
+ 	if (retval < 0) {
+ 		dev_err(rmi4_data->pdev->dev.parent,
+ 				"%s: Failed to read block size info\n",
+@@ -520,16 +523,16 @@ static int fwu_read_f34_queries(void)
+ 	batohs(&fwu->fw_block_count, &(buf[0]));
+ 	batohs(&fwu->config_block_count, &(buf[2]));
+ 
+-	count = 4;
++	count = sizeof(fwu->fw_block_count) + sizeof(fwu->config_block_count);
+ 
+ 	if (fwu->has_perm_config) {
+ 		batohs(&fwu->perm_config_block_count, &(buf[count]));
+-		count += 2;
++		count += sizeof(fwu->perm_config_block_count);
+ 	}
+ 
+ 	if (fwu->has_bl_config) {
+ 		batohs(&fwu->bl_config_block_count, &(buf[count]));
+-		count += 2;
++		count += sizeof(fwu->bl_config_block_count);
+ 	}
+ 
+ 	if (fwu->has_disp_config)

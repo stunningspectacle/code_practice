@@ -1,0 +1,219 @@
+diff --git a/arch/x86/configs/i386_SF-3G_defconfig b/arch/x86/configs/i386_SF-3G_defconfig
+index 2b2c1bb..e2e8bc4 100644
+--- a/arch/x86/configs/i386_SF-3G_defconfig
++++ b/arch/x86/configs/i386_SF-3G_defconfig
+@@ -1899,7 +1899,7 @@ CONFIG_MEDIA_TUNER_MC44S803=y
+ # CONFIG_DRM is not set
+ CONFIG_MALI400=y
+ # CONFIG_MALI450 is not set
+-# CONFIG_MALI400_DEBUG is not set
++CONFIG_MALI400_DEBUG=y
+ # CONFIG_MALI400_PROFILING is not set
+ # CONFIG_MALI400_UMP is not set
+ # CONFIG_MALI400_POWER_PERFORMANCE_POLICY is not set
+diff --git a/drivers/gpu/arm/mali/Makefile b/drivers/gpu/arm/mali/Makefile
+index 1edee7c..aca052f 100644
+--- a/drivers/gpu/arm/mali/Makefile
++++ b/drivers/gpu/arm/mali/Makefile
+@@ -15,6 +15,7 @@ USING_POWER_PERFORMANCE_POLICY ?= 0
+ MALI_HEATMAPS_ENABLED ?= 0
+ MALI_DMA_BUF_MAP_ON_ATTACH ?= 1
+ MALI_PMU_PARALLEL_POWER_UP ?= 0
++LOCK_ORDER_CHECKING ?= 1
+ 
+ # The Makefile sets up "arch" based on the CONFIG, creates the version info
+ # string and the __malidrv_build_info.c file, and then call the Linux build
+diff --git a/drivers/gpu/arm/mali/common/mali_gp.c b/drivers/gpu/arm/mali/common/mali_gp.c
+index 1e633f2..330213c 100644
+--- a/drivers/gpu/arm/mali/common/mali_gp.c
++++ b/drivers/gpu/arm/mali/common/mali_gp.c
+@@ -106,9 +106,13 @@ _mali_osk_errcode_t mali_gp_stop_bus_wait(struct mali_gp_core *core)
+ 			break;
+ 		}
+ 	}
++	if (i >= MALI_REG_POLL_COUNT_ORIG) {
++		MALI_PRINT_ERROR(("%s: Warning! Mali PP: read count: %d\n", __func__, i));
++	}
+ 
+ 	if (MALI_REG_POLL_COUNT_FAST == i) {
+ 		MALI_PRINT_ERROR(("Mali GP: Failed to stop bus on %s\n", core->hw_core.description));
++		dump_stack();
+ 		return _MALI_OSK_ERR_FAULT;
+ 	}
+ 	return _MALI_OSK_ERR_OK;
+@@ -172,6 +176,9 @@ _mali_osk_errcode_t mali_gp_reset_wait(struct mali_gp_core *core)
+ 			break;
+ 		}
+ 	}
++	if (i >= MALI_REG_POLL_COUNT_ORIG) {
++		MALI_PRINT_ERROR(("%s: Warning! Mali PP: read count: %d\n", __func__, i));
++	}
+ 
+ 	if (i == MALI_REG_POLL_COUNT_FAST) {
+ 		MALI_PRINT_ERROR(("Mali GP: Failed to reset core %s, rawstat: 0x%08x\n",
+diff --git a/drivers/gpu/arm/mali/common/mali_group.c b/drivers/gpu/arm/mali/common/mali_group.c
+index 922f012..688f625 100644
+--- a/drivers/gpu/arm/mali/common/mali_group.c
++++ b/drivers/gpu/arm/mali/common/mali_group.c
+@@ -1575,6 +1575,7 @@ _mali_osk_errcode_t mali_group_upper_half_pp(void *data)
+ 	 * parent group)
+ 	 */
+ #if !defined(MALI_UPPER_HALF_SCHEDULING)
++	not defined;
+ 	if (mali_group_is_in_virtual(group)) {
+ 		/*
+ 		 * This check is done without the group lock held, which could lead to
+@@ -1593,6 +1594,7 @@ _mali_osk_errcode_t mali_group_upper_half_pp(void *data)
+ 		mali_pp_mask_all_interrupts(core);
+ 
+ #if defined(CONFIG_MALI400_PROFILING)
++	not defined;
+ 		/* Currently no support for this interrupt event for the virtual PP core */
+ 		if (!mali_group_is_virtual(group)) {
+ 			_mali_osk_profiling_add_event(MALI_PROFILING_EVENT_TYPE_SINGLE |
+@@ -1671,8 +1673,8 @@ _mali_osk_errcode_t mali_group_upper_half_pp(void *data)
+ 			goto out;
+ 		}
+ #endif
+-
+ 		/* We do need to handle this in a bottom half */
++		MALI_PRINT_ERROR(("%s: not end of frame, irq_readout=0x%x\n", __func__, irq_readout));
+ 		_mali_osk_wq_schedule_work(group->bottom_half_work_pp);
+ 		err = _MALI_OSK_ERR_OK;
+ 		goto out;
+@@ -1690,7 +1692,7 @@ static void mali_group_bottom_half_pp(void *data)
+ {
+ 	struct mali_group *group = (struct mali_group *)data;
+ 	struct mali_pp_core *core = group->pp_core;
+-	u32 irq_readout;
++	u32 irq_readout, my_status;
+ 	u32 irq_errors;
+ 
+ 	_mali_osk_profiling_add_event(MALI_PROFILING_EVENT_TYPE_START |
+@@ -1721,7 +1723,7 @@ static void mali_group_bottom_half_pp(void *data)
+ 		return;
+ 	}
+ 
+-	irq_readout = mali_pp_read_rawstat(group->pp_core);
++	my_status = irq_readout = mali_pp_read_rawstat(group->pp_core);
+ 
+ 	MALI_DEBUG_PRINT(4, ("Mali PP: Bottom half IRQ 0x%08X from core %s\n", irq_readout, mali_pp_get_hw_core_desc(group->pp_core)));
+ 
+@@ -1777,8 +1779,9 @@ static void mali_group_bottom_half_pp(void *data)
+ 	} else if (group->core_timed_out) { /* SW timeout */
+ 		group->core_timed_out = MALI_FALSE;
+ 		if (!_mali_osk_timer_pending(group->timeout_timer) && NULL != group->pp_running_job) {
+-			MALI_PRINT(("Mali PP: Job %d timed out on core %s\n",
+-				    mali_pp_job_get_id(group->pp_running_job), mali_pp_get_hw_core_desc(core)));
++			MALI_PRINT(("Mali PP: Job %d timed out on core %s, my_status=0x%x\n",
++				    mali_pp_job_get_id(group->pp_running_job),
++				    mali_pp_get_hw_core_desc(core), my_status));
+ 
+ 			mali_group_complete_pp_and_unlock(group, MALI_FALSE, MALI_FALSE);
+ 		} else {
+diff --git a/drivers/gpu/arm/mali/common/mali_hw_core.h b/drivers/gpu/arm/mali/common/mali_hw_core.h
+index 341d303..3eac6fd 100644
+--- a/drivers/gpu/arm/mali/common/mali_hw_core.h
++++ b/drivers/gpu/arm/mali/common/mali_hw_core.h
+@@ -26,7 +26,9 @@ struct mali_hw_core {
+ 	const char *description;          /**< Name of unit (as specified in device configuration) */
+ };
+ 
+-#define MALI_REG_POLL_COUNT_FAST 1000
++//#define MALI_REG_POLL_COUNT_FAST 1000
++#define MALI_REG_POLL_COUNT_ORIG 1000
++#define MALI_REG_POLL_COUNT_FAST 10000
+ #define MALI_REG_POLL_COUNT_SLOW 1000000
+ 
+ _mali_osk_errcode_t mali_hw_core_create(struct mali_hw_core *core, const _mali_osk_resource_t *resource, u32 reg_size);
+diff --git a/drivers/gpu/arm/mali/common/mali_kernel_core.c b/drivers/gpu/arm/mali/common/mali_kernel_core.c
+index 770cf66..3586962 100644
+--- a/drivers/gpu/arm/mali/common/mali_kernel_core.c
++++ b/drivers/gpu/arm/mali/common/mali_kernel_core.c
+@@ -828,6 +828,7 @@ static _mali_osk_errcode_t mali_parse_config_memory(void)
+ 	_mali_osk_errcode_t ret;
+ 
+ 	if (0 == mali_dedicated_mem_start && 0 == mali_dedicated_mem_size && 0 == mali_shared_mem_size) {
++		/* leo: yes */
+ 		/* Memory settings are not overridden by module parameters, so use device settings */
+ 		_mali_osk_device_data data = { 0, };
+ 
+@@ -871,6 +872,7 @@ static _mali_osk_errcode_t mali_parse_config_memory(void)
+ 	}
+ 
+ 	if (0 == mali_fb_start && 0 == mali_fb_size) {
++		/* leo: yes */
+ 		/* Frame buffer settings are not overridden by module parameters, so use device settings */
+ 		_mali_osk_device_data data = { 0, };
+ 
+diff --git a/drivers/gpu/arm/mali/common/mali_l2_cache.c b/drivers/gpu/arm/mali/common/mali_l2_cache.c
+index 3893f27..1e8bb5c 100644
+--- a/drivers/gpu/arm/mali/common/mali_l2_cache.c
++++ b/drivers/gpu/arm/mali/common/mali_l2_cache.c
+@@ -482,6 +482,7 @@ void mali_l2_cache_invalidate_all_pages(u32 *pages, u32 num_pages)
+ 				ret = mali_l2_cache_send_command(mali_global_l2_cache_cores[i], MALI400_L2_CACHE_REGISTER_CLEAR_PAGE, pages[j]);
+ 				if (_MALI_OSK_ERR_OK != ret) {
+ 					MALI_PRINT_ERROR(("Failed to invalidate page cache\n"));
++					dump_stack();
+ 				}
+ 			}
+ 		}
+diff --git a/drivers/gpu/arm/mali/common/mali_mmu.c b/drivers/gpu/arm/mali/common/mali_mmu.c
+index 715fd09..cccbb4c 100644
+--- a/drivers/gpu/arm/mali/common/mali_mmu.c
++++ b/drivers/gpu/arm/mali/common/mali_mmu.c
+@@ -205,6 +205,9 @@ static mali_bool mali_mmu_enable_stall(struct mali_mmu_core *mmu)
+ 			break;
+ 		}
+ 	}
++	if (i >= MALI_REG_POLL_COUNT_ORIG) {
++		MALI_PRINT_ERROR(("%s: Warning! Mali PP: read count: %d\n", __func__, i));
++	}
+ 	if (MALI_REG_POLL_COUNT_FAST == i) {
+ 		MALI_DEBUG_PRINT(2, ("Enable stall request failed, MMU status is 0x%08X\n", mali_hw_core_register_read(&mmu->hw_core, MALI_MMU_REGISTER_STATUS)));
+ 		return MALI_FALSE;
+@@ -272,8 +275,12 @@ MALI_STATIC_INLINE _mali_osk_errcode_t mali_mmu_raw_reset(struct mali_mmu_core *
+ 			break;
+ 		}
+ 	}
++	if (i >= MALI_REG_POLL_COUNT_ORIG) {
++		MALI_PRINT_ERROR(("%s: Warning! Mali PP: read count: %d\n", __func__, i));
++	}
+ 	if (MALI_REG_POLL_COUNT_FAST == i) {
+ 		MALI_PRINT_ERROR(("Reset request failed, MMU status is 0x%08X\n", mali_hw_core_register_read(&mmu->hw_core, MALI_MMU_REGISTER_STATUS)));
++		dump_stack();
+ 		return _MALI_OSK_ERR_FAULT;
+ 	}
+ 
+diff --git a/drivers/gpu/arm/mali/common/mali_pp.c b/drivers/gpu/arm/mali/common/mali_pp.c
+index cd17220..b6e6c47 100644
+--- a/drivers/gpu/arm/mali/common/mali_pp.c
++++ b/drivers/gpu/arm/mali/common/mali_pp.c
+@@ -146,8 +146,15 @@ _mali_osk_errcode_t mali_pp_stop_bus_wait(struct mali_pp_core *core)
+ 			break;
+ 	}
+ 
++	if (i >= MALI_REG_POLL_COUNT_ORIG) {
++		MALI_PRINT_ERROR(("%s: Warning! Mali PP: read count: %d\n", __func__, i));
++	}
+ 	if (MALI_REG_POLL_COUNT_FAST == i) {
+-		MALI_PRINT_ERROR(("Mali PP: Failed to stop bus on %s. Status: 0x%08x\n", core->hw_core.description, mali_hw_core_register_read(&core->hw_core, MALI200_REG_ADDR_MGMT_STATUS)));
++		MALI_PRINT_ERROR(("Mali PP: Failed to stop bus on %s. Status: 0x%08x\n",
++			core->hw_core.description,
++			mali_hw_core_register_read(&core->hw_core, MALI200_REG_ADDR_MGMT_STATUS)));
++		dump_stack();
++
+ 		return _MALI_OSK_ERR_FAULT;
+ 	}
+ 	return _MALI_OSK_ERR_OK;
+@@ -261,7 +268,9 @@ _mali_osk_errcode_t mali_pp_reset_wait(struct mali_pp_core *core)
+ 			}
+ 		}
+ 	}
+-
++	if (i >= MALI_REG_POLL_COUNT_ORIG) {
++		MALI_PRINT_ERROR(("%s: Warning! Mali PP: read count: %d\n", __func__, i));
++	}
+ 	if (i == MALI_REG_POLL_COUNT_FAST) {
+ 		MALI_PRINT_ERROR(("Mali PP: Failed to reset core %s, rawstat: 0x%08x\n",
+ 				  core->hw_core.description, rawstat));

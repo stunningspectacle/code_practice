@@ -1,0 +1,27 @@
+diff --git a/input/touchscreen/Kconfig b/input/touchscreen/Kconfig
+index d452e49..daaea43 100644
+--- a/input/touchscreen/Kconfig
++++ b/input/touchscreen/Kconfig
+@@ -28,3 +28,4 @@ config TOUCHSCREEN_ATMEL_MXT_FORK
+ 	  module will be called atmel_mxt_ts.
+ 
+ source "drivers/external_drivers/drivers/input/touchscreen/rmi4/Kconfig"
++source "drivers/external_drivers/drivers/input/touchscreen/gt9xx/Kconfig"
+diff --git a/input/touchscreen/gt9xx/Kconfig b/input/touchscreen/gt9xx/Kconfig
+new file mode 100644
+index 0000000..be90b45
+--- /dev/null
++++ b/input/touchscreen/gt9xx/Kconfig
+@@ -0,0 +1,12 @@
++config TOUCHSCREEN_GOODIX_GT9XX
++	tristate "Goodix I2C Touchscreen"
++	depends on I2C && INPUT
++	help
++	  Say Y here if you have Goodix GT9xx series I2C touch screen,
++	  such as gt911, connected to your system.
++
++	  If unsure, say N.
++
++	  To compile this driver as a module, choose M here: the
++	  module will be called gt9xx_ts.
++

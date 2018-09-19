@@ -1,0 +1,2110 @@
+From 83deeba2d9032cae07c6ac75f161fd4035f2f094 Mon Sep 17 00:00:00 2001
+From: Jing Xiang <jing.xiang@intel.com>
+Date: Mon, 21 Mar 2016 19:12:44 +0800
+Subject: [PATCH 1/2] mobilevisor: produces: 3gx n-1 boards boot to kernel
+
+Change-Id: I3c7c8934a982a68c806f410b20e7f78e7a2272ef
+Tracked-On:
+Signed-off-by: Jing Xiang <jing.xiang@intel.com>
+---
+ sofia3gx                                      |   1 -
+ sofia3gx/configs/hirqs.xml                    |   1 +
+ sofia3gx/configs/irqs.xlsm                    |   1 +
+ sofia3gx/configs/memory_map.h                 |   1 +
+ sofia3gx/configs/mobilevisor_ld.c             |   1 +
+ sofia3gx/configs/modemonly                    |   1 +
+ sofia3gx/configs/module_boot.xml              |  34 +
+ sofia3gx/configs/module_hw_watchdog.xml       |  14 +
+ sofia3gx/configs/module_i2c.xml               |   1 +
+ sofia3gx/configs/module_noc_qos.xml           |   1 +
+ sofia3gx/configs/module_pinctrl.xml           | 921 ++++++++++++++++++++++++++
+ sofia3gx/configs/module_rga.xml               |   1 +
+ sofia3gx/configs/module_security.xml          | 327 +++++++++
+ sofia3gx/configs/module_security_vtrr.xml     | 145 ++++
+ sofia3gx/configs/module_spcu_thermal.xml      |   1 +
+ sofia3gx/configs/module_watchdog.xml          |   6 +
+ sofia3gx/configs/modules.xml                  |   1 +
+ sofia3gx/configs/msr_init.xml                 |   1 +
+ sofia3gx/configs/pal_interrupt_lines.h        |   1 +
+ sofia3gx/configs/pal_pcl_lut.h                | 189 ++++++
+ sofia3gx/configs/pal_vectors.h                |   1 +
+ sofia3gx/configs/reserved.xml                 |   1 +
+ sofia3gx/configs/vectors.xml                  | 217 ++++++
+ sofia3gx/configs/vmcs_config_modem_vcpu_0.xml |   1 +
+ sofia3gx/prebuilt                             |   1 +
+ sofia3gx/src                                  |   1 +
+ 26 files changed, 1870 insertions(+), 1 deletion(-)
+ delete mode 120000 sofia3gx
+ create mode 120000 sofia3gx/configs/hirqs.xml
+ create mode 120000 sofia3gx/configs/irqs.xlsm
+ create mode 120000 sofia3gx/configs/memory_map.h
+ create mode 120000 sofia3gx/configs/mobilevisor_ld.c
+ create mode 120000 sofia3gx/configs/modemonly
+ create mode 100644 sofia3gx/configs/module_boot.xml
+ create mode 100644 sofia3gx/configs/module_hw_watchdog.xml
+ create mode 120000 sofia3gx/configs/module_i2c.xml
+ create mode 120000 sofia3gx/configs/module_noc_qos.xml
+ create mode 100644 sofia3gx/configs/module_pinctrl.xml
+ create mode 120000 sofia3gx/configs/module_rga.xml
+ create mode 100644 sofia3gx/configs/module_security.xml
+ create mode 100644 sofia3gx/configs/module_security_vtrr.xml
+ create mode 120000 sofia3gx/configs/module_spcu_thermal.xml
+ create mode 100644 sofia3gx/configs/module_watchdog.xml
+ create mode 120000 sofia3gx/configs/modules.xml
+ create mode 120000 sofia3gx/configs/msr_init.xml
+ create mode 120000 sofia3gx/configs/pal_interrupt_lines.h
+ create mode 100644 sofia3gx/configs/pal_pcl_lut.h
+ create mode 120000 sofia3gx/configs/pal_vectors.h
+ create mode 120000 sofia3gx/configs/reserved.xml
+ create mode 100644 sofia3gx/configs/vectors.xml
+ create mode 100644 sofia3gx/configs/vmcs_config_modem_vcpu_0.xml
+ create mode 120000 sofia3gx/prebuilt
+ create mode 120000 sofia3gx/src
+
+diff --git a/sofia3gx b/sofia3gx
+deleted file mode 120000
+index 1c8c075..0000000
+--- a/sofia3gx
++++ /dev/null
+@@ -1 +0,0 @@
+-sofia3gr_garnet
+\ No newline at end of file
+diff --git a/sofia3gx/configs/hirqs.xml b/sofia3gx/configs/hirqs.xml
+new file mode 120000
+index 0000000..a0c969a
+--- /dev/null
++++ b/sofia3gx/configs/hirqs.xml
+@@ -0,0 +1 @@
++../../sofia3gr/configs/hirqs.xml
+\ No newline at end of file
+diff --git a/sofia3gx/configs/irqs.xlsm b/sofia3gx/configs/irqs.xlsm
+new file mode 120000
+index 0000000..c22e74e
+--- /dev/null
++++ b/sofia3gx/configs/irqs.xlsm
+@@ -0,0 +1 @@
++../../sofia3gr/configs/irqs.xlsm
+\ No newline at end of file
+diff --git a/sofia3gx/configs/memory_map.h b/sofia3gx/configs/memory_map.h
+new file mode 120000
+index 0000000..ef0ff23
+--- /dev/null
++++ b/sofia3gx/configs/memory_map.h
+@@ -0,0 +1 @@
++../../sofia3gr/configs/memory_map.h
+\ No newline at end of file
+diff --git a/sofia3gx/configs/mobilevisor_ld.c b/sofia3gx/configs/mobilevisor_ld.c
+new file mode 120000
+index 0000000..abb6b59
+--- /dev/null
++++ b/sofia3gx/configs/mobilevisor_ld.c
+@@ -0,0 +1 @@
++../../sofia3gr/configs/mobilevisor_ld.c
+\ No newline at end of file
+diff --git a/sofia3gx/configs/modemonly b/sofia3gx/configs/modemonly
+new file mode 120000
+index 0000000..32aa6a8
+--- /dev/null
++++ b/sofia3gx/configs/modemonly
+@@ -0,0 +1 @@
++../../sofia3gr/configs/modemonly
+\ No newline at end of file
+diff --git a/sofia3gx/configs/module_boot.xml b/sofia3gx/configs/module_boot.xml
+new file mode 100644
+index 0000000..5134312
+--- /dev/null
++++ b/sofia3gx/configs/module_boot.xml
+@@ -0,0 +1,34 @@
++    <module name="boot_service" enabled="1">
++      <params>
++        <param type="uint32" value="0x00800000" description="kernel_address"/>
++        <param type="uint32" value="0x0"        description="kernel_size, used in standalone vmm only"/>
++        <param type="uint32" value="0x600010"   description="dtb_address"/>
++        <param type="uint32" value="0x0"        description="dtb_size, used in standalone vmm only"/>
++        <param type="uint32" value="0x007ff800" description="setup_sector_address"/>
++        <param type="uint32" value="0x300000"   description="ramdisk_address"/>
++        <param type="uint32" value="0x0"        description="ramdisk_size, used in standalone vmm only"/>
++        <param type="uint32" value="0x0"        description="boot image address, used in standalone vmm only"/>
++        <param type="e820"   description="e820 entries">
++        <!-- E820 entries MAX: 5 -->
++        <!-- possible types: -->
++        <!--    E820_RAM        1
++                E820_RESERVED   2
++                E820_ACPI       3
++                E820_NVS        4
++                E820_UNUSABLE   5 -->
++          <e820 addr=to_string(RAM_CONFIG_LINUX_PSTART) size=to_string(RAM_CONFIG_LINUX_SIZE) type="1" />
++          <e820 addr="0x1BC00000" size="0x04400000" type="2" />
++#ifdef RAM_CONFIG_LINUX_HIGH_PSTART
++          <!-- Anything above 1GB is expected to be detected and configured at runtime for garnet variant -->
++          <e820 addr=to_string(RAM_CONFIG_LINUX_HIGH_PSTART) size="0x20000000" type="1" />
++#endif
++        </param>
++        <param type="uint32" value="1"          description="proxy certificate to secvm enable/disable"/>
++        <param type="uint32" value="0x1CB00000" description="proxy certificate to secvm address"/>
++        <param type="uint32" value="1"          description="proxy secpack to secvm enable/disable"/>
++        <param type="uint32" value="0x1CB01400" description="proxy secpack to secvm address"/>
++        <param type="uint32" value="1"          description="proxy keys to secvm address"/>
++        <param type="uint32" value="0x1CB02400" description="proxy keys to secvm address"/>
++        <param type="uint32" value="1"          description="proxy memory type and memory size from bootloader"/>
++      </params>
++    </module>
+diff --git a/sofia3gx/configs/module_hw_watchdog.xml b/sofia3gx/configs/module_hw_watchdog.xml
+new file mode 100644
+index 0000000..d58cf4a
+--- /dev/null
++++ b/sofia3gx/configs/module_hw_watchdog.xml
+@@ -0,0 +1,14 @@
++<module name="hw_wdog" enabled="1">
++  <devices>
++    <device name="ag620_pmu_wdog" enabled="0">
++      <params>
++        <param type="uint32" description="watchdog_forever_suspend" value="0"/>
++      </params>
++    </device>
++    <device name="scu_wdog" enabled="0">
++      <params>
++        <param type="uint32" description="watchdog_forever_suspend" value="0"/>
++      </params>
++    </device>
++  </devices>
++</module>
+diff --git a/sofia3gx/configs/module_i2c.xml b/sofia3gx/configs/module_i2c.xml
+new file mode 120000
+index 0000000..ac54a22
+--- /dev/null
++++ b/sofia3gx/configs/module_i2c.xml
+@@ -0,0 +1 @@
++../../sofia3gr/configs/module_i2c.xml
+\ No newline at end of file
+diff --git a/sofia3gx/configs/module_noc_qos.xml b/sofia3gx/configs/module_noc_qos.xml
+new file mode 120000
+index 0000000..28cacd5
+--- /dev/null
++++ b/sofia3gx/configs/module_noc_qos.xml
+@@ -0,0 +1 @@
++../../sofia3gr/configs/module_noc_qos.xml
+\ No newline at end of file
+diff --git a/sofia3gx/configs/module_pinctrl.xml b/sofia3gx/configs/module_pinctrl.xml
+new file mode 100644
+index 0000000..520f93f
+--- /dev/null
++++ b/sofia3gx/configs/module_pinctrl.xml
+@@ -0,0 +1,921 @@
++<module name="pal_pinctrl" enabled="1">
++  <devices>
++    <device name="pcl" enabled="1">
++      <params>
++        <!-- SF_3GR_GARNET -->
++        <param type="uint32" value="0x4" description="DBB_PCL_CTRL_INIT"/>
++        <!-- DBB_PCL Ownership -->
++        <!-- TOTAL_NUMBER_OF_PHYSICAL_DBB_PCL (106) -->
++        <param type="uint8" value="0" description="DBB_PCL_0_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_0_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_0_SECVM"/>
++        <param type="uint8" value="1" description="DBB_PCL_0_SW_INT"/>
++        <param type="uint32" value="0x0000D100" description="DBB_PCL_0_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_1_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_1_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_1_SECVM"/>
++        <param type="uint8" value="1" description="DBB_PCL_1_SW_INT"/>
++        <param type="uint32" value="0x0000D100" description="DBB_PCL_1_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_2_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_2_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_2_SECVM"/>
++        <param type="uint8" value="1" description="DBB_PCL_2_SW_INT"/>
++        <param type="uint32" value="0x0000D100" description="DBB_PCL_2_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="1" description="DBB_PCL_3_MODEM"/>
++        <param type="uint8" value="0" description="DBB_PCL_3_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_3_SECVM"/>
++        <param type="uint8" value="1" description="DBB_PCL_3_SW_INT"/>
++        <param type="uint32" value="0x0000D100" description="DBB_PCL_3_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="1" description="DBB_PCL_4_MODEM"/>
++        <param type="uint8" value="0" description="DBB_PCL_4_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_4_SECVM"/>
++        <param type="uint8" value="1" description="DBB_PCL_4_SW_INT"/>
++        <param type="uint32" value="0x0000D100" description="DBB_PCL_4_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_5_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_5_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_5_SECVM"/>
++        <param type="uint8" value="1" description="DBB_PCL_5_SW_INT"/>
++        <param type="uint32" value="0x0000D100" description="DBB_PCL_5_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_6_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_6_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_6_SECVM"/>
++        <param type="uint8" value="1" description="DBB_PCL_6_SW_INT"/>
++        <param type="uint32" value="0x0000D100" description="DBB_PCL_6_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_7_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_7_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_7_SECVM"/>
++        <param type="uint8" value="1" description="DBB_PCL_7_SW_INT"/>
++        <param type="uint32" value="0x0000D100" description="DBB_PCL_7_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_8_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_8_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_8_SECVM"/>
++        <param type="uint8" value="1" description="DBB_PCL_8_SW_INT"/>
++        <param type="uint32" value="0x0000D100" description="DBB_PCL_8_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_9_MODEM"/>
++        <param type="uint8" value="0" description="DBB_PCL_9_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_9_SECVM"/>
++        <param type="uint8" value="1" description="DBB_PCL_9_SW_INT"/>
++        <param type="uint32" value="0x0000D100" description="DBB_PCL_9_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_10_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_10_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_10_SECVM"/>
++        <param type="uint8" value="1" description="DBB_PCL_10_SW_INT"/>
++        <param type="uint32" value="0x0000B100" description="DBB_PCL_10_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_11_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_11_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_11_SECVM"/>
++        <param type="uint8" value="1" description="DBB_PCL_11_SW_INT"/>
++        <param type="uint32" value="0x0000B100" description="DBB_PCL_11_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_12_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_12_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_12_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_12_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_12_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_13_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_13_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_13_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_13_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_13_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_14_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_14_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_14_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_14_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_14_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_15_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_15_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_15_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_15_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_15_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_16_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_16_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_16_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_16_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_16_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_17_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_17_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_17_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_17_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_17_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_18_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_18_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_18_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_18_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_18_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_19_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_19_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_19_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_19_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_19_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_20_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_20_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_20_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_20_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_20_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_21_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_21_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_21_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_21_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_21_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_22_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_22_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_22_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_22_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_22_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_23_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_23_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_23_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_23_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_23_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_24_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_24_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_24_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_24_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_24_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_25_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_25_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_25_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_25_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_25_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_26_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_26_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_26_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_26_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_26_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_27_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_27_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_27_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_27_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_27_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_28_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_28_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_28_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_28_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_28_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_29_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_29_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_29_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_29_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_29_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_30_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_30_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_30_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_30_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_30_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_31_MODEM"/>
++        <param type="uint8" value="0" description="DBB_PCL_31_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_31_SECVM"/>
++        <param type="uint8" value="1" description="DBB_PCL_31_SW_INT"/>
++        <param type="uint32" value="0x0000D100" description="DBB_PCL_31_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_32_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_32_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_32_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_32_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_32_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_33_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_33_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_33_SECVM"/>
++        <param type="uint8" value="1" description="DBB_PCL_33_SW_INT"/>
++        <param type="uint32" value="0x0000D100" description="DBB_PCL_33_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_34_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_34_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_34_SECVM"/>
++        <param type="uint8" value="1" description="DBB_PCL_34_SW_INT"/>
++        <param type="uint32" value="0x0000D100" description="DBB_PCL_34_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_35_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_35_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_35_SECVM"/>
++        <param type="uint8" value="1" description="DBB_PCL_35_SW_INT"/>
++        <param type="uint32" value="0x0000D100" description="DBB_PCL_35_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_36_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_36_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_36_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_36_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_36_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_37_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_37_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_37_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_37_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_37_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_38_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_38_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_38_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_38_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_38_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_39_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_39_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_39_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_39_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_39_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_40_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_40_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_40_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_40_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_40_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_41_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_41_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_41_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_41_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_41_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_42_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_42_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_42_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_42_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_42_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_43_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_43_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_43_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_43_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_43_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_44_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_44_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_44_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_44_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_44_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_45_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_45_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_45_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_45_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_45_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_46_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_46_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_46_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_46_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_46_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_47_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_47_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_47_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_47_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_47_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_48_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_48_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_48_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_48_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_48_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_49_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_49_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_49_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_49_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_49_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_50_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_50_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_50_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_50_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_50_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_51_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_51_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_51_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_51_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_51_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_52_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_52_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_52_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_52_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_52_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_53_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_53_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_53_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_53_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_53_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_54_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_54_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_54_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_54_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_54_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_55_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_55_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_55_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_55_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_55_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_56_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_56_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_56_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_56_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_56_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_57_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_57_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_57_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_57_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_57_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_58_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_58_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_58_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_58_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_58_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_59_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_59_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_59_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_59_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_59_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_60_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_60_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_60_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_60_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_60_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_61_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_61_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_61_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_61_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_61_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_62_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_62_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_62_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_62_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_62_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_63_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_63_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_63_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_63_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_63_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_64_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_64_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_64_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_64_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_64_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_65_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_65_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_65_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_65_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_65_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_66_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_66_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_66_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_66_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_66_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_67_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_67_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_67_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_67_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_67_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_68_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_68_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_68_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_68_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_68_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_69_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_69_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_69_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_69_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_69_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_70_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_70_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_70_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_70_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_70_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_71_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_71_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_71_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_71_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_71_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_72_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_72_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_72_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_72_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_72_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_73_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_73_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_73_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_73_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_73_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_74_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_74_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_74_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_74_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_74_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_75_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_75_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_75_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_75_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_75_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_76_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_76_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_76_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_76_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_76_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_77_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_77_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_77_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_77_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_77_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_78_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_78_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_78_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_78_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_78_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_79_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_79_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_79_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_79_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_79_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_80_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_80_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_80_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_80_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_80_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_81_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_81_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_81_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_81_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_81_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_82_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_82_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_82_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_82_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_82_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_83_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_83_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_83_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_83_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_83_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_84_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_84_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_84_SECVM"/>
++        <param type="uint8" value="1" description="DBB_PCL_84_SW_INT"/>
++        <param type="uint32" value="0x0000B100" description="DBB_PCL_84_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_85_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_85_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_85_SECVM"/>
++        <param type="uint8" value="1" description="DBB_PCL_85_SW_INT"/>
++        <param type="uint32" value="0x0000B100" description="DBB_PCL_85_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_86_MODEM"/>
++        <param type="uint8" value="0" description="DBB_PCL_86_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_86_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_86_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_86_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_87_MODEM"/>
++        <param type="uint8" value="0" description="DBB_PCL_87_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_87_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_87_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_87_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_88_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_88_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_88_SECVM"/>
++        <param type="uint8" value="1" description="DBB_PCL_88_SW_INT"/>
++        <param type="uint32" value="0x0000B100" description="DBB_PCL_88_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_89_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_89_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_89_SECVM"/>
++        <param type="uint8" value="1" description="DBB_PCL_89_SW_INT"/>
++        <param type="uint32" value="0x0000B100" description="DBB_PCL_89_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="1" description="DBB_PCL_90_MODEM"/>
++        <param type="uint8" value="0" description="DBB_PCL_90_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_90_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_90_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_90_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="1" description="DBB_PCL_91_MODEM"/>
++        <param type="uint8" value="0" description="DBB_PCL_91_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_91_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_91_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_91_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="1" description="DBB_PCL_92_MODEM"/>
++        <param type="uint8" value="0" description="DBB_PCL_92_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_92_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_92_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_92_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="1" description="DBB_PCL_93_MODEM"/>
++        <param type="uint8" value="0" description="DBB_PCL_93_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_93_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_93_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_93_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="1" description="DBB_PCL_94_MODEM"/>
++        <param type="uint8" value="0" description="DBB_PCL_94_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_94_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_94_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_94_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="1" description="DBB_PCL_95_MODEM"/>
++        <param type="uint8" value="0" description="DBB_PCL_95_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_95_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_95_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_95_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_96_MODEM"/>
++        <param type="uint8" value="0" description="DBB_PCL_96_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_96_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_96_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_96_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_97_MODEM"/>
++        <param type="uint8" value="0" description="DBB_PCL_97_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_97_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_97_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_97_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_98_MODEM"/>
++        <param type="uint8" value="0" description="DBB_PCL_98_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_98_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_98_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_98_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_99_MODEM"/>
++        <param type="uint8" value="0" description="DBB_PCL_99_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_99_SECVM"/>
++        <param type="uint8" value="1" description="DBB_PCL_99_SW_INT"/>
++        <param type="uint32" value="0x0000D100" description="DBB_PCL_99_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_100_MODEM"/>
++        <param type="uint8" value="0" description="DBB_PCL_100_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_100_SECVM"/>
++        <param type="uint8" value="1" description="DBB_PCL_100_SW_INT"/>
++        <param type="uint32" value="0x0000B100" description="DBB_PCL_100_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_101_MODEM"/>
++        <param type="uint8" value="0" description="DBB_PCL_101_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_101_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_101_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_101_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_102_MODEM"/>
++        <param type="uint8" value="0" description="DBB_PCL_102_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_102_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_102_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_102_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_103_MODEM"/>
++        <param type="uint8" value="0" description="DBB_PCL_103_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_103_SECVM"/>
++        <param type="uint8" value="0" description="DBB_PCL_103_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="DBB_PCL_103_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_104_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_104_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_104_SECVM"/>
++        <param type="uint8" value="1" description="DBB_PCL_104_SW_INT"/>
++        <param type="uint32" value="0x00001010" description="DBB_PCL_104_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="DBB_PCL_105_MODEM"/>
++        <param type="uint8" value="1" description="DBB_PCL_105_LINUX"/>
++        <param type="uint8" value="0" description="DBB_PCL_105_SECVM"/>
++        <param type="uint8" value="1" description="DBB_PCL_105_SW_INT"/>
++        <param type="uint32" value="0x0000D100" description="DBB_PCL_105_DEFAULT_DEACTIVE"/>
++        <!-- END_OF_PHYSICAL_DBB_PCL (106) -->
++
++        <!-- ABB_PCL Ownership -->
++        <!-- TOTAL_NUMBER_OF_PHYSICAL_ABB_PCL (45) -->
++        <param type="uint8" value="1" description="ABB_PCL_0_MODEM"/>
++        <param type="uint8" value="0" description="ABB_PCL_0_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_0_SECVM"/>
++        <param type="uint8" value="1" description="ABB_PCL_0_SW_INT"/>
++        <param type="uint32" value="0x00020011" description="ABB_PCL_0_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="1" description="ABB_PCL_1_MODEM"/>
++        <param type="uint8" value="0" description="ABB_PCL_1_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_1_SECVM"/>
++        <param type="uint8" value="1" description="ABB_PCL_1_SW_INT"/>
++        <param type="uint32" value="0x00020011" description="ABB_PCL_1_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="1" description="ABB_PCL_2_MODEM"/>
++        <param type="uint8" value="0" description="ABB_PCL_2_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_2_SECVM"/>
++        <param type="uint8" value="1" description="ABB_PCL_2_SW_INT"/>
++        <param type="uint32" value="0x00020011" description="ABB_PCL_2_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="1" description="ABB_PCL_3_MODEM"/>
++        <param type="uint8" value="0" description="ABB_PCL_3_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_3_SECVM"/>
++        <param type="uint8" value="1" description="ABB_PCL_3_SW_INT"/>
++        <param type="uint32" value="0x00020011" description="ABB_PCL_3_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="1" description="ABB_PCL_4_MODEM"/>
++        <param type="uint8" value="0" description="ABB_PCL_4_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_4_SECVM"/>
++        <param type="uint8" value="1" description="ABB_PCL_4_SW_INT"/>
++        <param type="uint32" value="0x00020011" description="ABB_PCL_4_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="1" description="ABB_PCL_5_MODEM"/>
++        <param type="uint8" value="0" description="ABB_PCL_5_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_5_SECVM"/>
++        <param type="uint8" value="1" description="ABB_PCL_5_SW_INT"/>
++        <param type="uint32" value="0x00020011" description="ABB_PCL_5_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="1" description="ABB_PCL_6_MODEM"/>
++        <param type="uint8" value="0" description="ABB_PCL_6_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_6_SECVM"/>
++        <param type="uint8" value="1" description="ABB_PCL_6_SW_INT"/>
++        <param type="uint32" value="0x00020011" description="ABB_PCL_6_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="1" description="ABB_PCL_7_MODEM"/>
++        <param type="uint8" value="0" description="ABB_PCL_7_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_7_SECVM"/>
++        <param type="uint8" value="1" description="ABB_PCL_7_SW_INT"/>
++        <param type="uint32" value="0x00020011" description="ABB_PCL_7_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="1" description="ABB_PCL_8_MODEM"/>
++        <param type="uint8" value="0" description="ABB_PCL_8_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_8_SECVM"/>
++        <param type="uint8" value="1" description="ABB_PCL_8_SW_INT"/>
++        <param type="uint32" value="0x00020011" description="ABB_PCL_8_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="1" description="ABB_PCL_9_MODEM"/>
++        <param type="uint8" value="0" description="ABB_PCL_9_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_9_SECVM"/>
++        <param type="uint8" value="1" description="ABB_PCL_9_SW_INT"/>
++        <param type="uint32" value="0x00020011" description="ABB_PCL_9_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="1" description="ABB_PCL_10_MODEM"/>
++        <param type="uint8" value="0" description="ABB_PCL_10_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_10_SECVM"/>
++        <param type="uint8" value="1" description="ABB_PCL_10_SW_INT"/>
++        <param type="uint32" value="0x00001077" description="ABB_PCL_10_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="1" description="ABB_PCL_11_MODEM"/>
++        <param type="uint8" value="0" description="ABB_PCL_11_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_11_SECVM"/>
++        <param type="uint8" value="1" description="ABB_PCL_11_SW_INT"/>
++        <param type="uint32" value="0x00001077" description="ABB_PCL_11_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="ABB_PCL_12_MODEM"/>
++        <param type="uint8" value="1" description="ABB_PCL_12_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_12_SECVM"/>
++        <param type="uint8" value="1" description="ABB_PCL_12_SW_INT"/>
++        <param type="uint32" value="0x0000D100" description="ABB_PCL_12_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="ABB_PCL_13_MODEM"/>
++        <param type="uint8" value="1" description="ABB_PCL_13_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_13_SECVM"/>
++        <param type="uint8" value="1" description="ABB_PCL_13_SW_INT"/>
++        <param type="uint32" value="0x0000D100" description="ABB_PCL_13_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="ABB_PCL_14_MODEM"/>
++        <param type="uint8" value="1" description="ABB_PCL_14_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_14_SECVM"/>
++        <param type="uint8" value="1" description="ABB_PCL_14_SW_INT"/>
++        <param type="uint32" value="0x0000D100" description="ABB_PCL_14_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="1" description="ABB_PCL_15_MODEM"/>
++        <param type="uint8" value="0" description="ABB_PCL_15_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_15_SECVM"/>
++        <param type="uint8" value="1" description="ABB_PCL_15_SW_INT"/>
++        <param type="uint32" value="0x0000D100" description="ABB_PCL_15_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="ABB_PCL_16_MODEM"/>
++        <param type="uint8" value="1" description="ABB_PCL_16_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_16_SECVM"/>
++        <param type="uint8" value="1" description="ABB_PCL_16_SW_INT"/>
++        <param type="uint32" value="0x0000B100" description="ABB_PCL_16_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="ABB_PCL_17_MODEM"/>
++        <param type="uint8" value="1" description="ABB_PCL_17_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_17_SECVM"/>
++        <param type="uint8" value="1" description="ABB_PCL_17_SW_INT"/>
++        <param type="uint32" value="0x0000B100" description="ABB_PCL_17_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="ABB_PCL_18_MODEM"/>
++        <param type="uint8" value="0" description="ABB_PCL_18_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_18_SECVM"/>
++        <param type="uint8" value="0" description="ABB_PCL_18_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="ABB_PCL_18_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="ABB_PCL_19_MODEM"/>
++        <param type="uint8" value="0" description="ABB_PCL_19_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_19_SECVM"/>
++        <param type="uint8" value="0" description="ABB_PCL_19_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="ABB_PCL_19_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="ABB_PCL_20_MODEM"/>
++        <param type="uint8" value="0" description="ABB_PCL_20_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_20_SECVM"/>
++        <param type="uint8" value="1" description="ABB_PCL_20_SW_INT"/>
++        <param type="uint32" value="0x00008801" description="ABB_PCL_20_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="ABB_PCL_21_MODEM"/>
++        <param type="uint8" value="0" description="ABB_PCL_21_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_21_SECVM"/>
++        <param type="uint8" value="1" description="ABB_PCL_21_SW_INT"/>
++        <param type="uint32" value="0x00008801" description="ABB_PCL_21_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="ABB_PCL_22_MODEM"/>
++        <param type="uint8" value="0" description="ABB_PCL_22_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_22_SECVM"/>
++        <param type="uint8" value="0" description="ABB_PCL_22_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="ABB_PCL_22_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="ABB_PCL_23_MODEM"/>
++        <param type="uint8" value="0" description="ABB_PCL_23_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_23_SECVM"/>
++        <param type="uint8" value="0" description="ABB_PCL_23_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="ABB_PCL_23_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="ABB_PCL_24_MODEM"/>
++        <param type="uint8" value="0" description="ABB_PCL_24_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_24_SECVM"/>
++        <param type="uint8" value="0" description="ABB_PCL_24_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="ABB_PCL_24_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="ABB_PCL_25_MODEM"/>
++        <param type="uint8" value="0" description="ABB_PCL_25_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_25_SECVM"/>
++        <param type="uint8" value="1" description="ABB_PCL_25_SW_INT"/>
++        <param type="uint32" value="0x00008801" description="ABB_PCL_25_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="ABB_PCL_26_MODEM"/>
++        <param type="uint8" value="0" description="ABB_PCL_26_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_26_SECVM"/>
++        <param type="uint8" value="1" description="ABB_PCL_26_SW_INT"/>
++        <param type="uint32" value="0x0000D100" description="ABB_PCL_26_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="ABB_PCL_27_MODEM"/>
++        <param type="uint8" value="1" description="ABB_PCL_27_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_27_SECVM"/>
++        <param type="uint8" value="1" description="ABB_PCL_27_SW_INT"/>
++        <param type="uint32" value="0x0000D100" description="ABB_PCL_27_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="ABB_PCL_28_MODEM"/>
++        <param type="uint8" value="1" description="ABB_PCL_28_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_28_SECVM"/>
++        <param type="uint8" value="1" description="ABB_PCL_28_SW_INT"/>
++        <param type="uint32" value="0x0000D100" description="ABB_PCL_28_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="1" description="ABB_PCL_29_MODEM"/>
++        <param type="uint8" value="0" description="ABB_PCL_29_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_29_SECVM"/>
++        <param type="uint8" value="1" description="ABB_PCL_29_SW_INT"/>
++        <param type="uint32" value="0x00030040" description="ABB_PCL_29_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="1" description="ABB_PCL_30_MODEM"/>
++        <param type="uint8" value="0" description="ABB_PCL_30_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_30_SECVM"/>
++        <param type="uint8" value="1" description="ABB_PCL_30_SW_INT"/>
++        <param type="uint32" value="0x00030040" description="ABB_PCL_30_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="ABB_PCL_31_MODEM"/>
++        <param type="uint8" value="1" description="ABB_PCL_31_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_31_SECVM"/>
++        <param type="uint8" value="1" description="ABB_PCL_31_SW_INT"/>
++        <param type="uint32" value="0x0000D100" description="ABB_PCL_31_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="ABB_PCL_32_MODEM"/>
++        <param type="uint8" value="1" description="ABB_PCL_32_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_32_SECVM"/>
++        <param type="uint8" value="1" description="ABB_PCL_32_SW_INT"/>
++        <param type="uint32" value="0x0000D100" description="ABB_PCL_32_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="ABB_PCL_33_MODEM"/>
++        <param type="uint8" value="1" description="ABB_PCL_33_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_33_SECVM"/>
++        <param type="uint8" value="1" description="ABB_PCL_33_SW_INT"/>
++        <param type="uint32" value="0x00011001" description="ABB_PCL_33_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="ABB_PCL_34_MODEM"/>
++        <param type="uint8" value="1" description="ABB_PCL_34_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_34_SECVM"/>
++        <param type="uint8" value="0" description="ABB_PCL_34_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="ABB_PCL_34_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="ABB_PCL_35_MODEM"/>
++        <param type="uint8" value="1" description="ABB_PCL_35_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_35_SECVM"/>
++        <param type="uint8" value="1" description="ABB_PCL_35_SW_INT"/>
++        <param type="uint32" value="0x00001010" description="ABB_PCL_35_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="ABB_PCL_36_MODEM"/>
++        <param type="uint8" value="0" description="ABB_PCL_36_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_36_SECVM"/>
++        <param type="uint8" value="0" description="ABB_PCL_36_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="ABB_PCL_36_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="ABB_PCL_37_MODEM"/>
++        <param type="uint8" value="0" description="ABB_PCL_37_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_37_SECVM"/>
++        <param type="uint8" value="0" description="ABB_PCL_37_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="ABB_PCL_37_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="ABB_PCL_38_MODEM"/>
++        <param type="uint8" value="0" description="ABB_PCL_38_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_38_SECVM"/>
++        <param type="uint8" value="0" description="ABB_PCL_38_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="ABB_PCL_38_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="ABB_PCL_39_MODEM"/>
++        <param type="uint8" value="0" description="ABB_PCL_39_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_39_SECVM"/>
++        <param type="uint8" value="0" description="ABB_PCL_39_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="ABB_PCL_39_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="ABB_PCL_40_MODEM"/>
++        <param type="uint8" value="1" description="ABB_PCL_40_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_40_SECVM"/>
++        <param type="uint8" value="1" description="ABB_PCL_40_SW_INT"/>
++        <param type="uint32" value="0x0000D100" description="ABB_PCL_40_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="ABB_PCL_41_MODEM"/>
++        <param type="uint8" value="1" description="ABB_PCL_41_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_41_SECVM"/>
++        <param type="uint8" value="1" description="ABB_PCL_41_SW_INT"/>
++        <param type="uint32" value="0x0000D100" description="ABB_PCL_41_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="ABB_PCL_42_MODEM"/>
++        <param type="uint8" value="1" description="ABB_PCL_42_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_42_SECVM"/>
++        <param type="uint8" value="1" description="ABB_PCL_42_SW_INT"/>
++        <param type="uint32" value="0x0000D100" description="ABB_PCL_42_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="1" description="ABB_PCL_43_MODEM"/>
++        <param type="uint8" value="0" description="ABB_PCL_43_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_43_SECVM"/>
++        <param type="uint8" value="0" description="ABB_PCL_43_SW_INT"/>
++        <param type="uint32" value="0x00000000" description="ABB_PCL_43_DEFAULT_DEACTIVE"/>
++
++        <param type="uint8" value="0" description="ABB_PCL_44_MODEM"/>
++        <param type="uint8" value="1" description="ABB_PCL_44_LINUX"/>
++        <param type="uint8" value="0" description="ABB_PCL_44_SECVM"/>
++        <param type="uint8" value="1" description="ABB_PCL_44_SW_INT"/>
++        <param type="uint32" value="0x0000D100" description="ABB_PCL_44_DEFAULT_DEACTIVE"/>
++        <!-- END_OF_PHYSICAL_ABB_PCL (45) -->
++      </params>
++    </device>
++  </devices>
++</module>
+diff --git a/sofia3gx/configs/module_rga.xml b/sofia3gx/configs/module_rga.xml
+new file mode 120000
+index 0000000..231071f
+--- /dev/null
++++ b/sofia3gx/configs/module_rga.xml
+@@ -0,0 +1 @@
++../../sofia3gr/configs/module_rga.xml
+\ No newline at end of file
+diff --git a/sofia3gx/configs/module_security.xml b/sofia3gx/configs/module_security.xml
+new file mode 100644
+index 0000000..078568f
+--- /dev/null
++++ b/sofia3gx/configs/module_security.xml
+@@ -0,0 +1,327 @@
++    <module name="pal_security" enabled="0">
++      <params>
++        <param type="uint32" value="0xCAB00002" description="VERSION"/>
++        <param type="uint32" value="0"          description="osid: 0 mapping"/>
++        <param type="uint32" value="1"          description="osid: 1 mapping"/>
++        <param type="uint32" value="3"          description="osid: 2 mapping"/>
++        <param type="uint32" value="2"          description="osid: 3 mapping"/>
++        #include "module_security_vtrr.xml"
++      </params>
++      <devices>
++        <device name="noc_firewall" enabled="1">
++          <params>
++            <param type="uint32" value="3" description="size of used NOC LMU firewall register"/>
++            <param type="uint32" value="7" description="size of used NOC EMIC firewall register"/>
++            <!-- Dynamic NoC Firewall for CMA Heap -->
++            <param type="uint32" value="0x10000000"  description="noc fw emic addr -> CMA_64MB"/>
++            <param type="uint32" value="9"           description="noc fw emic size type: 9-> NOC_FW_SIZE_TYPE_EMIC_64MB"/>
++            <param type="uint32" value="2"           description="noc fw emic condition type:3-> NOC_FW_CONDITION_SET_TYPE_PERMIT_VM"/>
++            <param type="uint32" value="2"           description="noc fw emic param1 -> vmid -> SECVM"/>
++            <param type="uint32" value="0"           description="noc fw emic param2 -> not used"/>
++
++            <param type="uint32" value="0x14000000"  description="noc fw emic addr -> CMA_32MB"/>
++            <param type="uint32" value="8"           description="noc fw emic size type: 8-> NOC_FW_SIZE_TYPE_EMIC_32MB"/>
++            <param type="uint32" value="2"           description="noc fw emic condition type:3-> NOC_FW_CONDITION_SET_TYPE_PERMIT_VM"/>
++            <param type="uint32" value="2"           description="noc fw emic param1 -> vmid -> SECVM"/>
++            <param type="uint32" value="0"           description="noc fw emic param2 -> not used"/>
++            <param type="uint32" value="0xFFF00000"  description="noc fw lmu reg1 addr"/>
++            <param type="uint32" value="14"          description="noc fw lmu reg1 size type: 14-> NOC_FW_SIZE_TYPE_LMU_64K"/>
++            <param type="uint32" value="2"           description="noc fw lmu reg1 condition type:2-> NOC_FW_CONDITION_SET_TYPE_PERMIT_VM"/>
++            <param type="uint32" value="0"           description="noc fw lmu reg1 param1 -> vmid"/>
++            <param type="uint32" value="0"           description="noc fw lmu reg1 param2 -> not used"/>
++
++            <param type="uint32" value="0xFFF10000"  description="noc fw lmu reg2 addr"/>
++            <param type="uint32" value="14"          description="noc fw lmu reg2 size type: 14-> NOC_FW_SIZE_TYPE_LMU_64K"/>
++            <param type="uint32" value="2"           description="noc fw lmu reg2 condition type:3-> NOC_FW_CONDITION_SET_TYPE_PERMIT_VM"/>
++            <param type="uint32" value="1"           description="noc fw lmu reg2 param1 -> vmid"/>
++            <param type="uint32" value="0"           description="noc fw lmu reg2 param2 -> not used"/>
++
++            <param type="uint32" value="0xFFF10000"  description="noc fw lmu reg3 addr"/>
++            <param type="uint32" value="18"          description="noc fw lmu reg3 size type: 18-> NOC_FW_SIZE_TYPE_LMU_4K"/>
++            <param type="uint32" value="2"           description="noc fw lmu reg3 condition type:2-> NOC_FW_CONDITION_SET_TYPE_PERMIT_VM"/>
++            <param type="uint32" value="0"           description="noc fw lmu reg3 param1 -> vmid"/>
++            <param type="uint32" value="0"           description="noc fw lmu reg3 param2 -> not used"/>
++
++            <param type="uint32" value="0x1CC00000"  description="noc fw emic reg1 addr"/>
++            <param type="uint32" value="5"           description="noc fw emic reg1 size type: 6-> NOC_FW_SIZE_TYPE_EMIC_4MB"/>
++            <param type="uint32" value="2"           description="noc fw emic reg1 condition type:2-> NOC_FW_CONDITION_SET_TYPE_PERMIT_VM"/>
++            <param type="uint32" value="0"           description="noc fw emic reg1 param1 -> vmid"/>
++            <param type="uint32" value="0"           description="noc fw emic reg1 param2 -> not used"/>
++
++            <param type="uint32" value="0x1C000000"  description="noc fw emic reg2 addr"/>
++            <param type="uint32" value="7"           description="noc fw emic reg2 size type: 10-> NOC_FW_SIZE_TYPE_EMIC_16MB"/>
++            <param type="uint32" value="5"           description="noc fw emic reg2 condition type:5-> NOC_FW_CONDITION_SET_TYPE_INHIBIT_UNTRUSTED"/>
++            <param type="uint32" value="0"           description="noc fw emic reg2 param1 -> not used"/>
++            <param type="uint32" value="0"           description="noc fw emic reg2 param2 -> not used"/>
++
++            <param type="uint32" value="0x1D000000"  description="noc fw emic reg3 addr"/>
++            <param type="uint32" value="8"           description="noc fw emic reg3 size type: 9-> NOC_FW_SIZE_TYPE_EMIC_32MB"/>
++            <param type="uint32" value="2"           description="noc fw emic reg3 condition type:5-> NOC_FW_CONDITION_SET_TYPE_PERMIT_VM"/>
++            <param type="uint32" value="1"           description="noc fw emic reg3 param1 -> vmid"/>
++            <param type="uint32" value="0"           description="noc fw emic reg3 param2 -> not used"/>
++
++            <param type="uint32" value="0x1EC00000"  description="noc fw emic reg4 addr"/>
++            <param type="uint32" value="7"           description="noc fw emic reg4 size type: 7-> NOC_FW_SIZE_TYPE_EMIC_16MB"/>
++            <param type="uint32" value="2"           description="noc fw emic reg4 condition type:3-> NOC_FW_CONDITION_SET_TYPE_PERMIT_VM"/>
++            <param type="uint32" value="1"           description="noc fw emic reg4 param1 -> vmid"/>
++            <param type="uint32" value="0"           description="noc fw emic reg4 param2 -> not used"/>
++
++            <param type="uint32" value="0x1FC00000"  description="noc fw emic reg5 addr"/>
++            <param type="uint32" value="5"           description="noc fw emic reg5 size type: 5-> NOC_FW_SIZE_TYPE_EMIC_4MB"/>
++            <param type="uint32" value="3"           description="noc fw emic reg5 condition type:3-> NOC_FW_CONDITION_SET_TYPE_INHIBIT_VM"/>
++            <param type="uint32" value="3"           description="noc fw emic reg5 param1 -> vmid"/>
++            <param type="uint32" value="0"           description="noc fw emic reg5 param2 -> not used"/>
++
++            <param type="uint32" value="0x1BC00000"  description="noc fw emic reg6 addr"/>
++            <param type="uint32" value="5"           description="noc fw emic reg6 size type: 5-> NOC_FW_SIZE_TYPE_EMIC_4MB"/>
++            <param type="uint32" value="0"           description="noc fw emic reg6 condition type:0-> NOC_FW_CONDITION_SET_TYPE_PERMIT_MASTER"/>
++            <param type="uint32" value="0"           description="noc fw emic reg6 param1 -> CPU_0/1=0/1"/>
++            <param type="uint32" value="1"           description="noc fw emic reg6 param2 -> mask=1"/>
++
++            <param type="uint32" value="0x1FC00000"  description="noc fw emic reg7 addr"/>
++            <param type="uint32" value="5"           description="noc fw emic reg7 size type: 5-> NOC_FW_SIZE_TYPE_EMIC_4MB"/>
++            <param type="uint32" value="0"           description="noc fw emic reg7 condition type:0-> NOC_FW_CONDITION_SET_TYPE_PERMIT_MASTER"/>
++            <param type="uint32" value="0"           description="noc fw emic reg7 param1 -> CPU_0/1=0/1"/>
++            <param type="uint32" value="1"           description="noc fw emic reg7 param2 -> mask=1"/>
++          </params>
++        </device>
++        <device name="scu_vm_ctl" enabled="1">
++          <params>
++            <param type="uint8" value="2" description="SCU_DCC_VM_CTL master"/>
++            <param type="uint8" value="0" description="SCU_DCC_VM_CTL slv0"/>
++            <param type="uint8" value="1" description="SCU_DCC_VM_CTL slv1"/>
++            <param type="uint8" value="0" description="SCU_DCC_VM_CTL slv2"/>
++
++            <param type="uint8" value="0" description="padding"/>
++            <param type="uint8" value="0" description="SCU_USIF1_VM_CTL slv0"/>
++            <param type="uint8" value="1" description="SCU_USIF1_VM_CTL slv1"/>
++            <param type="uint8" value="0" description="SCU_USIF1_VM_CTL slv2"/>
++
++            <param type="uint8" value="0" description="padding"/>
++            <param type="uint8" value="0" description="SCU_USIF2_VM_CTL slv0"/>
++            <param type="uint8" value="1" description="SCU_USIF2_VM_CTL slv1"/>
++            <param type="uint8" value="0" description="SCU_USIF2_VM_CTL slv2"/>
++
++            <param type="uint8" value="0" description="padding"/>
++            <param type="uint8" value="0" description="SCU_I2C1_VM_CTL slv0"/>
++            <param type="uint8" value="1" description="SCU_I2C1_VM_CTL slv1"/>
++            <param type="uint8" value="0" description="SCU_I2C1_VM_CTL slv2"/>
++
++            <param type="uint8" value="0" description="padding"/>
++            <param type="uint8" value="0" description="SCU_I2C2_VM_CTL slv0"/>
++            <param type="uint8" value="1" description="SCU_I2C2_VM_CTL slv1"/>
++            <param type="uint8" value="0" description="SCU_I2C2_VM_CTL slv2"/>
++
++            <param type="uint8" value="0" description="padding"/>
++            <param type="uint8" value="0" description="SCU_I2C3_VM_CTL slv0"/>
++            <param type="uint8" value="1" description="SCU_I2C3_VM_CTL slv1"/>
++            <param type="uint8" value="0" description="SCU_I2C3_VM_CTL slv2"/>
++
++            <param type="uint8" value="3" description="SCU_SDMMC_VM_CTL master"/>
++            <param type="uint8" value="0" description="SCU_SDMMC_VM_CTL slv0"/>
++            <param type="uint8" value="1" description="SCU_SDMMC_VM_CTL slv1"/>
++            <param type="uint8" value="0" description="SCU_SDMMC_VM_CTL slv2"/>
++
++            <param type="uint8" value="3" description="SCU_SDIO_VM_CTL master"/>
++            <param type="uint8" value="0" description="SCU_SDIO_VM_CTL slv0"/>
++            <param type="uint8" value="1" description="SCU_SDIO_VM_CTL slv1"/>
++            <param type="uint8" value="0" description="SCU_SDIO_VM_CTL slv2"/>
++
++            <param type="uint8" value="3" description="SCU_CIF_VM_CTL master"/>
++            <param type="uint8" value="0" description="SCU_CIF_VM_CTL slv0"/>
++            <param type="uint8" value="1" description="SCU_CIF_VM_CTL slv1"/>
++            <param type="uint8" value="0" description="SCU_CIF_VM_CTL slv2"/>
++
++            <param type="uint8" value="0" description="padding"/>
++            <param type="uint8" value="0" description="SCU_CEU1_VM_CTL slv0"/>
++            <param type="uint8" value="0" description="SCU_CEU1_VM_CTL slv1"/>
++            <param type="uint8" value="1" description="SCU_CEU1_VM_CTL slv2"/>
++
++            <param type="uint8" value="1" description="SCU_DMA2_VM_CTL master"/>
++            <param type="uint8" value="1" description="SCU_DMA2_VM_CTL slv0"/>
++            <param type="uint8" value="0" description="SCU_DMA2_VM_CTL slv1"/>
++            <param type="uint8" value="0" description="SCU_DMA2_VM_CTL slv2"/>
++
++            <param type="uint8" value="3" description="SCU_NAND_VM_CTL master"/>
++            <param type="uint8" value="0" description="SCU_NAND_VM_CTL slv0"/>
++            <param type="uint8" value="1" description="SCU_NAND_VM_CTL slv1"/>
++            <param type="uint8" value="0" description="SCU_NAND_VM_CTL slv2"/>
++
++            <param type="uint8" value="3" description="SCU_EMMC_VM_CTL master"/>
++            <param type="uint8" value="0" description="SCU_EMMC_VM_CTL slv0"/>
++            <param type="uint8" value="1" description="SCU_EMMC_VM_CTL slv1"/>
++            <param type="uint8" value="0" description="SCU_EMMC_VM_CTL slv2"/>
++
++            <param type="uint8" value="3" description="SCU_USBHS_VM_CTL master"/>
++            <param type="uint8" value="0" description="SCU_USBHS_VM_CTL slv0"/>
++            <param type="uint8" value="1" description="SCU_USBHS_VM_CTL slv1"/>
++            <param type="uint8" value="0" description="SCU_USBHS_VM_CTL slv2"/>
++
++            <param type="uint8" value="2" description="SCU_VIDEO_VM_CTL master"/>
++            <param type="uint8" value="0" description="SCU_VIDEO_VM_CTL slv0"/>
++            <param type="uint8" value="0" description="SCU_VIDEO_VM_CTL slv1"/>
++            <param type="uint8" value="1" description="SCU_VIDEO_VM_CTL slv2"/>
++
++            <param type="uint8" value="3" description="SCU_GPU_VM_CTL master"/>
++            <param type="uint8" value="0" description="SCU_GPU_VM_CTL slv0"/>
++            <param type="uint8" value="1" description="SCU_GPU_VM_CTL slv1"/>
++            <param type="uint8" value="0" description="SCU_GPU_VM_CTL slv2"/>
++
++            <param type="uint8" value="0" description="padding"/>
++            <param type="uint8" value="1" description="SCU_CAPCOM0_VM_CTL slv0"/>
++            <param type="uint8" value="0" description="SCU_CAPCOM0_VM_CTL slv1"/>
++            <param type="uint8" value="0" description="SCU_CAPCOM0_VM_CTL slv2"/>
++
++            <param type="uint8" value="0" description="padding"/>
++            <param type="uint8" value="0" description="SCU_CAPCOM1_VM_CTL slv0"/>
++            <param type="uint8" value="1" description="SCU_CAPCOM1_VM_CTL slv1"/>
++            <param type="uint8" value="0" description="SCU_CAPCOM1_VM_CTL slv2"/>
++
++            <param type="uint8" value="0" description="padding"/>
++            <param type="uint8" value="0" description="SCU_KEYPAD_VM_CTL slv0"/>
++            <param type="uint8" value="1" description="SCU_KEYPAD_VM_CTL slv1"/>
++            <param type="uint8" value="0" description="SCU_KEYPAD_VM_CTL slv2"/>
++
++            <param type="uint8" value="0" description="padding"/>
++            <param type="uint8" value="1" description="SCU_STM_VM_CTL slv0"/>
++            <param type="uint8" value="1" description="SCU_STM_VM_CTL slv1"/>
++            <param type="uint8" value="1" description="SCU_STM_VM_CTL slv2"/>
++
++            <param type="uint8" value="0" description="padding"/>
++            <param type="uint8" value="1" description="SCU_GPTU0_VM_CTL slv0"/>
++            <param type="uint8" value="0" description="SCU_GPTU0_VM_CTL slv1"/>
++            <param type="uint8" value="0" description="SCU_GPTU0_VM_CTL slv2"/>
++
++            <param type="uint8" value="0" description="padding"/>
++            <param type="uint8" value="0" description="SCU_GPTU1_VM_CTL slv0"/>
++            <param type="uint8" value="0" description="SCU_GPTU1_VM_CTL slv1"/>
++            <param type="uint8" value="0" description="SCU_GPTU1_VM_CTL slv2"/>
++
++            <param type="uint8" value="0" description="padding"/>
++            <param type="uint8" value="0" description="SCU_PCL_VM_CTL slv0"/>
++            <param type="uint8" value="0" description="SCU_PCL_VM_CTL slv1"/>
++            <param type="uint8" value="0" description="SCU_PCL_VM_CTL slv2"/>
++
++            <param type="uint8" value="0" description="padding"/>
++            <param type="uint8" value="0" description="SCU_CGUSPCU_VM_CTL slv0"/>
++            <param type="uint8" value="0" description="SCU_CGUSPCU_VM_CTL slv1"/>
++            <param type="uint8" value="0" description="SCU_CGUSPCU_VM_CTL slv2"/>
++
++            <param type="uint8" value="0" description="padding"/>
++            <param type="uint8" value="0" description="SCU_SCU_VM_CTL slv0"/>
++            <param type="uint8" value="0" description="SCU_SCU_VM_CTL slv1"/>
++            <param type="uint8" value="1" description="SCU_SCU_VM_CTL slv2"/>
++
++            <param type="uint8" value="0" description="padding"/>
++            <param type="uint8" value="1" description="SCU_STMON_VM_CTL slv0"/>
++            <param type="uint8" value="0" description="SCU_STMON_VM_CTL slv1"/>
++            <param type="uint8" value="0" description="SCU_STMON_VM_CTL slv2"/>
++
++            <param type="uint8" value="0" description="padding"/>
++            <param type="uint8" value="1" description="SCU_DBGTRACE_VM_CTL slv0"/>
++            <param type="uint8" value="1" description="SCU_DBGTRACE_VM_CTL slv1"/>
++            <param type="uint8" value="1" description="SCU_DBGTRACE_VM_CTL slv2"/>
++
++            <param type="uint8" value="0" description="SCU_JAM_VM_CTL master"/>
++            <param type="uint8" value="0" description="padding"/>
++            <param type="uint8" value="0" description="padding"/>
++            <param type="uint8" value="0" description="padding"/>
++
++            <param type="uint8" value="3" description="SCU_IDI_VM_CTL master"/>
++            <param type="uint8" value="0" description="SECSIG0"/>
++            <param type="uint8" value="0" description="SECSIG1"/>
++            <param type="uint8" value="0" description="SECSIG2"/>
++
++            <param type="uint8" value="1" description="SCU_AUDIODSP_VM_CTL master"/>
++            <param type="uint8" value="0" description="padding"/>
++            <param type="uint8" value="0" description="padding"/>
++            <param type="uint8" value="0" description="padding"/>
++
++            <param type="uint8" value="0" description="SCU_OCT_VM_CTL master"/>
++            <param type="uint8" value="0" description="padding"/>
++            <param type="uint8" value="0" description="padding"/>
++            <param type="uint8" value="0" description="padding"/>
++
++            <param type="uint8" value="3" description="SCU_DMA1_VM_CTL master"/>
++            <param type="uint8" value="0" description="SCU_DMA1_VM_CTL slv0"/>
++            <param type="uint8" value="1" description="SCU_DMA1_VM_CTL slv1"/>
++            <param type="uint8" value="0" description="SCU_DMA1_VM_CTL slv2"/>
++
++            <param type="uint8" value="0" description="padding"/>
++            <param type="uint8" value="1" description="SCU_3GCOMRAM_VM_CTL slv0"/>
++            <param type="uint8" value="0" description="SCU_3GCOMRAM_VM_CTL slv1"/>
++            <param type="uint8" value="0" description="SCU_3GCOMRAM_VM_CTL slv2"/>
++
++            <param type="uint8" value="0" description="padding"/>
++            <param type="uint8" value="1" description="SCU_3GRF_VM_CTL slv0"/>
++            <param type="uint8" value="0" description="SCU_3GRF_VM_CTL slv1"/>
++            <param type="uint8" value="0" description="SCU_3GRF_VM_CTL slv2"/>
++
++            <param type="uint8" value="0" description="padding"/>
++            <param type="uint8" value="1" description="SCU_USIM1_VM_CTL slv0"/>
++            <param type="uint8" value="0" description="SCU_USIM1_VM_CTL slv1"/>
++            <param type="uint8" value="0" description="SCU_USIM1_VM_CTL slv2"/>
++
++            <param type="uint8" value="0" description="padding"/>
++            <param type="uint8" value="1" description="SCU_USIM2_VM_CTL slv0"/>
++            <param type="uint8" value="0" description="SCU_USIM2_VM_CTL slv1"/>
++            <param type="uint8" value="0" description="SCU_USIM2_VM_CTL slv2"/>
++
++            <param type="uint8" value="0" description="padding"/>
++            <param type="uint8" value="1" description="SCU_GUCIPH_VM_CTL slv0"/>
++            <param type="uint8" value="0" description="SCU_GUCIPH_VM_CTL slv1"/>
++            <param type="uint8" value="0" description="SCU_GUCIPH_VM_CTL slv2"/>
++
++            <param type="uint8" value="0" description="padding"/>
++            <param type="uint8" value="1" description="SCU_GSI_VM_CTL slv0"/>
++            <param type="uint8" value="0" description="SCU_GSI_VM_CTL slv1"/>
++            <param type="uint8" value="0" description="SCU_GSI_VM_CTL slv2"/>
++
++            <param type="uint8" value="0" description="padding"/>
++            <param type="uint8" value="1" description="SCU_2GRAM_VM_CTL slv0"/>
++            <param type="uint8" value="0" description="SCU_2GRAM_VM_CTL slv1"/>
++            <param type="uint8" value="0" description="SCU_2GRAM_VM_CTL slv2"/>
++
++            <param type="uint8" value="0" description="padding"/>
++            <param type="uint8" value="1" description="SCU_2GAUDIORAM_VM_CTL slv0"/>
++            <param type="uint8" value="1" description="SCU_2GAUDIORAM_VM_CTL slv1"/>
++            <param type="uint8" value="0" description="SCU_2GAUDIORAM_VM_CTL slv2"/>
++
++            <param type="uint8" value="1" description="SCU_MACPHY_VM_CTL master"/>
++            <param type="uint8" value="1" description="SCU_MACPHY_VM_CTL slv0"/>
++            <param type="uint8" value="0" description="SCU_MACPHY_VM_CTL slv1"/>
++            <param type="uint8" value="0" description="SCU_MACPHY_VM_CTL slv2"/>
++
++            <param type="uint8" value="0" description="padding"/>
++            <param type="uint8" value="0" description="SCU_EMIC_VM_CTL slv0"/>
++            <param type="uint8" value="0" description="SCU_EMIC_VM_CTL slv1"/>
++            <param type="uint8" value="0" description="SCU_EMIC_VM_CTL slv2"/>
++
++            <param type="uint8" value="0" description="padding"/>
++            <param type="uint8" value="0" description="SCU_NOC_VM_CTL slv0"/>
++            <param type="uint8" value="0" description="SCU_NOC_VM_CTL slv1"/>
++            <param type="uint8" value="0" description="SCU_NOC_VM_CTL slv2"/>
++
++            <param type="uint8" value="0" description="padding"/>
++            <param type="uint8" value="0" description="SCU_I2C4_VM_CTL slv0"/>
++            <param type="uint8" value="1" description="SCU_I2C4_VM_CTL slv1"/>
++            <param type="uint8" value="0" description="SCU_I2C4_VM_CTL slv2"/>
++
++            <param type="uint8" value="2" description="SCU_RGA_VM_CTL master"/>
++            <param type="uint8" value="0" description="SCU_RGA_VM_CTL slv0"/>
++            <param type="uint8" value="0" description="SCU_RGA_VM_CTL slv1"/>
++            <param type="uint8" value="1" description="SCU_RGA_VM_CTL slv2"/>
++
++            <param type="uint8" value="0" description="padding"/>
++            <param type="uint8" value="1" description="SCU_PWM_VM_CTL slv0"/>
++            <param type="uint8" value="1" description="SCU_PWM_VM_CTL slv1"/>
++            <param type="uint8" value="0" description="SCU_PWM_VM_CTL slv2"/>
++
++            <param type="uint8" value="0" description="padding"/>
++            <param type="uint8" value="0" description="SCU_DSI_VM_CTL slv0"/>
++            <param type="uint8" value="0" description="SCU_DSI_VM_CTL slv1"/>
++            <param type="uint8" value="1" description="SCU_DSI_VM_CTL slv2"/>
++          </params>
++        </device>
++      </devices>
++    </module>
+diff --git a/sofia3gx/configs/module_security_vtrr.xml b/sofia3gx/configs/module_security_vtrr.xml
+new file mode 100644
+index 0000000..9276039
+--- /dev/null
++++ b/sofia3gx/configs/module_security_vtrr.xml
+@@ -0,0 +1,145 @@
++<!-- VTRR Setup: Memory map v25 -->
++<param type="uint32" value="11"         description="VTRR num of configs"/>
++
++<!-- OSID 1 MEX -->
++<param type="uint32" value="1"          description="VTRR osid"/>
++<param type="uint32" value="0"          description="VTRR config type -> DEFAULT"/>
++        <param type="uint32" value="3"          description="VTRR used size"/>
++        <param type="uint32" value="0x1C000000" description="VTRR vtrr base 1"/>
++        <param type="uint32" value="0x01000000" description="VTRR vtrr mask 1"/>
++        <param type="uint32" value="0xFFF00000" description="VTRR vtrr base 2"/>
++        <param type="uint32" value="0x00010000" description="VTRR vtrr mask 2"/>
++        <param type="uint32" value="0xFFF10000" description="VTRR vtrr base 3"/>
++        <param type="uint32" value="0x00001000" description="VTRR vtrr mask 3"/>
++        <param type="uint32" value="0x00000000" description="VTRR vtrr base 4"/>
++        <param type="uint32" value="0x00000000" description="VTRR vtrr mask 4"/>
++
++<!-- OSID 2 LINUX, type 0 -->
++<param type="uint32" value="2"          description="VTRR osid"/>
++        <param type="uint32" value="0"          description="VTRR config type -> default/close modem range"/>
++        <param type="uint32" value="2"          description="VTRR used size"/>
++        <param type="uint32" value="0x1C000000" description="VTRR vtrr base 1"/>
++        <param type="uint32" value="0x04000000" description="VTRR vtrr mask 1"/>
++        <param type="uint32" value="0xFFF00000" description="VTRR vtrr base 2"/>
++        <param type="uint32" value="0x00100000" description="VTRR vtrr mask 2"/>
++        <param type="uint32" value="0x00000000" description="VTRR vtrr base 3"/>
++        <param type="uint32" value="0x00000000" description="VTRR vtrr mask 3"/>
++        <param type="uint32" value="0x00000000" description="VTRR vtrr base 4"/>
++        <param type="uint32" value="0x00000000" description="VTRR vtrr mask 4"/>
++
++<!-- OSID 2 LINUX, type 1 -->
++<param type="uint32" value="2"          description="VTRR osid"/>
++<param type="uint32" value="1"          description="VTRR config type -> Silent Reset (SR): open modem range"/>
++        <param type="uint32" value="2"          description="VTRR used size"/>
++        <param type="uint32" value="0x1C000000" description="VTRR vtrr base 1"/>
++        <param type="uint32" value="0x01000000" description="VTRR vtrr mask 1"/>
++        <param type="uint32" value="0xFFF00000" description="VTRR vtrr base 2"/>
++        <param type="uint32" value="0x00100000" description="VTRR vtrr mask 2"/>
++        <param type="uint32" value="0x00000000" description="VTRR vtrr base 3"/>
++        <param type="uint32" value="0x00000000" description="VTRR vtrr mask 3"/>
++        <param type="uint32" value="0x00000000" description="VTRR vtrr base 4"/>
++        <param type="uint32" value="0x00000000" description="VTRR vtrr mask 4"/>
++
++<!-- OSID 2 LINUX, type 2 -->
++<param type="uint32" value="2"          description="VTRR osid"/>
++<param type="uint32" value="2"          description="VTRR config type -> Secure Buffer (SB)"/>
++<param type="uint32" value="4"          description="VTRR used size"/>
++        <param type="uint32" value="0x1C000000" description="VTRR vtrr base 1"/>
++        <param type="uint32" value="0x04000000" description="VTRR vtrr mask 1"/>
++        <param type="uint32" value="0xFFF00000" description="VTRR vtrr base 2"/>
++        <param type="uint32" value="0x00100000" description="VTRR vtrr mask 2"/>
++        <param type="uint32" value="0x10000000" description="VTRR vtrr base 3"/>
++        <param type="uint32" value="0x04000000" description="VTRR vtrr mask 3"/>
++        <param type="uint32" value="0x14000000" description="VTRR vtrr base 4"/>
++        <param type="uint32" value="0x02000000" description="VTRR vtrr mask 4"/>
++
++<!-- OSID 2 LINUX, type 3 -->
++<param type="uint32" value="2"          description="VTRR osid"/>
++<param type="uint32" value="3"          description="VTRR config type -> SB + SR"/>
++<param type="uint32" value="4"          description="VTRR used size"/>
++        <param type="uint32" value="0x1C000000" description="VTRR vtrr base 1"/>
++        <param type="uint32" value="0xFF000400" description="VTRR vtrr mask 1"/>
++        <param type="uint32" value="0xFFF00000" description="VTRR vtrr base 2"/>
++        <param type="uint32" value="0x00100000" description="VTRR vtrr mask 2"/>
++        <param type="uint32" value="0x10000000" description="VTRR vtrr base 3"/>
++        <param type="uint32" value="0x04000000" description="VTRR vtrr mask 3"/>
++        <param type="uint32" value="0x14000000" description="VTRR vtrr base 4"/>
++        <param type="uint32" value="0x02000000" description="VTRR vtrr mask 4"/>
++
++<!-- OSID 2 LINUX, type 4 -->
++<param type="uint32" value="2"          description="VTRR osid"/>
++<param type="uint32" value="4"          description="VTRR config type -> Silent Lake (SL)"/>
++        <param type="uint32" value="3"          description="VTRR used size"/>
++        <param type="uint32" value="0x1C000000" description="VTRR vtrr base 1"/>
++        <param type="uint32" value="0xFF000400" description="VTRR vtrr mask 1"/>
++        <param type="uint32" value="0xFFF00000" description="VTRR vtrr base 2"/>
++        <param type="uint32" value="0xFFFF0400" description="VTRR vtrr mask 2"/>
++        <param type="uint32" value="0xFFF10000" description="VTRR vtrr base 3"/>
++        <param type="uint32" value="0xFFFFF400" description="VTRR vtrr mask 3"/>
++        <param type="uint32" value="0x00000000" description="VTRR vtrr base 4"/>
++        <param type="uint32" value="0x00000000" description="VTRR vtrr mask 4"/>
++
++<!-- OSID 2 LINUX, type 5 -->
++<param type="uint32" value="2"          description="VTRR osid"/>
++<param type="uint32" value="5"          description="VTRR config type -> SL + SR"/>
++        <param type="uint32" value="2"          description="VTRR used size"/>
++        <param type="uint32" value="0x1C000000" description="VTRR vtrr base 1"/>
++        <param type="uint32" value="0xFF000400" description="VTRR vtrr mask 1"/>
++        <param type="uint32" value="0xFFF00000" description="VTRR vtrr base 2"/>
++        <param type="uint32" value="0x00100000" description="VTRR vtrr mask 2"/>
++        <param type="uint32" value="0x00000000" description="VTRR vtrr base 3"/>
++        <param type="uint32" value="0x00000000" description="VTRR vtrr mask 3"/>
++        <param type="uint32" value="0x00000000" description="VTRR vtrr base 4"/>
++        <param type="uint32" value="0x00000000" description="VTRR vtrr mask 4"/>
++
++<!-- OSID 2 LINUX, type 6 -->
++<param type="uint32" value="2"          description="VTRR osid"/>
++<param type="uint32" value="6"          description="VTRR config type -> SL + SB"/>
++<param type="uint32" value="4"          description="VTRR used size"/>
++        <param type="uint32" value="0x1C000000" description="VTRR vtrr base 1"/>
++        <param type="uint32" value="0x04000000" description="VTRR vtrr mask 1"/>
++        <param type="uint32" value="0xFFF00000" description="VTRR vtrr base 2"/>
++        <param type="uint32" value="0x00100000" description="VTRR vtrr mask 2"/>
++        <param type="uint32" value="0x10000000" description="VTRR vtrr base 3"/>
++        <param type="uint32" value="0x04000000" description="VTRR vtrr mask 3"/>
++        <param type="uint32" value="0x14000000" description="VTRR vtrr base 4"/>
++        <param type="uint32" value="0x02000000" description="VTRR vtrr mask 4"/>
++
++<!-- OSID 2 LINUX, type 7 -->
++<param type="uint32" value="2"          description="VTRR osid"/>
++<param type="uint32" value="7"          description="VTRR config type -> SL + SB + SR"/>
++<param type="uint32" value="4"          description="VTRR used size"/>
++        <param type="uint32" value="0x1C000000" description="VTRR vtrr base 1"/>
++        <param type="uint32" value="0xFF000400" description="VTRR vtrr mask 1"/>
++        <param type="uint32" value="0xFFF00000" description="VTRR vtrr base 2"/>
++        <param type="uint32" value="0x00100000" description="VTRR vtrr mask 2"/>
++        <param type="uint32" value="0x10000000" description="VTRR vtrr base 3"/>
++        <param type="uint32" value="0x04000000" description="VTRR vtrr mask 3"/>
++        <param type="uint32" value="0x14000000" description="VTRR vtrr base 4"/>
++        <param type="uint32" value="0x02000000" description="VTRR vtrr mask 4"/>
++
++<!-- OSID 3 SECVM, type 0 -->
++<param type="uint32" value="3"          description="VTRR osid"/>
++<param type="uint32" value="0"          description="VTRR config type -> DEFAULT"/>
++        <param type="uint32" value="2"          description="VTRR used size"/>
++        <param type="uint32" value="0x1CC00000" description="VTRR vtrr base 1"/>
++        <param type="uint32" value="0x00400000" description="VTRR vtrr mask 1"/>
++        <param type="uint32" value="0xFFF00000" description="VTRR vtrr base 2"/>
++        <param type="uint32" value="0x00100000" description="VTRR vtrr mask 2"/>
++        <param type="uint32" value="0x00000000" description="VTRR vtrr base 3"/>
++        <param type="uint32" value="0x00000000" description="VTRR vtrr mask 3"/>
++        <param type="uint32" value="0x00000000" description="VTRR vtrr base 4"/>
++        <param type="uint32" value="0x00000000" description="VTRR vtrr mask 4"/>
++
++<!-- OSID 3 SECVM, type 1 -->
++<param type="uint32" value="3"          description="VTRR osid"/>
++<param type="uint32" value="1"          description="VTRR config type -> Silent Lake (SL)"/>
++        <param type="uint32" value="2"          description="VTRR used size"/>
++        <param type="uint32" value="0x1CC00000" description="VTRR vtrr base 1"/>
++        <param type="uint32" value="0x00400000" description="VTRR vtrr mask 1"/>
++        <param type="uint32" value="0xFFF00000" description="VTRR vtrr base 2"/>
++        <param type="uint32" value="0x00100000" description="VTRR vtrr mask 2"/>
++        <param type="uint32" value="0x00000000" description="VTRR vtrr base 3"/>
++        <param type="uint32" value="0x00000000" description="VTRR vtrr mask 3"/>
++        <param type="uint32" value="0x00000000" description="VTRR vtrr base 4"/>
++        <param type="uint32" value="0x00000000" description="VTRR vtrr mask 4"/>
+diff --git a/sofia3gx/configs/module_spcu_thermal.xml b/sofia3gx/configs/module_spcu_thermal.xml
+new file mode 120000
+index 0000000..8f8de44
+--- /dev/null
++++ b/sofia3gx/configs/module_spcu_thermal.xml
+@@ -0,0 +1 @@
++../../sofia3gr/configs/module_spcu_thermal.xml
+\ No newline at end of file
+diff --git a/sofia3gx/configs/module_watchdog.xml b/sofia3gx/configs/module_watchdog.xml
+new file mode 100644
+index 0000000..8686ec2
+--- /dev/null
++++ b/sofia3gx/configs/module_watchdog.xml
+@@ -0,0 +1,6 @@
++<module name="pal_watchdog" enabled="0">
++  <params>
++   <param type="uint32" description="guest vm startup timeout check enable mask(bit[VM_ID] is set=enable)" value="0"/>
++   <param type="uint32" description="guest vm startup timeout check delay (sec)" value="30"/>
++  </params>
++</module>
+diff --git a/sofia3gx/configs/modules.xml b/sofia3gx/configs/modules.xml
+new file mode 120000
+index 0000000..2c0f195
+--- /dev/null
++++ b/sofia3gx/configs/modules.xml
+@@ -0,0 +1 @@
++../../sofia3gr/configs/modules.xml
+\ No newline at end of file
+diff --git a/sofia3gx/configs/msr_init.xml b/sofia3gx/configs/msr_init.xml
+new file mode 120000
+index 0000000..ba0ebc8
+--- /dev/null
++++ b/sofia3gx/configs/msr_init.xml
+@@ -0,0 +1 @@
++../../sofia3gr/configs/msr_init.xml
+\ No newline at end of file
+diff --git a/sofia3gx/configs/pal_interrupt_lines.h b/sofia3gx/configs/pal_interrupt_lines.h
+new file mode 120000
+index 0000000..6136010
+--- /dev/null
++++ b/sofia3gx/configs/pal_interrupt_lines.h
+@@ -0,0 +1 @@
++../../sofia3gr/configs/pal_interrupt_lines.h
+\ No newline at end of file
+diff --git a/sofia3gx/configs/pal_pcl_lut.h b/sofia3gx/configs/pal_pcl_lut.h
+new file mode 100644
+index 0000000..6640e7d
+--- /dev/null
++++ b/sofia3gx/configs/pal_pcl_lut.h
+@@ -0,0 +1,189 @@
++/* ----------------------------------------------------------------------------
++   Copyright (C) 2013-2014 Intel Mobile Communications GmbH
++
++   Sec Class: Intel Confidential (IC)
++
++   All rights reserved.
++   ----------------------------------------------------------------------------
++   This document contains proprietary information belonging to IMC.
++   Passing on and copying of this document, use
++   and communication of its contents is not permitted without prior written
++   authorisation.
++  ---------------------------------------------------------------------------*/
++
++#ifndef _PAL_PCL_LUT_H
++#define _PAL_PCL_LUT_H
++
++/* INCLUDES */
++#include "pal_pinctrl.h"
++
++/** The total number of physical PCL, taken from platform generated pad table configuration */
++/* Should correspond with soclib build */
++#define PCL_TOTAL_NUMBER_OF_PHYSICAL_MON 4
++#define PCL_TOTAL_NUMBER_OF_PHYSICAL_PCL 96
++#define PCL_TOTAL_NUMBER_OF_PHYSICAL_PCL_AGOLD 45
++
++/** Reference to PAT_SF_3G_ES2.1_SVB_Rev0.1.xlsx **/
++const unsigned char pal_pcl_dbb_guard_lut[PCL_TOTAL_NUMBER_OF_PHYSICAL_PCL /* 93 */] =
++{           /* { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | PAL_PINCTRL_GUARD_LINUX | PAL_PINCTRL_GUARD_SECURE } */
++  /* PCL 0 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 1 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 2 */  { PAL_PINCTRL_GUARD_VMM | 0 | 0 | 0 },
++  /* PCL 3 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 4 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 5 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 6 */  { PAL_PINCTRL_GUARD_VMM | 0 | 0 | 0 },
++  /* PCL 7 */  { PAL_PINCTRL_GUARD_VMM | 0 | 0 | 0 },
++  /* PCL 8 */  { PAL_PINCTRL_GUARD_VMM | 0 | 0 | 0 },
++  /* PCL 9 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 10 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 11 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 12 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 13 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 14 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 15 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 16 */  { PAL_PINCTRL_GUARD_VMM | 0 | 0 | 0 },
++  /* PCL 17 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 18 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++#if defined (SF_ES_2_1)
++  /* PCL 19 */  { PAL_PINCTRL_GUARD_VMM | 0 | 0 | 0 },
++#else
++  /* PCL 19 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++#endif
++  /* PCL 20 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 21 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 22 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 23 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 24 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 25 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 26 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | PAL_PINCTRL_GUARD_SECURE },
++  /* PCL 27 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 28 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX| 0 },
++  /* PCL 29 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 30 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 31 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 32 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 33 */  { PAL_PINCTRL_GUARD_VMM | 0 | 0 | 0 },
++  /* PCL 34 */  { PAL_PINCTRL_GUARD_VMM | 0 | 0 | 0 },
++  /* PCL 35 */  { PAL_PINCTRL_GUARD_VMM | 0 | 0 | 0 },
++  /* PCL 36 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 37 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 38 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 39 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 40 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 41 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 42 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 43 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 44 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 45 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 46 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 47 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 48 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX| 0 },
++  /* PCL 49 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 50 */  { PAL_PINCTRL_GUARD_VMM | 0 | 0 | 0 },
++  /* PCL 51 */  { PAL_PINCTRL_GUARD_VMM | 0 | 0 | 0 },
++  /* PCL 52 */  { PAL_PINCTRL_GUARD_VMM | 0 | 0 | 0 },
++  /* PCL 53 */  { PAL_PINCTRL_GUARD_VMM | 0 | 0 | 0 },
++  /* PCL 54 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 55 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 56 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 57 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 58 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 59 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 60 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 61 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 62 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 63 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 64 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++#if defined (SF_ES_2_1)
++  /* PCL 65 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++#else
++  /* PCL 65 */  { PAL_PINCTRL_GUARD_VMM | 0 | 0 | 0 },
++#endif
++  /* PCL 66 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 67 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 68 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 69 */  { PAL_PINCTRL_GUARD_VMM | 0 | 0 | 0 },
++#if defined (SF_ES_2_1)
++  /* PCL 70 */  { PAL_PINCTRL_GUARD_VMM | 0 | 0 | 0 },
++#else
++  /* PCL 70 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++#endif
++  /* PCL 71 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 72 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 73 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 74 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 75 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 76 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 77 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 78 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 79 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 80 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 81 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 82 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 83 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 84 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 85 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 86 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 87 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 88 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 89 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 90 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 91 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 92 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 93 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 94 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 95 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 }
++}; /* pal_pcl_dbb_guard_lut */
++
++
++const unsigned char pal_pcl_abb_guard_lut[PCL_TOTAL_NUMBER_OF_PHYSICAL_PCL_AGOLD /* 45 */] =
++{
++  /* PCL 0 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 1 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 2 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 3 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 4 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 5 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 6 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 7 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 8 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 9 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 10 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 11 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 12 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 13 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 14 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 15 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 16 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 17 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 18 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 19 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 20 */  { PAL_PINCTRL_GUARD_VMM | 0 | 0 | 0 },
++  /* PCL 21 */  { PAL_PINCTRL_GUARD_VMM | 0 | 0 | 0 },
++  /* PCL 22 */  { PAL_PINCTRL_GUARD_VMM | 0 | 0 | 0 },
++  /* PCL 23 */  { PAL_PINCTRL_GUARD_VMM | 0 | 0 | 0 },
++  /* PCL 24 */  { PAL_PINCTRL_GUARD_VMM | 0 | 0 | 0 },
++  /* PCL 25 */  { PAL_PINCTRL_GUARD_VMM | 0 | 0 | 0 },
++  /* PCL 26 */  { PAL_PINCTRL_GUARD_VMM | 0 | 0 | 0 },
++  /* PCL 27 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 28 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 29 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 30 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 31 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 32 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 33 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 34 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 35 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 36 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 37 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 38 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 39 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 40 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 41 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 42 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 },
++  /* PCL 43 */  { PAL_PINCTRL_GUARD_VMM | PAL_PINCTRL_GUARD_MODEM | 0 | 0 },
++  /* PCL 44 */  { PAL_PINCTRL_GUARD_VMM | 0 | PAL_PINCTRL_GUARD_LINUX | 0 }
++}; /* pal_pcl_abb_guard_lut */
++
++#endif /* _PAL_PCL_LUT_H */
+diff --git a/sofia3gx/configs/pal_vectors.h b/sofia3gx/configs/pal_vectors.h
+new file mode 120000
+index 0000000..f1589cd
+--- /dev/null
++++ b/sofia3gx/configs/pal_vectors.h
+@@ -0,0 +1 @@
++../../sofia3gr/configs/pal_vectors.h
+\ No newline at end of file
+diff --git a/sofia3gx/configs/reserved.xml b/sofia3gx/configs/reserved.xml
+new file mode 120000
+index 0000000..309beea
+--- /dev/null
++++ b/sofia3gx/configs/reserved.xml
+@@ -0,0 +1 @@
++../../sofia3gr/configs/reserved.xml
+\ No newline at end of file
+diff --git a/sofia3gx/configs/vectors.xml b/sofia3gx/configs/vectors.xml
+new file mode 100644
+index 0000000..20eba10
+--- /dev/null
++++ b/sofia3gx/configs/vectors.xml
+@@ -0,0 +1,217 @@
++#ifdef __MV_SMP__
++  #define affinity_all_cores "14"
++  #define affinity_core3 "8"
++  #define affinity_core2 "4"
++  #define affinity_core1 "2"
++  #define affinity_core0 "1"
++#else
++  #define affinity_all_cores "1"
++  #define affinity_core3 "1"
++  #define affinity_core2 "1"
++  #define affinity_core1 "1"
++  #define affinity_core0 "1"
++#endif
++<vectors>
++  <!-- AUTO GENERATED - DO NOT MODIFY -->
++  <!-- This MUST be sync across full system or system could break! -->
++  <!-- Update irqs.xlsm and regenerate and perform synchronisation across full system for your change -->
++  <vector number="32" line="-2" owner="2" is_local="1" comment="IRQ_MOVE_CLEANUP_VECTOR"/>
++  <vector number="33" line="-2" owner="0" is_local="1" comment="hirq"/>
++  <vector number="34" line="-2" owner="0" is_local="1" comment="vmm reschedule ipi"/>
++  <vector number="147" line="-3" owner="0" is_local="1" comment="performance counter interrupt"/>
++  <vector number="119" line="-2" owner="2" is_local="1" comment="sep interrupt"/>
++  <vector number="120" line="-2" owner="2" is_local="1" comment="socwatch interrupt"/>
++  <vector number="110" line="-3" owner="2" is_local="1" comment="Linux lapic local timer"/>
++  <vector number="111" line="-2" owner="2" is_local="1" comment="Linux smp reboot vector"/>
++  <vector number="112" line="-2" owner="2" is_local="1" comment="Linux call function single vector"/>
++  <vector number="113" line="-2" owner="2" is_local="1" comment="Linux call function vector"/>
++  <vector number="114" line="-2" owner="2" is_local="1" comment="Linux reschedule ipi"/>
++  <vector number="255" line="-2" owner="0" is_local="1" comment="LAPIC spurious vector"/>
++  <vector number="35" line="52" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_USIF1"/>
++  <vector number="36" line="58" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_USIF2"/>
++  <vector number="37" line="69" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_DIF_ERR"/>
++#ifdef __MV_SECURE_PLAYBACK__
++  <vector number="38" line="70" affinity=affinity_core0 owner="3" type="1" comment="INT_LINE_VPU_HEVC_DEC"/>
++#else
++  <vector number="38" line="70" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_VPU_HEVC_DEC"/>
++#endif
++  <vector number="39" line="71" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_VOP"/>
++  <vector number="42" line="74" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_PWM"/>
++  <vector number="43" line="75" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_RGA"/>
++  <vector number="44" line="83" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_I2C1"/>
++  <vector number="45" line="45" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_NOC_ERR_APS_L1"/>
++  <vector number="46" line="46" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_NOC_ERR_APS_L2"/>
++  <vector number="47" line="91" affinity=affinity_core2 owner="2" type="1" comment="INT_LINE_CIF_ISP"/>
++  <vector number="48" line="92" affinity=affinity_core2 owner="2" type="1" comment="INT_LINE_CIF_JPEG_ERR"/>
++  <vector number="49" line="93" affinity=affinity_core2 owner="2" type="1" comment="INT_LINE_CIF_JPEG_STAT"/>
++  <vector number="50" line="94" affinity=affinity_core2 owner="2" type="1" comment="INT_LINE_CIF_MI"/>
++  <vector number="51" line="95" affinity=affinity_core2 owner="2" type="1" comment="INT_LINE_CIF_MIPI"/>
++  <vector number="52" line="54" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_FMRX_EV_TUNE"/>
++  <vector number="53" line="55" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_FMTX_EV_CALIB"/>
++  <vector number="54" line="56" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_FMTX_EV_TUNE"/>
++  <!-- <vector number="55" line="108" affinity=affinity_core2 owner="2" type="1" comment="INT_LINE_USB"/>-->
++  <vector number="55" line="163" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_EXI14"/>
++  <vector number="56" line="149" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_EXI0"/>
++  <vector number="57" line="150" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_EXI1"/>
++  <vector number="58" line="151" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_EXI2"/>
++  <vector number="59" line="246" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_I2C_RAW"/>
++  <vector number="60" line="155" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_EXI6"/>
++  <vector number="61" line="161" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_EXI12"/>
++  <vector number="62" line="165" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_USB_HS_RESUME"/>
++  <vector number="63" line="166" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_SDMMC_DETECT"/>
++  <vector number="64" line="221" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_BTIF_ERR_SRQ"/>
++  <vector number="65" line="204" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_USB_ID"/>
++  <vector number="66" line="217" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_BTIF_REQ_IRQ"/>
++  <vector number="67" line="218" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_BTIF_MULT_SRC_SRQ"/>
++  <vector number="68" line="80" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_PMU_PM1"/>
++  <vector number="69" line="177" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_KPD"/>
++  <vector number="70" line="169" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_USIF1_WK"/>
++  <vector number="71" line="170" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_USIF2_WK"/>
++  <vector number="72" line="241" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_SCU3"/>
++  <vector number="73" line="236" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_MRDY"/>
++  <vector number="74" line="227" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_WLAN"/>
++  <vector number="75" line="228" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_IDI_DBB_RX_REQ_IRQ"/>
++  <vector number="76" line="229" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_IDI_DBB_RX2_REQ_IRQ"/>
++  <vector number="77" line="230" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_IDI_DBB_RX3_REQ_IRQ"/>
++  <vector number="78" line="231" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_IDI_DBB_TX_REQ_IRQ"/>
++  <vector number="79" line="232" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_IDI_DBB_TX2_REQ_IRQ"/>
++  <vector number="80" line="233" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_IDI_DBB_TX3_REQ_IRQ"/>
++  <vector number="81" line="234" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_IDI_DBB_MULT_SRC_SRQ"/>
++  <vector number="82" line="235" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_IDI_DBB_ERR_SRQ"/>
++  <vector number="83" line="237" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_GNSS_WAKEUP"/>
++  <vector number="84" line="238" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_GNSS_NOTIFICATION"/>
++  <vector number="85" line="239" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_GNSS_ERROR"/>
++  <vector number="86" line="245" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_USIF_ALL"/>
++  <vector number="87" line="247" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_IDI_ABB_ERR_SRQ0"/>
++  <vector number="88" line="248" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_IDI_ABB_TX_REQ_IRQ0"/>
++  <vector number="89" line="249" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_IDI_ABB_RX_REQ_IRQ0"/>
++  <vector number="90" line="250" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_IDI_ABB_ERR_SRQ1"/>
++  <vector number="91" line="251" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_IDI_ABB_TX_REQ_IRQ1"/>
++  <vector number="92" line="252" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_IDI_ABB_RX_REQ_IRQ1"/>
++  <vector number="93" line="253" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_IDI_ABB_MULT_SRC_SRQ"/>
++  <vector number="94" line="254" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_FMR"/>
++  <vector number="95" line="255" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_FMRX_EV_ONESHOT"/>
++  <vector number="96" line="140" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_AUDIODSP7"/>
++  <vector number="97" line="139" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_AUDIODSP6"/>
++  <vector number="98" line="120" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_AUDIODSP3"/>
++  <vector number="99" line="64" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_SDMMC"/>
++  <vector number="100" line="82" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_EMMC"/>
++  <vector number="101" line="216" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_OCT"/>
++  <vector number="102" line="39" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_NOC_STATALARM"/>
++  <vector number="103" line="73" affinity=affinity_core2 owner="2" type="1" comment="INT_LINE_I2C4"/>
++  <vector number="104" line="72" affinity=affinity_core2 owner="2" type="1" comment="INT_LINE_I2C3"/>
++  <vector number="105" line="48" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_GPU"/>
++  <vector number="106" line="43" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_DMA1_ERR"/>
++  <vector number="107" line="44" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_DMA1_CH0_7"/>
++  <vector number="108" line="119" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_AUDIODSP2"/>
++  <vector number="109" line="118" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_AUDIODSP1"/>
++  <vector number="115" line="117" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_AUDIODSP0"/>
++  <vector number="116" line="142" affinity=affinity_core3 owner="2" type="1" comment="INT_LINE_STM1"/>
++  <vector number="117" line="141" affinity=affinity_core2 owner="2" type="1" comment="INT_LINE_STM0"/>
++  <vector number="118" line="157" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_EXI8"/>
++  <!-- <vector number="121" line="163" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_EXI14"/> -->
++  <vector number="121" line="108" affinity=affinity_core1 owner="2" type="1" comment="INT_LINE_USB"/>
++  <vector number="122" line="159" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_EXI10"/>
++  <vector number="123" line="152" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_EXI3"/>
++  <vector number="124" line="206" affinity=affinity_core1 owner="2" type="1" comment="INT_LINE_CC1_T0INT"/>
++  <vector number="125" line="207" affinity=affinity_core0 owner="2" type="1" comment="INT_LINE_CC1_T1INT"/>
++  <!--<vector number="124" line="103" affinity=affinity_core0 owner="3" type="1" comment="INT_LINE_SEC_CEU1_GLOBAL"/>-->
++  <!--<vector number="125" line="96" affinity=affinity_core0 owner="3" type="1" comment="INT_LINE_SEC_CEU1_EOP"/>-->
++#ifdef __MV_SECURE_PLAYBACK__
++  <vector number="126" line="49" affinity=affinity_core0 owner="3" type="1" comment="INT_LINE_VID_HINT_ENC"/>
++  <vector number="127" line="50" affinity=affinity_core0 owner="3" type="1" comment="INT_LINE_VID_HINT_DEC"/>
++#else
++  <vector number="126" line="49" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_VID_HINT_ENC"/>
++  <vector number="127" line="50" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_VID_HINT_DEC"/>
++#endif
++  <!--<vector number="128" line="98" affinity=affinity_core0 owner="3" type="1" comment="INT_LINE_NSEC_CEU1_RX"/>-->
++  <!--<vector number="129" line="99" affinity=affinity_core0 owner="3" type="1" comment="INT_LINE_NSEC_CEU1_TX"/>-->
++  <!--vector number="130" line="100" affinity=affinity_core0 owner="3" type="1" comment="INT_LINE_NSEC_CEU1_GLOBAL"/>-->
++  <vector number="128" line="103" affinity=affinity_core0 owner="3" type="1" comment="INT_LINE_SEC_CEU1_GLOBAL"/>
++  <vector number="129" line="96" affinity=affinity_core0 owner="3" type="1" comment="INT_LINE_SEC_CEU1_EOP"/>
++
++  <vector number="130" line="101" affinity=affinity_core0 owner="3" type="1" comment="INT_LINE_SEC_CEU1_RX"/>
++  <vector number="131" line="102" affinity=affinity_core0 owner="3" type="1" comment="INT_LINE_SEC_CEU1_TX"/>
++    <!--<vector number="131" line="97" affinity=affinity_core0 owner="3" type="1" comment="INT_LINE_NSEC_CEU1_EOP"/>-->
++  <vector number="133" line="76" affinity=affinity_core2 owner="0" type="1" comment="INT_LINE_I2C2"/>
++  <!--<vector number="131" line="97" affinity=affinity_core0 owner="3" type="1" comment="INT_LINE_NSEC_CEU1_EOP"/>-->
++  <!--<vector number="133" line="102" affinity=affinity_core0 owner="3" type="1" comment="INT_LINE_SEC_CEU1_TX"/>-->
++  <vector number="134" line="147" affinity=affinity_core0 owner="3" type="1" comment="INT_LINE_SEC_T"/>
++  <vector number="137" line="186" affinity=affinity_core1 owner="0" type="1" comment="INT_LINE_GT1_0"/>
++  <vector number="138" line="81" affinity=affinity_core1 owner="0" type="1" comment="INT_LINE_SCU0"/>
++  <vector number="139" line="53" affinity=affinity_core1 owner="0" type="1" comment="INT_LINE_PMU_PM0"/>
++  <vector number="140" line="60" affinity=affinity_core1 owner="0" type="1" comment="INT_LINE_PROF_ENV"/>
++  <vector number="141" line="176" affinity=affinity_core1 owner="0" type="1" comment="INT_LINE_WDT0"/>
++  <vector number="142" line="51" affinity=affinity_core1 owner="0" type="1" comment="INT_LINE_RTC"/>
++  <vector number="143" line="121" affinity=affinity_core0 owner="0" type="1" comment="INT_LINE_SPCU"/>
++  <vector number="144" line="171" affinity=affinity_core0 owner="0" type="1" comment="INT_LINE_WUP_DBB"/>
++  <vector number="145" line="112" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_USIM1_IN"/>
++  <vector number="146" line="116" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_USIM2_IN"/>
++  <vector number="148" line="87" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_DMA4_CH0_3"/>
++  <vector number="149" line="89" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_DMA4_ERR"/>
++  <vector number="150" line="198" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_CC0_CCINT0_7"/>
++
++  <vector number="151" line="154" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_EXI5"/>
++  <vector number="152" line="156" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_EXI7"/>
++  <vector number="153" line="158" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_EXI9"/>
++  <vector number="154" line="164" affinity=affinity_all_cores owner="2" type="1" comment="INT_LINE_EXI15"/>
++
++  <!--<vector number="151" line="126" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_2GDSP_INT2"/>-->
++  <!--<vector number="152" line="127" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_2GDSP_INT3"/>-->
++  <!--<vector number="153" line="130" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_GSI_GP2"/>-->
++  <!--<vector number="154" line="131" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_GSI_GP3"/>-->
++  <!--<vector number="156" line="132" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_GSI_GP4"/>-->
++  <!--<vector number="157" line="135" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_GSI_TLINT"/>-->
++  <!--<vector number="158" line="136" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_GUC_ERR"/>-->
++  <!--<vector number="159" line="137" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_GUC0"/>-->
++  <!--<vector number="160" line="138" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_GUC1"/>-->
++  <!--<vector number="161" line="144" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_SWDT0"/>-->
++  <!--<vector number="162" line="145" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_SWDT1"/>-->
++  <!--<vector number="163" line="146" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_SWDT2"/>-->
++  <!--<vector number="164" line="148" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_SCU1"/>-->
++  <!--<vector number="168" line="172" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_U2H"/>-->
++  <!--<vector number="170" line="174" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_DTXS"/>-->
++  <!--<vector number="171" line="175" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_DRXS"/>-->
++  <vector number="173" line="178" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_GT0_0"/>
++  <vector number="174" line="179" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_GT0_1"/>
++  <vector number="175" line="180" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_GT0_2"/>
++  <!--<vector number="176" line="181" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_GT0_3"/>-->
++  <!--<vector number="177" line="182" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_GT0_4"/>-->
++  <!--<vector number="178" line="183" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_GT0_5"/>-->
++  <!--<vector number="179" line="184" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_GT0_6"/>-->
++  <!--<vector number="180" line="185" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_GT0_7"/>-->
++  <!--<vector number="181" line="186" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_GT1_0"/>-->
++  <!--<vector number="182" line="187" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_GT1_1"/>-->
++  <!--<vector number="183" line="188" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_GT1_2"/>-->
++  <!--<vector number="184" line="189" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_GT1_3"/>-->
++  <!--<vector number="185" line="190" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_GT1_4"/>-->
++  <vector number="186" line="220" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_MPUL"/>
++  <vector number="187" line="173" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_G3FP"/>
++  <vector number="188" line="219" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_MPDL"/>
++  <vector number="189" line="225" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_U2H1"/>
++  <vector number="190" line="226" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_U2H2"/>
++  <vector number="192" line="196" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_CC0_T0INT"/>
++  <vector number="193" line="197" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_CC0_T1INT"/>
++  <vector number="197" line="35" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_COMMTX"/>
++  <vector number="198" line="36" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_COMMRX"/>
++  <!--<vector number="199" line="222" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_DRF_RXSTAT2G"/>-->
++  <!--<vector number="204" line="224" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_DRF_ERR2G"/>-->
++  <!--<vector number="205" line="223" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_DRF_LPINT2G"/>-->
++  <vector number="217" line="124" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_2GDSP_INT0"/>
++  <vector number="218" line="125" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_2GDSP_INT1"/>
++  <!--<vector number="219" line="240" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_SCU2"/>-->
++  <!--<vector number="220" line="242" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_SCU4"/>-->
++  <vector number="222" line="128" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_GSI_GP0"/>
++  <vector number="223" line="134" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_GSI_T_INT2"/>
++  <vector number="236" line="122" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_AUDIODSP4"/>
++  <vector number="237" line="123" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_AUDIODSP5"/>
++  <vector number="238" line="110" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_USIM1_ERR"/>
++  <vector number="239" line="114" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_USIM2_ERR"/>
++  <!--<vector number="246" line="133" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_GSI_T_INT1"/>-->
++  <!--<vector number="247" line="129" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_GSI_GP1"/>-->
++  <vector number="249" line="109" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_USIM1_FIFO"/>
++  <vector number="250" line="111" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_USIM1_OK"/>
++  <vector number="251" line="113" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_USIM2_FIFO"/>
++  <vector number="252" line="115" affinity=affinity_core0 owner="1" type="1" comment="INT_LINE_USIM2_OK"/>
++  <!-- AUTO GENERATED - DO NOT MODIFY -->
++</vectors>
+diff --git a/sofia3gx/configs/vmcs_config_modem_vcpu_0.xml b/sofia3gx/configs/vmcs_config_modem_vcpu_0.xml
+new file mode 100644
+index 0000000..d14b2e1
+--- /dev/null
++++ b/sofia3gx/configs/vmcs_config_modem_vcpu_0.xml
+@@ -0,0 +1 @@
++<vmcsConfig pinBasedVMExCtrls="0x00000000" procBasedVMExCtrls="0xb1800484" secProcBasedVMExCtrls="0x00000000" vpid="1" exceptionBitmap="0x140102" cr0GuestHostMask="0xe0000021" cr4GuestHostMask="0x00002000" cr0ReadShadow="0x80000021" cr4ReadShadow="0x00002000"/>
+diff --git a/sofia3gx/prebuilt b/sofia3gx/prebuilt
+new file mode 120000
+index 0000000..fda55ed
+--- /dev/null
++++ b/sofia3gx/prebuilt
+@@ -0,0 +1 @@
++../sofia3gr/prebuilt
+\ No newline at end of file
+diff --git a/sofia3gx/src b/sofia3gx/src
+new file mode 120000
+index 0000000..4ea7c31
+--- /dev/null
++++ b/sofia3gx/src
+@@ -0,0 +1 @@
++../sofia3gr/src
+\ No newline at end of file
+-- 
+1.9.1
+

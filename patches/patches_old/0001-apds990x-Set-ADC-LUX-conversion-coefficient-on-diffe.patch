@@ -1,0 +1,45 @@
+From 2c454d390b5f188958deef4109a54f6c8b282aae Mon Sep 17 00:00:00 2001
+From: Leo Yan <leo.yan@intel.com>
+Date: Mon, 9 Jul 2012 18:14:03 +0800
+Subject: [PATCH] apds990x: Set ADC-LUX conversion coefficient on different platform
+
+BZ: 43871
+
+Since different platforms may have different ADC-LUX conversion coefficient,
+we need to set the coefficient accordingly in the platform data.
+
+Change-Id: I51f5d508b6fe9bb5d30f7a32f81b8542c762d29f
+Signed-off-by: Leo Yan <leo.yan@intel.com>
+---
+ .../intel-mid/device_libs/platform_apds990x.c      |   15 +++++++++++++++
+ 1 files changed, 15 insertions(+), 0 deletions(-)
+
+diff --git a/arch/x86/platform/intel-mid/device_libs/platform_apds990x.c b/arch/x86/platform/intel-mid/device_libs/platform_apds990x.c
+index e8af753..569c8bc 100644
+--- a/arch/x86/platform/intel-mid/device_libs/platform_apds990x.c
++++ b/arch/x86/platform/intel-mid/device_libs/platform_apds990x.c
+@@ -22,6 +22,21 @@ void *apds990x_platform_data(void *info)
+ 		.pdrive = 0,
+ 		.ppcount = 1,
+ 	};
++
++	platform_data.cf.cf1 = 4096;
++	platform_data.cf.irf1 = 9134;
++	platform_data.cf.cf2 = 2867;
++	platform_data.cf.irf2 = 5816;
++	platform_data.cf.df = 52;
++	if (spid.product_line_id == INTEL_MFLDP_LEX_ENG) {
++		if (spid.hardware_id < MFLDP_LEX_PR21)
++			platform_data.cf.ga = 1966 / 2;
++		else
++			platform_data.cf.ga = 1966 * 4;
++	} else {
++			platform_data.cf.ga = 1966 * 9 / 2;
++	}
++
+ 	platform_data.gpio_number = get_gpio_by_name("AL-intr");
+ 
+ 	return &platform_data;
+-- 
+1.7.0.4
+

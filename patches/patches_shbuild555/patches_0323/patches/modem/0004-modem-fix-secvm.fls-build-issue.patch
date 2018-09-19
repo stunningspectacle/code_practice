@@ -1,0 +1,24 @@
+From c090352b95c2cdf53c8a4caef5522b24b41293bf Mon Sep 17 00:00:00 2001
+From: Jing Xiang <jing.xiang@intel.com>
+Date: Wed, 23 Mar 2016 10:39:38 +0800
+Subject: [PATCH 4/4] modem: fix secvm.fls build issue
+
+Change-Id: Ie0a889670c50a0c19c5650fc75deb157b6919072
+Tracked-On:
+Signed-off-by: Jing Xiang <jing.xiang@intel.com>
+---
+ prebuilt/SF_3GX_SOC_ES_1_0_AG620_ES2_DVFS_VMM_EMMC_ONLY_DSDS | 1 +
+ 1 file changed, 1 insertion(+)
+ create mode 120000 prebuilt/SF_3GX_SOC_ES_1_0_AG620_ES2_DVFS_VMM_EMMC_ONLY_DSDS
+
+diff --git a/prebuilt/SF_3GX_SOC_ES_1_0_AG620_ES2_DVFS_VMM_EMMC_ONLY_DSDS b/prebuilt/SF_3GX_SOC_ES_1_0_AG620_ES2_DVFS_VMM_EMMC_ONLY_DSDS
+new file mode 120000
+index 0000000..20ff26c
+--- /dev/null
++++ b/prebuilt/SF_3GX_SOC_ES_1_0_AG620_ES2_DVFS_VMM_EMMC_ONLY_DSDS
+@@ -0,0 +1 @@
++SF_3GR_SOC_ES_1_0_AG620_ES2_DVFS_VMM_EMMC_ONLY_DSDS_GARNET
+\ No newline at end of file
+-- 
+1.9.1
+

@@ -1,0 +1,21 @@
+diff --git a/hwmon/psh_ia_common.c b/hwmon/psh_ia_common.c
+index 5f1b8cc..7afb216 100644
+--- a/hwmon/psh_ia_common.c
++++ b/hwmon/psh_ia_common.c
+@@ -233,6 +233,7 @@ static int ia_sync_timestamp(struct psh_ia_priv *psh_ia_data, u8 check_interval)
+ 	struct cmd_ia_notify_param *param = (struct cmd_ia_notify_param *)cmd_timestamp.param;
+ 	u8 *linux_base_ns = param->extra;
+ 	timestamp_t base_ns = 0;
++	s64 base_ms;
+ 	int ret;
+ 
+ 	if (check_interval) {
+@@ -245,6 +246,8 @@ static int ia_sync_timestamp(struct psh_ia_priv *psh_ia_data, u8 check_interval)
+ 		}
+ 	}
+ 
++	base_ms = ktime_to_ms(ktime_get_boottime());
++	psh_err("psh-%s: base_ms=%lld\n", base_ms);
+ 	cmd_timestamp.tran_id = 0;
+ 	cmd_timestamp.cmd_id = CMD_IA_NOTIFY;
+ 	cmd_timestamp.sensor_id = 0;

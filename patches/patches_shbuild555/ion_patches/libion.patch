@@ -1,0 +1,34 @@
+diff --git a/include/ion/ion.h b/include/ion/ion.h
+index 0451b5a..2047bfc 100644
+--- a/include/ion/ion.h
++++ b/include/ion/ion.h
+@@ -39,6 +39,7 @@ int ion_map(int fd, ion_user_handle_t handle, size_t length, int prot,
+             int flags, off_t offset, unsigned char **ptr, int *map_fd);
+ int ion_share(int fd, ion_user_handle_t handle, int *share_fd);
+ int ion_import(int fd, int share_fd, ion_user_handle_t *handle);
++int ion_cache_flush(int fd, ion_user_handle_t handle);
+ 
+ __END_DECLS
+ 
+diff --git a/libion/ion.c b/libion/ion.c
+index 5fd35fe..658719c 100644
+--- a/libion/ion.c
++++ b/libion/ion.c
+@@ -121,6 +121,17 @@ int ion_share(int fd, ion_user_handle_t handle, int *share_fd)
+         return ret;
+ }
+ 
++int ion_cache_flush(int fd, ion_user_handle_t handle)
++{
++        struct ion_fd_data data = {
++                .handle = handle,
++        };
++        int ret = ion_ioctl(fd, ION_IOC_CACHE_FLUSH, &data);
++        if (ret < 0)
++                return ret;
++        return ret;
++}
++
+ int ion_alloc_fd(int fd, size_t len, size_t align, unsigned int heap_mask,
+                 unsigned int flags, int *handle_fd) {
+        ion_user_handle_t handle;

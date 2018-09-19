@@ -1,0 +1,23 @@
+From cc89365271bdd81533514bb010470c07951b6a1f Mon Sep 17 00:00:00 2001
+From: Bin Yang <bin.yang@intel.com>
+Date: Sat, 6 Feb 2016 14:24:00 +0800
+Subject: [PATCH 1/2] 3gx: pal support
+
+Change-Id: Ic4473aba22744e0c92ad556430ed15a714511692
+Signed-off-by: Bin Yang <bin.yang@intel.com>
+---
+ make/configs/sofia3gx | 1 +
+ 1 file changed, 1 insertion(+)
+ create mode 120000 make/configs/sofia3gx
+
+diff --git a/make/configs/sofia3gx b/make/configs/sofia3gx
+new file mode 120000
+index 0000000..00d525b
+--- /dev/null
++++ b/make/configs/sofia3gx
+@@ -0,0 +1 @@
++sofia3gr
+\ No newline at end of file
+-- 
+1.9.1
+

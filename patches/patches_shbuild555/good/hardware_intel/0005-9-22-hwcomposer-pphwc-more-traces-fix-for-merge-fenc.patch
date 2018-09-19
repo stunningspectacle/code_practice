@@ -1,0 +1,60 @@
+From e8f3290964edbc5a2bc726aa66186338cbeece1d Mon Sep 17 00:00:00 2001
+From: Fabrizio Iannetti <fabrizio.iannetti@intel.com>
+Date: Thu, 18 Dec 2014 10:08:13 +0100
+Subject: [PATCH 5/6] [9/22]hwcomposer: (pphwc) more traces, fix for merge
+ fences.
+
+Change-Id: I8552798b3f09c9a550c2c1a0b7415c7d7327e9d1
+Tracked-On: https://jira01.devtools.intel.com/browse/IMINAN-17187
+Signed-off-by: Yan Leo <leo.yan@intel.com>
+---
+ libhwcomposer/hwcomposer_video.cpp |   16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/libhwcomposer/hwcomposer_video.cpp b/libhwcomposer/hwcomposer_video.cpp
+index 8f9df93..c5632a0 100644
+--- a/libhwcomposer/hwcomposer_video.cpp
++++ b/libhwcomposer/hwcomposer_video.cpp
+@@ -92,6 +92,7 @@ public:
+         // make sure the source buffer is ready
+         if (srcAcquireFenceFd >= 0) {
+             int result = sync_wait(srcAcquireFenceFd, 200);
++            ALOGE_IF(result, "PPHWC: timeout waiting for source ready");
+             ALOGV("VPP waitBufferReady (src) done: %d", result);
+             close(srcAcquireFenceFd);
+             srcAcquireFenceFd = -1;
+@@ -100,6 +101,7 @@ public:
+         if (tgtReleaseFenceFd >= 0) {
+             ALOGV("VPP waitBufferReady");
+             int result = sync_wait(tgtReleaseFenceFd, 200);
++            ALOGE_IF(result, "PPHWC: timeout waiting for target ready");
+             ALOGV("VPP waitBufferReady done: %d, on %d", result, tgtReleaseFenceFd);
+             close(tgtReleaseFenceFd);
+             tgtReleaseFenceFd = -1;
+@@ -430,17 +432,15 @@ public:
+             }
+         }
+ 
++        // now update the release fence by merging previous and new fences
+         if (layerFd >= 0 && bufferFd >= 0) {
+-            int mergedFd = sync_merge("hwc-vpp",
+-                    mCurrent->tgtReleaseFenceFd,
+-                    mCurrentLayer.releaseFenceFd);
+-            if (mergedFd < 0) {
+-                ALOGE("Could not merge release fences!");
+-            }
++            int mergedFd = sync_merge("hwc-vpp", bufferFd, layerFd);
++            ALOGE_IF((mergedFd < 0), "Could not merge release fences!");
+             mCurrent->tgtReleaseFenceFd = mergedFd;
+-            if (layerFd >= 0)
+-                close(bufferFd);
++            close(layerFd);
++            close(bufferFd);
+         } else if (layerFd >= 0) {
++            // bufferFd is not valid, replace it with layerFd
+             mCurrent->tgtReleaseFenceFd = layerFd;
+         }
+     }
+-- 
+1.7.9.5
+

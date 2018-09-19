@@ -1,0 +1,14 @@
+diff --git a/input/touchscreen/atmel_mxt_ts.c b/input/touchscreen/atmel_mxt_ts.c
+index e0f7a25..3e420f6 100644
+--- a/input/touchscreen/atmel_mxt_ts.c
++++ b/input/touchscreen/atmel_mxt_ts.c
+@@ -3345,6 +3345,9 @@ static int mxt_initialize_t9_input_device(struct mxt_data *data)
+ 	input_set_abs_params(input_dev, ABS_MT_ORIENTATION,
+ 			     0, 255, 0, 0);
+ 
++	dev_info(dev, "xxxxxxxx Set ABS_MT_TOOL_TYPE\n");
++	input_set_abs_params(input_dev,
++			ABS_MT_TOOL_TYPE, 0, MT_TOOL_MAX, 0, 0);
+ #if SUPPORT_STYLUS
+ 	/* For T63 active stylus */
+ 	if (data->T63_reportid_min) {

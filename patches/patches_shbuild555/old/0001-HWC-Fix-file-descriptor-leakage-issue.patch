@@ -1,0 +1,64 @@
+From 761eff669363605e23d20d191ea018c23e564752 Mon Sep 17 00:00:00 2001
+From: Leo Yan <leo.yan@intel.com>
+Date: Tue, 9 Dec 2014 15:53:26 +0800
+Subject: [PATCH] HWC: Fix file descriptor leakage issue
+
+BZ: 395
+
+When smart composition is enabled, we need to close the acquireFence
+ourselves since all the layers are set to HWC_OVERLAY.
+
+Change-Id: Idc996bc242737c2ae54346d98b98616927840155
+Signed-off-by: Leo Yan <leo.yan@intel.com>
+---
+ libhwcomposer/hwcomposer.cpp |   13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/libhwcomposer/hwcomposer.cpp b/libhwcomposer/hwcomposer.cpp
+index 6b447e0..5ac89b3 100644
+--- a/libhwcomposer/hwcomposer.cpp
++++ b/libhwcomposer/hwcomposer.cpp
+@@ -258,6 +258,7 @@ public:
+     size_t  fb_count;
+     hwc_layer_1_t* fbLayers[HWC_MAX_LAYER_NUM];
+     buffer_handle_t fbLastHandle[HWC_MAX_LAYER_NUM];
++    bool smartCompEnabled;
+ 
+     static const char *DEFAULT_CONFIGURATOR_NAME;
+ 
+@@ -726,6 +727,7 @@ public:
+ 
+     void setupSmartComposition() {
+          int compositionType = HWC_OVERLAY;
++         conf.smartCompEnabled = true;
+ 
+          // setup smart composition only there's no update on all FB layers
+          for (size_t i = 0; i < conf.fb_count; i++) {
+@@ -735,6 +737,7 @@ public:
+              if (lastHandle != currentHandle) {
+                  conf.fbLastHandle[i] = currentHandle;
+                  compositionType = HWC_FRAMEBUFFER;
++                 conf.smartCompEnabled = false;
+              }
+          }
+ 
+@@ -800,6 +803,16 @@ public:
+                 layer->acquireFenceFd = -1;
+             }
+         }
++        if (conf.smartCompEnabled) {
++            for (size_t i = 0; i < conf.fb_count; i++) {
++                hwc_layer_1_t *layer = conf.fbLayers[i];
++                if (layer->acquireFenceFd >= 0) {
++                    close(layer->acquireFenceFd);
++                    layer->acquireFenceFd = -1;
++                }
++            }
++        }
++
+         if (conf.back && conf.back->acquireFenceFd >= 0) {
+             close(back->acquireFenceFd);
+             back->acquireFenceFd = -1;
+-- 
+1.7.9.5
+

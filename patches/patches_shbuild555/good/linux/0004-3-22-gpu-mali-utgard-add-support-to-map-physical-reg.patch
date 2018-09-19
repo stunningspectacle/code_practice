@@ -1,0 +1,37 @@
+From 3b9fbad8111a5537ee19880283457d253e80d9eb Mon Sep 17 00:00:00 2001
+From: Fabrizio Iannetti <fabrizio.iannetti@intel.com>
+Date: Tue, 9 Dec 2014 18:35:58 +0100
+Subject: [PATCH 4/5] [3/22]gpu, mali, utgard: add support to map physical
+ region.
+
+Change-Id: I447ac3cf943cc19ff4e17eb385a2ab375de58907
+Tracked-On: https://jira01.devtools.intel.com/browse/IMINAN-17187
+Signed-off-by: Fabrizio Iannetti <fabrizio.iannetti@intel.com>
+---
+ drivers/gpu/arm/mali/platform/xgold/platform.c |   10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/drivers/gpu/arm/mali/platform/xgold/platform.c b/drivers/gpu/arm/mali/platform/xgold/platform.c
+index d4a0eae..b05dbac 100644
+--- a/drivers/gpu/arm/mali/platform/xgold/platform.c
++++ b/drivers/gpu/arm/mali/platform/xgold/platform.c
+@@ -223,6 +223,16 @@ static int mali_platform_memory_layout(struct mali_gpu_device_data *gpu_data)
+ 		gpu_data->fb_size = 0;
+ 	}
+ 
++	/* protected memory (secvm) */
++	ret = of_property_read_u32_array(ngraphics, "intel,prot-mem", array, 2);
++	if (ret && ret != -EINVAL) {
++		/* property was specified, error occurred while reading */
++		mali_err("could not read prot-mem property, err=%d", ret);
++	} else {
++		gpu_data->fb_start = array[0];
++		gpu_data->fb_size = array[1];
++	}
++
+ 	/* dedicated memory */
+ 	ret = of_property_read_u32_array(ngraphics,
+ 					"intel,gpu-rsvd-mem", array, 2);
+-- 
+1.7.9.5
+

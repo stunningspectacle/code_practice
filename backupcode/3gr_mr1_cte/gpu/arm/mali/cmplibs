@@ -1,0 +1,78 @@
+#!/bin/bash
+#
+# Copyright (C) 2014 Intel Mobile Communications GmbH
+#
+# Notes:
+# Sep 05 2014: IMC: Adapt script to MALI400 r4p1-01rel0 release
+# Feb 03 2014: IMC: Initial compare script for MALI400 derived from Verisilicon compare script
+#
+#
+
+myname=$(basename ${0})
+mydir=$(dirname ${0})
+prompt="${myname}[$$]"
+
+BUILD_BASE=$(cd ${mydir}/../../../../../..; pwd);
+
+echo ${BUILD_BASE}
+
+LIBS="egl/libGLES_mali.so"
+
+DEFAULT_BOARD="sofia3g_xges2_0_ages2_svb"
+
+
+function cmp_libs()
+{
+    build_type=${1}
+    board=${2}
+
+    SRC_DIR="${BUILD_BASE}/android/out/target/product/${board}/system/lib"
+    DEST_DIR="${mydir}/lib/${build_type}"
+
+    echo
+    echo "${prompt} build type: ${build_type}"
+    echo "${prompt} board ${board}"
+    echo
+
+    if [ -d ${SRC_DIR} ]
+    then
+        for lib in ${LIBS}
+        do
+            if [ -f ${SRC_DIR}/${lib} ]
+            then
+                lib_name="$(basename $lib)"
+                if [ -f ${DEST_DIR}/${lib_name} ]
+                then
+                    echo "${prompt} comparing ${lib_name} ..."
+                    md5sum ${SRC_DIR}/${lib}
+                    md5sum ${DEST_DIR}/${lib_name}
+                else
+                    echo "${prompt} Warning dest ${DEST_DIR}/${lib_name} does not exist."
+                fi
+            else
+                echo "${prompt} WARNING src ${SRC_DIR}/${lib} does not exist!!"
+            fi
+        done
+    else
+        echo "${prompt} WARNING src directory ${SRC_DIR} does not exist!!"
+    fi
+}
+
+
+if [[ "$1" != "" ]] && [[ "$2" != "" ]]; then
+    cmp_libs ${1} ${2}
+else
+    if [[ "$1" != "" ]] && [[ "$2" == "" ]]; then
+        cmp_libs $1 ${DEFAULT_BOARD}
+    else
+        echo "usage: cmplibs <build_type> [<board>]"
+        echo
+        echo "This script compares the MALI400 userspace libraries in android/out/target/<board>/system"
+        echo "with the libraries in ${mydir}/<build_type>"
+        echo
+        echo "If you do not specify <board> ${DEFAULT_BOARD} will be used."
+        echo
+        echo "For example: cmplibs release ${DEFAULT_BOARD}"
+        echo
+    fi
+fi

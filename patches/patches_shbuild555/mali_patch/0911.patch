@@ -1,0 +1,38 @@
+diff --git a/drivers/gpu/arm/mali/common/mali_l2_cache.c b/drivers/gpu/arm/mali/common/mali_l2_cache.c
+index 3893f27..17519d8 100644
+--- a/drivers/gpu/arm/mali/common/mali_l2_cache.c
++++ b/drivers/gpu/arm/mali/common/mali_l2_cache.c
+@@ -65,7 +65,7 @@ typedef enum mali_l2_cache_status {
+ 	MALI400_L2_CACHE_STATUS_DATA_BUSY    = 0x02, /**< L2 cache is busy handling data requests */
+ } mali_l2_cache_status;
+ 
+-#define MALI400_L2_MAX_READS_DEFAULT 0x1C
++#define MALI400_L2_MAX_READS_DEFAULT 0x1
+ 
+ static struct mali_l2_cache_core *mali_global_l2_cache_cores[MALI_MAX_NUMBER_OF_L2_CACHE_CORES] = { NULL, };
+ static u32 mali_global_num_l2_cache_cores = 0;
+diff --git a/drivers/misc/noc/noc.c b/drivers/misc/noc/noc.c
+index eec7363..7d313ca 100644
+--- a/drivers/misc/noc/noc.c
++++ b/drivers/misc/noc/noc.c
+@@ -1267,7 +1267,19 @@ void xgold_noc_qos_set(char *name)
+ 	list_for_each_entry(qos, &noc_dev->qos->list, list) {
+ 
+ 		if (strcmp(qos->name, name) == 0) {
+-			if (qos->config) {
++			if (strcmp(qos->name, "GPU") == 0) {
++				if (qos->config) {
++					list_for_each_entry(reg,
++							&qos->config->list, list) {
++						/*
++						iowrite32(reg->value,
++							noc_dev->hw_base + reg->offset);
++						*/
++						pr_info("looooooong Set QoS config %s, noc_dev->hw_base=0x%x, offset=0x%x, value=0x%x\n",
++							qos->name, noc_dev->hw_base, reg->offset, reg->value);
++					}
++				}
++			} else if (qos->config) {
+ 				pr_info("Set QoS config %s\n", qos->name);
+ 				list_for_each_entry(reg,
+ 						&qos->config->list, list) {

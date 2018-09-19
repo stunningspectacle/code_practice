@@ -1,0 +1,71 @@
+From 4f5e28fdb08d5a064d71c5da1df574627809ce1c Mon Sep 17 00:00:00 2001
+From: Jukka Kaartinen <jukka.o.kaartinen@intel.com>
+Date: Wed, 22 Apr 2015 09:35:16 +0300
+Subject: [PATCH] media, v4l2, cif_isp20: Fix start order of mi
+
+Merory interface should be enabled after valid
+address has been set where MI can write.
+
+Change-Id: Ie385b723f501fda818c707821242b1750bfedd9e
+Tracked-On: https://jira01.devtools.intel.com/browse/CTEAN-937
+Signed-off-by: Jukka Kaartinen <jukka.o.kaartinen@intel.com>
+Signed-off-by: Ukri Niemimuukko <ukri.niemimuukko@intel.com>
+Signed-off-by: Xiaolin Zhang <xiaolin.zhang@intel.com>
+Reviewed-on: https://android.intel.com:443/357198
+---
+ drivers/media/platform/xgold/cif_isp20.c |   13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/media/platform/xgold/cif_isp20.c b/drivers/media/platform/xgold/cif_isp20.c
+index 095a30e..66cf4c9 100644
+--- a/drivers/media/platform/xgold/cif_isp20.c
++++ b/drivers/media/platform/xgold/cif_isp20.c
+@@ -3570,8 +3570,12 @@ static int cif_isp20_update_mi_mp(
+ 				cif_iowrite32AND_verify(~CIF_MI_CTRL_MP_ENABLE,
+ 					dev->config.base_addr + CIF_MI_CTRL,
+ 					~0);
++				cif_isp20_mi_update_buff_addr(dev,
++							CIF_ISP20_STREAM_MP);
+ 			} else if (dev->config.mi_config.mp.curr_buff_addr ==
+ 				CIF_ISP20_INVALID_BUFF_ADDR) {
++				cif_isp20_mi_update_buff_addr(dev,
++							CIF_ISP20_STREAM_MP);
+ 				/* re-enable MI MP */
+ 				cif_isp20_pltfrm_pr_dbg(NULL,
+ 					"enabling MP MI\n");
+@@ -3580,8 +3584,10 @@ static int cif_isp20_update_mi_mp(
+ 				cif_iowrite32OR_verify(CIF_MI_CTRL_MP_ENABLE,
+ 					dev->config.base_addr + CIF_MI_CTRL,
+ 					~0);
++			} else {
++				cif_isp20_mi_update_buff_addr(dev,
++							CIF_ISP20_STREAM_MP);
+ 			}
+-			cif_isp20_mi_update_buff_addr(dev, CIF_ISP20_STREAM_MP);
+ 			dev->config.mi_config.mp.curr_buff_addr =
+ 				dev->config.mi_config.mp.next_buff_addr;
+ 		}
+@@ -3611,16 +3617,19 @@ static int cif_isp20_update_mi_sp(
+ 			/* 'switch off' MI interface */
+ 			cif_iowrite32AND_verify(~CIF_MI_CTRL_SP_ENABLE,
+ 				dev->config.base_addr + CIF_MI_CTRL, ~0);
++			cif_isp20_mi_update_buff_addr(dev, CIF_ISP20_STREAM_SP);
+ 		} else if (dev->config.mi_config.sp.curr_buff_addr ==
+ 			CIF_ISP20_INVALID_BUFF_ADDR) {
++			cif_isp20_mi_update_buff_addr(dev, CIF_ISP20_STREAM_SP);
+ 			/* re-enable MI SP */
+ 			cif_isp20_pltfrm_pr_dbg(NULL, "enabling SP MI\n");
+ 			cif_iowrite32(CIF_MI_SP_FRAME,
+ 				dev->config.base_addr + CIF_MI_ICR);
+ 			cif_iowrite32OR_verify(CIF_MI_CTRL_SP_ENABLE,
+ 				dev->config.base_addr + CIF_MI_CTRL, ~0);
++		} else {
++			cif_isp20_mi_update_buff_addr(dev, CIF_ISP20_STREAM_SP);
+ 		}
+-		cif_isp20_mi_update_buff_addr(dev, CIF_ISP20_STREAM_SP);
+ 		dev->config.mi_config.sp.curr_buff_addr =
+ 			dev->config.mi_config.sp.next_buff_addr;
+ 	}
+-- 
+1.7.9.5
+

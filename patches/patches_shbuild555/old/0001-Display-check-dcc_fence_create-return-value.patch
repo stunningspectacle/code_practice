@@ -1,0 +1,69 @@
+From eef634ec1c05cab6f1861fbdcd754caa4e4b004c Mon Sep 17 00:00:00 2001
+From: Lei Zhang <lei.zhang@intel.com>
+Date: Mon, 9 Feb 2015 10:44:07 +0800
+Subject: [PATCH] Display: check dcc_fence_create return value
+
+BZ: 776
+
+This patch checks the dcc_fence_create return value before assign
+it to the retire/release fence from user space. If failed to create
+a fence, then just assign -1 to those fences.
+
+Change-Id: I1ce87608597d51b4b75293f223df9039a4f286d7
+Signed-off-by: Lei Zhang <lei.zhang@intel.com>
+---
+ drivers/video/xgold/dcc-main.c |   23 ++++++++++++++---------
+ 1 file changed, 14 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/video/xgold/dcc-main.c b/drivers/video/xgold/dcc-main.c
+index f7eb0e7..c63c242 100644
+--- a/drivers/video/xgold/dcc-main.c
++++ b/drivers/video/xgold/dcc-main.c
+@@ -618,7 +618,7 @@ static int dcc_fence_create(struct dcc_drvdata *pdata,
+ 	/* Create fd */
+ 	fd = get_unused_fd();
+ 	if (fd < 0) {
+-		dcc_err("fence_fd not initialized\n");
++		dcc_err("err[%d]: fence_fd not initialized\n", fd);
+ 		sync_pt_free(point);
+ 		return -EINVAL;
+ 	}
+@@ -813,22 +813,27 @@ long dcc_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+ 		if (err == 0) {
+ #ifdef CONFIG_SW_SYNC_USER
+ 			if (pdata->use_fences) {
+-				updt.fence_retire =
+-					dcc_fence_create(pdata,
++				int fence = 0;
++				fence = dcc_fence_create(pdata,
+ 						pdata->timeline_current);
++				updt.fence_retire = (fence > 0) ? fence: -1;
+ 				if (updt.back.phys &&
+-					(!DCC_UPDATE_NOBG_GET(updt.flags)))
+-					updt.back.fence_release =
+-						dcc_fence_create(pdata,
++					(!DCC_UPDATE_NOBG_GET(updt.flags))) {
++					fence = dcc_fence_create(pdata,
+ 						pdata->timeline_current);
++					updt.back.fence_release =
++							(fence > 0) ? fence: -1;
++				}
+ 				for (ovl_id = 0;
+ 					ovl_id < DCC_OVERLAY_NUM; ovl_id++) {
+ 					struct dcc_layer_ovl *l =
+ 						&updt.ovls[ovl_id];
+-					if (l->phys)
+-						l->fence_release =
+-							dcc_fence_create(pdata,
++					if (l->phys) {
++						fence = dcc_fence_create(pdata,
+ 						pdata->timeline_current);
++						l->fence_release =
++							(fence > 0) ? fence: -1;
++					}
+ 				}
+ 			}
+ #endif
+-- 
+1.7.9.5
+

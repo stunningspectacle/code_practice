@@ -146,7 +146,6 @@ int my_test_div_zero() {
 	test_div_zero();
 
 	exit(123);
-
 }
 
 void test_uint() {
@@ -161,7 +160,23 @@ void test_uint() {
 	printf("%u, %d\n", b, delta);
 }
 
+void sizeof_long()
+{
+	printf("sizeof(unsigned int): %u\n", sizeof(int));
+	printf("sizeof(long): %u\n", sizeof(long));
+	printf("sizeof(long long): %u\n", sizeof(long long));
+	printf("sizeof(double): %u\n", sizeof(double));
+	printf("sizeof(long double): %u\n", sizeof(long double));
+}
+
+void test_typeof()
+{
+	int a;
+
+	printf("%d\n", sizeof(typeof(a)));
+}
+
 void main(int argc, char *argv[])
 {
-	test_uint();
+	test_typeof();
 }

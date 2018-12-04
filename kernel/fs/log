@@ -1,0 +1,80 @@
+@leoyan:~/study/code_practice/c/fs$ dd if=/dev/zero of=blkfile bs=512 count=10000
+10000+0 records in
+10000+0 records out
+5120000 bytes (5.1 MB) copied, 0.060444 s, 84.7 MB/s
+
+leo@leoyan:~/study/code_practice/c/fs$ sudo losetup /dev/loop0 blkfile
+
+leo@leoyan:~/study/code_practice/c/fs$ sudo mkfs.ext2 /dev/loop0
+mke2fs 1.42 (29-Nov-2011)
+Discarding device blocks: done
+Filesystem label=
+OS type: Linux
+Block size=1024 (log=0)
+Fragment size=1024 (log=0)
+Stride=0 blocks, Stripe width=0 blocks
+1256 inodes, 5000 blocks
+250 blocks (5.00%) reserved for the super user
+First data block=1
+Maximum filesystem blocks=5242880
+1 block group
+8192 blocks per group, 8192 fragments per group
+1256 inodes per group
+
+Allocating group tables: done
+Writing inode tables: done
+Writing superblocks and filesystem accounting information: done
+
+leo@leoyan:~/study/code_practice/c/fs$ ll blkfile
+-rw-rw-r-- 1 leo leo 4.9M Oct 26 08:36 blkfile
+
+leo@leoyan:~/study/code_practice/c/fs$ dumpe2fs blkfile
+dumpe2fs 1.42 (29-Nov-2011)
+Filesystem volume name:   <none>
+Last mounted on:          <not available>
+Filesystem UUID:          734b55a0-76b0-42b9-81e7-59f964a2d315
+Filesystem magic number:  0xEF53
+Filesystem revision #:    1 (dynamic)
+Filesystem features:      ext_attr resize_inode dir_index filetype sparse_super
+Filesystem flags:         signed_directory_hash
+Default mount options:    user_xattr acl
+Filesystem state:         clean
+Errors behavior:          Continue
+Filesystem OS type:       Linux
+Inode count:              1256
+Block count:              5000
+Reserved block count:     250
+Free blocks:              4805
+Free inodes:              1245
+First block:              1
+Block size:               1024
+Fragment size:            1024
+Reserved GDT blocks:      19
+Blocks per group:         8192
+Fragments per group:      8192
+Inodes per group:         1256
+Inode blocks per group:   157
+Filesystem created:       Fri Oct 26 08:36:49 2018
+Last mount time:          n/a
+Last write time:          Fri Oct 26 08:36:49 2018
+Mount count:              0
+Maximum mount count:      -1
+Last checked:             Fri Oct 26 08:36:49 2018
+Check interval:           0 (<none>)
+Reserved blocks uid:      0 (user root)
+Reserved blocks gid:      0 (group root)
+First inode:              11
+Inode size:               128
+Default directory hash:   half_md4
+Directory Hash Seed:      98d93f0e-3e44-4c87-8c32-d288e91e5c37
+
+Group 0: (Blocks 1-4999)
+Primary superblock at 1, Group descriptors at 2-2
+Reserved GDT blocks at 3-21
+Block bitmap at 22 (+21), Inode bitmap at 23 (+22)
+Inode table at 24-180 (+23)
+4805 free blocks, 1245 free inodes, 2 directories
+Free blocks: 195-4999
+Free inodes: 12-1256
+leo@leoyan:~/study/code_practice/c/fs$ k
+

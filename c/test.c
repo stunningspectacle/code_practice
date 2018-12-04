@@ -8,6 +8,13 @@
 extern char **environ;
 typedef unsigned short uint16_t;
 
+struct testA {
+	unsigned int type;
+	unsigned int len;
+	unsigned flags;
+	unsigned char data[];
+};
+
 #define DEBUG(fmt, args...) printf(fmt, ##args)
 #define ASSERT_EQ(a, b) \
 do {\
@@ -162,11 +169,13 @@ void test_uint() {
 
 void sizeof_long()
 {
-	printf("sizeof(unsigned int): %u\n", sizeof(int));
-	printf("sizeof(long): %u\n", sizeof(long));
+	printf("sizeof(unsigned short): %u\n", sizeof(unsigned short));
+	printf("sizeof(unsigned int): %u\n", sizeof(unsigned int));
+	printf("sizeof(long): %u\n", sizeof(unsigned long));
 	printf("sizeof(long long): %u\n", sizeof(long long));
 	printf("sizeof(double): %u\n", sizeof(double));
 	printf("sizeof(long double): %u\n", sizeof(long double));
+	printf("sizeof(void *): %u\n", sizeof(void *));
 }
 
 void test_typeof()
@@ -176,7 +185,16 @@ void test_typeof()
 	printf("%d\n", sizeof(typeof(a)));
 }
 
+void test_for(int num)
+{
+	int i;
+
+	for (i = 2; i < num; i++)
+		printf("i = %d\n", i);
+	printf("Done\n", i);
+}
+
 void main(int argc, char *argv[])
 {
-	test_typeof();
+	sizeof_long();
 }

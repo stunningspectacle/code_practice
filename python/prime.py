@@ -1,4 +1,5 @@
 #!/usr/bin/python
+import sys
 
 def prime(MAX):
 	mark = [0] * MAX
@@ -13,11 +14,16 @@ def prime(MAX):
 		if mark[i] == 0:
 			yield i
 
+if len(sys.argv) != 2:
+    print "Usage:", sys.argv[0], "N"
+    exit()
+
+primes = []
+num = int(sys.argv[1])
 SUM = 0
-for i in prime(100000):
+for i in prime(num):
 	SUM += i
+	primes.append(i)
 
+print primes
 print SUM
-print sum([i for i in prime(100000)])
-	
-

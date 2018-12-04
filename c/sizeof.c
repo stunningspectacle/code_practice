@@ -9,6 +9,8 @@ int main(void)
 	printf("sizeof(double)=%d\n", sizeof(double));
 	printf("sizeof(long)=%d\n", sizeof(long));
 	printf("sizeof(long long)=%d\n", sizeof(long long));
+	printf("sizeof(short)=%d\n", sizeof(short));
+	printf("sizeof(short int)=%d\n", sizeof(short int));
 	f = (float)a / b;
 	printf("%f\n", f);
 }

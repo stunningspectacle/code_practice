@@ -194,7 +194,14 @@ void test_for(int num)
 	printf("Done\n", i);
 }
 
+void value_of_negtive(int val)
+{
+	unsigned int a = (unsigned int)val;
+
+	printf("%d: 0x%x\n", val, a);
+}
+
 void main(int argc, char *argv[])
 {
-	sizeof_long();
+	value_of_negtive(atoi(argv[1]));
 }

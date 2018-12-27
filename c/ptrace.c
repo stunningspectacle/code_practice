@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include <unistd.h>
 
 char *syscalls[] = {
 "read				",
@@ -391,18 +392,25 @@ void handler(int signum)
 int main(int argc, char *argv[])
 {
 	int ret;
+	pid_t child;
 	struct sigaction sigact;
+	int count = 0;
 
-	if (argc != 2) {
-		printf("Usage %s: pid\n", argv[0]);
-		exit(-1);
+	child = fork();
+	if (!child) {
+		while (1) {
+			printf("count=%d\n", count);
+			sleep(1);
+			count++;
+		}
 	}
 
-	pid = strtol(argv[1], NULL, 10);
+	pid = child;
 	if (pid < 1) {
 		printf("Invalid pid %ld\n", pid);
 		exit(-1);
 	}
+
 	printf("Will trace task %ld\n", pid);
 
 	sigact.sa_handler = handler;

@@ -1,0 +1,69 @@
+[core]
+    editor=vim	
+    pager = less -x1,5
+    excludesfile = ~/.gitignore_global
+[user]
+    email=leo.yan@intel.com
+    name=Leo Yan
+[sendemail]
+    smtpserver = smtp.intel.com
+[color]
+    ui = auto
+[review "git-ger-3.devtools.intel.com:29418"]
+    username = lyan7
+[review "android.intel.com:8080"]
+    username = lyan7
+[review "http://shsrv888.sh.intel.com:8888"]
+    username = lyan7
+[review "https://android.intel.com"]
+    username = lyan7
+
+#[url "ssh://lyan7@git-ger-3.devtools.intel.com:29418/"]
+#	insteadOf=ssh://git-ger-3.devtools.intel.com:29418/
+#	insteadOf=https://git-ger-3.devtools.intel.com:29418/
+#	insteadOf=ssh://git-ger-3.devtools.intel.com/
+#	insteadOf=https://git-ger-3.devtools.intel.com/ 
+
+##setup the ssh access of the mirror when doing repo sync-s in git
+#[url "ssh://umgsw-gcrmirror5.jf.intel.com/"]
+# insteadOf=git://jfumg-gcrmirror.jf.intel.com/
+##setup the ssh access of the mirror when doing repo sync-s in ssh
+#[url "ssh://umgsw-gcrmirror5.jf.intel.com/"]
+# insteadOf=ssh://jfumg-gcrmirror.jf.intel.com/
+##setup the ssh access of the mirror when downloading manifests or updating repo
+#[url "ssh://umgsw-gcrmirror5.jf.intel.com/"]
+# insteadOf=git://android.intel.com/
+
+##setup the ssh access of the mirror when doing repo sync-s in git
+#[url "git://shlabacsbb06.sh.intel.com/"]
+# insteadOf=git://jfumg-gcrmirror.jf.intel.com/
+##setup the ssh access of the mirror when doing repo sync-s in ssh
+#[url "ssh://shlabacsbb06.sh.intel.com/"]
+# insteadOf=git://jfumg-gcrmirror.jf.intel.com/
+##setup the ssh access of the mirror when downloading manifests or updating repo
+#[url "ssh://shlabacsbb06.sh.intel.com/"]
+# insteadOf=git://android.intel.com/
+
+#[url "git://mcg-psi-gcr-glb.sh.intel.com"]
+#    insteadOf = "git://jfumg-gcrmirror.jf.intel.com"
+#
+#[url "ssh://mcg-psi-gcr-glb.sh.intel.com"]
+#    insteadOf = "git://jfumg-gcrmirror.jf.intel.com"
+#
+#[url "ssh://mcg-psi-gcr-glb.sh.intel.com"]
+#    insteadOf = "git://android.intel.com"
+#
+#[url "ssh://lyan7@mcg-psi-gcr-glb.sh.intel.com:29418/"]
+##[url "ssh://lyan7@jfumg-gcrmirror.jf.intel.com:29418/"]
+#	insteadOf=ssh://jfumg-gcrmirror.jf.intel.com/
+#	insteadOf=git://jfumg-gcrmirror.jf.intel.com/
+#	insteadOf=git://android.intel.com/
+#	insteadOf=ssh://android.intel.com:29418/
+#	insteadOf=ssh://android.intel.com/
+#
+#[url "ssh://android.intel.com:29418/"]
+#	pushInsteadOf=ssh://android.intel.com/
+#	pushInsteadOf=ssh://android.intel.com:29418/
+#	pushInsteadOf=ssh://jfumg-gcrmirror.jf.intel.com/
+#	pushInsteadOf=ssh://jfumg-gcrmirror.jf.intel.com:29418/
+#

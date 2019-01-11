@@ -1,1 +1,0 @@
-cmd_/home/leo/study/code_practice/kernel/drivers/my_debugfs.ko := ld -r -m elf_x86_64 -T /usr/src/linux-headers-3.2.0-67-generic/scripts/module-common.lds --build-id  -o /home/leo/study/code_practice/kernel/drivers/my_debugfs.ko /home/leo/study/code_practice/kernel/drivers/my_debugfs.o /home/leo/study/code_practice/kernel/drivers/my_debugfs.mod.o

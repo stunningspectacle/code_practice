@@ -20,10 +20,32 @@ int search(const char *src, const char *target)
 	return (tmp_src - src - (tmp_target - target));
 }
 
+#define CONTIG_LEN 3
+#define TARGET_VAL 0
+int test[] = { 1 , 1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0};
+int search_contig_area(int *array, int array_size, int val)
+{
+	int offset;
+	int contig_end;
+
+	offset = 0;
+	contig_end = offset + CONTIG_LEN - 1;
+	for (; offset < array_size; offset++) {
+		if (array[offset] != TARGET_VAL) {
+			contig_end = offset + CONTIG_LEN;
+			continue;
+		}
+		if (offset == contig_end)
+			return offset - CONTIG_LEN + 1;
+	}
+
+	return -1;
+}
+
 int main(int argc, char *argv[]) {
 	int ret;
 
-	ret = search(argv[1], argv[2]);
+	ret = search_contig_area(test, sizeof(test)/sizeof(test[0]), TARGET_VAL);
 
 	if (ret < 0) {
 		printf("Cannot find\n");

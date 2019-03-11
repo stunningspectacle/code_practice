@@ -8,8 +8,8 @@ MODULE_DESCRIPTION("sample code for DebugFS functionality");
 #define len 200 
 u64 intvalue,hexvalue; 
 struct dentry *dirret,*fileret,*u64int,*u64hex; 
-char ker_buf[len]; 
-int filevalue; 
+char ker_buf[len + 1];
+int filevalue;
 /* read file operation */
 static ssize_t myreader(struct file *fp, char __user *user_buffer, 
 		size_t count, loff_t *position) 

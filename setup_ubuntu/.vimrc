@@ -28,6 +28,8 @@ set fileencodings=ucs-bom,utf-8,cp936
 set fileencoding=gb2312
 set termencoding=utf-8
 
+match ErrorMsg '\%>80v.\+'
+
 "set tags=tags,./tags,../tags,../../tags,../../../tags,../../../../tags,../../../../../tags,../../../../../../tags
 "set tags=./tags,./../tags,./**/tags
 "

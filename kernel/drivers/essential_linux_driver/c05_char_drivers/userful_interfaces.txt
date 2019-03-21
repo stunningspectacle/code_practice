@@ -1,0 +1,52 @@
+cdev 			include/linux/cdev.h          	Kernel abstraction of a char device
+file_operations      	include/linux/fs.h 		Char driver methods
+dev_t 			include/linux/types.h         	Device major/minor numbers
+poll_table 		include/linux/poll.h 		A table of wait queues owned by drivers that are being polled for data
+pardevice 		include/linux/parport.h      	Kernel abstraction of a parallel port device
+rtc_class_ops        	include/linux/rtc.h 		Communication interface between top layer and bottom layer RTC drivers
+miscdevice 		include/linux/miscdevice.h 	Representation of a misc device
+
+alloc_chrdev_region()   fs/char_dev.c 			Requests dynamic allocation of a device major number
+unregister_chrdev_region()   fs/char_dev.c 		Reverse of alloc_chrdev_region()
+cdev_init() 		fs/char_dev.c Connects char driver methods with the associated cdev
+cdev_add() fs/char_dev.c Associates a device number with a cdev
+cdev_del() fs/char_dev.c Removes a cdev
+container_of() include/linux/kernel.h          From a structure member, gets the address of its containing structure
+copy_from_user() arch/x86/lib/usercopy_32.c (For i386) Copies data from user space to kernel space
+copy_to_user() arch/x86/lib/usercopy_32.c (For i386) Copies data from kernel space to user space
+likely()
+unlikely()
+include/linux/compiler.h      Informs GCC about the possibility of success of the associated conditional evaluation
+request_region() include/linux/ioport.h kernel/resource.c Stakes claim to an I/O region
+release_region() include/linux/ioport.h kernel/resource.c Relinquishes claim to an I/O region
+
+in[b|w|l|set number|sl]()
+out[b|w|l|set number|sl]() include/asm-your-arch/io.h  Family of functions to exchange data with I/O regions
+
+poll_wait() include/linux/poll.h Adds a wait queue to the kernel poll_table
+fasync_helper() fs/fcntl.c Ensures that if a driver issues a kill_fasync(), a SIGIO is dispatched to the owning application
+kill_fasync() fs/fcntl.c Dispatches a SIGIO to the owning application
+
+parport_register_device()    drivers/parport/share.c        Registers a parallel port device with parport
+parport_unregister_device()  drivers/parport/share.c        Unregisters a parallel port device
+parport_register_driver()    drivers/parport/share.c        Registers a parallel port driver with parport
+parport_unregister_driver()  drivers/parport/share.c        Unregisters a parallel port driver
+parport_claim_or_block()     drivers/parport/share.c        Claims a parallel port
+parport_release() drivers/parport/share.c        Releases a parallel port
+parport_write_data()         include/linux/parport.h        Writes data to a parallel port
+parport_read_data()          include/linux/parport.h        Reads data from a parallel port
+
+kobject_init()
+kobject_add() 		lib/kobject.c Registers a kobject and creates associated files in sysfs
+kobject_del()         lib/kobject.c Reverse of kobject_register()
+#define __ATTR(_name, _mode, _show, _store) ...
+
+rtc_device_register()
+rtc_device_unregister() drivers/rtc/class.c Registers/unregisters a bottom-layer driver with the RTC subsystem
+
+misc_register() drivers/char/misc.c Registers a misc driver
+misc_deregister() drivers/char/misc.c Unregisters a misc driver
+
+class_create()
+device_create()
+device_destroy()

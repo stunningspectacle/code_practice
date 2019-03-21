@@ -1,0 +1,12 @@
+make -C /lib/modules/4.15.0-29-generic/build M=/home/leo/study/code_practice/kernel/drivers/essential_linux_driver/c05_char_drivers/led_sysfs modules
+make[1]: Entering directory '/usr/src/linux-headers-4.15.0-29-generic'
+  CC [M]  /home/leo/study/code_practice/kernel/drivers/essential_linux_driver/c05_char_drivers/led_sysfs/led_sysfs.o
+/home/leo/study/code_practice/kernel/drivers/essential_linux_driver/c05_char_drivers/led_sysfs/led_sysfs.c:108:25: warning: ‘ktype_led’ defined but not used [-Wunused-variable]
+ static struct kobj_type ktype_led = {
+                         ^~~~~~~~~
+  Building modules, stage 2.
+  MODPOST 1 modules
+  CC      /home/leo/study/code_practice/kernel/drivers/essential_linux_driver/c05_char_drivers/led_sysfs/led_sysfs.mod.o
+  LD [M]  /home/leo/study/code_practice/kernel/drivers/essential_linux_driver/c05_char_drivers/led_sysfs/led_sysfs.ko
+make[1]: Leaving directory '/usr/src/linux-headers-4.15.0-29-generic'
+cp led_sysfs.o ~/qemu_shared

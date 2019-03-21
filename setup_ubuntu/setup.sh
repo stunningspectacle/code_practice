@@ -14,8 +14,11 @@ sudo yes | apt-get install --no-install-recommends tmux vim cscope ctags git \
   python3-ply python3-pip python3-setuptools python3-wheel xz-utils file \
   make gcc-multilib autoconf automake libtool libczmq-dev libczmq-dev:i386
 
+# Man pages
 sudo yes | apt-get install manpages manpages-de manpages-de-dev manpages-dev \
 	manpages-posix manpages-posix-dev
+# Qemu
+sudo yes | apt install qemu-kvm libvirt-clients libvirt-daemon-system bridge-utils virt-manager
 
 cd $SETUP_ROOT
 cp .vimrc ~/

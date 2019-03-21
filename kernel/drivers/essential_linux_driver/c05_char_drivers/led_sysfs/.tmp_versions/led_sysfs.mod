@@ -1,0 +1,3 @@
+/home/leo/study/code_practice/kernel/drivers/essential_linux_driver/c05_char_drivers/led_sysfs/led_sysfs.ko
+/home/leo/study/code_practice/kernel/drivers/essential_linux_driver/c05_char_drivers/led_sysfs/led_sysfs.o
+

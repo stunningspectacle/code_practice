@@ -294,7 +294,8 @@ int main(int argc, char *argv[])
 		}
 		offset += sizeof(pdt_entry_t) + pdt_entry->length;
 	}
-	printf("offset = %d\n", offset);
+
+	printf("\noffset = %d\n", offset);
 
 	return 0;
 }

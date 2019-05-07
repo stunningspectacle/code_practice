@@ -1,18 +1,6 @@
-#TARGETS := search print_env test macro execve
-TARGET := mix
-OBJS := $(patsubst %.c, %.o, $(wildcard *.c))
-SRC := $(wildcard *.c)
-
-LD := ld
-
-$(TARGET): $(OBJS)
-	@echo $(OBJS)
-	@echo $@
-	@echo $^
-	$(LD) -o $@ $^
-$(OBJS): $(SRC)
-
+TARGETS := $(patsubst %.c, %, $(wildcard *.c))
+all: $(TARGETS)
 
 clean:
-	rm -rf $(OBJS)
+	find -perm -o=x -type f | xargs rm
 

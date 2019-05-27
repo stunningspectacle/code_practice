@@ -155,9 +155,40 @@ def do_variable_decorator():
     hello0()
     hello1()
 
+def do_type_assert():
+    from inspect import signature
+    from functools import wraps
+
+    def typeassert(*ty_args, **ty_kwargs):
+        def decorator(func):
+            sig = signature(func)
+            bind_types = sig.bind_partial(*ty_args, **ty_kwargs).arguments
+
+            @wraps(func)
+            def wrapper(*args, **kwargs):
+                bind_values = sig.bind(*args, **kwargs).arguments
+                for name, value in bind_values.items():
+                    if name in bind_types:
+                        if not isinstance(value, bind_types[name]):
+                            raise TypeError('Argument \''+str(value)+
+                                    '\' must be '+str(bind_types[name]))
+                return func(*args, **kwargs)
+            return wrapper
+        return decorator
+
+    @typeassert(a=int, c=list)
+    def hello(a, b, c):
+        print(a, b, c)
+
+    hello(8, 8, 'ok')
+
+
 class C09TestCase(TestCase):
     def test_main(self):
-        do_variable_decorator()
+        try:
+            do_type_assert()
+        except Exception as e:
+            print(e)
         print('Test Completed'.center(60, '-'))
 
 if __name__ == '__main__':

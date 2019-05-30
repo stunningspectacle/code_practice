@@ -9,6 +9,7 @@ cd ~/
 rm -rf Desktop Documents Downloads Pictures Public Videos Templates \
 	Music examples.desktop
 
+
 sudo yes | apt-get install --no-install-recommends tmux vim cscope ctags git \
   ccache doxygen dfu-util device-tree-compiler \
   python3-ply python3-pip python3-setuptools python3-wheel xz-utils file \
@@ -16,6 +17,9 @@ sudo yes | apt-get install --no-install-recommends tmux vim cscope ctags git \
 
 # build kernel
 sudo yes | apt-get install flex bison libelf-dev libssl-dev
+
+# build ubuntu-kernel
+sudo apt install build-essential kernel-package fakeroot libncurses5-dev 
 
 # Man pages
 sudo yes | apt-get install manpages manpages-de manpages-de-dev manpages-dev \

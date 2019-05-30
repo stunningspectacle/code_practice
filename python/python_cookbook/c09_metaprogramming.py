@@ -177,18 +177,414 @@ def do_type_assert():
         return decorator
 
     @typeassert(a=int, c=list)
+    def hello(a, b, c=[2, 3]):
+        print(a, b, c)
+
+    try:
+        hello(8, 8, 'ok')
+    except Exception as e:
+        print(e)
+
+    sig = signature(hello)
+    print(sig.parameters)
+    print(sig.parameters['a'])
+    print(sig.parameters['a'].name)
+    print(sig.parameters['a'].default)
+    print(sig.parameters['a'].kind)
+
+    print(sig.parameters['b'])
+    print(sig.parameters['c'])
+    print(sig.parameters['c'].name)
+    print(sig.parameters['c'].default)
+    print(sig.parameters['c'].kind)
+
+def do_decorator_class():
+    import types
+    from functools import wraps
+
+    class Profiled:
+        def __init__(self, func):
+            wraps(func)(self)
+            self.ncalls = 0
+
+        def __call__(self, *args, **kwargs):
+            print('__call__ is called')
+            self.ncalls += 1
+            return self.__wrapped__(*args, **kwargs)
+
+        def __get__(self, instance, cls):
+            print('__get__ is called, instance:', instance, cls)
+            if instance is None:
+                print('instance is None')
+                return self
+            t = types.MethodType(self, instance)
+            print('t:', t)
+            return t
+
+    @Profiled
+    def add(x, y):
+        return x + y
+
+    class Spam:
+        @Profiled
+        def bar(self, x):
+            print(self, x)
+
+    add(2, 3)
+    add(2, 3)
+    print(add.ncalls)
+
+    s = Spam()
+    print('get s')
+    s.bar(1)
+    #print(add.ncalls)
+
+    try:
+        s.grok(s, 100)
+    except Exception as e:
+        print(e)
+
+    def grok(self, x):
+        print(x)
+    print(grok.__get__(s, Spam))
+
+    try:
+        grok(s, 200)
+    except Exception as e:
+        print(e)
+
+def do_decorator_add_arg():
+    from functools import wraps
+    import inspect
+
+    def optional_debug(func):
+        sig0 = inspect.getfullargspec(func).args
+        print(sig0)
+
+        sig1 = inspect.signature(func)
+        #help(sig1)
+        print(sig1)
+        print('sig1:', sig1.parameters.keys())
+        print('sig1:', sig1.parameters.values())
+        if 'a' in sig0:
+            print('yes')
+        @wraps(func)
+        def wrapper(*args, debug=False, **kwargs):
+            if debug:
+                print('debug is enabled')
+            return func(*args, **kwargs)
+        return wrapper
+
+    @optional_debug
     def hello(a, b, c):
         print(a, b, c)
 
-    hello(8, 8, 'ok')
+    hello(1, 2, 3, debug=True)
+
+def do_class_decorator():
+    def logged_getattribute(cls):
+        old_attr = cls.__getattribute__
+        def wrapper(self, name):
+            print('getting:', name)
+            return old_attr(self, name)
+        cls.__getattribute__ = wrapper
+        return cls
+
+    @logged_getattribute
+    class A:
+        def __init__(self, val):
+            self.x = val
+        def spam(self):
+            pass
+
+    a0 = A(100)
+    print(a0.x)
+    a0.spam()
+
+    #Use inheritance
+    class B:
+        def __init__(self, val):
+            self.x = val
+        def spam(self):
+            pass
+
+    class LoggedB(B):
+        def __getattribute__(self, name):
+            print('b getting:', name)
+            return super().__getattribute__(name)
+
+    b0 = LoggedB(200)
+    print(b0.x)
+    b0.spam()
+
+def do_metaclass():
+    class NoInstance(type):
+        def __call__(self):
+            raise TypeError('No instance should be created')
+
+    class Spam(metaclass=NoInstance):
+        @staticmethod
+        def grok():
+            print('Spam.grok()')
+
+        @classmethod
+        def good(cls):
+            print(cls)
+
+    Spam.grok()
+    Spam.good()
+    try:
+        s = Spam()
+    except Exception as e:
+        print(e)
+
+    #----------------------------------
+
+    class Singleton(type):
+        def __init__(self, *args, **kwargs):
+            print('s __init__ is called')
+            self.__inst = None
+            super().__init__(*args, **kwargs)
+
+        def __call__(self, *args, **kwargs):
+            print('s __call__ is called')
+            if self.__inst is None:
+                self.__inst = super().__call__(*args, **kwargs)
+            return self.__inst
+
+    class Spam(metaclass=Singleton):
+        def __init__(self):
+            print('Spam __init__')
+        def grok(self):
+            print('grok()')
+
+    class A:
+        def __init__(self, *args, **kwargs):
+            print('A __init__ is called')
+
+    class B(metaclass=A): # A's __init__ will be called when interpreter gets here
+        pass
+
+    class C(metaclass=A): # A's __init__ will be called when interpreter gets here
+        pass
+
+    class D(A): # A's __init__ won't be called until one D's instance is created
+        pass
+
+    s0 = Spam()
+    s1 = Spam()
+
+    if s0 is s1:
+        print('yes')
+    else:
+        print('no')
+
+    #---------------------------------------
+
+    import weakref
+    class Cached(type):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.__cached = weakref.WeakValueDictionary()
+        def __call__(self, *args):
+            if args not in self.__cached:
+                obj = super().__call__(*args) 
+                self.__cached[args] = obj
+            return self.__cached[args]
+
+    class Spam(metaclass=Cached):
+        def __init__(self, *args, **kwargs):
+            print('Create a Spam')
+
+    s0 = Spam('kk')
+    s1 = Spam('jj')
+    s2 = Spam('kk')
+    
+    if s0 is s2:
+        print('yes')
+    else:
+        print('no')
+
+def do_class_ordered_attr():
+    from collections import OrderedDict
+
+    class Typed:
+        _expected_type = type(None)
+        def __init__(self, name=None):
+            self._name = name
+
+        def __set__(self, instance, value):
+            if not isinstance(value, self._expected_type):
+                raise TypeError('Expected ' + str(self._expected_type))
+            instance.__dict__[self._name]  = value
+
+    class Integer(Typed):
+        _expected_type = int
+    class Float(Typed):
+        _expected_type = float
+    class String(Typed):
+        _expected_type = str
+
+    class OrderedMeta(type):
+        def __new__(cls, clsname, bases, clsdict):
+            print('OrderedMeta.__new__:')
+            print('cls:', cls)
+            print('clsname:', clsname)
+            print('bases:', bases)
+            print('clsdict:', clsdict)
+            d = dict(clsdict)
+            print('d:', d)
+            order = []
+            for name, value in clsdict.items():
+                if isinstance(value, Typed):
+                    value._name = name
+                    order.append(name)
+            d['_order'] = order
+            return type.__new__(cls, clsname, bases, d)
+
+        @classmethod
+        def __prepare__(cls, clsname, bases):
+            print('__prepare__() is called')
+            return OrderedDict()
+
+    class Structure(metaclass=OrderedMeta):
+        def as_csv(self):
+            return ','.join(str(getattr(self, name)) for name in self._order)
+
+    class Stock(Structure):
+        name = String()
+        shares = Integer()
+        price = Float()
+
+        def __init__(self, name, shares, price):
+            self.name = name
+            self.shares = shares
+            self.price = price
+
+    s = Stock('GOOG', 100, 490.1)
+    print(s.name)
+    print(s.as_csv())
+
+    try:
+        s = Stock('AAPL', 'a lot', 610.23)
+        print(s.name)
+        print(s.as_csv())
+    except Exception as e:
+        print(e)
+
+def do_variable_args_metaclass():
+    class A(type):
+        def __new__(cls, clsname, bases, ns):
+            print('A __new__')
+            return super().__new__(cls, clsname, bases, ns)
+
+        @classmethod
+        def __prepare__(cls, clsname, bases):
+            print('A __parepare__')
+            return super().__prepare__()
+
+    class B(metaclass=A):
+        pass
+
+def do_limit_class():
+    class MyMeta(type):
+        def __init__(self, clsname, base, clsdict):
+            print('__init__:', self)
+            for name in clsdict:
+                if name.lower() != name:
+                    raise TypeError('Bad attribute name: ' + name)
+            super().__init__(clsname, base, clsdict)
+        def __new__(cls, clsname, base, clsdict):
+            print('__new__:', cls)
+            return super().__new__(cls, clsname, base, clsdict)
+
+        @classmethod # Must be classmethod
+        def __prepare__(cls, clsname, base):
+            print('__prepare__:', cls, clsname, base)
+            return super().__prepare__(cls, clsname, base)
+
+    class Root(metaclass=MyMeta):
+        pass
+
+    try:
+        class A(Root):
+            numOne = 0
+
+        class B(Root):
+            numtwo = 0
+
+        a = A()
+    except Exception as e:
+        print(e)
+
+    class D:
+        pass
+    class DD(D):
+        def __init__(self):
+            s0 = super()
+            print('s0:', s0)
+
+            s1 = super(self.__class__, self)
+            print('s1:', s1)
+            print('self:', self)
+            print('self.__class__:', self.__class__)
+            super().__init__()
+
+    dd = DD()
+    print('mro:', DD.__mro__)
+    #--------------------------------------------
+    from inspect import signature
+    class SigMatchMeta(type):
+        def __init__(self, clsname, bases, clsdict):
+            print('clsdict:', clsdict)
+            super().__init__(clsname, bases, clsdict)
+            sup = super(self, self)
+            sup0 = super()
+            print('self:', self)
+            print('super(self, self):', sup)
+            print('sup0()', sup0)
+            for name, value in clsdict.items():
+                if name.startswith('_') or not callable(value):
+                    continue
+                attr = getattr(sup, name, None)
+                if attr:
+                    sig0 = signature(value)
+                    sig1 = signature(attr)
+                    if sig0 != sig1:
+                        raise TypeError(sig0, '!=', sig1)
+    class SigRoot(metaclass=SigMatchMeta):
+        def spam(x, y, z):
+            pass
+
+    class A(SigRoot):
+        def spam(x, y):
+            pass
+
+def do_customize_class_in_define():
+    import operator
+    class StructTupleMeta(type):
+        def __init__(cls, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            for n, name in enumerate(cls._fields):
+                setattr(cls, name, property(operator.itemgetter(n)))
+    class StructTuple(tuple, metaclass=StructTupleMeta):
+        _fields = []
+        def __new__(cls, *args):
+            if len(args) != len(cls._fields):
+                raise ValueError('{} arguments required'.format(len(cls._fields)))
+            return super().__new__(cls, args)
+
+    class Stock(StructTuple):
+        _fields = ['name', 'shares', 'price']
+    
+    s0 = Stock('GOOG', 900, 100.0)
+    print(s0[0])
+    print(s0.name)
 
 
 class C09TestCase(TestCase):
     def test_main(self):
-        try:
-            do_type_assert()
-        except Exception as e:
-            print(e)
+        do_customize_class_in_define()
         print('Test Completed'.center(60, '-'))
 
 if __name__ == '__main__':

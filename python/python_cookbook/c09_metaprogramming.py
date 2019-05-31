@@ -581,10 +581,97 @@ def do_customize_class_in_define():
     print(s0[0])
     print(s0.name)
 
+def do_param_override():
+    class Spam:
+        def bar(self, x: int, y: int):
+            print(x, y)
+        def bar(self, x: str, y: int=10):
+            print(x, y)
 
+    s = Spam()
+    s.bar(1, 2)
+    s.bar('hello')
+
+def do_avoid_duplicate_methods():
+    class Person:
+        def __init__(self, name, age):
+            self._name = name
+            self._age = age
+
+        @property
+        def name(self):
+            return self._name
+        @name.setter
+        def name(self, name):
+            if not isinstance(name, str):
+                raise TypeError('name should be a string')
+            self._name = name
+
+        @property
+        def age(self):
+            return self._age
+        @age.setter
+        def age(self, age):
+            if not isinstance(age, int):
+                raise TypeError('age should be int')
+            self._age = age
+
+    p = Person('John', 20)
+    print(p.__dict__)
+    p.name = 'Jack'
+    print(p.__dict__)
+    p.age = 50
+    print(p.__dict__)
+
+    #------------------------------------------------
+
+    def typed_property(name, expected_type):
+        new_prop = '_' + name
+        @property
+        def prop(self):
+            return getattr(self, new_prop)
+        @prop.setter
+        def prop(self, value):
+            if not isinstance(value, expected_type):
+                raise TypeError(name, 'should be', str(expected_type))
+            setattr(self, new_prop, value)
+        return prop
+    
+    class Person1:
+        name = typed_property('name', str)
+        age = typed_property('age', int)
+        def __init__(self, name, age):
+            self.name = name
+            self.age = age
+
+    p = Person1('John1', 21)
+    print(p.__dict__)
+    p.name = 'Jack1'
+    print(p.__dict__)
+    p.age = 51
+    print(p.__dict__)
+
+    #----------------------------------------------
+    from functools import partial
+    String = partial(typed_property, expected_type=str)
+    Integer = partial(typed_property, expected_type=int)
+    class Person2:
+        name = String('name')
+        age = Integer('age')
+        def __init__(self, name, age):
+            self.name = name
+            self.age = age
+
+    p = Person2('John2', 22)
+    print(p.__dict__)
+    p.name = 'Jack2'
+    print(p.__dict__)
+    p.age = 52
+    print(p.__dict__)
+        
 class C09TestCase(TestCase):
     def test_main(self):
-        do_customize_class_in_define()
+        do_avoid_duplicate_methods()
         print('Test Completed'.center(60, '-'))
 
 if __name__ == '__main__':

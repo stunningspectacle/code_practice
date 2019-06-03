@@ -724,10 +724,100 @@ def do_context_manager():
 
     with Timethis('Timethis says'):
         time.sleep(0.5)
+
+def do_exec_in_local():
+    def test1():
+        x = 0
+        exec('x += 1')
+        print(x)
+
+    test1()
+
+    #---------------------
+
+    def test2():
+        x = 0
+        loc = locals()
+        print('before:', loc)
+        exec('x += 1')
+        print('after:', loc)
+        print(x)
+        x = loc['x']
+        print(x)
+
+    test2()
+
+    #--------------------
+
+    def test3():
+        x = 0
+        loc = locals()
+        print('before:', loc)
+        exec('x += 1')
+        print('after:', loc)
+        locals()
+        print('after locals:', loc)
+
+    test3()
+
+    def test4():
+        x = 10
+        loc = {'x': x}
+        glob = dict()
+        exec('x += 1', glob, loc)
+        print('test4:', loc)
+
+    test4()
+
+def do_parse_analyze_python_source():
+    glob = { }
+    loc = { }
+    s = 'x = 13; y = 20; z = x * y + x + y'
+    exec(s, glob, loc)
+    print(loc)
+    for name, value in loc.items():
+        if name == 'z':
+            print('z:', value)
+
+    s = "10 + 20 + 30 + loc['z']"
+    print(eval(s))
+
+    #-------------------------------
+
+    import ast
+
+    x = 10
+    ex = ast.parse('2 + 3 * 4 + x', mode='eval')
+    print('ex:', ex)
+    ast.dump(ex)
+
+    top = ast.parse('for i in range(10): print(i)', mode='exec')
+    print('top:', top)
+    ast.dump(top)
+
+def do_disassemble_bytecode():
+    import dis
+
+    def countdown(n):
+        while n > 0:
+            print('T-minus:', n)
+            n -= 1
+        print('Blastoff!')
+
+    cd = dis.dis(countdown)
+    print(cd)
+    print(countdown.__code__.co_code)
+
+    import opcode
+    c = countdown.__code__.co_code
+    print('c[0]:', opcode.opname[c[0]])
+    print('c[1]:', opcode.opname[c[1]])
+    print('c[2]:', opcode.opname[c[2]])
+
         
 class C09TestCase(TestCase):
     def test_main(self):
-        do_context_manager()
+        do_disassemble_bytecode()
         print('Test Completed'.center(60, '-'))
 
 if __name__ == '__main__':

@@ -668,10 +668,66 @@ def do_avoid_duplicate_methods():
     print(p.__dict__)
     p.age = 52
     print(p.__dict__)
+
+def do_context_manager():
+    import time
+    from contextlib import contextmanager
+
+    @contextmanager
+    def timethis(label):
+        start = time.time()
+        try:
+            yield
+        finally:
+            end = time.time()
+            print('{}: costs {}'.format(label, end - start))
+
+    with timethis('counting'):
+        end = 100000
+        time.sleep(0.1)
+        while end > 0:
+            end -= 1
+        
+    @contextmanager
+    def list_trans(orig_list):
+        working_list = list(orig_list)
+        yield working_list
+        orig_list[:] = working_list
+
+    nums = [ i for i in range(3)]
+    print('before:', nums)
+    with list_trans(nums) as n:
+        n.append(5)
+        n.append(6)
+    print('after:', nums)
+
+    nums_except = [i for i in range(5)]
+    print('before excecption:', nums_except)
+    try:
+        with list_trans(nums_except) as n:
+            n.append(10)
+            n.append(11)
+            raise Exception('excpetion happens in context')
+    except:
+        pass
+    print('after excecption:', nums_except)
+
+    #------------------------------------------------------
+    class Timethis:
+        def __init__(self, lable):
+            self._lable = lable
+        def __enter__(self):
+            self._start = time.time()
+        def __exit__(self, exc_ty, exc_val, exc_tb):
+            print('{}: costs {} seconds'.format(self._lable,
+                time.time()-self._start))
+
+    with Timethis('Timethis says'):
+        time.sleep(0.5)
         
 class C09TestCase(TestCase):
     def test_main(self):
-        do_avoid_duplicate_methods()
+        do_context_manager()
         print('Test Completed'.center(60, '-'))
 
 if __name__ == '__main__':

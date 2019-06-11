@@ -8,7 +8,7 @@
 #include <sys/types.h>
 #include <sys/mman.h>
 
-#define READSIZE 256
+#define READSIZE (256 / 4)
 #define PCI_CONFIG_START 0xe0000000
 
 int main(char argc, char *argv[])
@@ -45,11 +45,9 @@ int main(char argc, char *argv[])
 		return -EFAULT;
 	}
 	printf("mmap @%p\n", vm);
-	for (i = 0; i < READSIZE; i += 8) {
+	for (i = 0; i < READSIZE; i += 4) {
 		tmp = vm + i;
-		printf("%x %x %x %x %x %x %x %x\n",
-				tmp[0], tmp[1], tmp[2], tmp[3],
-				tmp[4], tmp[5], tmp[6], tmp[7]);
+		printf("%-10x %-10x %-10x %-10x\n", tmp[0], tmp[1], tmp[2], tmp[3]);
 	}
 
 	return 0;

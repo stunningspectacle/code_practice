@@ -1,4 +1,6 @@
 TARGETS := $(patsubst %.c, %, $(wildcard *.c))
+#CFLAGS += -fPIC
+
 all: $(TARGETS)
 
 .PHONY:

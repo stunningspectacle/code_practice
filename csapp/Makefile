@@ -1,8 +1,7 @@
 TARGETS := $(patsubst %.c, %, $(wildcard *.c))
-#CFLAGS += -fPIC
 
 all: $(TARGETS)
 
-.PHONY:
+.PHONY: clean
 clean:
 	@find -perm -o=x -type f | xargs rm -rf

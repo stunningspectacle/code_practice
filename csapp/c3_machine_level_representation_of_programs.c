@@ -1,5 +1,7 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <inttypes.h>
+#include <string.h>
 
 static int global0 = 0;
 
@@ -103,26 +105,66 @@ int get_polarity_simple(short x)
 	return 0;
 }
 
-int main(void)
+long reverse_bit(long x)
 {
-	uint128_t s;
-	uint64_t a = 0xaaaaaaaaaaaaaaaa;
-	uint64_t b = 0xbbbbbbbbbbbbbbbb;
-	uint64_t *p;
-	int s0 = 0;
 	int i;
+	long val = 0;
+	for (i = 64; i != 0; i--) {
+		val = (val << 1) | (x & 0x1);
+		x >>= 1;
+	}
 
-	asm0();
+	return val;
+}
 
-	uint128_mul(&s, a, b);
-	p = (uint64_t *)&s;
-	printf("0x%lx * 0x%lx = 0x%lx%lx\n", a, b, p[1], p[0]);
+void jump_table(int x)
+{
+	void *jt[] = { &&l0, &&l1, &&l2, &&l3, &&l4, &&l5, &&l6 };
+	if (x < 0 || x > 6)
+		goto no;
 
-	pc_update();
-	s0 = add_div(10, 20, 30);
-	printf("%d\n", s0);
-	for (i = 0; i < 10; i++)
-		printf("polarity of %d is %d\n", i, get_polarity(i));
-	for (i = 0; i < 10; i++)
-		printf("polarity of %d is %d\n", i, get_polarity_simple(i));
+	goto *jt[x];
+
+l0:
+	printf("this is l0\n");
+	goto done;
+l1:
+	printf("this is l1\n");
+	goto done;
+l2:
+	printf("this is l2\n");
+	goto done;
+l3:
+	printf("this is l3\n");
+	goto done;
+l4:
+	printf("this is l4\n");
+	goto done;
+l5:
+	printf("this is l5\n");
+	goto done;
+l6:
+	printf("this is l6\n");
+	goto done;
+no:
+	printf("not support\n");
+
+done:
+	printf("done\n");
+}
+
+typedef int row3_t[3];
+int typedef_array(void)
+{
+	row3_t arr[10];
+	int a = arr[5][2];
+
+	return a;
+}
+
+int main(int argc, char *argv[])
+{
+	typedef_array();
+
+	return 0;
 }

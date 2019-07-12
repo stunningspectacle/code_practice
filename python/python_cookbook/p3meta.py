@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 
 from unittest import TestCase, main
+from functools import wraps, partial
+import logging
 
 def do_decorator():
     from functools import wraps
@@ -153,9 +155,182 @@ def do_deco0():
     print(add.__doc__)
     add(1, 2)
 
+def do_log():
+    import os
+    from functools import wraps
+    import logging
+
+    def debug(func):
+        if 'DEBUG' not in os.environ:
+            return func
+        if os.environ['DEBUG'] == '0':
+            return func
+        msg = func.__qualname__
+        log = logging.getLogger()
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            log.critical(msg)
+            return func(*args, **kwargs)
+        return wrapper
+
+    @debug
+    def add(a, b):
+        return a + b
+
+    add(1, 2)
+
+def do_prefix_deco():
+    def debug(prefix=''):
+        def decorator(func):
+            msg = prefix + func.__qualname__
+            log = logging.getLogger()
+            @wraps(func)
+            def wrapper(*args, **kwargs):
+                log.critical(msg)
+                return func(*args, **kwargs)
+            return wrapper
+        return decorator
+
+    @debug('+++++++')
+    def add(a, b):
+        return a + b
+
+    @debug('*******')
+    def mul(a, b):
+        return a * b
+
+    @debug
+    def sub(a, b):
+        return a - b
+
+def debug1(func=None, *, prefix=''):
+    if func is None:
+        return partial(debug1, prefix=prefix)
+    log = logging.getLogger()
+    msg = prefix + func.__qualname__
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        log.critical(msg)
+        return func(*args, **kwargs)
+    return wrapper
+
+def do_reformation():
+    @debug1
+    def add0(a, b):
+        return a + b
+
+    @debug1(prefix='+++++')
+    def add1(a, b):
+        return a + b
+
+    print(add0(1, 2))
+    print(add1(1, 2))
+
+def do_decorate_cls():    
+    def debug_cls(cls):
+        for name, value in vars(cls).items():
+            if callable(value):
+                print(name, value, "is callable")
+                setattr(cls, name, debug1(value))
+            else:
+                print(name, value, "is not callable")
+        return cls
+
+    class Foo:
+        def foo_a(self):
+            pass
+        def foo_b(self):
+            pass
+        def foo_c(self):
+            pass
+        @classmethod
+        def foo_d(cls):
+            pass
+        @staticmethod
+        def foo_e():
+            pass
+
+
+    def debug_getattr(cls):
+        ga = cls.__getattribute__
+        def wrapper(self, name):
+            print("I want ", name)
+            return ga(self, name)
+        cls.__getattribute__ = wrapper
+        return cls
+
+    @debug_getattr
+    class Bar:
+        def __init__(self):
+            self.x = 10
+            self.y = 20
+        def spam(self):
+            pass
+
+    b0 = Bar()
+    print(b0.x)
+    b0.spam()
+
+def do_meta():
+    def debug_attr(cls):
+        __getattr__ = cls.__getattribute__
+        def wrapper(self, name):
+            print("I want", name)
+            return __getattr__(self, name)
+        cls.__getattribute__ = wrapper
+        return cls
+
+    class DebugMeta(type):
+        def __new__(cls, clsname, bases, clsdict):
+            clsobj = super().__new__(cls, clsname, bases, clsdict)
+            clsobj = debug_attr(clsobj)
+            return clsobj
+
+    class Foo(metaclass=DebugMeta):
+        def __init__(self):
+            self.x = 100
+            self.y = 200
+
+        def spam(self):
+            pass
+
+    class Bar(metaclass=DebugMeta):
+        def __init__(self):
+            self.x = 300
+            self.y = 400
+
+        def spam(self):
+            pass
+
+    f = Foo()
+    print(f.x)
+    f.spam()
+
+    b = Bar()
+    print(b.x)
+    b.spam()
+
+def do_cls_create():
+    class Foo():
+        def __init__(self):
+            self.name = 'Foo'
+        def spam():
+            pass
+
+    s = '''
+def __init__(self):
+    self.name = 'Foo'
+def spam():
+    pass
+        '''
+    clsdict = {}
+    exec(s, globals(), clsdict)
+    print(clsdict)
+
+
 class P3Meta(TestCase):
     def test_test(self):
-        do_deco0()
+        do_cls_create()
         print('Test Done'.center(50, '-'))
 
 if __name__ == '__main__':

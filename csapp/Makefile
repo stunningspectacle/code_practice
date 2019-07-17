@@ -1,6 +1,7 @@
 TARGETS := $(patsubst %.c, %, $(wildcard *.c))
 
-CFLAGS += -O2
+#CFLAGS += -O2
+CFLAGS += -g -mavx2
 
 all: $(TARGETS)
 

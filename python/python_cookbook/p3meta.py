@@ -327,10 +327,268 @@ def spam():
     exec(s, globals(), clsdict)
     print(clsdict)
 
+def do_struct():
+    class Struct:
+        _field = []
+        def __init__(self, *args):
+            if len(self._field) != len(args):
+                raise TypeError('Wrong # args');
+            for name, value in zip(self._field, args):
+                setattr(self, name, value)
+
+    class Point(Struct):
+        _field = ['x', 'y']
+
+    class Stock:
+        name=str()
+        price=float()
+        def __init__(self, name, price=100):
+            self.name = name
+            self.price = price
+
+    p0 = Point(1, 2)
+    print(p0.x, p0.y)
+
+    from inspect import signature
+    print(signature(Stock))
+
+    print(signature(Point))
+
+def do_bind_sig():
+    from inspect import Signature, Parameter
+
+    def func(*args, **kwargs):
+        _fields = ['name', 'shares', 'price']
+        sig = Signature(Parameter(name, Parameter.POSITIONAL_OR_KEYWORD)
+                for name in _fields)
+        bound_arg = sig.bind(*args, **kwargs)
+        for name, value in bound_arg.arguments.items():
+            print(name, value)
+
+    func('google', price=1000.0, shares=200)
+
+    class Struct:
+        _fields = []
+        def __init__(self, *args, **kwargs):
+            sig = Signature(Parameter(name, Parameter.POSITIONAL_OR_KEYWORD) 
+                    for name in self._fields)
+            bound_args = sig.bind(*args, **kwargs)
+            for name, value in bound_args.arguments.items():
+                setattr(self, name, value)
+    class Point(Struct):
+        _fields = ['x', 'y']
+
+    class Stock(Struct):
+        _fields = ['name', 'shares', 'price']
+
+    p0 = Point(1, 2)
+    print(p0.x, p0.y)
+
+    p1 = Point(y=200, x=100)
+    print(p1.x, p1.y)
+
+    s0 = Stock(price=100.0, name='google', shares=20)
+    print(s0.__dict__)
+
+    s1 = Stock('Intel', shares=100, price=20.0)
+    print(s1.__dict__)
+
+def do_sig_decorator():
+    from inspect import Signature, Parameter
+
+    def make_signature(*args):
+        return Signature(Parameter(name, Parameter.POSITIONAL_OR_KEYWORD)
+                for name in args)
+
+    def add_signature(*args):
+        sig = make_signature(*args)
+        def decorator(cls):
+            cls.__signature__ = sig
+            return cls
+        return decorator
+
+    class Struct:
+        __signature__ = None
+        def __init__(self, *args, **kwargs):
+            bound_args = self.__signature__.bind(*args, **kwargs)
+            for name, value in bound_args.arguments.items():
+                setattr(self, name, value)
+
+    @add_signature('x', 'y')
+    class Point(Struct):
+        pass
+
+    @add_signature('name', 'price', 'shares')
+    class Stock(Struct):
+        pass
+
+    p0 = Point(1, 2)
+    print(p0.__dict__)
+
+    s0 = Stock('google', shares=20, price=100.01)
+    print(s0.__dict__)
+
+def do_sig_meta():
+    from inspect import Signature, Parameter
+
+    class StructMeta(type):
+        def __new__(cls, name, base, clsdict):
+            clsobj = super().__new__(cls, name, base, clsdict)
+            sig = Signature(Parameter(name, Parameter.POSITIONAL_OR_KEYWORD)
+                    for name in clsobj._fields)
+            setattr(clsobj, '__signature__', sig)
+            return clsobj
+
+    class Struct(metaclass=StructMeta):
+        _fields = []
+        def __init__(self, *args, **kwargs):
+            bound_args = self.__signature__.bind(*args, **kwargs)
+            for name, value in bound_args.arguments.items():
+                setattr(self, name, value)
+        def __str__(self):
+            args = ', '.join(repr(getattr(self, name)) for name in self._fields)
+            return type(self).__name__ + '(' + args + ')'
+        '''
+        def __repr__(self):
+            args = ', '.join(repr(getattr(self, name)) for name in self._fields)
+            return type(self).__name__ + '(' + args + ')'
+            '''
+
+    class Point(Struct):
+        _fields = ['x', 'y']
+
+    class Stock(Struct):
+        _fields = ['name', 'price', 'shares']
+
+    p0 = Point(1, 2)
+    print(p0)
+
+    s0 = Stock('google', shares=20, price=100.23)
+    print(s0)
+
+def do_sig_check():
+    from inspect import Signature, Parameter
+
+    class StructMeta(type):
+        def __new__(cls, name, base, clsdict):
+            clsobj = super().__new__(cls, name, base, clsdict)
+            sig = Signature(Parameter(name, Parameter.POSITIONAL_OR_KEYWORD)
+                    for name in clsobj._fields)
+            setattr(clsobj, '__signature__', sig)
+            return clsobj
+
+    class Struct(metaclass=StructMeta):
+        _fields = []
+        def __init__(self, *args, **kwargs):
+            bound_args = self.__signature__.bind(*args, **kwargs)
+            for name, value in bound_args.arguments.items():
+                setattr(self, name, value)
+        def __str__(self):
+            args = ', '.join(repr(getattr(self, name)) for name in self._fields)
+            return type(self).__name__ + '(' + args + ')'
+
+    class Stock(Struct):
+        _fields = ['name', 'shares', 'price']
+
+        @property
+        def name(self):
+            print('name is called')
+            return self._name
+
+        @name.setter
+        def name(self, val):
+            if not isinstance(val, str):
+                raise TypeError('name should be a string')
+            self._name = val
+
+    s0 = Stock('google', price=100.1, shares=20)
+    print(s0.name)
+    s0.name = 'Intel'
+    print(s0.name)
+
+def do_desc():
+    from inspect import Signature, Parameter
+
+    class StructMeta(type):
+        def __new__(cls, name, base, clsdict):
+            clsobj = super().__new__(cls, name, base, clsdict)
+            sig = Signature(Parameter(name, Parameter.POSITIONAL_OR_KEYWORD)
+                    for name in clsobj._fields)
+            setattr(clsobj, '__signature__', sig)
+            return clsobj
+
+    class Struct(metaclass=StructMeta):
+        _fields = []
+        def __init__(self, *args, **kwargs):
+            bound_args = self.__signature__.bind(*args, **kwargs)
+            for name, value in bound_args.arguments.items():
+                setattr(self, name, value)
+        def __str__(self):
+            args = ', '.join(repr(getattr(self, name)) for name in self._fields if hasattr(self, name))
+            return type(self).__name__ + '(' + args + ')'
+
+    class Descriptor:
+        def __init__(self, name=None):
+            self.name = name
+        def __get__(self, inst, cls):
+            if inst is None:
+                return self
+            return inst.__dict__[self.name]
+        def __set__(self, inst, val):
+            inst.__dict__[self.name] = val
+        def __delete__(self, inst):
+            #del inst.__dict__[self.name]
+            raise AttributeError('cannot delete')
+
+    class Typed(Descriptor):
+        ty = object
+        def __set__(self, inst, val):
+            if not isinstance(val, self.ty):
+                raise TypeError('Only accept ', self.ty)
+            super().__set__(inst, val)
+    class Integer(Typed):
+        ty = int
+    class String(Typed):
+        ty = str
+    class Float(Typed):
+        ty = float
+    class Positive(Descriptor):
+        def __set__(self, inst, val):
+            if val < 0:
+                raise ValueError('value should > 0')
+            super().__set__(inst, val)
+
+    class PosInteger(Integer, Positive):
+        pass
+    class PosFloat(Float, Positive):
+        pass
+
+    class Stock(Struct):
+        _fields = ['name', 'shares', 'price']
+        name = String('name')
+        shares = PosInteger('shares')
+        price = PosFloat('price')
+
+    s0 = Stock('google', 50, 100.0)
+    print(s0)
+    s0.shares = -1
+
+def do_test10():
+    class Spam:
+        k = 0
+        def __init__(self):
+            self.bar = 0
+            pass
+        def bar(self):
+            pass
+
+    s0 = Spam()
+    print(s0.__dict__)
+    print(Spam.__dict__)
 
 class P3Meta(TestCase):
     def test_test(self):
-        do_cls_create()
+        do_test10()
         print('Test Done'.center(50, '-'))
 
 if __name__ == '__main__':

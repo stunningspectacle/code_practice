@@ -153,6 +153,40 @@ done:
 	printf("done\n");
 }
 
+struct {
+	int      *a;
+	float    b;
+	char     c;
+	short    d;
+	long     e;
+	double   f;
+	int      g;
+	char     *h;
+} rec;
+
+struct {
+	char     c;
+	short    d;
+	int      g;
+	float    b;
+	long     e;
+	double   f;
+	int      *a;
+	char     *h;
+} rec_opt;
+
+struct P1 { short i; int c; int *j; short *d; };
+static void alignment(void)
+{
+	struct P1 p;
+
+	printf("%p, %p, %p, %p, %p\n",
+			&p, &p.i, &p.c, &p.j, &p.d);
+	printf("size = %ld\n", sizeof(struct P1));
+	printf("sizeof(rec)=%ld, sizeof(rec_opt)=%ld\n", sizeof(rec), sizeof(rec_opt));
+}
+
+
 typedef int row3_t[3];
 int typedef_array(void)
 {
@@ -162,9 +196,46 @@ int typedef_array(void)
 	return a;
 }
 
+static int variable_stack()
+{
+	int local;
+
+	printf("local at @%p\n", &local);
+
+	return local;
+}
+
+void mygetchar(char *dst, int val)
+{
+	char s[] = "124567890";
+	int k = 100;
+
+	strncpy(dst, s, strlen(s));
+	k /= val;
+}
+
+void mygetchar_caller()
+{
+	char buf[5];
+
+	memset(buf, 0, sizeof(buf));
+	mygetchar(buf, 10);
+}
+
+void float_cac(long double x)
+{
+	long double y = x * x;
+
+	printf("x = %.100Lf\n", x);
+	y -= x;
+	printf("y = %.100Lf\n", y);
+}
+
 int main(int argc, char *argv[])
 {
-	typedef_array();
+	long double pi = 3.14159265358;
+
+	float_cac(pi);
 
 	return 0;
 }

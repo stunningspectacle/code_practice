@@ -328,9 +328,43 @@ def spam():
     print(clsdict)
 
 
+def do_test5():
+    from functools import wraps
+    import time
+
+    class Test5:
+        def __init__(s, val0, val1):
+            s.val0 = val0
+            s.val1 = val1
+        def show(kk):
+            print(kk.val0, kk.val1)
+
+    t0 = Test5(1, 2)
+    t0.show()
+    print(t0.__dict__)
+
+    def mydec(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            start = time.time()
+            ret = func(*args, **kwargs)
+            end = time.time() - start
+            print(end)
+            return ret
+        return wrapper
+
+    @mydec
+    def loop(n):
+        for i in range(n):
+            for j in range(n):
+                d = 10 + 20 + 30
+
+    loop(10000)
+
+
 class P3Meta(TestCase):
     def test_test(self):
-        do_cls_create()
+        do_test5()
         print('Test Done'.center(50, '-'))
 
 if __name__ == '__main__':

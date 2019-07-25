@@ -179,11 +179,15 @@ struct P1 { short i; int c; int *j; short *d; };
 static void alignment(void)
 {
 	struct P1 p;
+	volatile int x = 0xffffff;
 
-	printf("%p, %p, %p, %p, %p\n",
-			&p, &p.i, &p.c, &p.j, &p.d);
-	printf("size = %ld\n", sizeof(struct P1));
-	printf("sizeof(rec)=%ld, sizeof(rec_opt)=%ld\n", sizeof(rec), sizeof(rec_opt));
+	while (x >= 0)
+		x--;
+
+	//printf("%p, %p, %p, %p, %p\n",
+	//		&p, &p.i, &p.c, &p.j, &p.d);
+	//printf("size = %ld\n", sizeof(struct P1));
+	//printf("sizeof(rec)=%ld, sizeof(rec_opt)=%ld\n", sizeof(rec), sizeof(rec_opt));
 }
 
 
@@ -226,6 +230,9 @@ void float_cac(long double x)
 {
 	long double y = x * x;
 
+//	for (int i = 0; i < 30; i++)
+//		alignment();
+
 	printf("x = %.100Lf\n", x);
 	y -= x;
 	printf("y = %.100Lf\n", y);
@@ -234,8 +241,11 @@ void float_cac(long double x)
 int main(int argc, char *argv[])
 {
 	long double pi = 3.14159265358;
+	int i;
 
 	float_cac(pi);
+	for (i = 0; i < 100; i++)
+		alignment();
 
 	return 0;
 }

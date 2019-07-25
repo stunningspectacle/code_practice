@@ -616,6 +616,10 @@ alias p3='python3'
 
 #Need to run VM from virt-manager
 #To use virt-manger in vnc, open it from "Applications->system->Virtual MM"
+#To share folder
+#	1. config it in virt-manager
+#	2. use it in VM(host's /home/leo/vmshare will be mounted to VM's ~/vmshare):
+#	alias vmount='sudo mount -t 9p -o trans=virtio,version=9p2000.L /vmshare /home/leo/vmshare'
 alias sshqemu='ssh leo@192.168.122.29' 
 
 #alias cdlua='cd /home/data/leo/lua'

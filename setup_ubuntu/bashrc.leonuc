@@ -1,0 +1,646 @@
+# ~/.bashrc: executed by bash(1) for non-login shells.
+# see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
+# for examples
+
+# If not running interactively, don't do anything
+case $- in
+    *i*) ;;
+      *) return;;
+esac
+
+# don't put duplicate lines or lines starting with space in the history.
+# See bash(1) for more options
+HISTCONTROL=ignoreboth
+
+# append to the history file, don't overwrite it
+shopt -s histappend
+
+# for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
+HISTSIZE=1000
+HISTFILESIZE=2000
+
+# check the window size after each command and, if necessary,
+# update the values of LINES and COLUMNS.
+shopt -s checkwinsize
+
+# If set, the pattern "**" used in a pathname expansion context will
+# match all files and zero or more directories and subdirectories.
+#shopt -s globstar
+
+# make less more friendly for non-text input files, see lesspipe(1)
+[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+
+# set variable identifying the chroot you work in (used in the prompt below)
+if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
+    debian_chroot=$(cat /etc/debian_chroot)
+fi
+
+# set a fancy prompt (non-color, unless we know we "want" color)
+case "$TERM" in
+    xterm-color|*-256color) color_prompt=yes;;
+esac
+
+# uncomment for a colored prompt, if the terminal has the capability; turned
+# off by default to not distract the user: the focus in a terminal window
+# should be on the output of commands, not on the prompt
+#force_color_prompt=yes
+
+if [ -n "$force_color_prompt" ]; then
+    if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
+	# We have color support; assume it's compliant with Ecma-48
+	# (ISO/IEC-6429). (Lack of such support is extremely rare, and such
+	# a case would tend to support setf rather than setaf.)
+	color_prompt=yes
+    else
+	color_prompt=
+    fi
+fi
+
+if [ "$color_prompt" = yes ]; then
+    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+else
+    PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
+fi
+unset color_prompt force_color_prompt
+
+# If this is an xterm set the title to user@host:dir
+case "$TERM" in
+xterm*|rxvt*)
+    PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
+    ;;
+*)
+    ;;
+esac
+
+# enable color support of ls and also add handy aliases
+if [ -x /usr/bin/dircolors ]; then
+    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+    alias ls='ls --color=auto'
+    #alias dir='dir --color=auto'
+    #alias vdir='vdir --color=auto'
+
+    alias grep='grep --color=auto'
+    alias fgrep='fgrep --color=auto'
+    alias egrep='egrep --color=auto'
+fi
+
+# colored GCC warnings and errors
+#export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
+
+# some more ls aliases
+alias ll='ls -alF'
+alias la='ls -A'
+alias l='ls -CF'
+
+# Add an "alert" alias for long running commands.  Use like so:
+#   sleep 10; alert
+alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
+
+# Alias definitions.
+# You may want to put all your additions into a separate file like
+# ~/.bash_aliases, instead of adding them here directly.
+# See /usr/share/doc/bash-doc/examples in the bash-doc package.
+
+if [ -f ~/.bash_aliases ]; then
+    . ~/.bash_aliases
+fi
+
+# enable programmable completion features (you don't need to enable
+# this, if it's already enabled in /etc/bash.bashrc and /etc/profile
+# sources /etc/bash.bashrc).
+#if ! shopt -oq posix; then
+#  if [ -f /usr/share/bash-completion/bash_completion ]; then
+#    . /usr/share/bash-completion/bash_completion
+#  elif [ -f /etc/bash_completion ]; then
+#    . /etc/bash_completion
+#  fi
+#fi
+
+# bashrc_ext
+export ZEPHYR_TOOLCHAIN_VARIANT=zephyr
+export ZEPHYR_GCC_VARIANT=
+export ZEPHYR_SDK_INSTALL_DIR=/opt/zephyr-sdk
+#export ZEPHYR_BASE=~/ose/ose-dev-code-base/modules/rtos/ose_zephyr
+
+export PATH=/opt/cmake-3.9.6-Linux-x86_64/bin:/usr/local/bin/python3:/opt/zephyr-sdk/sysroots/x86_64-pokysdk-linux/usr/bin/arm-zephyr-eabi:$PATH:~/bin:~/bin/android_bin
+export PATH=$PATH:~/android/android-sdk-linux_x86/platform-tools:~/android/android-sdk-linux_x86/tools:/opt/google/chrome
+export LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:/usr/lib32
+#LD_LIBRARY_PATH
+#export PATH=$PATH:~/composer_xe_2015.0.090/bin/ia32/
+#export INCLUDE=$INCLUDE:/opt/intel/external_req/include/clang
+#source /opt/intel/bin/compilervars.sh ia32
+#PATH=$PATH:/opt/intel/composerxe-2011/bin:/opt/intel/composerxe-2011.0.062/bin/ia32
+#export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/lib/ia32
+#export INCLUDE=$INCLUDE:/opt/ips2013/external_req/include/clang
+#source ~/intel/bin/compilervars.sh ia32
+#export INCLUDE=
+#export INCLUDE=$INCLUDE:/home/lyan7/intel/composer_xe_2015.0.090/compiler/include/
+#export INCLUDE=$INCLUDE:~/external_req/include/clang
+
+export JAVA_HOME=~/jdk_1_7/
+export JRE_HOME=${JAVA_HOME}/jre
+export CLASSPATH=.:$CLASSPATH:${JAVA_HOME}/lib:${JRE_HOME}/lib
+export PATH=${JAVA_HOME}/bin:$PATH
+export PATH=$PATH:/usr/local/go/bin
+export GOPATH=~/study/go/workspace
+export GOPATH=$GOPATH:~/study/go/workspace/calc
+
+export DISPLAY=:0.0
+export APPDATA=/tmp
+#export http_proxy=http://proxy.fm.intel.com:912
+#export https_proxy=http://proxy.fm.intel.com:912
+export no_proxy=localhost,.intel.com,10.0.0.0/8
+#export GIT_PROXY_COMMAND=git_proxy.sh
+
+#export http_proxy=http://proxy01.cd.intel.com:911
+#export https_proxy=http://proxy01.cd.intel.com:911
+
+export http_proxy=http://child-prc.intel.com:913
+export https_proxy=http://child-prc.intel.com:913
+
+#alias repo_init_ics='repo init -u git://android.intel.com/manifest -b platform/android/main -m android-main'
+#alias repo_init_gb='repo init -u git://android.intel.com/manifest -b platform/android/r2-stable -m android-r2'
+# some more ls aliases
+alias ll='ls -lh'
+alias df='df -h'
+alias du='du -h'
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../../'
+alias .....='cd ../../../../'
+alias ......='cd ../../../../../'
+alias .......='cd ../../../../../../'
+alias .b='. ~/.bashrc'
+alias a='adb'
+alias g='git'
+alias m='make'
+alias cddata='cd /home/data/leo'
+alias an='source and.sh'
+alias adbroot='adb wait-for-device && adb root'
+alias adbpullmac='adb pull nvm_fs_partition/wlan/nvmData' #edit: 1. :%!xxd -g 1  2. :%!xxd -r, Change 002e~0033 to random number
+alias adbwait='adb wait-for-device'
+
+alias ar_arm='~/gccarm/gcc-arm-none-eabi-7-2017-q4-major/arm-none-eabi/bin/ar'
+alias as_arm='~/gccarm/gcc-arm-none-eabi-7-2017-q4-major/arm-none-eabi/bin/as'
+alias ld_arm='~/gccarm/gcc-arm-none-eabi-7-2017-q4-major/arm-none-eabi/bin/ld'
+alias am_arm='~/gccarm/gcc-arm-none-eabi-7-2017-q4-major/arm-none-eabi/bin/nm'
+alias objcopy_arm='~/gccarm/gcc-arm-none-eabi-7-2017-q4-major/arm-none-eabi/bin/objcopy'
+alias objdump_arm='~/gccarm/gcc-arm-none-eabi-7-2017-q4-major/arm-none-eabi/bin/objdump'
+alias ranlib_arm='~/gccarm/gcc-arm-none-eabi-7-2017-q4-major/arm-none-eabi/bin/ranlib'
+alias readelf_arm='~/gccarm/gcc-arm-none-eabi-7-2017-q4-major/arm-none-eabi/bin/readelf'
+alias strip_arm='~/gccarm/gcc-arm-none-eabi-7-2017-q4-major/arm-none-eabi/bin/strip'
+alias ose_make_config='./config.sh -A arm -P ehl_ose_fw -T toolchain_arm_gcc.cmake'
+alias cdace='cd ~/ace/cavs_fw/FW'
+
+mkcd() { mkdir -p "$1"; cd "$1"; }
+cls() { cd "$1"; ls; }
+scpleoicl() {
+	[ $# != 1 ] && {
+		echo "usage: scpleoicl file"
+		return
+	}
+	scp $1 leoicl@leoicl:~/
+}
+mkscript() { 
+    cmd=
+    case "$1" in
+        *.sh) cmd="#!/bin/bash" ;;
+        *.py) cmd="#!/usr/bin/python" ;;
+        *) cmd="unkown"
+    esac
+    if [ $cmd == "unkown" ]; then
+        echo "Not support .$(echo $1 | cut -d. -f2) file"
+    else
+        touch "$1"
+        echo $cmd > "$1"
+        chmod +x "$1"
+        vim "$1"
+    fi
+}
+ggrep() {
+    git grep --break --heading $@
+}
+
+installAll() {
+    [ $# != 1 ] && {
+        echo "usage: installAll path"
+        return
+    }
+    PWD=$(pwd)
+    cd $1 || return
+    for i in $(ls *.apk); do
+        echo "Installing $i..."
+        adb wait-for-device && adb install $i;
+    done
+    cd $PWD
+}
+and() {
+    DIR=$(pwd)
+    while true
+    do
+        if [ -d ".repo" ]; then
+            source build/envsetup.sh
+            break
+        else
+            if [ $(pwd) = $HOME ] || [ $(pwd) = "/" ]; then
+                echo "Not in an Android repo tree."
+                break
+            fi
+            cd ..
+        fi
+    done
+    cd $DIR
+}
+cscope-android() {
+    DIR=$(pwd)
+    find $DIR/libcore $DIR/frameworks $DIR/hardware $DIR/packages $DIR/vendor \
+    -type l -prune -o \
+    -name "*.[chxsS]" -print -o \
+    -name "*.cpp" -print -o \
+    -name "*.java" -print > $DIR/cscope.files
+
+    cscope -bq
+    #cscope -Rbq
+}
+cscope-common() {
+    DIR=$(pwd)
+
+    find $DIR -type l -prune -o \
+    -name "*.[chxsS]" -print -o \
+    -name "*.cpp" -print -o \
+    -name "*.cc" -print -o \
+    -name "*.asm" -print -o \
+    -name "*.dts" -print -o \
+    -name "*.dtsi" -print -o \
+    -name "*.py" -print -o \
+    -name "*.cfg" -print -o \
+    -name "*.java" -print > $DIR/cscope.files
+
+    cscope -bq
+    #cscope -Rbq
+}
+cscope-zephyr() {
+    DIR=$(pwd)
+
+    find $DIR -type l -prune -o \
+    -path "$DIR/arch/arc" -prune -o \
+    -path "$DIR/arch/nios2" -prune -o \
+    -path "$DIR/arch/riscv32" -prune -o \
+    -path "$DIR/arch/xtensa" -prune -o \
+    -path "$DIR/boards/arc" -prune -o \
+    -path "$DIR/boards/nios2" -prune -o \
+    -path "$DIR/boards/riscv32" -prune -o \
+    -path "$DIR/boards/xtensa" -prune -o \
+    -path "$DIR/include/arch/arc" -prune -o \
+    -path "$DIR/include/arch/nios2" -prune -o \
+    -path "$DIR/include/arch/riscv32" -prune -o \
+    -path "$DIR/include/arch/xtensa" -prune -o \
+    -name "*.[chxsS]" -print -o \
+    -name "*.cpp" -print -o \
+    -name "*.asm" -print -o \
+    -name "*.dts" -print -o \
+    -name "*.dtsi" -print -o \
+    -name "*.java" -print > $DIR/cscope.files
+
+    cscope -bq
+    #cscope -Rbq
+}
+
+cscope-jlf() {
+    DIR=$(pwd)
+
+    find $DIR -type l -prune -o \
+    -path "$DIR/arch/arc" -prune -o \
+    -path "$DIR/arch/nios2" -prune -o \
+    -path "$DIR/arch/riscv32" -prune -o \
+    -path "$DIR/arch/xtensa" -prune -o \
+    -path "$DIR/boards/arc" -prune -o \
+    -path "$DIR/boards/nios2" -prune -o \
+    -path "$DIR/boards/riscv32" -prune -o \
+    -path "$DIR/boards/xtensa" -prune -o \
+    -path "$DIR/include/arch/arc" -prune -o \
+    -path "$DIR/include/arch/nios2" -prune -o \
+    -path "$DIR/include/arch/riscv32" -prune -o \
+    -path "$DIR/include/arch/xtensa" -prune -o \
+    -name "*.[chxsS]" -print -o \
+    -name "*.cpp" -print -o \
+    -name "*.asm" -print -o \
+    -name "*.dts" -print -o \
+    -name "*.dtsi" -print -o \
+    -name "*.java" -print > $DIR/cscope.files
+
+    cscope -bq
+    #cscope -Rbq
+}
+
+cscope-linux-kernel-study() {
+    KERNEL=$(pwd)
+    rm -rf cscope*
+
+    find $KERNEL \
+    -path "$KERNEL/arch/*" ! -path "$KERNEL/arch/*86*" ! -path "$KERNEL/arch/arm" -prune -o \
+    -path "$KERNEL/include/asm*" ! -path "$KERNEL/include/asm-*86*" ! -path "$KERNEL/include/asm-arm" -prune -o \
+    -path "$KERNEL/Documentation" -prune -o \
+    -path "$KERNEL/tools" -prune -o \
+    -path "$KERNEL/scripts" -prune -o \
+    -path "$KERNEL/leo" -prune -o \
+    -path "$KERNEL/drivers" -prune -o \
+    -path "$KERNEL/sound" -prune -o \
+    -path "$KERNEL/debian" -prune -o \
+    -type l -prune -o \
+    -name ".*" -prune -o \
+    -name "*.[chxsS]" -print > $KERNEL/cscope.files
+
+    find $KERNEL/drivers/base $KERNEL/drivers/hid $KERNEL/drivers/pci \
+	    $KERNEL/drivers/i2c $KERNEL/drivers/spi $KERNEL/drivers/char \
+	    $KERNEL/drivers/misc $KERNEL/drivers/acpi $KERNEL/drivers/android \
+	    $KERNEL/drivers/bus $KERNEL/drivers/char \
+	    $KERNEL/drivers/dma \
+	    $KERNEL/drivers/usb \
+	    $KERNEL/drivers/iio \
+	    $KERNEL/drivers/mfd \
+	    $KERNEL/drivers/parport \
+	    $KERNEL/drivers/dma-buf \
+	    $KERNEL/drivers/gpio \
+	    $KERNEL/drivers/rtc \
+	    $KERNEL/drivers/tty \
+	    $KERNEL/drivers/hwmon \
+	    $KERNEL/drivers/input \
+	    $KERNEL/drivers/platform \
+	    $KERNEL/drivers/power \
+	    $KERNEL/drivers/regulator \
+	    $KERNEL/drivers/staging/android \
+    -type l -prune -o \
+    -name ".*" -prune -o \
+    -name "*.[chxsS]" -print >> $KERNEL/cscope.files
+
+    cscope -b
+    #cscope -Rbq
+}
+
+build_module() {
+    KERNELDIR=/home/lyan7/r41-stable/hardware/intel/linux-2.6
+    make -C $KERNELDIR M=$(pwd) modules
+}
+codeviz() {
+    #make CC=/usr/local/gccgraph/bin/gcc
+    #genfull
+
+    gengraph -f ${1} -d 3 output-font=Arial --output-layout LR --plain
+    dot -GPAPERSIZE=letter -Gsize=8,10.5 -Gcenter=1 -Gmargin=.25 -Tps -o ${1}.ps < ${1}.plain
+    ps2pdf ${1}.ps
+    rm ${1}.{ps,plain}
+
+
+    #Combining pdf pages into one file
+    #Ghostscript can combine separate PDF pages into a single file:
+    #gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile=gpxe-call-graphs.pdf gpxe-api-call-graphs/*.pdf
+}
+function exit_on_failure() {
+    echo "$@"
+    if [ $0 -e "adb" ]; then
+        echo "adb wait-for-device"
+        adb wait-for-device
+    fi
+    $@
+    if [ $? -ne 0 ]; then
+        echo "$@ failed"
+    fi
+}
+get_code() {
+    repo init -u git://android.intel.com/manifest -b platform/android/main -m android-main
+    repo sync -c -j 5
+    source build/envsetup.sh
+    lunch redhookbay-eng
+    make flashfiles -j 24
+}
+idb() {
+    mysql -D $1 -u root -pleoautoscan < $2
+}
+start_synergy() {
+    [ $# -eq 0 ] && {
+        _name=$(basename $0)
+        echo "Usage: $_name 10.239.205.38:80"
+        return
+    }
+    ps aux | grep /usr/bin/synergyc | tr -s ' ' | while read line 
+    do 
+        pid=$(echo $line | cut -d' ' -f2)
+        cmd=$(echo $line | cut -d' ' -f11)
+        if [ $cmd != "/usr/bin/synergyc" ];then
+            continue
+        fi
+        kill $pid
+    done
+    /usr/bin/synergyc $1
+}
+
+ishsetconfig() {
+    ! [ -f "config.xml" ] && {
+        echo "no config.xml"
+        return
+    }
+    adb wait-for-devices && adb root && adb wait-for-devices && adb push config.xml /sdcard/
+    adb shell 'cd /sdcard/ && TraceConfigTool setconfig config.xml && TraceConfigTool getconfig'
+}
+
+ishgetconfig() {
+    adb wait-for-devices && adb root && adb wait-for-devices
+    adb shell 'TraceConfigTool getconfig' 
+}
+
+ishversion() {
+    adb wait-for-devices && adb root && adb wait-for-devices
+    adb shell 'SMHITool_android -version'
+}
+
+ishgetlog() {
+    adb wait-for-devices && adb root && adb wait-for-devices
+    adb shell 'cd /sdcard/; ISSTraceCollector HECI TraceCatalog.xml TraceComponents.xml log.txt && exit'
+    adb pull /sdcard/log.txt
+}
+
+function adbshell() {
+    if [ $# -eq 0 ]; then
+        echo "usage: adbshell command"
+        return
+    fi
+    while true; do
+        adb wait-for-device && adb root
+        sleep 3
+        adb wait-for-device
+        adb shell $@
+    done
+}
+function adblogcat() {
+    while true; do
+        adb wait-for-device && adb root
+        sleep 3
+        adb wait-for-device
+        adb logcat $@
+    done
+}
+mydiff() {
+    GB=gb-r2
+    ICS=ics
+    is_ics=0
+    buddy_file=
+
+    PWD=$(pwd)
+    file_dir=$(dirname $1)
+    cd $file_dir
+    file_path=$(pwd)/$(basename $1)
+    if [ ! -f $file_path ]; then
+        echo "$file_path not exists"
+        exit
+    fi
+    cd $PWD
+
+    if $(echo $file_path | grep -q $GB); then
+        buddy_file=$(echo $file_path | sed -e 's/gb-r2/ics/')
+    elif $(echo $file_path | grep -q $ICS); then
+        buddy_file=$(echo $file_path | sed -e 's/ics/gb-r2/')
+    else
+        echo "Not in GB or ICS"
+        exit
+    fi
+
+    if [ ! -f $buddy_file ]; then
+        echo "$buddy_file not exists"
+        exit
+    fi
+
+    if [ "$(diff $file_path $buddy_file)" = "" ]; then
+        echo "No difference between these two files"
+    else
+        vimdiff $file_path $buddy_file
+        #diff $file_path $buddy_file > mydiff_tmp.diff
+    fi
+}
+
+screencap() {
+    adb shell "cd /data/; screencap -p a.png"
+}
+
+zephyr_env() {
+    cd ~/ose/ose-dev-code-base/modules/rtos/ose_zephyr/
+    source zephyr-env.sh
+    cd -
+}
+
+vit() {
+    if [ -e "$1" ]; then
+            vim $1 
+            exit
+    fi
+
+    files=()
+    files_name=`find . -name "$1" | sed -e "/.*.o$/d"`
+
+    i=0
+    for file in $files_name
+    do
+            files[$i]=$file
+            echo "$i) $file"
+            #let "i = $i + 1"
+            i=`expr $i + 1`
+    done
+
+    if [ $i -eq 1 ]; then
+            vim ${files[0]}
+    elif [ $i -eq 0 ]; then
+            echo "Can't find file: $1!"
+            exit 1
+    else
+            echo -n "which one: "
+            read a
+            vim ${files[$a]} 
+    fi
+}
+check_patch() {
+    PWD=$(pwd)
+    LNX_DIR="/home/leo/linux_torvalds/linux"
+    ! [ -d $LNX_DIR ] && {
+        echo "Linux source code folder $LNX_DIR is not exist"
+        return
+    }
+    ! [ $# -eq 1 ] && {
+        echo "Usage: check_patch patch_file"
+        return
+    }
+    cd $LNX_DIR
+    scripts/checkpatch.pl $1
+    cd $PWD
+}
+# rm exec but not script files */
+ls_exec_files() {
+    find . -perm /a+x -type f -not -name "*.*" | xargs ls -l
+}
+rm_exec_files() {
+    find . -perm /a+x -type f -not -name "*.*" | xargs rm
+}
+
+
+alias sshhz='ssh hzheng3@shbuild666.sh.intel.com' # pwd: 12345678
+alias ssh5='ssh lyan7@shbuild555.sh.intel.com'
+alias sshzl='ssh lzha106@shbuild666.sh.intel.com'
+#alias sshoc6='ssh lyan7@bjsxbeo013.bj.intel.com'
+alias sshleo='ssh leo@leoyan.sh.intel.com'
+alias sshleoicl='ssh leoicl@leoicl.sh.intel.com'
+alias sshleoiclip='ssh leoicl@10.239.153.186'
+alias sshoc6='ssh lyan7@shsxopticm019.sh.intel.com'
+alias sshoc6_jialei='ssh jialeifx@shsxopticm016' # pwd: password=1
+alias sshfs555='sshfs shbuild lyan7@shbuild555.sh.intel.com:/home/lyan7'
+alias repoinit_main='repo init -u git://android.intel.com/manifest -b platform/android/main -m android-main'
+alias synergyc_leo='synergyc lyan7-mobl.ccr.corp.intel.com:80'
+alias beeinit_sofia='bee init -u ssh://opticm6/manifest -b sofia_3g-nonIMC/development'
+alias runcts_testHoloThemes='run cts -c android.theme.cts.ThemeHostTest -m testHoloThemes'
+#alias dns_flush='sudo /etc/init.d/dns-clean restart'
+#lookup dns cache: nslookup hostnamae
+alias dns_flush='sudo /etc/init.d/networking force-reload'
+alias sdcard_flush='adb shell am broadcast -a android.intent.action.MEDIA_MOUNTED -d file:///mnt/sdcard/'
+
+chenyan_server=10.239.154.68
+alias smbmount_SOFIA_tester="sudo smbmount //$chenyan_server/SoFIA_tester ~/smbmount -o username=tester,password=abcd1234"
+alias smbmount_SOFIA_image="sudo smbmount //$chenyan_server/SoFIA_image ~/smbmount -o username=usershare,password=abcd1234"
+# Can upload files to this folder(sudo cp -r ~/xxxx smbmount/2015/):
+alias smbmount_SOFIA_testresult="sudo smbmount //$chenyan_server/SoFIA_testresult_upload ~/smbmount -o username=tester,password=abcd1234"
+alias smbmount_chenyan="sudo smbmount //$chenyan_server -o username=lyan7"
+alias cdgo='cd /home/leo/study/go/workspace'
+
+alias zbuild='zephyr_env && rm -rf * && cmake -DBOARD=intel_ose ../../ && m'
+alias cdishlinuxdriver='cd ~/linux_torvalds/linux/drivers/hid/intel-ish-hid/ipc'
+alias gpush='git push origin HEAD:refs/for/master'
+alias cdzephyr='cd ~/ose/ose-dev-code-base/modules/rtos/ose_zephyr'
+alias p3='python3'
+
+#Need to run VM from virt-manager
+#To use virt-manger in vnc, open it from "Applications->system->Virtual MM"
+alias sshqemu='ssh leo@192.168.122.29' 
+
+#alias cdlua='cd /home/data/leo/lua'
+kernelgraph() { lsmod | perl -e 'print "digraph \"lsmod\" {";<>;while(<>){@_=split/\s+/; print "\"$_[0]\" -> \"$_\"\n" for split/,/,$_[3]}print "}"' | dot -Tpng | display -;}
+
+#. ~/.git-completion.bash
+
+#alias la='ls -A'
+#alias l='ls -CF'
+
+# enable programmable completion features (you don't need to enable
+# this, if it's already enabled in /etc/bash.bashrc and /etc/profile
+# sources /etc/bash.bashrc).
+#if [ -f /etc/bash_completion ]; then
+#    . /etc/bash_completion
+#fi
+#PATH=$PATH:/opt/intel/composerxe-2011/bin:/opt/intel/composerxe-2011.0.062/bin/ia32
+#export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/lib/ia32
+
+[ -f ~/.fzf.bash ] && source ~/.fzf.bash
+
+#cd /opt/stack
+#cd ~/study/code_practice/
+cd ~/study/code_practice/kernel/drivers/ldd3
+#cd ~/study/code_practice/python/python_cookbook
+#cd ~/study/code_practice/csapp
+#cd ~/linux_vanilla/linux
+#cd ~/linux_vanilla/linux/drivers/iio/accel

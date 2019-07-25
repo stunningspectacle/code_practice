@@ -19,12 +19,10 @@ static int c14_show(struct seq_file *s, void *data)
 	return 0;
 }
 
-/*
 static int c14_open(struct inode *inode, struct file *filp)
 {
-	return 0;
+	return single_open(filp, c14_show, NULL);
 }
-*/
 
 static ssize_t c14_read(struct file *filp,
 		char __user *buf, size_t size, loff_t *ppos)
@@ -48,7 +46,6 @@ static ssize_t c14_read(struct file *filp,
 
 static struct file_operations c14_fops = {
 	.owner = THIS_MODULE,
-	//.open = c14_open,
 	.read = c14_read,
 };
 
@@ -59,12 +56,20 @@ static struct miscdevice c14_misc = {
 	.mode = 0666,
 };
 
+static struct file_operations c14_single_fops = {
+	.owner = THIS_MODULE,
+	.open = c14_open,
+	.read = seq_read,
+	.llseek = seq_lseek,
+	.release = seq_release,
+};
+
 static int __init c14_init(void)
 {
 	int ret;
 
 	pr_info("%s is called\n", __func__);
-	proc = proc_create_single(C14NAME, 0666, NULL, c14_show);
+	proc = proc_create(C14NAME, 0666, NULL, &c14_single_fops);
 	if (proc)
 		pr_info("proc entry is created\n");
 	else

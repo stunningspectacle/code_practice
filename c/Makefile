@@ -1,4 +1,6 @@
 TARGETS := $(patsubst %.c, %, $(wildcard *.c))
+CFLAGS += -Og
+
 all: $(TARGETS)
 
 clean:

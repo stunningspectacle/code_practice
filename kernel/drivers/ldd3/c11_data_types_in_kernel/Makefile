@@ -6,7 +6,7 @@ MOD := $(shell pwd)
 all:
 	make -C $(KERN) modules M=$(MOD)
 
-PHONY := clean
+.PHONY := clean
 clean:
-	rm *.ko *.mod.c *.mod.o modules.order Module.symvers
+	rm -rf *.ko *.mod.c *.mod.o modules.order Module.symvers
 

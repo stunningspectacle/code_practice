@@ -1,0 +1,11 @@
+Developers Guide
+-----------------
+
+The following rules apply when using the OpenRTOS API:
+--------------------------------------------------------
+1. API functions that do no end in "FromISR" must not be used in an interrupt service routine(ISR). 
+
+2. API functions that can potentially cause a context switch must not be called while the
+scheduler is suspended.
+
+3. API functions that can potentially cause a context switch must not be called from within a critical section.

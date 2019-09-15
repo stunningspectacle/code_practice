@@ -6,3 +6,6 @@ all:
 	make -C $(KERN) M=$(PWD) modules
 	cp hello.ko ~/vmshare/
 
+.PHONY: clean
+clean:
+	@rm -rf *.ko *.o Module.* *.mod.c modules.*

@@ -1,10 +1,10 @@
 obj-m := hello.o
 
 PWD := $(shell pwd)
-KERN := /lib/modules/4.15.0-29-generic/build
+KERN := /lib/modules/$(shell uname -r)/build
 all:
 	make -C $(KERN) M=$(PWD) modules
-	cp hello.ko ~/vmshare/
+	#cp hello.ko ~/vmshare/
 
 .PHONY: clean
 clean:

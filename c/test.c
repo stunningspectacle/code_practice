@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <malloc.h>
+#include <time.h>
 
 extern char **environ;
 typedef unsigned short uint16_t;
@@ -201,7 +202,35 @@ void value_of_negtive(int val)
 	printf("%d: 0x%x\n", val, a);
 }
 
+void test0() {
+	float a = 1.0e10;
+
+	printf("a = %f\n", a);
+
+	struct student {
+		char *name;
+		float score;
+	};
+
+	struct student s0 = {
+		"Leo",
+		100,
+	};
+
+	printf("s0.name: %s, s0.score: %f\n", s0.name, s0.score);
+}
+
+void test1()
+{
+	int cnt;
+
+	while (cnt < 10) {
+		printf("cnt = %d, clock=%lu, CLOCKS_PER_SEC=%lu\n", cnt++, clock(), CLOCKS_PER_SEC);
+		sleep(1);
+	}
+}
+
 void main(int argc, char *argv[])
 {
-	value_of_negtive(atoi(argv[1]));
+	test1();
 }

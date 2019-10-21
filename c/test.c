@@ -24,6 +24,11 @@ do {\
 	}\
 } while (0)
 
+inline void mb()
+{
+	asm volatile("":::"memory");
+}
+
 int myffs(unsigned long data) {
 	int count = 0;
 	if (data == 0)
